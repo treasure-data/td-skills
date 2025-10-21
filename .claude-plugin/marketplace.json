@@ -15,8 +15,8 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "sql-skills/trino",
-        "sql-skills/hive"
+        "./sql-skills/trino",
+        "./sql-skills/hive"
       ]
     },
     {
@@ -25,8 +25,8 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "workflow-skills/digdag",
-        "workflow-skills/management"
+        "./workflow-skills/digdag",
+        "./workflow-skills/management"
       ]
     },
     {
@@ -35,7 +35,7 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "template-skill"
+        "./template-skill"
       ]
     }
   ]
