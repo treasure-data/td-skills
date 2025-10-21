@@ -104,7 +104,31 @@ TD_TIME_RANGE(time, '2024-01-01')  -- Single day
 TD_TIME_ADD(TD_SCHEDULED_TIME(), '-1d')  -- Yesterday
 ```
 
-**TD_TIME_FORMAT** - Format timestamps:
+**TD_TIME_STRING** - Format timestamps (Recommended):
+```sql
+-- Uses simple format codes instead of full format strings
+TD_TIME_STRING(time, 'd!', 'JST')     -- Returns: 2018-09-13
+TD_TIME_STRING(time, 's!', 'UTC')     -- Returns: 2018-09-13 16:45:34
+TD_TIME_STRING(time, 'M!', 'JST')     -- Returns: 2018-09 (year-month)
+TD_TIME_STRING(time, 'h!', 'UTC')     -- Returns: 2018-09-13 16 (year-month-day hour)
+
+-- With timezone in output (without ! suffix)
+TD_TIME_STRING(time, 'd', 'JST')      -- Returns: 2018-09-13 00:00:00+0900
+TD_TIME_STRING(time, 's', 'UTC')      -- Returns: 2018-09-13 16:45:34+0000
+```
+
+**Format codes:**
+- `y!` = yyyy (year only)
+- `q!` = yyyy-MM (quarter start)
+- `M!` = yyyy-MM (month)
+- `w!` = yyyy-MM-dd (week start)
+- `d!` = yyyy-MM-dd (day)
+- `h!` = yyyy-MM-dd HH (hour)
+- `m!` = yyyy-MM-dd HH:mm (minute)
+- `s!` = yyyy-MM-dd HH:mm:ss (second)
+- Without `!` includes timezone offset
+
+**TD_TIME_FORMAT** - Format timestamps (Legacy, use TD_TIME_STRING instead):
 ```sql
 TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm:ss', 'UTC')
 ```
@@ -162,7 +186,7 @@ WHERE TD_TIME_RANGE(time, '2024-01-01')
 ```sql
 -- Using TD_INTERVAL for last month
 SELECT
-  TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date,
+  TD_TIME_STRING(time, 'd!', 'JST') as date,
   event_type,
   COUNT(*) as event_count,
   APPROX_DISTINCT(user_id) as unique_users
@@ -176,7 +200,7 @@ ORDER BY 1, 2
 **Alternative with explicit date range:**
 ```sql
 SELECT
-  TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date,
+  TD_TIME_STRING(time, 'd!', 'JST') as date,
   event_type,
   COUNT(*) as event_count,
   APPROX_DISTINCT(user_id) as unique_users
@@ -208,7 +232,7 @@ FROM events_filtered
 ```sql
 -- Using TD_INTERVAL for yesterday's data
 SELECT
-  TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date,
+  TD_TIME_STRING(time, 'd!', 'JST') as date,
   COUNT(*) as total_events,
   APPROX_DISTINCT(user_id) as daily_active_users,
   AVG(session_duration) as avg_session_duration
@@ -222,7 +246,7 @@ ORDER BY 1
 **For rolling 30-day window:**
 ```sql
 SELECT
-  TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date,
+  TD_TIME_STRING(time, 'd!', 'JST') as date,
   COUNT(*) as total_events,
   APPROX_DISTINCT(user_id) as daily_active_users,
   AVG(session_duration) as avg_session_duration
