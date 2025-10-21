@@ -275,13 +275,19 @@ ORDER BY 1
 
 ## Best Practices
 
-1. **Always include time filters** using TD_TIME_RANGE
-2. **Use APPROX functions** for large-scale aggregations
-3. **Limit exploratory queries** to reduce costs
-4. **Test queries on small time ranges** before running on full dataset
-5. **Use CTEs (WITH clauses)** for complex queries to improve readability
-6. **Add comments** explaining business logic
-7. **Consider materialized results** for frequently-run queries
+1. **Always include time filters** using TD_INTERVAL or TD_TIME_RANGE for partition pruning
+   - Use TD_INTERVAL for relative dates: `WHERE TD_INTERVAL(time, '-1d', 'JST')`
+   - Use TD_TIME_RANGE for explicit dates: `WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')`
+   - Never filter by formatted dates: ❌ `WHERE TD_TIME_STRING(time, 'd!', 'JST') = '2024-01-01'`
+2. **Use TD_TIME_STRING for display only**, not for filtering
+   - ✅ `SELECT TD_TIME_STRING(time, 'd!', 'JST') as date`
+   - ❌ `WHERE TD_TIME_STRING(time, 'd!', 'JST') = '2024-01-01'`
+3. **Use APPROX functions** for large-scale aggregations (APPROX_DISTINCT, APPROX_PERCENTILE)
+4. **Limit exploratory queries** to reduce costs and scan time
+5. **Test queries on small time ranges** before running on full dataset
+6. **Use CTEs (WITH clauses)** for complex queries to improve readability
+7. **Add comments** explaining business logic
+8. **Consider materialized results** for frequently-run queries
 
 ## Example Workflow
 
