@@ -24,24 +24,38 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ## Using These Skills
 
-### Setup
+### In Claude Code
 
-1. Clone this repository to your local machine:
-   ```bash
-   git clone <repository-url>
+1. **Register the TD skills marketplace:**
+   ```
+   /plugin marketplace add https://github.com/treasure-data/td-skills
    ```
 
-2. In Claude Code, skills in this directory are automatically available if configured in your project.
+2. **Browse and install plugins:**
+
+   Select "Browse and install plugins" from the menu, then choose from:
+   - `sql-skills` - Trino and Hive query assistance
+   - `workflow-skills` - Digdag workflow creation and management
+   - `template-skill` - Template for creating new skills
+
+3. **Or install directly:**
+   ```
+   /plugin install sql-skills@td-skills
+   /plugin install workflow-skills@td-skills
+   ```
 
 ### Invoking Skills
 
-Once available, you can invoke skills in Claude Code:
+Once installed, Claude will automatically use the appropriate skill based on your request:
 
 ```
-# Claude will automatically use the appropriate skill
 "Help me write a Trino query to analyze user events"
+"Create a digdag workflow to process daily data"
+"Optimize this Hive query for better performance"
+```
 
-# Or explicitly reference a skill
+You can also explicitly reference a skill:
+```
 "Use the trino skill to optimize this query"
 ```
 
