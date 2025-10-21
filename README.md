@@ -1,6 +1,6 @@
 # TD Skills for Claude Code
 
-Internal Treasure Data skills for [Claude Code](https://claude.com/claude-code) to enhance productivity with TD-specific tools and workflows.
+Treasure Data skills for [Claude Code](https://claude.com/claude-code) to enhance productivity with TD-specific tools and workflows.
 
 ## What Are Skills?
 
