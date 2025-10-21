@@ -73,6 +73,18 @@ To add a new TD-specific skill:
 
 2. Create a `SKILL.md` file with YAML frontmatter (see [template-skill](./template-skill/SKILL.md))
 
+3. Update `.claude-plugin/marketplace.json` to register the new skill:
+   ```json
+   {
+     "name": "sql-skills",
+     "skills": [
+       "./sql-skills/trino",
+       "./sql-skills/hive",
+       "./sql-skills/your-skill-name"  // Add your skill path here (must start with ./)
+     ]
+   }
+   ```
+
 ## Contributing
 
 To contribute a new skill or improve an existing one:
