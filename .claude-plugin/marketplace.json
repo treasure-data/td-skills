@@ -16,7 +16,8 @@
       "strict": false,
       "skills": [
         "./sql-skills/trino",
-        "./sql-skills/hive"
+        "./sql-skills/hive",
+        "./sql-skills/trino-optimizer"
       ]
     },
     {
