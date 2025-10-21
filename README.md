@@ -46,18 +46,19 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ### Invoking Skills
 
-Once installed, Claude will automatically use the appropriate skill based on your request:
+Once installed, explicitly reference skills using the `skill` keyword to trigger them:
 
 ```
-"Help me write a Trino query to analyze user events"
-"Create a digdag workflow to process daily data"
-"Optimize this Hive query for better performance"
+"Use the Trino skill to extract data from sample_datasets.nasdaq table"
+"Use the Hive skill to write a query for daily user aggregation"
+"Use the digdag skill to create a workflow that runs every morning"
+"Use the workflow-management skill to debug this failing digdag workflow"
 ```
 
-You can also explicitly reference a skill:
-```
-"Use the trino skill to optimize this query"
-```
+Tips for triggering skills:
+- Include the skill name (Trino, Hive, digdag, workflow-management)
+- Use the word "skill" in your request
+- Be specific about what you want to accomplish
 
 ## Creating Your Own TD Skills
 
