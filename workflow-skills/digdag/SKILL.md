@@ -21,10 +21,10 @@ Use this skill when:
 
 ### 1. Basic Workflow Structure
 
-A digdag workflow is defined in a `.dig` file:
+A digdag workflow is defined in a `.dig` file. **The filename becomes the workflow name** - for example, `hello_world.dig` creates a "hello_world" workflow.
 
 ```yaml
-timezone: Asia/Tokyo
+timezone: UTC
 
 schedule:
   daily>: 02:00:00
@@ -42,6 +42,12 @@ _export:
 +finish:
   echo>: "Workflow completed"
 ```
+
+**Key points:**
+- `.dig` file extension required
+- Workflow name = filename (without .dig)
+- `timezone:` defaults to UTC if not specified
+- Tasks are defined with `+` prefix and run top-to-bottom sequentially
 
 ### 2. Workflow Configuration
 
@@ -68,7 +74,7 @@ _export:
 
 ### 3. Task Structure
 
-Tasks are defined with `+task_name:` prefix:
+Tasks are defined with `+task_name:` prefix. Tasks run sequentially from top to bottom and can be nested as children of other tasks.
 
 ```yaml
 +task1:
@@ -77,10 +83,21 @@ Tasks are defined with `+task_name:` prefix:
 +task2:
   sh>: echo "This is task 2"
 
++parent_task:
+  echo>: "Parent task"
+
+  +child_task:
+    echo>: "This runs as a child of parent_task"
+
+  +another_child:
+    echo>: "This also runs as a child"
+
 +task3:
   td>: queries/query.sql
   create_table: result_table
 ```
+
+**Important:** The syntax `foo>: bar` is syntactic sugar for setting both `_type: foo` and `_command: bar` parameters.
 
 ### 4. TD Operator
 
@@ -123,9 +140,50 @@ The `td>` operator runs TD queries:
 
 ### 5. Session Variables
 
-Digdag provides session variables for dynamic workflows:
+Digdag provides built-in session variables for dynamic workflows accessible via `${variable_name}` syntax:
 
-**Time-based variables:**
+**Always available variables:**
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `${timezone}` | Timezone of workflow | `America/Los_Angeles` |
+| `${project_id}` | Project ID | `12345` |
+| `${session_uuid}` | Unique session UUID | `414a8b9e-b365-4394-916a-f0ed9987bd2b` |
+| `${session_id}` | Integer session ID | `2381` |
+| `${session_time}` | Session timestamp with timezone | `2016-01-30T00:00:00-08:00` |
+| `${session_date}` | Date part (YYYY-MM-DD) | `2016-01-30` |
+| `${session_date_compact}` | Date part (YYYYMMDD) | `20160130` |
+| `${session_local_time}` | Local time format | `2016-01-30 00:00:00` |
+| `${session_tz_offset}` | Timezone offset | `-0800` |
+| `${session_unixtime}` | Unix epoch seconds | `1454140800` |
+| `${task_name}` | Full task name path | `+myworkflow+parent+child` |
+| `${attempt_id}` | Integer attempt ID | `7` |
+
+**Schedule-only variables** (when `schedule:` is configured):
+
+| Variable | Hourly Schedule Example | Daily Schedule Example |
+|----------|------------------------|------------------------|
+| `${last_session_time}` | `2016-01-29T23:00:00-08:00` | `2016-01-29T00:00:00-08:00` |
+| `${last_session_date}` | `2016-01-29` | `2016-01-29` |
+| `${last_session_date_compact}` | `20160129` | `20160129` |
+| `${last_session_local_time}` | `2016-01-29 23:00:00` | `2016-01-29 00:00:00` |
+| `${last_session_tz_offset}` | `-0800` | `-0800` |
+| `${last_session_unixtime}` | `1454137200` | `1454054400` |
+| `${last_executed_session_time}` | `2016-01-29T23:00:00-08:00` | `2016-01-29T00:00:00-08:00` |
+| `${last_executed_session_unixtime}` | `1454137200` | `1454054400` |
+| `${next_session_time}` | `2016-01-30T01:00:00-08:00` | `2016-01-31T00:00:00-08:00` |
+| `${next_session_date}` | `2016-01-30` | `2016-01-31` |
+| `${next_session_date_compact}` | `20160130` | `20160131` |
+| `${next_session_local_time}` | `2016-01-30 01:00:00` | `2016-01-31 00:00:00` |
+| `${next_session_tz_offset}` | `-0800` | `-0800` |
+| `${next_session_unixtime}` | `1454144400` | `1454227200` |
+
+**Notes:**
+- `last_session_time` = timestamp of last schedule (calculated, not actual execution)
+- `last_executed_session_time` = timestamp of previously executed session
+- Built-in variables cannot be overwritten
+
+**Using variables in queries:**
 ```yaml
 +daily_job:
   td>:
@@ -138,13 +196,29 @@ Digdag provides session variables for dynamic workflows:
       )
 ```
 
-**Common session variables:**
-- `${session_time}` - Session timestamp (ISO 8601)
-- `${session_date}` - Session date (YYYY-MM-DD)
-- `${session_date_compact}` - Session date (YYYYMMDD)
-- `${session_unixtime}` - Unix timestamp
-- `${session_uuid}` - Unique session ID
-- `${timezone}` - Workflow timezone
+**Calculating variables with JavaScript:**
+
+You can use JavaScript expressions within `${...}` syntax. Digdag includes Moment.js for time calculations:
+
+```yaml
+timezone: America/Los_Angeles
+
++format_session_time:
+  # "2016-09-24 00:00:00 -0700"
+  echo>: ${moment(session_time).format("YYYY-MM-DD HH:mm:ss Z")}
+
++format_in_utc:
+  # "2016-09-24 07:00:00"
+  echo>: ${moment(session_time).utc().format("YYYY-MM-DD HH:mm:ss")}
+
++format_tomorrow:
+  # "September 24, 2016 12:00 AM"
+  echo>: ${moment(session_time).add(1, 'days').format("LLL")}
+
++get_execution_time:
+  # Current execution time: "2016-09-24 05:24:49 -0700"
+  echo>: ${moment().format("YYYY-MM-DD HH:mm:ss Z")}
+```
 
 ### 6. Task Dependencies
 
@@ -158,6 +232,9 @@ Digdag provides session variables for dynamic workflows:
 ```
 
 **Parallel execution:**
+
+Use `_parallel: true` to run child tasks concurrently (only affects direct children, not grandchildren):
+
 ```yaml
 +parallel_tasks:
   _parallel: true
@@ -175,67 +252,255 @@ Digdag provides session variables for dynamic workflows:
   echo>: "Runs after all parallel tasks complete"
 ```
 
-**Conditional execution:**
+**Limited parallel execution:**
+
+Use `_parallel: {limit: N}` to limit concurrent execution to N tasks:
+
 ```yaml
-+check_condition:
-  sh>: test -f /tmp/flag.txt
++prepare:
+  # +data1 and +data2 run in parallel first
+  # Then +data3 and +data4 run in parallel (after first two succeed)
+  _parallel:
+    limit: 2
 
-+run_if_success:
-  echo>: "Runs only if check_condition succeeds"
+  +data1:
+    py>: tasks.PrepareWorkflow.prepare_data1
 
-+cleanup:
-  _background: true
-  echo>: "Runs regardless of previous task results"
+  +data2:
+    py>: tasks.PrepareWorkflow.prepare_data2
+
+  +data3:
+    py>: tasks.PrepareWorkflow.prepare_data3
+
+  +data4:
+    py>: tasks.PrepareWorkflow.prepare_data4
+
++analyze:
+  py>: tasks.AnalyzeWorkflow.analyze_prepared_data_sets
+```
+
+**Background execution:**
+
+Use `_background: true` to run a task in parallel with previous tasks. The next task waits for background task completion:
+
+```yaml
++prepare:
+  +data1:
+    py>: tasks.PrepareWorkflow.prepare_data1
+
+  # +data1 and +data2 run in parallel
+  +data2:
+    _background: true
+    py>: tasks.PrepareWorkflow.prepare_data2
+
+  # +data3 runs after both +data1 and +data2 complete
+  +data3:
+    py>: tasks.PrepareWorkflow.prepare_data3
+
++analyze:
+  py>: tasks.AnalyzeWorkflow.analyze_prepared_data_sets
 ```
 
 ### 7. Error Handling
 
-**Retry logic:**
+**Group-level retry:**
+
+If `_retry: N` is set on a group, it retries the entire group from the beginning when any child fails:
+
+```yaml
++prepare:
+  # If any child task fails, retry the entire group up to 3 times
+  _retry: 3
+
+  +erase_table:
+    py>: tasks.PrepareWorkflow.erase_table
+
+  +load_data:
+    py>: tasks.PrepareWorkflow.load_data
+
+  +check_loaded_data:
+    py>: tasks.PrepareWorkflow.check_loaded_data
+
++analyze:
+  py>: tasks.AnalyzeWorkflow.analyze_prepared_data_sets
+```
+
+**Task-level retry:**
+
+Individual tasks can also use `_retry: N`, though some operators have their own retry options:
+
 ```yaml
 +query_with_retry:
   td>: queries/important_query.sql
-  retry: 3
-  retry_wait: 30s
+  _retry: 3
 ```
 
-**Error handling tasks:**
+**Retry with intervals:**
+
+Configure retry intervals with exponential or constant backoff:
+
 ```yaml
++prepare:
+  _retry:
+    limit: 3              # Number of retries
+    interval: 10          # Interval in seconds
+    interval_type: exponential  # or "constant"
+
+  +load_data:
+    py>: tasks.PrepareWorkflow.load_data
+```
+
+With `exponential` type:
+- 1st retry: 10 seconds
+- 2nd retry: 20 seconds (10 × 2^1)
+- 3rd retry: 40 seconds (10 × 2^2)
+
+With `constant` type (default):
+- All retries: 10 seconds
+
+**Error handling tasks:**
+
+Use `_error:` to run operators when a workflow fails:
+
+```yaml
+# Runs when workflow fails
+_error:
+  py>: tasks.ErrorWorkflow.runs_when_workflow_failed
+
 +main_task:
   td>: queries/analysis.sql
 
   _error:
     +send_alert:
       sh>: python scripts/send_slack_alert.py "Main task failed"
+
++another_task:
+  py>: tasks.process_data
 ```
 
-**Check tasks (run after completion):**
+**Email notifications on error:**
 ```yaml
-+risky_task:
-  td>: queries/complex_query.sql
-
-  _check:
-    +verify_results:
-      td>:
-        query: |
-          SELECT COUNT(*) as cnt FROM ${td.last_results.table}
-          WHERE cnt > 0
+_error:
+  mail>:
+    from: workflow@example.com
+    to: [alerts@example.com]
+    subject: "Workflow ${task_name} failed"
+    body: "Session: ${session_time}"
 ```
 
-### 8. Parameter Store
+### 8. Defining Variables
 
-Store and retrieve secrets securely:
+**Using `_export:` directive:**
+
+The `_export:` directive defines variables within a scope. Variables are available to the task and all its children:
+
+```yaml
+_export:
+  foo: 1  # Available to all tasks
+
++prepare:
+  py>: tasks.MyWorkflow.prepare
+  # Can use ${foo}
+
++analyze:
+  _export:
+    bar: 2  # Only available to +analyze and its children
+
+  +step1:
+    py>: tasks.MyWorkflow.analyze_step1
+    # Can use ${foo} and ${bar}
+
++dump:
+  py>: tasks.MyWorkflow.dump
+  # Can use ${foo}, but NOT ${bar}
+```
+
+**Key points:**
+- Top-level `_export:` makes variables available to all tasks
+- Task-level `_export:` makes variables available to that task and its children only
+- Built-in variables cannot be overwritten
+
+**Using API (Python):**
+
+Variables can be set programmatically using language APIs:
+
+```python
+import digdag
+
+class MyWorkflow(object):
+  def prepare(self):
+    # store() makes variables available to ALL following tasks
+    digdag.env.store({"my_param": 2})
+
+  def export_and_call_child(self):
+    # export() makes variables available to children only
+    digdag.env.export({"my_param": 2})
+    digdag.env.add_subtask({'_type': 'call', '_command': 'child1.dig'})
+```
+
+**Differences:**
+- `digdag.env.store(dict)` → Available to all following tasks (like task-level variable)
+- `digdag.env.export(dict)` → Available to children only (like `_export:` in YAML)
+
+**Parameter Store (secrets):**
+
+Store and retrieve secrets securely from TD parameter store:
 
 ```yaml
 _export:
   # Reference secrets from TD parameter store
   api_key: ${secret:api_credentials.api_key}
+  db_password: ${secret:database.password}
 
 +call_api:
   py>: scripts.api_caller.main
   api_key: ${api_key}
 ```
 
-### 9. Python Operator
+### 9. Including External Files
+
+Use `!include` to organize complex workflows across multiple files:
+
+```yaml
+_export:
+  mysql:
+    !include : 'config/mysql.dig'
+  hive:
+    !include : 'config/hive.dig'
+
+!include : 'tasks/foo.dig'
+```
+
+**Note:** A whitespace before `:` is required for valid YAML syntax.
+
+**Example structure:**
+```
+my_workflow/
+├── my_workflow.dig
+├── config/
+│   ├── mysql.dig
+│   └── hive.dig
+└── tasks/
+    └── foo.dig
+```
+
+**config/mysql.dig:**
+```yaml
+host: mysql.example.com
+port: 3306
+database: production
+```
+
+**tasks/foo.dig:**
+```yaml
++extract:
+  td>: queries/extract.sql
+
++transform:
+  td>: queries/transform.sql
+```
+
+### 10. Python Operator
 
 Run Python scripts:
 
@@ -268,7 +533,7 @@ def process(database, table):
     return {'processed_count': result}
 ```
 
-### 10. Shell Operator
+### 11. Shell Operator
 
 Run shell commands:
 
@@ -453,43 +718,206 @@ _export:
   download_file: export_${session_date_compact}.csv
 ```
 
+## Workflow Project Structure
+
+A TD workflow project typically follows this structure:
+
+```
+my_workflow/
+├── workflow.dig           # Main workflow definition
+├── queries/              # SQL query files
+│   ├── query1.sql
+│   └── query2.sql
+└── scripts/              # Python/shell scripts (optional)
+    └── process.py
+```
+
+**Key conventions:**
+- Workflow files use `.dig` extension
+- SQL queries are stored in `queries/` directory
+- Python scripts go in `scripts/` directory
+- Project name matches the workflow directory name
+
+## TD CLI Workflow Commands
+
+### Creating and Testing Workflows Locally
+
+**Run workflow once from local machine:**
+```bash
+# Run workflow in TD environment (creates tables/runs queries)
+td wf run my_workflow
+
+# Run from within workflow directory
+cd my_workflow
+td wf run .
+```
+
+**Check workflow syntax:**
+```bash
+# Verify workflow file syntax
+td wf check my_workflow.dig
+```
+
+**Verify created tables:**
+```bash
+# Show table details
+td table:show database_name table_name
+
+# List tables in database
+td table:list database_name
+```
+
+### Pushing and Scheduling Workflows
+
+**Register workflow with TD:**
+```bash
+# Push workflow to TD (registers and schedules if schedule: is defined)
+td wf push my_workflow
+
+# Push from within workflow directory
+cd my_workflow
+td wf push .
+```
+
+**Note:** When you push a workflow with a `schedule:` section, it automatically starts running on that schedule.
+
+### Managing Workflows
+
+**List registered workflows:**
+```bash
+# List all workflow projects
+td wf list
+
+# Show workflows in a specific project
+td wf workflows my_workflow
+
+# Show specific workflow definition
+td wf workflows my_workflow workflow_name
+```
+
+**View workflow execution history:**
+```bash
+# List workflow sessions (runs)
+td wf sessions my_workflow
+
+# Show details of a specific session
+td wf session my_workflow session_id
+
+# View task logs
+td wf log my_workflow session_id +task_name
+```
+
+**Delete workflows:**
+```bash
+# Delete a workflow project
+td wf delete my_workflow
+```
+
+### Database Management
+
+**Create database for workflows:**
+```bash
+# Create a new database
+td db:create database_name
+
+# List databases
+td db:list
+
+# Show database details
+td db:show database_name
+```
+
 ## Best Practices
 
 1. **Use descriptive task names** with `+prefix`
 2. **Always set timezone** at workflow level
 3. **Use session variables** for dynamic dates
-4. **Externalize SQL queries** into separate files for complex queries
+4. **Externalize SQL queries** into separate files in `queries/` directory
 5. **Add error handlers** with `_error:` for critical tasks
 6. **Use retry logic** for potentially flaky operations
 7. **Implement parallel execution** where tasks are independent
 8. **Store secrets** in TD parameter store, not in workflow files
 9. **Add logging** with echo or shell tasks for debugging
-10. **Test workflows** with manual runs before scheduling
-11. **Use `_export`** for common parameters
+10. **Test workflows locally** with `td wf run` before pushing
+11. **Use `_export`** for common parameters (especially `td.database`)
 12. **Document workflows** with comments
+13. **Use `create_table:`** parameter to manage table creation/replacement
+14. **Organize queries** in `queries/` directory, scripts in `scripts/`
+
+## Workflow Development Cycle
+
+The typical workflow development cycle:
+
+1. **Create project directory** with workflow file and queries
+2. **Test locally** - Run with `td wf run` to execute in TD environment
+3. **Iterate** - Edit workflow and queries, re-run to test
+4. **Verify results** - Check created tables with `td table:show`
+5. **Push to TD** - Register and schedule with `td wf push`
+6. **Monitor** - Check execution with `td wf sessions` and `td wf log`
+
+**Example development workflow:**
+```bash
+# Create project directory
+mkdir my_workflow && cd my_workflow
+
+# Create workflow file
+cat > my_workflow.dig << 'EOF'
+timezone: UTC
+schedule:
+  daily>: 02:00:00
+
+_export:
+  td:
+    database: analytics
+
++analyze:
+  td>: queries/analysis.sql
+  create_table: results
+EOF
+
+# Create queries directory
+mkdir queries
+
+# Create query file
+cat > queries/analysis.sql << 'EOF'
+SELECT COUNT(*) as cnt
+FROM events
+WHERE TD_INTERVAL(time, '-1d', 'UTC')
+EOF
+
+# Test workflow locally (runs in TD)
+td wf run .
+
+# Verify table was created
+td table:show analytics results
+
+# Push to TD to schedule
+td wf push .
+```
 
 ## Debugging Workflows
 
-### Local Testing
+### Local Testing with TD CLI
 
-Test workflow syntax locally:
+Test workflow execution:
 ```bash
-# Check syntax
-digdag check workflow.dig
+# Run workflow once in TD environment
+td wf run my_workflow
 
-# Run locally (dry run)
-digdag run workflow.dig --dry-run
+# Check if tables were created
+td table:show database_name table_name
 
-# Run with specific session time
-digdag run workflow.dig -p session_date=2024-01-15
+# View recent job history in TD Console
+# Jobs will appear at: console.treasuredata.com/app/jobs
 ```
 
 ### Common Issues
 
 **"Task failed with exit code 1"**
-- Check task logs in TD console
+- Check task logs in TD console or with `td wf log`
 - Verify SQL syntax if using td> operator
 - Check file paths for external scripts
+- Verify database and table names
 
 **"Session variable not found"**
 - Ensure variable exists in session context
@@ -505,18 +933,34 @@ digdag run workflow.dig -p session_date=2024-01-15
 - Optimize query performance
 - Consider breaking into smaller tasks
 
-### Monitoring
+**"Database not found"**
+- Create database with `td db:create database_name`
+- Verify database name in `_export.td.database`
 
-Check workflow status:
+### Monitoring Workflows
+
+**Check workflow status:**
 ```bash
-# List workflow runs
-digdag workflows
+# List all workflow projects
+td wf list
 
-# Show workflow details
-digdag show <workflow_name>
+# List workflow runs (sessions)
+td wf sessions my_workflow
+
+# Show specific session details
+td wf session my_workflow session_id
 
 # View task logs
-digdag log <session_id> +task_name
+td wf log my_workflow session_id +task_name
+
+# Check job status in TD Console
+# Visit: console.treasuredata.com/app/jobs
+```
+
+**View workflow definition:**
+```bash
+# Show registered workflow
+td wf workflows my_workflow workflow_name
 ```
 
 ## Advanced Features
