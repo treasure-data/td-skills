@@ -75,7 +75,7 @@ td:
       threads: 4
       http_scheme: https
       session_properties:
-        query_max_run_time: 8h
+        query_max_run_time: 1h
 
     prod:
       type: trino
@@ -89,7 +89,7 @@ td:
       threads: 4
       http_scheme: https
       session_properties:
-        query_max_run_time: 8h
+        query_max_run_time: 1h
 ```
 
 **Important TD-specific settings:**
@@ -491,10 +491,10 @@ Connection timeout
 ```
 
 **Solution:**
-Increase session timeout in `profiles.yml`:
+Increase session timeout in `profiles.yml` if needed (default is 1h):
 ```yaml
 session_properties:
-  query_max_run_time: 8h
+  query_max_run_time: 2h  # Increase if queries legitimately need more time
 ```
 
 ### Issue 4: Incremental Model Not Working
