@@ -125,7 +125,7 @@ For incremental models that process new data only:
 {% macro incremental_scan(table_name) -%}
 (
   SELECT * FROM {{ table_name }}
-  WHERE TD_INTERVAL(time, '{{ var('target_range') }}')
+  WHERE TD_INTERVAL(time, '{{ var("target_range", "-3M/now") }}')
 {% if is_incremental() -%}
     AND time > {{ get_max_time(this.table) }}
 {%- endif %}
@@ -136,6 +136,8 @@ For incremental models that process new data only:
   (SELECT MAX(time) FROM {{ table_name }})
 {%- endmacro %}
 ```
+
+**Default behavior:** Scans last 3 months to now (`-3M/now`) if no `target_range` variable is provided.
 
 **Usage in model:**
 ```sql
@@ -155,9 +157,21 @@ SELECT
 FROM {{ incremental_scan('raw_events') }}
 ```
 
-**Run with variable:**
+**Run with default (last 3 months):**
 ```bash
+dbt run --models incremental_events
+```
+
+**Or override with specific range:**
+```bash
+# Yesterday only
 dbt run --vars '{"target_range": "-1d"}' --models incremental_events
+
+# Last 7 days
+dbt run --vars '{"target_range": "-7d/now"}' --models incremental_events
+
+# Specific date range
+dbt run --vars '{"target_range": "2024-01-01/2024-01-31"}' --models incremental_events
 ```
 
 **Note:** No need to create wrapper macros for TD time functions - they're already simple enough to use directly in your SQL.
