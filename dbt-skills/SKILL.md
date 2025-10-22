@@ -65,7 +65,7 @@ td_project:
   outputs:
     dev:
       type: trino
-      method: ldap
+      method: none                          # Use 'none' for API key authentication
       user: "{{ env_var('TD_API_KEY') }}"  # TD API key from environment variable
       password: dummy                       # Password is not used with API key
       host: api-presto.treasuredata.com
@@ -79,6 +79,7 @@ td_project:
 ```
 
 **Important TD-specific settings:**
+- `method`: Set to `none` for API key authentication (not `ldap`)
 - `user`: Use TD API key from `TD_API_KEY` environment variable
 - `password`: Set to `dummy` (not used with API key authentication)
 - `host`: Always `api-presto.treasuredata.com` (even though it's actually Trino)
