@@ -66,12 +66,12 @@ td_project:
     dev:
       type: trino
       method: ldap
-      user: YOUR_TD_EMAIL
-      password: YOUR_TD_PASSWORD
+      user: "{{ env_var('TD_API_KEY') }}"  # TD API key from environment variable
+      password: dummy                       # Password is not used with API key
       host: api-presto.treasuredata.com
       port: 443
-      database: td                    # Always 'td' for Treasure Data
-      schema: your_td_database_name   # Your actual TD database name (e.g., 'production', 'analytics')
+      database: td                          # Always 'td' for Treasure Data
+      schema: your_td_database_name         # Your actual TD database name (e.g., 'production', 'analytics')
       threads: 4
       http_scheme: https
       session_properties:
@@ -79,9 +79,20 @@ td_project:
 ```
 
 **Important TD-specific settings:**
+- `user`: Use TD API key from `TD_API_KEY` environment variable
+- `password`: Set to `dummy` (not used with API key authentication)
 - `host`: Always `api-presto.treasuredata.com` (even though it's actually Trino)
 - `database`: Always set to `td` for Treasure Data
 - `schema`: Set to your actual TD database name (what you see in TD Console)
+
+**Set up your TD API key:**
+```bash
+# Get your API key from TD Console: https://console.treasuredata.com/app/users
+export TD_API_KEY="your_api_key_here"
+
+# Or add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
+echo 'export TD_API_KEY="your_api_key_here"' >> ~/.zshrc
+```
 
 ## Required TD-Specific Overrides
 
