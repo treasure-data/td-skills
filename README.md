@@ -14,25 +14,19 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[sql-skills/hive](./sql-skills/hive)** - Create efficient Hive queries following TD conventions
 - **[sql-skills/trino-optimizer](./sql-skills/trino-optimizer)** - Optimize slow Trino queries, fix timeouts and memory errors, reduce costs
 - **[sql-skills/trino-to-hive-migration](./sql-skills/trino-to-hive-migration)** - Convert Trino queries to Hive to resolve memory errors and handle large datasets
+- **[sql-skills/trino-cli](./sql-skills/trino-cli)** - Use Trino CLI for interactive queries, data exploration, and terminal-based workflows with TD
+- **[sql-skills/td-mcp](./sql-skills/td-mcp)** - Connect Claude Code to TD via MCP server for natural language data exploration and queries
 
 ### Workflow Skills
 
 - **[workflow-skills/digdag](./workflow-skills/digdag)** - Design and implement digdag workflows with proper error handling
 - **[workflow-skills/management](./workflow-skills/management)** - Manage, debug, and optimize existing TD workflows
-
-### dbt Skills
-
-- **[dbt-skills](./dbt-skills)** - Use dbt (data build tool) with TD Trino, includes setup, TD-specific macros, and incremental models
+- **[workflow-skills/dbt](./workflow-skills/dbt)** - Use dbt (data build tool) with TD Trino, includes setup, TD-specific macros, and incremental models
 
 ### SDK Skills
 
 - **[sdk-skills/javascript](./sdk-skills/javascript)** - Import data to TD using the JavaScript SDK for browser-based event tracking and page analytics
 - **[sdk-skills/python](./sdk-skills/python)** - Query and import data using pytd (Python SDK) for analytical workflows, pandas integration, and ETL pipelines
-
-### CLI Skills
-
-- **[cli-skills/trino](./cli-skills/trino)** - Use Trino CLI for interactive queries, data exploration, and terminal-based workflows with TD
-- **[cli-skills/td-mcp](./cli-skills/td-mcp)** - Connect Claude Code to TD via MCP server for natural language data exploration and queries
 
 ### Reference
 
@@ -50,20 +44,16 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 2. **Browse and install plugins:**
 
    Select "Browse and install plugins" from the menu, then choose from:
-   - `sql-skills` - Trino and Hive query assistance
-   - `workflow-skills` - Digdag workflow creation and management
-   - `dbt-skills` - dbt with TD Trino
+   - `sql-skills` - Trino and Hive query assistance, Trino CLI, and TD MCP server
+   - `workflow-skills` - Digdag workflow creation, management, and dbt transformations
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
-   - `cli-skills` - Trino CLI and TD MCP server for Claude Code
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
    ```
    /plugin install sql-skills@td-skills
    /plugin install workflow-skills@td-skills
-   /plugin install dbt-skills@td-skills
    /plugin install sdk-skills@td-skills
-   /plugin install cli-skills@td-skills
    ```
 
 ### Invoking Skills
@@ -73,16 +63,17 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 "Use the Trino skill to extract data from sample_datasets.nasdaq table"
 "Use the Hive skill to write a query for daily user aggregation"
+"Use the Trino CLI skill to help me connect to TD from the terminal"
+"Use the TD MCP skill to set up Claude Code to access my TD databases"
 "Use the digdag skill to create a workflow that runs every morning"
 "Use the workflow-management skill to debug this failing digdag workflow"
+"Use the dbt skill to create an incremental model for user events"
 "Use the JavaScript SDK skill to implement event tracking on my website"
-"Use the pytd skill to query TD from Python and load the results into a pandas DataFrame"
-"Use the Trino CLI skill to help me connect to TD from the terminal and run interactive queries"
-"Use the TD MCP skill to set up Claude Code to access my TD databases"
+"Use the pytd skill to query TD from Python and load results into pandas"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, digdag, workflow-management, JavaScript SDK, pytd, Trino CLI, TD MCP)
+- Include the skill name (Trino, Hive, Trino CLI, TD MCP, digdag, dbt, JavaScript SDK, pytd)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
