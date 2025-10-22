@@ -584,7 +584,103 @@ dbt_project/
 
 ## Integration with TD Workflows
 
-### Digdag + dbt Integration
+### Running dbt with Custom Scripts (Recommended for TD Workflow)
+
+TD Workflow supports running dbt using Custom Scripts with Docker containers. This is the recommended approach for production deployments.
+
+**Create a Python wrapper (`dbt_wrapper.py`):**
+```python
+#!/usr/bin/env python3
+import sys
+from dbt.cli.main import dbtRunner
+
+def run_dbt(command_args):
+    """Run dbt commands using dbtRunner"""
+    dbt = dbtRunner()
+    result = dbt.invoke(command_args)
+
+    if not result.success:
+        sys.exit(1)
+
+    return result
+
+if __name__ == "__main__":
+    # Get command from arguments (e.g., ['run', '--target', 'prod'])
+    command = sys.argv[1:] if len(sys.argv) > 1 else ['run']
+
+    print(f"Running dbt with command: {' '.join(command)}")
+    run_dbt(command)
+```
+
+**Create workflow file (`dbt_workflow.dig`):**
+```yaml
+timezone: Asia/Tokyo
+
+schedule:
+  daily>: 03:00:00
+
+_export:
+  docker:
+    image: "digdag/digdag-python:3.10"
+
+  # Set TD API key from secrets
+  _env:
+    TD_API_KEY: ${secret:td.apikey}
+
++setup:
+  py>: tasks.InstallPackages
+
++dbt_run:
+  py>: dbt_wrapper.run_dbt
+  command_args: ['run', '--target', 'prod']
+
++dbt_test:
+  py>: dbt_wrapper.run_dbt
+  command_args: ['test']
+```
+
+**Create package installer (`tasks.py`):**
+```python
+def InstallPackages():
+    """Install dbt and dependencies at runtime"""
+    import subprocess
+    import sys
+
+    packages = [
+        'dbt-core==1.10.9',
+        'dbt-trino==1.9.3'
+    ]
+
+    for package in packages:
+        subprocess.check_call([
+            sys.executable, '-m', 'pip', 'install', package
+        ])
+```
+
+**Deploy to TD Workflow:**
+```bash
+# 1. Clean dbt artifacts
+dbt clean
+
+# 2. Push to TD Workflow
+td workflow push my_dbt_project
+
+# 3. Set TD API key secret
+td workflow secrets --project my_dbt_project --set td.apikey=YOUR_API_KEY
+
+# 4. Run from TD Console or trigger manually
+td workflow start my_dbt_project dbt_workflow --session now
+```
+
+**Important notes:**
+- Use Docker image: `digdag/digdag-python:3.10`
+- Install dependencies at runtime using `py>: tasks.InstallPackages`
+- Store API key in TD secrets: `${secret:td.apikey}`
+- Include your dbt project files (models, macros, profiles.yml, dbt_project.yml)
+
+### Local Digdag + dbt Integration (Development)
+
+For local development and testing:
 
 ```yaml
 # workflow.dig
