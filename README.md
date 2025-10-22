@@ -29,6 +29,10 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[sdk-skills/javascript](./sdk-skills/javascript)** - Import data to TD using the JavaScript SDK for browser-based event tracking and page analytics
 - **[sdk-skills/python](./sdk-skills/python)** - Query and import data using pytd (Python SDK) for analytical workflows, pandas integration, and ETL pipelines
 
+### CLI Skills
+
+- **[cli-skills/trino](./cli-skills/trino)** - Use Trino CLI for interactive queries, data exploration, and terminal-based workflows with TD
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
@@ -48,7 +52,8 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `sql-skills` - Trino and Hive query assistance
    - `workflow-skills` - Digdag workflow creation and management
    - `dbt-skills` - dbt with TD Trino
-   - `sdk-skills` - TD JavaScript SDK for data import
+   - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
+   - `cli-skills` - Trino CLI for terminal-based queries
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -57,6 +62,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    /plugin install workflow-skills@td-skills
    /plugin install dbt-skills@td-skills
    /plugin install sdk-skills@td-skills
+   /plugin install cli-skills@td-skills
    ```
 
 ### Invoking Skills
@@ -70,10 +76,11 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the workflow-management skill to debug this failing digdag workflow"
 "Use the JavaScript SDK skill to implement event tracking on my website"
 "Use the pytd skill to query TD from Python and load the results into a pandas DataFrame"
+"Use the Trino CLI skill to help me connect to TD from the terminal and run interactive queries"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, digdag, workflow-management, JavaScript SDK, pytd)
+- Include the skill name (Trino, Hive, digdag, workflow-management, JavaScript SDK, pytd, Trino CLI)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 

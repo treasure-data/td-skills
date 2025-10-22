@@ -51,6 +51,15 @@
       ]
     },
     {
+      "name": "cli-skills",
+      "description": "Skills for using command-line tools with Treasure Data including Trino CLI for interactive queries, data exploration, and terminal-based workflows",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./cli-skills/trino"
+      ]
+    },
+    {
       "name": "template-skill",
       "description": "Template for creating new TD-specific Claude Code skills with best practices and standard structure",
       "source": "./",
