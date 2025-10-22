@@ -146,66 +146,7 @@ FROM {{ incremental_scan('raw_events') }}
 dbt run --vars '{"target_range": "-1d"}' --models incremental_events
 ```
 
-### 2. TD Time Range Macro
-
-Simplify time range filtering:
-
-```sql
--- macros/td_time_range.sql
-{% macro td_time_range(time_column, start_date, end_date=none, timezone='JST') -%}
-  {% if end_date %}
-    TD_TIME_RANGE({{ time_column }}, '{{ start_date }}', '{{ end_date }}', '{{ timezone }}')
-  {% else %}
-    TD_TIME_RANGE({{ time_column }}, '{{ start_date }}', '{{ timezone }}')
-  {% endif %}
-{%- endmacro %}
-```
-
-**Usage:**
-```sql
-SELECT *
-FROM events
-WHERE {{ td_time_range('time', '2024-01-01', '2024-01-31') }}
-```
-
-### 3. TD Interval Macro
-
-For relative time ranges:
-
-```sql
--- macros/td_interval.sql
-{% macro td_interval(time_column, interval, timezone='JST') -%}
-  TD_INTERVAL({{ time_column }}, '{{ interval }}', '{{ timezone }}')
-{%- endmacro %}
-```
-
-**Usage:**
-```sql
--- Yesterday's data
-SELECT *
-FROM events
-WHERE {{ td_interval('time', '-1d') }}
-```
-
-### 4. TD Time String Macro
-
-Format timestamps consistently:
-
-```sql
--- macros/td_time_string.sql
-{% macro td_time_string(time_column, format='d!', timezone='JST') -%}
-  TD_TIME_STRING({{ time_column }}, '{{ format }}', '{{ timezone }}')
-{%- endmacro %}
-```
-
-**Usage:**
-```sql
-SELECT
-  {{ td_time_string('time', 'd!') }} as date,
-  COUNT(*) as events
-FROM events
-GROUP BY 1
-```
+**Note:** No need to create wrapper macros for TD time functions - they're already simple enough to use directly in your SQL.
 
 ## dbt Model Patterns for TD
 
@@ -482,10 +423,7 @@ dbt_project/
 ├── profiles.yml (in ~/.dbt/)
 ├── macros/
 │   ├── override_dbt_trino.sql      # Required TD overrides
-│   ├── td_incremental_scan.sql     # Incremental helper
-│   ├── td_time_range.sql           # Time range helper
-│   ├── td_interval.sql             # Interval helper
-│   └── td_time_string.sql          # Time format helper
+│   └── td_incremental_scan.sql     # Optional: Incremental helper
 ├── models/
 │   ├── sources.yml                 # Source definitions
 │   ├── schema.yml                  # Tests and documentation
@@ -500,35 +438,31 @@ dbt_project/
 
 ## Best Practices
 
-1. **Always use macros for TD functions**
-   - Makes queries more maintainable
-   - Easier to change timezone or format globally
-
-2. **Include time filters in all models**
-   - Use TD_INTERVAL or TD_TIME_RANGE
+1. **Include time filters in all models**
+   - Use TD_INTERVAL or TD_TIME_RANGE directly
    - Critical for performance on large tables
 
-3. **Use incremental models wisely**
+2. **Use incremental models wisely**
    - Good for append-only event data
    - Requires careful unique_key selection
    - Test thoroughly before production
 
-4. **Leverage sources**
+3. **Leverage sources**
    - Define all TD tables as sources
    - Enables lineage tracking
    - Centralizes table documentation
 
-5. **Use variables for flexibility**
+4. **Use variables for flexibility**
    - Date ranges
    - Environment-specific settings
    - Makes models reusable
 
-6. **Test your models**
+5. **Test your models**
    - Not null checks on key columns
    - Unique checks on IDs
    - Custom assertions for business logic
 
-7. **Document everything**
+6. **Document everything**
    - Model descriptions
    - Column descriptions
    - Include TD-specific notes
