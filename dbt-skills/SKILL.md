@@ -57,7 +57,7 @@ dbt --version
 
 ### TD Connection Setup
 
-Create `~/.dbt/profiles.yml`:
+Create `profiles.yml` (can be in `~/.dbt/profiles.yml` or at project root):
 
 ```yaml
 td:
@@ -143,6 +143,10 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
+# SSL certificate validation (required for TD)
+flags:
+  require_certificate_validation: true
+
 # Global variable for default time range
 vars:
   target_range: '-3M/now'  # Default: last 3 months to now
@@ -172,11 +176,13 @@ models:
 ```
 
 **Key TD-specific settings:**
+- `flags.require_certificate_validation: true` - Required for SSL validation with TD
 - `vars.target_range: '-3M/now'` - Default time range for all models using the variable
 - `+on_schema_change: "append_new_columns"` - Automatically add new columns to existing tables (prevents rebuild on schema changes)
 - `+views_enabled: false` - Explicitly disable views since TD doesn't support `CREATE VIEW`
 
 **Benefits:**
+- **SSL security**: Ensures certificate validation for secure TD connections
 - **Schema evolution**: New columns are added automatically without dropping tables
 - **Default time window**: All models using `{{ var('target_range') }}` get sensible default
 - **No views**: Prevents accidental view creation attempts
@@ -534,8 +540,8 @@ dbt run --vars '{"target_range": "-1d"}'
 
 ```
 dbt_project/
-├── dbt_project.yml
-├── profiles.yml (in ~/.dbt/)
+├── dbt_project.yml                 # Project config with TD-specific settings
+├── profiles.yml                    # Connection config (or in ~/.dbt/profiles.yml)
 ├── macros/
 │   ├── override_dbt_trino.sql      # Required TD overrides
 │   └── td_incremental_scan.sql     # Optional: Incremental helper
@@ -550,6 +556,10 @@ dbt_project/
 └── tests/
     └── assert_positive_events.sql
 ```
+
+**Note:** `profiles.yml` can be placed either:
+- At project root (recommended for TD Workflow deployments)
+- In `~/.dbt/profiles.yml` (for local development)
 
 ## Best Practices
 
