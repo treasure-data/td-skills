@@ -28,11 +28,6 @@ Use this skill when:
 pip install pytd
 ```
 
-**With Spark Support (for high-performance writes):**
-```bash
-pip install pytd[spark]
-```
-
 **Requirements:**
 - Python 3.9 or later
 - pandas 2.0 or later
@@ -41,7 +36,7 @@ pip install pytd[spark]
 
 **Environment Variables (Recommended):**
 ```bash
-export TD_API_KEY="1/your_api_key_here"
+export TD_API_KEY="(your_api_key_here)"
 export TD_API_SERVER="https://api.treasuredata.com/"
 ```
 
@@ -54,7 +49,7 @@ client = pytd.Client(database='sample_datasets')
 
 # Explicit credentials (not recommended for production)
 client = pytd.Client(
-    apikey='1/your_api_key',
+    apikey='(your_api_key)',
     endpoint='https://api.treasuredata.com/',
     database='your_database',
     default_engine='presto'  # or 'hive'
