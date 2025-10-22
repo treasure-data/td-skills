@@ -95,6 +95,69 @@ export TD_API_KEY="your_api_key_here"
 echo 'export TD_API_KEY="your_api_key_here"' >> ~/.zshrc
 ```
 
+### dbt Project Configuration
+
+Create or update `dbt_project.yml` with TD-specific settings:
+
+```yaml
+name: 'td_project'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'td_project'
+
+# These configurations specify where dbt should look for different types of files.
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Global variable for default time range
+vars:
+  target_range: '-3M/now'  # Default: last 3 months to now
+
+# Model configuration with TD-specific settings
+models:
+  td_project:
+    +materialized: table
+    +on_schema_change: "append_new_columns"  # Auto-add new columns instead of failing
+    +views_enabled: false                     # TD doesn't support views (use tables)
+
+    # Staging models
+    staging:
+      +materialized: table
+      +tags: ["staging"]
+
+    # Marts models
+    marts:
+      +materialized: table
+      +tags: ["marts"]
+
+    # Incremental models
+    incremental:
+      +materialized: incremental
+      +on_schema_change: "append_new_columns"
+      +tags: ["incremental"]
+```
+
+**Key TD-specific settings:**
+- `vars.target_range: '-3M/now'` - Default time range for all models using the variable
+- `+on_schema_change: "append_new_columns"` - Automatically add new columns to existing tables (prevents rebuild on schema changes)
+- `+views_enabled: false` - Explicitly disable views since TD doesn't support `CREATE VIEW`
+
+**Benefits:**
+- **Schema evolution**: New columns are added automatically without dropping tables
+- **Default time window**: All models using `{{ var('target_range') }}` get sensible default
+- **No views**: Prevents accidental view creation attempts
+
 ## Required TD-Specific Overrides
 
 TD's Presto/Trino has limitations that require overriding some dbt-trino macros. You MUST create this file in your dbt project.
