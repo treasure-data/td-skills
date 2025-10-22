@@ -17,7 +17,8 @@
       "skills": [
         "./sql-skills/trino",
         "./sql-skills/hive",
-        "./sql-skills/trino-optimizer"
+        "./sql-skills/trino-optimizer",
+        "./sql-skills/trino-to-hive-migration"
       ]
     },
     {

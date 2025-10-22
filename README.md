@@ -13,6 +13,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[sql-skills/trino](./sql-skills/trino)** - Write and optimize SQL queries for Trino with TD best practices
 - **[sql-skills/hive](./sql-skills/hive)** - Create efficient Hive queries following TD conventions
 - **[sql-skills/trino-optimizer](./sql-skills/trino-optimizer)** - Optimize slow Trino queries, fix timeouts and memory errors, reduce costs
+- **[sql-skills/trino-to-hive-migration](./sql-skills/trino-to-hive-migration)** - Convert Trino queries to Hive to resolve memory errors and handle large datasets
 
 ### Workflow Skills
 
