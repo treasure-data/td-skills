@@ -70,15 +70,18 @@ td_project:
       password: YOUR_TD_PASSWORD
       host: api-presto.treasuredata.com
       port: 443
-      database: your_database
-      schema: your_schema
+      database: td                    # Always 'td' for Treasure Data
+      schema: your_td_database_name   # Your actual TD database name (e.g., 'production', 'analytics')
       threads: 4
       http_scheme: https
       session_properties:
         query_max_run_time: 8h
 ```
 
-**Important:** TD uses `api-presto.treasuredata.com` as the host, even though it's actually Trino.
+**Important TD-specific settings:**
+- `host`: Always `api-presto.treasuredata.com` (even though it's actually Trino)
+- `database`: Always set to `td` for Treasure Data
+- `schema`: Set to your actual TD database name (what you see in TD Console)
 
 ## Required TD-Specific Overrides
 
