@@ -24,6 +24,11 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 - **[dbt-skills](./dbt-skills)** - Use dbt (data build tool) with TD Trino, includes setup, TD-specific macros, and incremental models
 
+### SDK Skills
+
+- **[sdk-skills/javascript](./sdk-skills/javascript)** - Import data to TD using the JavaScript SDK for browser-based event tracking and page analytics
+- **[sdk-skills/python](./sdk-skills/python)** - Query and import data using pytd (Python SDK) for analytical workflows, pandas integration, and ETL pipelines
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
@@ -42,12 +47,16 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    Select "Browse and install plugins" from the menu, then choose from:
    - `sql-skills` - Trino and Hive query assistance
    - `workflow-skills` - Digdag workflow creation and management
+   - `dbt-skills` - dbt with TD Trino
+   - `sdk-skills` - TD JavaScript SDK for data import
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
    ```
    /plugin install sql-skills@td-skills
    /plugin install workflow-skills@td-skills
+   /plugin install dbt-skills@td-skills
+   /plugin install sdk-skills@td-skills
    ```
 
 ### Invoking Skills
@@ -59,10 +68,12 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the Hive skill to write a query for daily user aggregation"
 "Use the digdag skill to create a workflow that runs every morning"
 "Use the workflow-management skill to debug this failing digdag workflow"
+"Use the JavaScript SDK skill to implement event tracking on my website"
+"Use the pytd skill to query TD from Python and load the results into a pandas DataFrame"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, digdag, workflow-management)
+- Include the skill name (Trino, Hive, digdag, workflow-management, JavaScript SDK, pytd)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 

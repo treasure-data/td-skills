@@ -41,6 +41,16 @@
       ]
     },
     {
+      "name": "sdk-skills",
+      "description": "Skills for using Treasure Data SDKs including JavaScript SDK for browser-based event tracking and pytd (Python SDK) for querying data, importing pandas DataFrames, and building analytical pipelines",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./sdk-skills/javascript",
+        "./sdk-skills/python"
+      ]
+    },
+    {
       "name": "template-skill",
       "description": "Template for creating new TD-specific Claude Code skills with best practices and standard structure",
       "source": "./",
