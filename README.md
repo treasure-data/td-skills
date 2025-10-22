@@ -32,6 +32,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 ### CLI Skills
 
 - **[cli-skills/trino](./cli-skills/trino)** - Use Trino CLI for interactive queries, data exploration, and terminal-based workflows with TD
+- **[cli-skills/td-mcp](./cli-skills/td-mcp)** - Connect Claude Code to TD via MCP server for natural language data exploration and queries
 
 ### Reference
 
@@ -53,7 +54,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `workflow-skills` - Digdag workflow creation and management
    - `dbt-skills` - dbt with TD Trino
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
-   - `cli-skills` - Trino CLI for terminal-based queries
+   - `cli-skills` - Trino CLI and TD MCP server for Claude Code
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -77,10 +78,11 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the JavaScript SDK skill to implement event tracking on my website"
 "Use the pytd skill to query TD from Python and load the results into a pandas DataFrame"
 "Use the Trino CLI skill to help me connect to TD from the terminal and run interactive queries"
+"Use the TD MCP skill to set up Claude Code to access my TD databases"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, digdag, workflow-management, JavaScript SDK, pytd, Trino CLI)
+- Include the skill name (Trino, Hive, digdag, workflow-management, JavaScript SDK, pytd, Trino CLI, TD MCP)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 

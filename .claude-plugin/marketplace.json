@@ -52,11 +52,12 @@
     },
     {
       "name": "cli-skills",
-      "description": "Skills for using command-line tools with Treasure Data including Trino CLI for interactive queries, data exploration, and terminal-based workflows",
+      "description": "Skills for using command-line tools with Treasure Data including Trino CLI for interactive queries and TD MCP server for Claude Code integration with natural language data exploration",
       "source": "./",
       "strict": false,
       "skills": [
-        "./cli-skills/trino"
+        "./cli-skills/trino",
+        "./cli-skills/td-mcp"
       ]
     },
     {
