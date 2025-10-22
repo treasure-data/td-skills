@@ -60,7 +60,7 @@ dbt --version
 Create `~/.dbt/profiles.yml`:
 
 ```yaml
-td_project:
+td:
   target: dev
   outputs:
     dev:
@@ -71,7 +71,21 @@ td_project:
       host: api-presto.treasuredata.com
       port: 443
       database: td                          # Always 'td' for Treasure Data
-      schema: your_td_database_name         # Your actual TD database name (e.g., 'production', 'analytics')
+      schema: your_dev_database             # Your dev TD database (e.g., 'dev_analytics')
+      threads: 4
+      http_scheme: https
+      session_properties:
+        query_max_run_time: 8h
+
+    prod:
+      type: trino
+      method: none
+      user: "{{ env_var('TD_API_KEY') }}"
+      password: dummy
+      host: api-presto.treasuredata.com
+      port: 443
+      database: td
+      schema: your_prod_database            # Your prod TD database (e.g., 'production')
       threads: 4
       http_scheme: https
       session_properties:
@@ -95,17 +109,26 @@ export TD_API_KEY="your_api_key_here"
 echo 'export TD_API_KEY="your_api_key_here"' >> ~/.zshrc
 ```
 
+**Switch between dev and prod:**
+```bash
+# Run against dev (default)
+dbt run
+
+# Run against prod
+dbt run --target prod
+```
+
 ### dbt Project Configuration
 
 Create or update `dbt_project.yml` with TD-specific settings:
 
 ```yaml
-name: 'td_project'
+name: 'my_td_project'
 version: '1.0.0'
 config-version: 2
 
 # This setting configures which "profile" dbt uses for this project.
-profile: 'td_project'
+profile: 'td'
 
 # These configurations specify where dbt should look for different types of files.
 model-paths: ["models"]
@@ -126,7 +149,7 @@ vars:
 
 # Model configuration with TD-specific settings
 models:
-  td_project:
+  my_td_project:
     +materialized: table
     +on_schema_change: "append_new_columns"  # Auto-add new columns instead of failing
     +views_enabled: false                     # TD doesn't support views (use tables)
