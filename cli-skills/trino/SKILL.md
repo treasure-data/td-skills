@@ -63,7 +63,7 @@ trino \
 **Using Environment Variable:**
 ```bash
 # Set TD API key as environment variable (recommended)
-export TD_API_KEY="1/your_api_key_here"
+export TD_API_KEY="your_api_key_here"
 
 # Connect using environment variable
 trino \
@@ -153,7 +153,7 @@ echo "SELECT symbol, COUNT(*) as cnt FROM nasdaq GROUP BY symbol LIMIT 10" | \
 
 ```bash
 # Connect to TD
-export TD_API_KEY="1/your_api_key"
+export TD_API_KEY="your_api_key"
 
 trino \
   --server https://api-presto.treasuredata.com \
@@ -202,7 +202,7 @@ trino:analytics> EXIT;
 #!/bin/bash
 # daily_report.sh - Generate daily report from TD
 
-export TD_API_KEY="1/your_api_key"
+export TD_API_KEY="your_api_key"
 TD_SERVER="https://api-presto.treasuredata.com"
 DATABASE="analytics"
 
@@ -241,7 +241,7 @@ rm /tmp/daily_report.sql
 #!/bin/bash
 # etl_pipeline.sh - Run multiple queries in sequence
 
-export TD_API_KEY="1/your_api_key"
+export TD_API_KEY="your_api_key"
 TD_SERVER="https://api-presto.treasuredata.com"
 
 run_query() {
@@ -339,7 +339,7 @@ td-trino analytics          # connects to analytics database
 ### Pattern 5: Formatted Output for Different Use Cases
 
 ```bash
-export TD_API_KEY="1/your_api_key"
+export TD_API_KEY="your_api_key"
 TD_SERVER="https://api-presto.treasuredata.com"
 DATABASE="sample_datasets"
 QUERY="SELECT symbol, COUNT(*) as cnt FROM nasdaq GROUP BY symbol ORDER BY cnt DESC LIMIT 10"
@@ -469,7 +469,7 @@ trino --output-format-interactive ALIGNED
 1. **Always Use Environment Variables for API Keys**
    ```bash
    # In ~/.bashrc or ~/.zshrc
-   export TD_API_KEY="1/your_api_key"
+   export TD_API_KEY="your_api_key"
    ```
    Never hardcode API keys in scripts or commands
 
@@ -571,8 +571,8 @@ trino --output-format-interactive ALIGNED
 **Solutions:**
 1. **Check API Key Format**
    ```bash
-   # TD API keys start with "1/"
-   echo $TD_API_KEY  # Should show: 1/abc123...
+   # Verify API key is set
+   echo $TD_API_KEY  # Should display your API key
    ```
 
 2. **Verify API Key is Set**
@@ -757,7 +757,7 @@ trino \
 #!/bin/bash
 # Run multiple queries in parallel
 
-export TD_API_KEY="1/your_api_key"
+export TD_API_KEY="your_api_key"
 
 run_query() {
     local database=$1

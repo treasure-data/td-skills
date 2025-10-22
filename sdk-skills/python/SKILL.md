@@ -36,7 +36,7 @@ pip install pytd
 
 **Environment Variables (Recommended):**
 ```bash
-export TD_API_KEY="(your_api_key_here)"
+export TD_API_KEY="your_api_key_here"
 export TD_API_SERVER="https://api.treasuredata.com/"
 ```
 
@@ -49,7 +49,7 @@ client = pytd.Client(database='sample_datasets')
 
 # Explicit credentials (not recommended for production)
 client = pytd.Client(
-    apikey='(your_api_key)',
+    apikey='your_api_key',
     endpoint='https://api.treasuredata.com/',
     database='your_database',
     default_engine='presto'  # or 'hive'
@@ -473,7 +473,7 @@ client.load_table_from_dataframe(
 
 1. **Use Environment Variables for Credentials**
    ```bash
-   export TD_API_KEY="1/your_key"
+   export TD_API_KEY="your_api_key"
    export TD_API_SERVER="https://api.treasuredata.com/"
    ```
    Never hardcode API keys in scripts
@@ -589,8 +589,9 @@ client.load_table_from_dataframe(
 
 2. **Check API Key Format**
    ```python
-   # Correct format
-   apikey = '1/abc123...'  # Starts with "1/"
+   # Verify API key is set correctly
+   import os
+   print(os.getenv('TD_API_KEY'))
    ```
 
 3. **Verify Regional Endpoint**
@@ -796,7 +797,7 @@ If you have existing code using the deprecated `pandas-td` library:
 ```python
 import pandas_td as td
 
-con = td.connect(apikey='1/xxx', endpoint='https://api.treasuredata.com/')
+con = td.connect(apikey='your_api_key', endpoint='https://api.treasuredata.com/')
 df = td.read_td('SELECT * FROM sample_datasets.nasdaq', con)
 ```
 
@@ -804,7 +805,7 @@ df = td.read_td('SELECT * FROM sample_datasets.nasdaq', con)
 ```python
 import pytd.pandas_td as td
 
-con = td.connect(apikey='1/xxx', endpoint='https://api.treasuredata.com/')
+con = td.connect(apikey='your_api_key', endpoint='https://api.treasuredata.com/')
 df = td.read_td('SELECT * FROM sample_datasets.nasdaq', con)
 ```
 

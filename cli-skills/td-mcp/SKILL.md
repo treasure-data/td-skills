@@ -71,7 +71,7 @@ npm install -g @treasuredata/mcp-server
 **Quick Setup:**
 ```bash
 # Set your TD API key
-export TD_API_KEY="1/your_api_key_here"
+export TD_API_KEY="your_api_key_here"
 
 # Add TD MCP server to Claude Code
 claude mcp add td -e TD_API_KEY=$TD_API_KEY -- npx @treasuredata/mcp-server
@@ -381,7 +381,7 @@ Lists execution sessions with status and time filtering.
 
 ```bash
 # Step 1: Install and configure TD MCP
-export TD_API_KEY="1/your_api_key"
+export TD_API_KEY="your_api_key"
 claude mcp add td \
   -e TD_API_KEY=$TD_API_KEY \
   -e TD_SITE=us01 \
@@ -548,10 +548,10 @@ In Claude Code:
 7. **Secure API Key Management**
    ```bash
    # Store in environment variable
-   export TD_API_KEY="1/your_key"
+   export TD_API_KEY="your_api_key"
 
    # Or use shell config
-   echo 'export TD_API_KEY="1/your_key"' >> ~/.bashrc
+   echo 'export TD_API_KEY="your_api_key"' >> ~/.bashrc
    ```
 
 8. **Test Queries Interactively**
@@ -601,7 +601,7 @@ node --version  # Should show v18.0.0+
 1. **Verify API Key Format**
    ```bash
    echo $TD_API_KEY
-   # Should show: 1/abc123...
+   # Should display your API key
    ```
 
 2. **Check API Key Permissions**
@@ -816,7 +816,7 @@ Instead of command-line setup, you can manually edit Claude Code's MCP configura
       "command": "npx",
       "args": ["@treasuredata/mcp-server"],
       "env": {
-        "TD_API_KEY": "1/your_api_key",
+        "TD_API_KEY": "your_api_key",
         "TD_SITE": "us01",
         "TD_DATABASE": "sample_datasets",
         "TD_ENABLE_UPDATES": "false"
