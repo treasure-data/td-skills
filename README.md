@@ -20,6 +20,10 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[workflow-skills/digdag](./workflow-skills/digdag)** - Design and implement digdag workflows with proper error handling
 - **[workflow-skills/management](./workflow-skills/management)** - Manage, debug, and optimize existing TD workflows
 
+### dbt Skills
+
+- **[dbt-skills](./dbt-skills)** - Use dbt (data build tool) with TD Trino, includes setup, TD-specific macros, and incremental models
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
