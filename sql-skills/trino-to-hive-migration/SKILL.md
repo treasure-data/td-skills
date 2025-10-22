@@ -28,8 +28,10 @@ Use this skill when:
 - Best for interactive queries on moderate data volumes
 - Fast failures when memory exceeded
 
-**Hive (Slower but More Scalable):**
-- Disk-based MapReduce processing
+**Hive with Tez (Slower but More Scalable):**
+- TD's Hive uses Apache Tez execution engine (not traditional MapReduce)
+- Tez provides faster performance than classic MapReduce
+- Disk-based processing with memory spilling
 - Can handle much larger datasets
 - Spills to disk when memory insufficient
 - More fault-tolerant for large jobs
@@ -116,20 +118,27 @@ WHERE TD_INTERVAL(time, '-1M', 'JST')
 
 ### Approximate Functions
 
-**APPROX_DISTINCT (Trino) → COUNT(DISTINCT) or sampling (Hive):**
+**APPROX_DISTINCT (Compatible via Hivemall!):**
 ```sql
 -- Trino
 SELECT APPROX_DISTINCT(user_id) as unique_users
 
--- Hive Option 1: Exact count (slower but accurate)
+-- Hive: SAME SYNTAX! approx_distinct is available via Hivemall
+SELECT approx_distinct(user_id) as unique_users
+-- Also available as: approx_count_distinct(user_id)
+-- Uses HyperLogLog algorithm, same as Trino
+
+-- Hive Option 2: Exact count (slower but accurate)
 SELECT COUNT(DISTINCT user_id) as unique_users
 
--- Hive Option 2: Sample for estimation
+-- Hive Option 3: Sample for estimation
 SELECT COUNT(DISTINCT user_id) * 10 as estimated_users
 FROM table_name
 WHERE TD_INTERVAL(time, '-1M', 'JST')
   AND rand() < 0.1  -- 10% sample
 ```
+
+**Good news:** `approx_distinct()` works in both Trino and Hive! Hivemall provides this function (along with `approx_count_distinct()` as an alias) using the same HyperLogLog algorithm, so you often don't need to change this function when migrating.
 
 **APPROX_PERCENTILE (Trino) → PERCENTILE (Hive):**
 ```sql
@@ -250,7 +259,7 @@ GROUP BY user_id, TD_TIME_STRING(time, 'd!', 'JST')
 SELECT
   user_id,
   TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date,
-  COUNT(DISTINCT session_id) as sessions,
+  approx_distinct(session_id) as sessions,  -- Hivemall - same as Trino!
   COUNT(*) as events
 FROM events
 WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-12-31', 'JST')
@@ -322,8 +331,9 @@ GROUP BY user_id, session_id, page_url, referrer
 
 | Feature | Trino | Hive |
 |---------|-------|------|
+| Execution engine | In-memory | Tez (optimized MapReduce) |
 | Time formatting | `TD_TIME_STRING(time, 'd!', 'JST')` | `TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST')` |
-| Approximate distinct | `APPROX_DISTINCT(col)` | `COUNT(DISTINCT col)` |
+| Approximate distinct | `APPROX_DISTINCT(col)` | `approx_distinct(col)` (Hivemall - compatible!) |
 | Approximate percentile | `APPROX_PERCENTILE(col, 0.95)` | `PERCENTILE(col, 0.95)` |
 | Array aggregation | `ARRAY_AGG(col)` | `COLLECT_LIST(col)` |
 | String aggregation | `STRING_AGG(col, ',')` | `CONCAT_WS(',', COLLECT_LIST(col))` |
@@ -338,13 +348,15 @@ Before converting from Trino to Hive:
 - [ ] Confirm memory error or timeout in Trino
 - [ ] Try Trino optimization first (time filters, column reduction, APPROX functions)
 - [ ] Replace `TD_TIME_STRING` with `TD_TIME_FORMAT`
-- [ ] Replace `APPROX_DISTINCT` with `COUNT(DISTINCT)` or sampling
+- [ ] Keep `approx_distinct` as-is (compatible via Hivemall!) or use `COUNT(DISTINCT)` for exact counts
 - [ ] Replace `REGEXP_LIKE` with `RLIKE`
 - [ ] Replace `ARRAY_AGG` with `COLLECT_LIST`
 - [ ] Replace `STRING_AGG` with `CONCAT_WS` + `COLLECT_LIST`
 - [ ] Add `/*+ MAPJOIN */` hints for small lookup tables
 - [ ] Test query on small time range first
 - [ ] Verify results match expected output
+
+**Note:** TD's Hive uses Apache Tez for execution (faster than classic MapReduce) and includes Hivemall library for machine learning and approximate functions.
 
 ## Performance Tips for Hive
 
