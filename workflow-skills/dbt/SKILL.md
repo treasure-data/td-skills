@@ -644,7 +644,7 @@ schedule:
 
 _export:
   docker:
-    image: "digdag/digdag-python:3.9.22-td1"
+    image: "treasuredata/customscript-python:3.12.11-td1"
 
   # Set TD API key from secrets
   _env:
@@ -696,7 +696,7 @@ td workflow start my_dbt_project dbt_workflow --session now
 ```
 
 **Important notes:**
-- Use Docker image: `digdag/digdag-python:3.9.22-td1` (latest stable image with Python 3.9)
+- Use Docker image: `treasuredata/customscript-python:3.12.11-td1` (latest stable image with Python 3.12)
 - Install dependencies at runtime using `py>: tasks.InstallPackages`
 - Store API key in TD secrets: `${secret:td.apikey}`
 - Include your dbt project files (models, macros, profiles.yml, dbt_project.yml)
