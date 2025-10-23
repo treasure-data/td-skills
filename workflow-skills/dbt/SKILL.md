@@ -1,5 +1,5 @@
 ---
-name: dbt-trino-td
+name: dbt
 description: Expert guidance for using dbt (data build tool) with Treasure Data Trino. Use this skill when users need help setting up dbt with TD, creating models, using TD-specific macros, handling incremental models, or troubleshooting dbt-trino adapter issues.
 ---
 
