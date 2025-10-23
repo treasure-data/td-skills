@@ -265,19 +265,19 @@ FROM {{ incremental_scan('raw_events') }}
 
 **Run with default (last 3 months):**
 ```bash
-dbt run --models incremental_events
+dbt run --select incremental_events
 ```
 
 **Or override with specific range:**
 ```bash
 # Yesterday only
-dbt run --vars '{"target_range": "-1d"}' --models incremental_events
+dbt run --vars '{"target_range": "-1d"}' --select incremental_events
 
 # Last 7 days
-dbt run --vars '{"target_range": "-7d/now"}' --models incremental_events
+dbt run --vars '{"target_range": "-7d/now"}' --select incremental_events
 
 # Specific date range
-dbt run --vars '{"target_range": "2024-01-01/2024-01-31"}' --models incremental_events
+dbt run --vars '{"target_range": "2024-01-01/2024-01-31"}' --select incremental_events
 ```
 
 **Note:** No need to create wrapper macros for TD time functions - they're already simple enough to use directly in your SQL.
@@ -448,7 +448,7 @@ dbt debug
 dbt run
 
 # Run specific model
-dbt run --models daily_events
+dbt run --select daily_events
 
 # Run with variables
 dbt run --vars '{"target_range": "-7d"}'
@@ -465,13 +465,13 @@ dbt docs serve
 
 ```bash
 # Daily incremental run
-dbt run --models incremental_events --vars '{"target_range": "-1d"}'
+dbt run --select incremental_events --vars '{"target_range": "-1d"}'
 
 # Full refresh
-dbt run --models incremental_events --full-refresh
+dbt run --select incremental_events --full-refresh
 
 # Backfill specific date
-dbt run --models incremental_events --vars '{"target_range": "2024-01-15"}'
+dbt run --select incremental_events --vars '{"target_range": "2024-01-15"}'
 ```
 
 ## Common Issues and Solutions
@@ -729,12 +729,12 @@ _export:
 +run_incremental_models:
   sh>: |
     cd /path/to/dbt_project
-    dbt run --models tag:incremental --vars '{"target_range": "-1d"}'
+    dbt run --select tag:incremental --vars '{"target_range": "-1d"}'
 
 +run_tests:
   sh>: |
     cd /path/to/dbt_project
-    dbt test --models tag:incremental
+    dbt test --select tag:incremental
 
 +notify_completion:
   echo>: "dbt run completed for ${session_date}"
