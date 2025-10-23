@@ -965,6 +965,57 @@ td wf workflows my_workflow workflow_name
 
 ## Advanced Features
 
+### Event-Triggered Workflows
+
+Start a workflow automatically when another workflow completes successfully using the `trigger:` directive:
+
+```yaml
+# subsequent_workflow.dig
+# This workflow waits for test_workflow_1 to complete successfully
+
+trigger:
+  attempt>:
+  dependent_workflow_name: test_workflow_1
+  dependent_project_name: test_project_1
+
++start:
+  echo>: "This runs after test_workflow_1 succeeds"
+
++process:
+  td>: queries/process_data.sql
+  create_table: processed_results
+```
+
+**Key points:**
+- Add `trigger:` directive to the **subsequent workflow** (the one that waits)
+- `attempt>:` parameter is required (allows future expansion of trigger types)
+- `dependent_workflow_name`: Name of the workflow that must complete successfully
+- `dependent_project_name`: Name of the project containing the dependent workflow
+- Triggers only on **success** (not on failure)
+- Works regardless of how the preceding workflow starts (manual, scheduled, or triggered)
+- Cannot wait for multiple workflows (use `td_wait`, `s3_wait`, or `http` operators instead)
+- SLA directive timing starts only after the preceding workflow finishes
+
+**Example use case - Activation after segment refresh:**
+
+```yaml
+# activation_workflow.dig
+# Triggers after daily segment refresh completes
+
+timezone: Asia/Tokyo
+
+trigger:
+  attempt>:
+  dependent_workflow_name: segment_refresh
+  dependent_project_name: customer_segments
+
++activate_campaign:
+  td>: queries/activate_to_destination.sql
+
++send_notification:
+  sh>: python scripts/notify_completion.py
+```
+
 ### Conditional Branching
 
 ```yaml
