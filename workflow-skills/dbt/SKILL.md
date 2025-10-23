@@ -23,20 +23,33 @@ Use this skill when:
 ### Installation
 
 **Recommended: Using uv (modern Python package manager):**
+
+`uv` is a fast, modern Python package and environment manager written in Rust. It's significantly faster than traditional pip and provides better dependency resolution.
+
 ```bash
-# Install uv if not already installed
+# Install uv (choose one):
+# Option 1: Homebrew (recommended for Mac)
+brew install uv
+
+# Option 2: Standalone installer
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Create and activate virtual environment with uv
 uv venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# Install dbt-core and dbt-trino
+# Install dbt-core and dbt-trino (much faster than pip)
 uv pip install dbt-core dbt-trino==1.9.3
 
 # Verify installation
 dbt --version
 ```
+
+**Benefits of uv:**
+- **10-100x faster** than pip for package installation
+- **Better dependency resolution** with clearer error messages
+- **Drop-in replacement** for pip (use `uv pip` instead of `pip`)
+- **Built-in virtual environment management** with `uv venv`
 
 **Alternative: Using traditional pip and venv:**
 ```bash
