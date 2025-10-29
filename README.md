@@ -4,7 +4,7 @@ Treasure Data skills for [Claude Code](https://claude.com/claude-code) to enhanc
 
 ## What Are Skills?
 
-Skills are folders of instructions and resources that Claude loads dynamically to improve performance on specialized tasks. These TD skills teach Claude how to work with our internal tools and best practices.
+Skills are folders of instructions and resources that Claude loads dynamically to improve performance on specialized tasks. These TD skills teach Claude how to use our tools and follow our best practices.
 
 ## Available Skills
 
