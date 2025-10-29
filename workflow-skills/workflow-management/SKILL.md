@@ -3,9 +3,9 @@ name: workflow-management
 description: Expert assistance for managing, debugging, monitoring, and optimizing Treasure Data workflows. Use this skill when users need help troubleshooting workflow failures, improving performance, or implementing workflow best practices.
 ---
 
-# Workflow Management Expert
+# Treasure Workflow Management Expert
 
-Expert assistance for managing and optimizing Treasure Data workflows and digdag pipelines.
+Expert assistance for managing and optimizing Treasure Workflow (Treasure Data's workflow orchestration tool).
 
 ## When to Use This Skill
 
@@ -25,25 +25,16 @@ Use this skill when:
 **Check workflow status:**
 ```bash
 # List all workflows
-digdag workflows
+td wf list
 
-# Show workflow details
-digdag show <workflow_name>
+# Show workflows in a specific project
+td wf workflows <project_name>
 
 # List recent runs
-digdag sessions <workflow_name> --last 10
+td wf sessions <project_name>
 
 # View specific session
-digdag session <session_id>
-```
-
-**Monitor active workflows:**
-```bash
-# Show running sessions
-digdag sessions --running
-
-# Show recent failures
-digdag sessions --failed --last 20
+td wf session <project_name> <session_id>
 ```
 
 ### 2. Debugging Failed Workflows
@@ -51,13 +42,13 @@ digdag sessions --failed --last 20
 **Investigate failure:**
 ```bash
 # Get session details
-digdag session <session_id>
+td wf session <project_name> <session_id>
 
 # View task logs
-digdag log <session_id> +task_name
+td wf log <project_name> <session_id> +task_name
 
 # Get full session logs
-digdag log <session_id>
+td wf log <project_name> <session_id>
 ```
 
 **Common debugging steps:**
@@ -219,7 +210,7 @@ _export:
 ```bash
 # Run workflow for specific dates
 for date in {2024-01-01..2024-01-31}; do
-  digdag run workflow.dig -p session_date=$date
+  td wf run workflow.dig -p session_date=$date
 done
 ```
 
@@ -483,6 +474,7 @@ Quarterly:
 ## Resources
 
 - TD Console: Access workflow logs and monitoring
-- Digdag CLI: Command-line workflow management
+- Treasure Workflow Quick Start: https://docs.treasuredata.com/articles/#!pd/treasure-workflow-quick-start-using-td-toolbelt-in-a-cli
+- td CLI: Command-line workflow management using `td wf` commands
 - Query performance: Use EXPLAIN for query optimization
 - Internal docs: Check TD internal documentation for updates

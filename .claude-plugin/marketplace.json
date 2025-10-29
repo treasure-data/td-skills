@@ -25,12 +25,12 @@
     },
     {
       "name": "workflow-skills",
-      "description": "Workflow orchestration and data transformation skills including digdag workflow creation, management, debugging, optimization, and dbt (data build tool) for Treasure Data Trino",
+      "description": "Treasure Workflow orchestration and data transformation skills including workflow creation, management, debugging, optimization, and dbt (data build tool) for Treasure Data Trino",
       "source": "./",
       "strict": false,
       "skills": [
         "./workflow-skills/digdag",
-        "./workflow-skills/management",
+        "./workflow-skills/workflow-management",
         "./workflow-skills/dbt"
       ]
     },
