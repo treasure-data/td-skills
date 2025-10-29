@@ -17,6 +17,10 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[sql-skills/trino-cli](./sql-skills/trino-cli)** - Use Trino CLI for interactive queries, data exploration, and terminal-based workflows with TD
 - **[sql-skills/td-mcp](./sql-skills/td-mcp)** - Connect Claude Code to TD via MCP server for natural language data exploration and queries
 
+### Realtime Skills
+
+- **[realtime-skills/activations](./realtime-skills/activations)** - Query activation logs to check for errors and view volume for digital marketing activations
+
 ### Workflow Skills
 
 - **[workflow-skills/digdag](./workflow-skills/digdag)** - Design and implement digdag workflows with proper error handling
@@ -45,6 +49,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
    Select "Browse and install plugins" from the menu, then choose from:
    - `sql-skills` - Trino and Hive query assistance, Trino CLI, and TD MCP server
+   - `realtime-skills` - Query activation logs for digital marketing activations
    - `workflow-skills` - Digdag workflow creation, management, and dbt transformations
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `template-skill` - Template for creating new skills
@@ -52,6 +57,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 3. **Or install directly:**
    ```
    /plugin install sql-skills@td-skills
+   /plugin install realtime-skills@td-skills
    /plugin install workflow-skills@td-skills
    /plugin install sdk-skills@td-skills
    ```
@@ -65,6 +71,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the Hive skill to write a query for daily user aggregation"
 "Use the Trino CLI skill to help me connect to TD from the terminal"
 "Use the TD MCP skill to set up Claude Code to access my TD databases"
+"Use the activations skill to query activation logs for parent segment 394649"
 "Use the digdag skill to create a workflow that runs every morning"
 "Use the workflow-management skill to debug this failing digdag workflow"
 "Use the dbt skill to create an incremental model for user events"
@@ -73,7 +80,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, Trino CLI, TD MCP, digdag, dbt, JavaScript SDK, pytd)
+- Include the skill name (Trino, Hive, Trino CLI, TD MCP, activations, digdag, dbt, JavaScript SDK, pytd)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
