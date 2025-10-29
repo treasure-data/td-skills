@@ -1,27 +1,27 @@
 ---
 name: digdag
-description: Expert assistance for designing, implementing, and debugging digdag workflows for Treasure Data. Use this skill when users need help with digdag YAML configuration, workflow orchestration, error handling, or scheduling.
+description: Expert assistance for designing, implementing, and debugging Treasure Workflow (digdag) for Treasure Data. Use this skill when users need help with workflow YAML configuration, workflow orchestration, error handling, or scheduling.
 ---
 
-# Digdag Workflow Expert
+# Treasure Workflow Expert
 
-Expert assistance for creating and managing digdag workflows in Treasure Data environments.
+Expert assistance for creating and managing Treasure Workflow (powered by digdag) in Treasure Data environments.
 
 ## When to Use This Skill
 
 Use this skill when:
-- Creating new digdag workflow definitions
-- Debugging existing digdag workflows
+- Creating new Treasure Workflow definitions
+- Debugging existing Treasure Workflows
 - Implementing error handling and retry logic
 - Setting up workflow schedules and dependencies
 - Optimizing workflow performance
-- Working with digdag operators (td, sh, py, etc.)
+- Working with workflow operators (td, sh, py, etc.)
 
 ## Core Principles
 
 ### 1. Basic Workflow Structure
 
-A digdag workflow is defined in a `.dig` file. **The filename becomes the workflow name** - for example, `hello_world.dig` creates a "hello_world" workflow.
+A Treasure Workflow is defined in a `.dig` file. **The filename becomes the workflow name** - for example, `hello_world.dig` creates a "hello_world" workflow.
 
 ```yaml
 timezone: UTC
@@ -738,7 +738,9 @@ my_workflow/
 - Python scripts go in `scripts/` directory
 - Project name matches the workflow directory name
 
-## TD CLI Workflow Commands
+## Treasure Workflow CLI Commands (td command)
+
+Treasure Workflow uses the `td` command-line tool (Treasure Data Toolbelt) for managing workflows. All workflow operations are performed using `td wf`.
 
 ### Creating and Testing Workflows Locally
 
@@ -1059,7 +1061,8 @@ Call another workflow:
 
 ## Resources
 
-- Digdag documentation: https://docs.digdag.io/
+- Treasure Workflow Quick Start: https://docs.treasuredata.com/articles/#!pd/treasure-workflow-quick-start-using-td-toolbelt-in-a-cli
+- Digdag documentation (underlying engine): https://docs.digdag.io/
 - TD workflow guide: Check internal TD documentation
 - Operator reference: https://docs.digdag.io/operators.html
 - Session variables: https://docs.digdag.io/workflow_definition.html#session-variables
