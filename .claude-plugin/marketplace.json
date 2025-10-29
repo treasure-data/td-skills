@@ -22,6 +22,14 @@
         "./sql-skills/trino-cli",
         "./sql-skills/td-mcp"
       ]
+    }, {
+      "name": "realtime-skills",
+      "description": "Skills related to real time",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./realtime-skills/activations"
+      ]
     },
     {
       "name": "workflow-skills",
