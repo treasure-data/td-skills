@@ -41,9 +41,9 @@ jobs:
           # [Important] For using Bedrock in Claude Code
           AWS_REGION: us-east-1
           # Use Sonnet 4.5 for the default model
-          ANTHROPIC_DEFAULT_SONNET_MODEL: ${BEDROCK_ARN_PREFIX}/9d7sekky2cm6
+          ANTHROPIC_DEFAULT_SONNET_MODEL: ${{ secrets.BEDROCK_ARN_PREFIX }}/9d7sekky2cm6
           # Use Haiku 4.5 for small tasks
-          ANTHROPIC_DEFAULT_HAIKU_MODEL: ${BEDROCK_ARN_PREFIX}/ls66k5wvo4vk
+          ANTHROPIC_DEFAULT_HAIKU_MODEL: ${{ secrets.BEDROCK_ARN_PREFIX }}/ls66k5wvo4vk
         with:
           use_bedrock: "true"
           # This is an optional setting that allows Claude to read CI results on PRs
