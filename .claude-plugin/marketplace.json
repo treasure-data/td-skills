@@ -23,12 +23,12 @@
         "./sql-skills/td-mcp"
       ]
     }, {
-      "name": "rt-skills",
+      "name": "realtime-skills",
       "description": "Skills related to real time",
       "source": "./",
       "strict": false,
       "skills": [
-        "./rt-skills/activations"
+        "./realtime-skills/activations"
       ]
     },
     {
