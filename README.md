@@ -19,8 +19,8 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ### Workflow Skills
 
-- **[workflow-skills/digdag](./workflow-skills/digdag)** - Design and implement digdag workflows with proper error handling
-- **[workflow-skills/management](./workflow-skills/management)** - Manage, debug, and optimize existing TD workflows
+- **[workflow-skills/digdag](./workflow-skills/digdag)** - Design and implement Treasure Workflow with proper error handling
+- **[workflow-skills/workflow-management](./workflow-skills/workflow-management)** - Manage, debug, and optimize existing Treasure Workflows
 - **[workflow-skills/dbt](./workflow-skills/dbt)** - Use dbt (data build tool) with TD Trino, includes setup, TD-specific macros, and incremental models
 
 ### SDK Skills
@@ -45,7 +45,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
    Select "Browse and install plugins" from the menu, then choose from:
    - `sql-skills` - Trino and Hive query assistance, Trino CLI, and TD MCP server
-   - `workflow-skills` - Digdag workflow creation, management, and dbt transformations
+   - `workflow-skills` - Treasure Workflow creation, management, and dbt transformations
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `template-skill` - Template for creating new skills
 
@@ -66,7 +66,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the Trino CLI skill to help me connect to TD from the terminal"
 "Use the TD MCP skill to set up Claude Code to access my TD databases"
 "Use the digdag skill to create a workflow that runs every morning"
-"Use the workflow-management skill to debug this failing digdag workflow"
+"Use the workflow-management skill to debug this failing workflow"
 "Use the dbt skill to create an incremental model for user events"
 "Use the JavaScript SDK skill to implement event tracking on my website"
 "Use the pytd skill to query TD from Python and load results into pandas"
