@@ -32,6 +32,12 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[sdk-skills/javascript](./sdk-skills/javascript)** - Import data to TD using the JavaScript SDK for browser-based event tracking and page analytics
 - **[sdk-skills/python](./sdk-skills/python)** - Query and import data using pytd (Python SDK) for analytical workflows, pandas integration, and ETL pipelines
 
+### Field Agent Skills
+
+- **[field-agent-skills/deployment](./field-agent-skills/deployment)** - Best practices for developing, testing, and deploying production-ready Field Agents including R&D workflows and release management
+- **[field-agent-skills/documentation](./field-agent-skills/documentation)** - Comprehensive templates and guidelines for documenting Field Agents with standardized structure, system prompts, and tool specifications
+- **[field-agent-skills/visualization](./field-agent-skills/visualization)** - Professional Plotly visualization best practices with TD color palette, chart specifications, and formatting standards for executive-ready visualizations
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
@@ -52,6 +58,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `realtime-skills` - Query activation logs for digital marketing activations
    - `workflow-skills` - Treasure Workflow creation, management, and dbt transformations
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
+   - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -60,6 +67,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    /plugin install realtime-skills@td-skills
    /plugin install workflow-skills@td-skills
    /plugin install sdk-skills@td-skills
+   /plugin install field-agent-skills@td-skills
    ```
 
 ### Invoking Skills
@@ -77,10 +85,13 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the dbt skill to create an incremental model for user events"
 "Use the JavaScript SDK skill to implement event tracking on my website"
 "Use the pytd skill to query TD from Python and load results into pandas"
+"Use the deployment skill to set up a production publishing workflow"
+"Use the documentation skill to create comprehensive Field Agent documentation"
+"Use the visualization skill to create a Plotly chart with TD colors"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, Trino CLI, TD MCP, activations, digdag, dbt, JavaScript SDK, pytd)
+- Include the skill name (Trino, Hive, Trino CLI, TD MCP, activations, digdag, dbt, JavaScript SDK, pytd, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
@@ -93,6 +104,8 @@ To add a new TD-specific skill:
    mkdir sql-skills/your-skill-name
    # or
    mkdir workflow-skills/your-skill-name
+   # or
+   mkdir field-agent-skills/your-skill-name
    ```
 
 2. Create a `SKILL.md` file with YAML frontmatter (see [template-skill](./template-skill/SKILL.md))
@@ -107,6 +120,7 @@ To add a new TD-specific skill:
        "./sql-skills/your-skill-name"  // Add your skill path here (must start with ./)
      ]
    }
+
    ```
 
 ## Contributing
