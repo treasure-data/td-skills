@@ -22,13 +22,25 @@
         "./sql-skills/trino-cli",
         "./sql-skills/td-mcp"
       ]
-    }, {
+    },
+    {
       "name": "realtime-skills",
       "description": "Skills related to real time",
       "source": "./",
       "strict": false,
       "skills": [
         "./realtime-skills/activations"
+      ]
+    },
+    {
+      "name": "field-agent-skills",
+      "description": "Field Agent development and production best practices including deployment workflows, documentation standards, and professional Plotly visualization guidelines for creating executive-ready agents",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./field-agent-skills/deployment",
+        "./field-agent-skills/documentation",
+        "./field-agent-skills/visualization"
       ]
     },
     {
