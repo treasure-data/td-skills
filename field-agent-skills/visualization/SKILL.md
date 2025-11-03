@@ -56,6 +56,49 @@ TD_COLORS = [
 - Cycle through colors for multi-series charts
 - Use color scales for heatmaps (DAF1F1 → 8FD6D4 → 44BAB8)
 
+### Color Conversion Helper Function
+
+For charts requiring RGB/RGBA format (e.g., transparency effects):
+
+```python
+def hex_to_rgb(hex_color):
+    """Convert hex color to RGB tuple
+
+    Args:
+        hex_color (str): Hex color code (e.g., '#44BAB8' or '44BAB8')
+
+    Returns:
+        tuple: RGB values as (R, G, B) where each value is 0-255
+
+    Example:
+        >>> hex_to_rgb('#44BAB8')
+        (68, 186, 184)
+    """
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def hex_to_rgba(hex_color, alpha=1.0):
+    """Convert hex color to RGBA string for Plotly
+
+    Args:
+        hex_color (str): Hex color code (e.g., '#44BAB8')
+        alpha (float): Opacity value 0.0-1.0
+
+    Returns:
+        str: RGBA color string (e.g., 'rgba(68, 186, 184, 0.5)')
+
+    Example:
+        >>> hex_to_rgba('#44BAB8', 0.5)
+        'rgba(68, 186, 184, 0.5)'
+    """
+    r, g, b = hex_to_rgb(hex_color)
+    return f'rgba({r}, {g}, {b}, {alpha})'
+
+# Usage examples:
+td_primary_rgb = hex_to_rgb('#44BAB8')  # (68, 186, 184)
+td_primary_transparent = hex_to_rgba('#44BAB8', 0.3)  # 'rgba(68, 186, 184, 0.3)'
+```
+
 ---
 
 ## CRITICAL: JSON Structure Requirements

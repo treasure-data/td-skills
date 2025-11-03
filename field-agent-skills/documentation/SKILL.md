@@ -291,7 +291,7 @@ Document all external requirements and integrations.
 ### Integration Points
 | Integration | Type | Purpose |
 |-------------|------|---------|
-| Treasure Data Presto | SQL Query | Data extraction and analysis |
+| Treasure Data Trino | SQL Query | Data extraction and analysis |
 | Plotly | Visualization Library | Chart generation |
 
 ### Prerequisites
@@ -301,7 +301,7 @@ Document all external requirements and integrations.
 - [ ] Dependencies installed: Plotly for visualizations
 
 ### Dependencies on Other Systems
-- Requires Treasure Data instance with Presto query engine
+- Requires Treasure Data instance with Trino query engine
 - No dependencies on external workflows
 ```
 
@@ -558,7 +558,7 @@ Tool Response: {"segments": [...], "total": 5}
 
 **Knowledge Base Tools:**
 - **List Columns**: Retrieve schema information
-- **Query Data (Presto SQL)**: Execute SQL queries
+- **Query Data (Trino SQL)**: Execute SQL queries
 - **Search Schema**: Find tables/columns (avoid if possible - can be slow)
 
 **Agent Tools:**

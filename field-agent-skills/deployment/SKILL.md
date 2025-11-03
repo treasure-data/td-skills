@@ -129,7 +129,9 @@ fi
 
 # Step 2: Push to production (use your deployment tool)
 echo "Deploying to production instance ${PROD_INSTANCE}..."
-# Example: td-agent-cli push --instance ${PROD_INSTANCE} --agent ${AGENT_NAME}
+# TODO: Replace with your actual deployment command
+# Example placeholder: td-agent-cli push --instance ${PROD_INSTANCE} --agent ${AGENT_NAME}
+# For TD deployments, consult your infrastructure team for the correct deployment tool
 
 echo "Deployment completed successfully!"
 ```
