@@ -32,6 +32,10 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[sdk-skills/javascript](./sdk-skills/javascript)** - Import data to TD using the JavaScript SDK for browser-based event tracking and page analytics
 - **[sdk-skills/python](./sdk-skills/python)** - Query and import data using pytd (Python SDK) for analytical workflows, pandas integration, and ETL pipelines
 
+### TDX CLI Skills
+
+- **[tdx-skills/tdx-basic](./tdx-skills/tdx-basic)** - Core tdx CLI operations for managing TD from command line: databases, tables, queries, and context management
+
 ### Field Agent Skills
 
 - **[field-agent-skills/deployment](./field-agent-skills/deployment)** - Best practices for developing, testing, and deploying production-ready Field Agents including R&D workflows and release management
@@ -58,6 +62,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `realtime-skills` - Query activation logs for digital marketing activations
    - `workflow-skills` - Treasure Workflow creation, management, and dbt transformations
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
+   - `tdx-skills` - tdx CLI for managing TD from command line
    - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
    - `template-skill` - Template for creating new skills
 
@@ -67,6 +72,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    /plugin install realtime-skills@td-skills
    /plugin install workflow-skills@td-skills
    /plugin install sdk-skills@td-skills
+   /plugin install tdx-skills@td-skills
    /plugin install field-agent-skills@td-skills
    ```
 
@@ -85,13 +91,15 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the dbt skill to create an incremental model for user events"
 "Use the JavaScript SDK skill to implement event tracking on my website"
 "Use the pytd skill to query TD from Python and load results into pandas"
+"Use the tdx-basic skill to list all databases in the Tokyo region"
+"Use the tdx skill to query the users table and save results as JSON"
 "Use the deployment skill to set up a production publishing workflow"
 "Use the documentation skill to create comprehensive Field Agent documentation"
 "Use the visualization skill to create a Plotly chart with TD colors"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, Trino CLI, TD MCP, activations, digdag, dbt, JavaScript SDK, pytd, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, Trino CLI, TD MCP, activations, digdag, dbt, JavaScript SDK, pytd, tdx, tdx-basic, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 

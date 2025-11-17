@@ -65,6 +65,15 @@
       ]
     },
     {
+      "name": "tdx-skills",
+      "description": "tdx CLI for managing Treasure Data from the command line including database management, table operations, queries, and context configuration",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./tdx-skills/tdx-basic"
+      ]
+    },
+    {
       "name": "template-skill",
       "description": "Template for creating new TD-specific Claude Code skills with best practices and standard structure",
       "source": "./",
