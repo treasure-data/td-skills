@@ -93,7 +93,7 @@ tdx profiles
 Set temporary overrides for current shell:
 
 ```bash
-# Set session database
+# Set session database (PID-scoped by default)
 tdx use database mydb
 
 # Set session site
@@ -106,7 +106,28 @@ tdx context
 tdx context --clear
 ```
 
-**Note:** Sessions are automatically scoped per terminal window (by PPID).
+**Important:** By default, sessions are scoped per terminal window (by PPID). This means context set in one terminal won't be available in another.
+
+**To persist context across terminals/processes**, use `--session`:
+
+```bash
+# Set context with explicit session name
+tdx --session my-workflow use database analytics
+tdx --session my-workflow use site jp01
+
+# Use the same session from different terminal or script
+tdx --session my-workflow tables
+tdx --session my-workflow query "SELECT * FROM users"
+
+# Clear named session
+tdx --session my-workflow context --clear
+```
+
+**When to use `--session`:**
+- Scripts that span multiple processes
+- Sharing context across multiple terminal windows
+- CI/CD pipelines
+- When you need persistent context beyond current terminal
 
 ### Project Config
 
@@ -359,12 +380,24 @@ WHERE TD_TIME_RANGE(time, '2025-01-01', '2025-01-31')
 
 ### Session Context Not Working Across Terminals
 
-**Expected Behavior:** Sessions are scoped per terminal window (by PPID)
+**Expected Behavior:** Sessions are scoped per terminal window (by PPID) by default.
 
-**Solution:**
-1. Use profiles instead: `tdx use profile prod`
-2. Use project config: Create `tdx.json`
-3. Use explicit session: `tdx --session my-session use database mydb`
+**Solution - Use `--session` for shared context:**
+
+```bash
+# Set context with explicit session name
+tdx --session my-workflow use database mydb
+tdx --session my-workflow use site jp01
+
+# Access from any terminal
+tdx --session my-workflow tables
+```
+
+**Alternative solutions:**
+1. Use profiles: `tdx use profile prod` (switch in each terminal)
+2. Use project config: Create `tdx.json` (automatic per directory)
+
+See the Session Context section above for more details on `--session`.
 
 ## Table-Specific Options
 
