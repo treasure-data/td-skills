@@ -18,15 +18,24 @@ Use this skill when:
 
 ## Installation and Setup
 
-### Quick Start
+### Installation Options
 
 ```bash
-# Run directly with Bun (recommended - always uses latest version)
+# Option 1: Install globally (recommended for regular use)
+npm install -g @treasuredata/tdx
+
+# Option 2: Run with bunx (no installation, always latest)
 bunx @treasuredata/tdx@latest databases
 
-# Or install globally
-npm install -g @treasuredata/tdx
+# Option 3: Run with npx
+npx @treasuredata/tdx@latest databases
+```
+
+After global installation, use `tdx` command directly:
+```bash
 tdx databases
+tdx tables
+tdx query "SELECT * FROM mydb.users"
 ```
 
 ### Configure API Key
@@ -119,16 +128,16 @@ Create `tdx.json` in project root:
 
 ```bash
 # List all databases
-bunx @treasuredata/tdx@latest databases
+tdx databases
 
 # Filter with pattern
-bunx @treasuredata/tdx@latest databases "prod_*"
+tdx databases "prod_*"
 
 # Specify site
-bunx @treasuredata/tdx@latest databases --site jp01
+tdx databases --site jp01
 
 # JSON output
-bunx @treasuredata/tdx@latest databases --json
+tdx databases --json
 ```
 
 Sites: `us01` (default), `jp01`, `eu01`, `ap02`
@@ -137,23 +146,23 @@ Sites: `us01` (default), `jp01`, `eu01`, `ap02`
 
 ```bash
 # List all tables
-bunx @treasuredata/tdx@latest tables
+tdx tables
 
 # Tables from specific database
-bunx @treasuredata/tdx@latest tables "mydb.*"
-bunx @treasuredata/tdx@latest tables --in mydb
-bunx @treasuredata/tdx@latest tables -d mydb
+tdx tables "mydb.*"
+tdx tables --in mydb
+tdx tables -d mydb
 
 # Filter with pattern
-bunx @treasuredata/tdx@latest tables "mydb.user_*"
+tdx tables "mydb.user_*"
 
 # Describe table schema
-bunx @treasuredata/tdx@latest describe mydb.users
-bunx @treasuredata/tdx@latest desc users --in mydb
+tdx describe mydb.users
+tdx desc users --in mydb
 
 # Show table contents
-bunx @treasuredata/tdx@latest show mydb.users --limit 10
-bunx @treasuredata/tdx@latest show users --in mydb
+tdx show mydb.users --limit 10
+tdx show users --in mydb
 ```
 
 **Pattern Syntax:**
@@ -165,16 +174,16 @@ bunx @treasuredata/tdx@latest show users --in mydb
 
 ```bash
 # Execute SQL query
-bunx @treasuredata/tdx@latest query "SELECT * FROM mydb.users LIMIT 10"
+tdx query "SELECT * FROM mydb.users LIMIT 10"
 
 # With database context
-bunx @treasuredata/tdx@latest query "SELECT * FROM users" --database mydb
+tdx query "SELECT * FROM users" --database mydb
 
 # From file
-bunx @treasuredata/tdx@latest query -f query.sql
+tdx query -f query.sql
 
 # Multi-statement from file
-bunx @treasuredata/tdx@latest query -f setup-and-query.sql
+tdx query -f setup-and-query.sql
 ```
 
 **Multi-statement execution:**
@@ -184,19 +193,19 @@ Separate statements with semicolons. Execution stops on first error.
 
 ```bash
 # Table format (default, human-readable)
-bunx @treasuredata/tdx@latest databases
+tdx databases
 
 # JSON (for jq/scripting)
-bunx @treasuredata/tdx@latest databases --json
+tdx databases --json
 
 # JSON Lines (streaming)
-bunx @treasuredata/tdx@latest query "SELECT * FROM users" --jsonl
+tdx query "SELECT * FROM users" --jsonl
 
 # TSV (tab-separated)
-bunx @treasuredata/tdx@latest databases --tsv
+tdx databases --tsv
 
 # Save to file
-bunx @treasuredata/tdx@latest databases --json --output databases.json
+tdx databases --json --output databases.json
 ```
 
 ## Common Patterns
@@ -230,10 +239,10 @@ tdx tables
 
 ```bash
 # Query and pipe to jq
-bunx @treasuredata/tdx@latest query "SELECT * FROM users" --json | jq '.[0]'
+tdx query "SELECT * FROM users" --json | jq '.[0]'
 
 # Query as JSONL and process line by line
-bunx @treasuredata/tdx@latest query "SELECT * FROM users" --jsonl | while read line; do
+tdx query "SELECT * FROM users" --jsonl | while read line; do
   echo "$line" | jq '.name'
 done
 ```
@@ -242,8 +251,8 @@ done
 
 ```bash
 # Check databases in different regions
-bunx @treasuredata/tdx@latest databases --site us01 --json > us_dbs.json
-bunx @treasuredata/tdx@latest databases --site jp01 --json > jp_dbs.json
+tdx databases --site us01 --json > us_dbs.json
+tdx databases --site jp01 --json > jp_dbs.json
 ```
 
 ## Global Options
@@ -268,10 +277,9 @@ Available for all commands:
 2. **Use Profiles** - Define prod/dev/staging profiles for easy switching
 3. **Pattern Matching** - Use wildcards (`*`) to filter databases/tables
 4. **Right Output Format** - JSON/JSONL for scripting, table for review
-5. **Always Use Latest** - Run with `bunx @treasuredata/tdx@latest` for latest features
-6. **Never Commit Keys** - Store API keys in `~/.config/tdx/.env`, not in git
-7. **Test with LIMIT** - Add LIMIT when exploring to avoid long queries
-8. **Use --dry-run** - Preview operations on production
+5. **Never Commit Keys** - Store API keys in `~/.config/tdx/.env`, not in git
+6. **Test with LIMIT** - Add LIMIT when exploring to avoid long queries
+7. **Use --dry-run** - Preview operations on production
 
 ## TD-Specific Conventions
 
@@ -280,7 +288,7 @@ Available for all commands:
 TD uses dot notation: `database_name.table_name`
 
 ```bash
-bunx @treasuredata/tdx@latest show sample_datasets.www_access
+tdx show sample_datasets.www_access
 ```
 
 ### Time-Based Filtering
@@ -289,14 +297,14 @@ For partitioned tables, use time filters for performance:
 
 ```bash
 # Use TD_INTERVAL for relative time
-bunx @treasuredata/tdx@latest query "
+tdx query "
 SELECT COUNT(*)
 FROM mydb.access_logs
 WHERE TD_INTERVAL(time, '-1d', 'JST')
 "
 
 # Use TD_TIME_RANGE for absolute time
-bunx @treasuredata/tdx@latest query "
+tdx query "
 SELECT COUNT(*)
 FROM mydb.access_logs
 WHERE TD_TIME_RANGE(time, '2025-01-01', '2025-01-31', 'JST')
@@ -325,20 +333,20 @@ WHERE TD_TIME_RANGE(time, '2025-01-01', '2025-01-31', 'JST')
 **Error:** "Database 'mydb' does not exist"
 
 **Solution:**
-1. List databases: `bunx @treasuredata/tdx@latest databases`
-2. Check correct site: `bunx @treasuredata/tdx@latest databases --site jp01`
+1. List databases: `tdx databases`
+2. Check correct site: `tdx databases --site jp01`
 3. Use correct name in query
 
 ### Pattern Matching Not Working
 
 **Solution:**
-1. Always quote patterns: `bunx @treasuredata/tdx@latest tables "prod_*"`
-2. Or use `--in` flag: `bunx @treasuredata/tdx@latest tables --in mydb`
+1. Always quote patterns: `tdx tables "prod_*"`
+2. Or use `--in` flag: `tdx tables --in mydb`
 
 ### Query Timeout
 
 **Solution:**
-1. Increase timeout: `bunx @treasuredata/tdx@latest query "..." --timeout 300`
+1. Increase timeout: `tdx query "..." --timeout 300`
 2. Add LIMIT clause
 3. Use TD_INTERVAL/TD_TIME_RANGE for partition pruning
 
@@ -360,9 +368,9 @@ For table commands (tables, describe, show):
 
 ```bash
 # All equivalent
-bunx @treasuredata/tdx@latest tables "mydb.*"
-bunx @treasuredata/tdx@latest tables --in mydb
-bunx @treasuredata/tdx@latest tables -d mydb
+tdx tables "mydb.*"
+tdx tables --in mydb
+tdx tables -d mydb
 ```
 
 ## Query-Specific Options
