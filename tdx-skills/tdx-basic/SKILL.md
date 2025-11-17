@@ -296,26 +296,33 @@ tdx show sample_datasets.www_access
 For partitioned tables, use time filters for performance:
 
 ```bash
-# Use TD_INTERVAL for relative time
+# Use TD_INTERVAL for relative time (UTC default)
+tdx query "
+SELECT COUNT(*)
+FROM mydb.access_logs
+WHERE TD_INTERVAL(time, '-1d')
+"
+
+# With explicit timezone for Japan data
 tdx query "
 SELECT COUNT(*)
 FROM mydb.access_logs
 WHERE TD_INTERVAL(time, '-1d', 'JST')
 "
 
-# Use TD_TIME_RANGE for absolute time
+# Use TD_TIME_RANGE for absolute time (UTC default)
 tdx query "
 SELECT COUNT(*)
 FROM mydb.access_logs
-WHERE TD_TIME_RANGE(time, '2025-01-01', '2025-01-31', 'JST')
+WHERE TD_TIME_RANGE(time, '2025-01-01', '2025-01-31')
 "
 ```
 
 ### Timezone
 
-- Use `JST` for Japan data
-- Use `UTC` for other regions
-- Always specify timezone in TD time functions
+- **UTC is the default** - timezone parameter can be omitted
+- **JST for Japan data** - must specify explicitly: `TD_INTERVAL(time, '-1d', 'JST')`
+- Other timezones must be explicitly specified
 
 ## Common Issues
 
