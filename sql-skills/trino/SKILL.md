@@ -126,7 +126,7 @@ TD_TIME_STRING(time, 's', 'UTC')      -- Returns: 2018-09-13 16:45:34+0000
 - `h!` = yyyy-MM-dd HH (hour)
 - `m!` = yyyy-MM-dd HH:mm (minute)
 - `s!` = yyyy-MM-dd HH:mm:ss (second)
-- Without `!` includes timezone offset
+- Without the exclamation mark suffix, timezone offset is included
 
 **TD_TIME_FORMAT** - Format timestamps (Legacy, use TD_TIME_STRING instead):
 ```sql
