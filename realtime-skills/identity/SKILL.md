@@ -66,7 +66,7 @@ For the oldest profile the others are merged into the profile_change_type is pro
 If the user does not specify a time range assume the last 24 hours. Use a where clause like `TD_INTERVAL(time, '-1d/now')`
 
 Rather than show the time as a timestamp it is useful to convert it to a human friendly string using TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm:ss', 'GMT'). The user may specify a different time zone.
-Sample trino/presto to get 8 hours of logs.
+Sample trino/presto query to get 8 hours of logs.
 
 ```
 select TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm:ss', 'PST'), *
