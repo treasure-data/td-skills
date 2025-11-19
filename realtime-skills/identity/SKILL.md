@@ -29,7 +29,7 @@ The id_changes log table is always called id_changes and is in the Parent Segmen
 
 ## Schema
 
-The activations table has the following schema. The format is of the schema below is:
+The id_changes table has the following schema. The format of the schema below is:
 
 column name, type, description
 time, int, unix timestamp of when the record was logged
