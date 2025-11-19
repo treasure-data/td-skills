@@ -7,13 +7,13 @@ description: Query identity change logs to explore profile creation and merging
 
 This skill is used when the user asks about identity stitching, id stitching or wants to explore real time profiles. It involves querying a table called id_changes which is a log updated by the application when id changes occur.
 
-Treasue Data's real time service includes creation and management of real time profiles. Profiles are updated based on a stream of event records that contain one or more "id stitching key" properties. The identity of a profile consists of both an internal Rid (real time Id) and one or more stitching keys. The system creates new profiles when the keys are all unique. It updates a profile when a new key is found that was not previously associated with other keys in the record. It can also stitch multiple profiles together when we find that keys in the record exist in two or more existing profiles. We combine the profiles together and the rid with the earliest date is the kept whilst the other profiles are merged and deleted. 
+Treasure Data's real time service includes creation and management of real time profiles. Profiles are updated based on a stream of event records that contain one or more "id stitching key" properties. The identity of a profile consists of both an internal Rid (real time Id) and one or more stitching keys. The system creates new profiles when the keys are all unique. It updates a profile when a new key is found that was not previously associated with other keys in the record. It can also stitch multiple profiles together when we find that keys in the record exist in two or more existing profiles. We combine the profiles together and the rid with the earliest date is the kept whilst the other profiles are merged and deleted. 
 
 # Description
 
 ## Requirements
 
-In order to query the id changes log we must know the parent segment the customer is interested in. A customer may have a number of parent segments so we must ask them to provide the one they are interested before making a query. A segment ID will be a numeric value like 411671.
+In order to query the id changes log we must know the parent segment the customer is interested in. A customer may have a number of parent segments so we must ask them to provide the one they are interested in before making a query. A segment ID will be a numeric value like 411671.
 
 The user must also have a correctly configured tdx-skill or the Treasure Data mcp server (@treasuredata/mcp-server) to enable the database lookup.
 
@@ -29,7 +29,7 @@ The id_changes log table is always called id_changes and is in the Parent Segmen
 
 ## Schema
 
-The activations table has the following schema. The format is of the schema below is:
+The id_changes table has the following schema. The format of the schema below is:
 
 column name, type, description
 time, int, unix timestamp of when the record was logged
@@ -50,7 +50,7 @@ When you see profile_change_type is profile_added that means a new profile is cr
 
 ### Updated profiles
 
-Sometimes you may see profile_change_type is profile_updated_by_stitching and merged_rids is just an empty array. This means a profile was update but it is not useful information for identity purposes.
+Sometimes you may see profile_change_type is profile_updated_by_stitching and merged_rids is just an empty array. This means a profile was updated but it is not useful information for identity purposes.
 
 ### Merged profiles
 
@@ -66,7 +66,7 @@ For the oldest profile the others are merged into the profile_change_type is pro
 If the user does not specify a time range assume the last 24 hours. Use a where clause like `TD_INTERVAL(time, '-1d/now')`
 
 Rather than show the time as a timestamp it is useful to convert it to a human friendly string using TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm:ss', 'GMT'). The user may specify a different time zone.
-Sample trino/presto to get 8 hours of logs.
+Sample trino/presto query to get 8 hours of logs.
 
 ```
 select TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm:ss', 'PST'), *
