@@ -29,7 +29,8 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./realtime-skills/activations"
+        "./realtime-skills/activations",
+        "./realtime-skills/identity"
       ]
     },
     {

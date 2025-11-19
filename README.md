@@ -20,6 +20,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 ### Realtime Skills
 
 - **[realtime-skills/activations](./realtime-skills/activations)** - Query activation logs to check for errors and view volume for digital marketing activations
+- **[realtime-skills/identity](./realtime-skills/identity)** - Query id change logs to get information about new, updated and merged realtime profiles
 
 ### Workflow Skills
 
