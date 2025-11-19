@@ -50,7 +50,7 @@ When you see profile_change_type is profile_added that means a new profile is cr
 
 ### Updated profiles
 
-Sometimes you may see profile_change_type is profile_updated_by_stitching and merged_rids is just an empty array. This means a profile was update but it is not useful information for identity purposes.
+Sometimes you may see profile_change_type is profile_updated_by_stitching and merged_rids is just an empty array. This means a profile was updated but it is not useful information for identity purposes.
 
 ### Merged profiles
 
