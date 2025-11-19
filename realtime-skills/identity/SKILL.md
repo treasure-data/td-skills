@@ -13,7 +13,7 @@ Treasure Data's real time service includes creation and management of real time 
 
 ## Requirements
 
-In order to query the id changes log we must know the parent segment the customer is interested in. A customer may have a number of parent segments so we must ask them to provide the one they are interested before making a query. A segment ID will be a numeric value like 411671.
+In order to query the id changes log we must know the parent segment the customer is interested in. A customer may have a number of parent segments so we must ask them to provide the one they are interested in before making a query. A segment ID will be a numeric value like 411671.
 
 The user must also have a correctly configured Treasure Data mcp server to enable the database lookup @treasuredata/mcp-server
 
