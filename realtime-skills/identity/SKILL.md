@@ -15,7 +15,7 @@ Treasue Data's real time service includes creation and management of real time p
 
 In order to query the id changes log we must know the parent segment the customer is interested in. A customer may have a number of parent segments so we must ask them to provide the one they are interested before making a query. A segment ID will be a numeric value like 411671.
 
-The user must also have a correctly configured Treasure Data mcp server to enable the database lookup @treasuredata/mcp-server
+The user must also have a correctly configured tdx-skill or the Treasure Data mcp server (@treasuredata/mcp-server) to enable the database lookup.
 
 In addition the api key with appropriate access to the database table should be available and configured.
 
