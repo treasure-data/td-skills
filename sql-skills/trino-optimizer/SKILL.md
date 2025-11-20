@@ -17,6 +17,7 @@ Use this skill when:
 - Reducing query costs
 - Analyzing query execution plans
 - Joins between large and small tables need optimization (use Magic Comments)
+- Frequent ID lookups on large tables (>100M rows) need optimization (use UDP)
 
 ## Core Optimization Principles
 

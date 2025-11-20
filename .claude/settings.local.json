@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:td-public.redocly.app)",
+      "WebSearch",
+      "mcp__playwright__browser_navigate"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
