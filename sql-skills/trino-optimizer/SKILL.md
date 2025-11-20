@@ -16,6 +16,8 @@ Use this skill when:
 - Debugging PAGE_TRANSPORT_TIMEOUT errors
 - Reducing query costs
 - Analyzing query execution plans
+- Joins between large and small tables need optimization (use Magic Comments)
+- Frequent ID lookups on large tables (>100M rows) need optimization (use UDP)
 
 ## Core Optimization Principles
 
@@ -156,6 +158,30 @@ JOIN (
 WHERE TD_INTERVAL(e.time, '-1d', 'JST')
 ```
 
+**Magic Comments for Join Distribution:**
+
+When joins fail with memory errors or run slowly, use magic comments to control join algorithm.
+
+```sql
+-- BROADCAST: Small right table fits in memory
+-- set session join_distribution_type = 'BROADCAST'
+SELECT *
+FROM large_table, small_lookup
+WHERE large_table.id = small_lookup.id
+```
+
+**Use BROADCAST when:** Right table is very small and fits in memory. Avoids partitioning overhead but uses more memory per node.
+
+```sql
+-- PARTITIONED: Both tables large or memory issues
+-- set session join_distribution_type = 'PARTITIONED'
+SELECT *
+FROM large_table_a, large_table_b
+WHERE large_table_a.id = large_table_b.id
+```
+
+**Use PARTITIONED when:** Both tables are large or right table doesn't fit in memory. Default algorithm that reduces memory per node.
+
 **Tips:**
 - Always include time filters on all tables in JOIN
 - Consider using IN or EXISTS for single-column lookups
@@ -199,6 +225,56 @@ SELECT
 FROM events
 WHERE TD_INTERVAL(time, '-1d', 'JST')
 ```
+
+### 9. User-Defined Partitioning (UDP)
+
+Hash partition tables on frequently queried columns for fast ID lookups and large joins.
+
+```sql
+-- Create UDP table with bucketing on customer_id
+CREATE TABLE customer_events WITH (
+  bucketed_on = array['customer_id'],
+  bucket_count = 512
+) AS
+SELECT * FROM raw_events
+WHERE TD_INTERVAL(time, '-30d', 'JST')
+```
+
+**When to use UDP:**
+- Fast lookups by specific IDs (needle-in-a-haystack queries)
+- Aggregations on specific columns
+- Very large joins on same keys
+- Tables with >100M rows
+
+**Choosing bucketing columns:**
+- High cardinality: `customer_id`, `user_id`, `email`, `account_number`
+- Frequently used with equality predicates (`WHERE customer_id = 12345`)
+- Supported types: int, long, string
+- Maximum 3 columns
+
+```sql
+-- Accelerated: Equality on all bucketing columns
+SELECT * FROM customer_events
+WHERE customer_id = 12345
+  AND TD_INTERVAL(time, '-7d', 'JST')
+
+-- NOT accelerated: Missing bucketing column
+SELECT * FROM customer_events
+WHERE TD_INTERVAL(time, '-7d', 'JST')
+```
+
+**UDP for large joins:**
+```sql
+-- Both tables bucketed on same key enables colocated join
+-- set session join_distribution_type = 'PARTITIONED'
+-- set session colocated_join = 'true'
+SELECT a.*, b.*
+FROM customer_events_a a
+JOIN customer_events_b b ON a.customer_id = b.customer_id
+WHERE TD_INTERVAL(a.time, '-1d', 'JST')
+```
+
+**Impact:** UDP scans only relevant buckets, dramatically improving performance for ID lookups and reducing memory for large joins.
 
 ## Common Performance Issues
 
