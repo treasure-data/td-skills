@@ -415,7 +415,7 @@ For query command:
 ## Complete Command Reference
 
 For full command list and advanced features, visit:
-**https://www.npmjs.com/package/@treasuredata/tdx**
+**https://tdx.treasuredata.com/**
 
 Additional commands available:
 - Job management (submit, list, kill, results)
