@@ -294,13 +294,14 @@ Available for all commands:
 
 ## Best Practices
 
-1. **Use Context Management** - Set database/profile once instead of repeating flags
-2. **Use Profiles** - Define prod/dev/staging profiles for easy switching
-3. **Pattern Matching** - Use wildcards (`*`) to filter databases/tables
-4. **Right Output Format** - JSON/JSONL for scripting, table for review
-5. **Never Commit Keys** - Store API keys in `~/.config/tdx/.env`, not in git
-6. **Test with LIMIT** - Add LIMIT when exploring to avoid long queries
-7. **Use --dry-run** - Preview operations on production
+1. **Always Use Time Filters** - Most TD data is time-series. Use `TD_INTERVAL` or `TD_TIME_RANGE` for partition pruning and better performance
+2. **Use Context Management** - Set database/profile once instead of repeating flags
+3. **Use Profiles** - Define prod/dev/staging profiles for easy switching
+4. **Pattern Matching** - Use wildcards (`*`) to filter databases/tables
+5. **Right Output Format** - JSON/JSONL for scripting, table for review
+6. **Never Commit Keys** - Store API keys in `~/.config/tdx/.env`, not in git
+7. **Test with LIMIT** - Add LIMIT when exploring to avoid long queries
+8. **Use --dry-run** - Preview operations on production
 
 ## TD-Specific Conventions
 
