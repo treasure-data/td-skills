@@ -40,6 +40,32 @@ tdx query "SELECT * FROM mydb.users"
 
 ### Configure API Key
 
+**Recommended: Use the interactive setup command**
+
+```bash
+# Interactive setup with site selection
+tdx auth setup
+
+# Or specify site directly
+tdx auth setup --site jp01
+
+# Set up profile-specific authentication
+tdx auth setup --profile work --site eu01
+```
+
+The setup command will:
+- Guide you through site selection
+- Securely prompt for your API key (hidden input)
+- Validate the API key before saving
+- Save to `~/.config/tdx/.env` (or `.env.{profile}` for profiles)
+
+**Check authentication status:**
+```bash
+tdx auth
+```
+
+**Alternative: Manual configuration**
+
 Create `~/.config/tdx/.env`:
 
 ```bash
@@ -50,6 +76,31 @@ Or use environment variable:
 ```bash
 export TD_API_KEY=your-key-id/your-key-secret
 ```
+
+### Getting Help
+
+Use the `--help` option with any tdx command to learn more about its usage, options, and examples:
+
+```bash
+# Get help for the main tdx command
+tdx --help
+
+# Get help for specific commands
+tdx auth setup --help
+tdx databases --help
+tdx query --help
+tdx segment --help
+
+# Get help for subcommands
+tdx workflow --help
+tdx llm agent --help
+```
+
+The `--help` output includes:
+- Command description and usage syntax
+- Available options and flags
+- Command-specific examples
+- Related commands and documentation links
 
 ## Context Management
 
@@ -352,9 +403,11 @@ WHERE TD_TIME_RANGE(time, '2025-01-01', '2025-01-31')
 **Error:** "TD_API_KEY not found"
 
 **Solution:**
-1. Create `~/.config/tdx/.env` with `TD_API_KEY=key_id/key_secret`
-2. Or: `export TD_API_KEY=key_id/key_secret`
-3. Verify format: `key_id/key_secret` (not just key_id)
+1. Run the interactive setup: `tdx auth setup`
+2. Or manually create `~/.config/tdx/.env` with `TD_API_KEY=key_id/key_secret`
+3. Or: `export TD_API_KEY=key_id/key_secret`
+4. Verify format: `key_id/key_secret` (not just key_id)
+5. Check authentication status: `tdx auth`
 
 ### Database Not Found
 
