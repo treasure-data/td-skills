@@ -383,13 +383,6 @@ WHERE TD_TIME_RANGE(time, '2025-01-01', '2025-01-31')
 1. Always quote patterns: `tdx tables "prod_*"`
 2. Or use `--in` flag: `tdx tables --in mydb`
 
-### Query Timeout
-
-**Solution:**
-1. Increase timeout: `tdx query "..." --timeout 300`
-2. Add LIMIT clause
-3. Use TD_INTERVAL/TD_TIME_RANGE for partition pruning
-
 ## Table-Specific Options
 
 For table commands (tables, describe, show):
