@@ -77,6 +77,31 @@ Or use environment variable:
 export TD_API_KEY=your-key-id/your-key-secret
 ```
 
+### Getting Help
+
+Use the `--help` option with any tdx command to learn more about its usage, options, and examples:
+
+```bash
+# Get help for the main tdx command
+tdx --help
+
+# Get help for specific commands
+tdx auth setup --help
+tdx databases --help
+tdx query --help
+tdx segment --help
+
+# Get help for subcommands
+tdx workflow --help
+tdx llm agent --help
+```
+
+The `--help` output includes:
+- Command description and usage syntax
+- Available options and flags
+- Command-specific examples
+- Related commands and documentation links
+
 ## Context Management
 
 tdx context is resolved with this priority:
