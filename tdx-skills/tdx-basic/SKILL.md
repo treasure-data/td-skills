@@ -18,20 +18,13 @@ Use this skill when:
 
 ## Installation and Setup
 
-### Installation Options
+### Installation
 
 ```bash
-# Option 1: Install globally (recommended for regular use)
 npm install -g @treasuredata/tdx
-
-# Option 2: Run with bunx (no installation, always latest)
-bunx @treasuredata/tdx@latest databases
-
-# Option 3: Run with npx
-npx @treasuredata/tdx@latest databases
 ```
 
-After global installation, use `tdx` command directly:
+After installation, use `tdx` command directly:
 ```bash
 tdx databases
 tdx tables
@@ -43,24 +36,14 @@ tdx query "SELECT * FROM mydb.users"
 **Recommended: Use the interactive setup command**
 
 ```bash
-# Interactive setup with site selection
+# Interactive setup (single account)
 tdx auth setup
 
-# Or specify site directly
-tdx auth setup --site jp01
+# Or use profiles for multiple accounts (e.g., dev/prod)
+tdx auth setup --profile development
+tdx auth setup --profile production
 
-# Set up profile-specific authentication
-tdx auth setup --profile work --site eu01
-```
-
-The setup command will:
-- Guide you through site selection
-- Securely prompt for your API key (hidden input)
-- Validate the API key before saving
-- Save to `~/.config/tdx/.env` (or `.env.{profile}` for profiles)
-
-**Check authentication status:**
-```bash
+# Check authentication status
 tdx auth
 ```
 
@@ -79,28 +62,12 @@ export TD_API_KEY=your-key-id/your-key-secret
 
 ### Getting Help
 
-Use the `--help` option with any tdx command to learn more about its usage, options, and examples:
+Use the `--help` option with any tdx command to learn about its usage, options, and examples:
 
 ```bash
-# Get help for the main tdx command
 tdx --help
-
-# Get help for specific commands
-tdx auth setup --help
-tdx databases --help
 tdx query --help
-tdx segment --help
-
-# Get help for subcommands
-tdx workflow --help
-tdx llm agent --help
 ```
-
-The `--help` output includes:
-- Command description and usage syntax
-- Available options and flags
-- Command-specific examples
-- Related commands and documentation links
 
 ## Context Management
 
@@ -144,7 +111,7 @@ tdx profiles
 Set temporary overrides for current shell:
 
 ```bash
-# Set session database (PID-scoped by default)
+# Set session database
 tdx use database mydb
 
 # Set session site
@@ -156,29 +123,6 @@ tdx context
 # Clear session
 tdx context --clear
 ```
-
-**Important:** By default, sessions are scoped per terminal window (by PPID). This means context set in one terminal won't be available in another.
-
-**To persist context across terminals/processes**, use `--session`:
-
-```bash
-# Set context with explicit session name
-tdx --session my-workflow use database analytics
-tdx --session my-workflow use site jp01
-
-# Use the same session from different terminal or script
-tdx --session my-workflow tables
-tdx --session my-workflow query "SELECT * FROM users"
-
-# Clear named session
-tdx --session my-workflow context --clear
-```
-
-**When to use `--session`:**
-- Scripts that span multiple processes
-- Sharing context across multiple terminal windows
-- CI/CD pipelines
-- When you need persistent context beyond current terminal
 
 ### Project Config
 
@@ -217,24 +161,23 @@ Sites: `us01` (default), `jp01`, `eu01`, `ap02`
 ### Tables
 
 ```bash
-# List all tables
+# Set database context first (recommended)
+tdx use database mydb
+
+# Then list tables without repeating database
 tdx tables
-
-# Tables from specific database
-tdx tables "mydb.*"
-tdx tables --in mydb
-tdx tables -d mydb
-
-# Filter with pattern
-tdx tables "mydb.user_*"
+tdx tables "user_*"
 
 # Describe table schema
-tdx describe mydb.users
-tdx desc users --in mydb
+tdx describe users
 
 # Show table contents
-tdx show mydb.users --limit 10
-tdx show users --in mydb
+tdx show users --limit 10
+
+# Alternative: specify database inline
+tdx tables "mydb.*"
+tdx tables --in mydb
+tdx describe mydb.users
 ```
 
 **Pattern Syntax:**
@@ -251,11 +194,16 @@ tdx query "SELECT * FROM mydb.users LIMIT 10"
 # With database context
 tdx query "SELECT * FROM users" --database mydb
 
-# From file
+# From file (recommended for complex queries)
 tdx query -f query.sql
 
 # Multi-statement from file
 tdx query -f setup-and-query.sql
+```
+
+**Best Practice:** For complex or multi-line SQL queries, save to a file and use `-f` option:
+```bash
+tdx query -f my_complex_query.sql
 ```
 
 **Multi-statement execution:**
@@ -331,6 +279,7 @@ tdx databases --site jp01 --json > jp_dbs.json
 
 Available for all commands:
 
+- `--profile <name>` - Use specific profile configuration
 - `--site <site>` - TD site/region (us01, jp01, eu01, ap02)
 - `--format <format>` - Output format (table, json, jsonl, tsv)
 - `--json` - JSON output (shorthand)
@@ -345,13 +294,14 @@ Available for all commands:
 
 ## Best Practices
 
-1. **Use Context Management** - Set database/profile once instead of repeating flags
-2. **Use Profiles** - Define prod/dev/staging profiles for easy switching
-3. **Pattern Matching** - Use wildcards (`*`) to filter databases/tables
-4. **Right Output Format** - JSON/JSONL for scripting, table for review
-5. **Never Commit Keys** - Store API keys in `~/.config/tdx/.env`, not in git
-6. **Test with LIMIT** - Add LIMIT when exploring to avoid long queries
-7. **Use --dry-run** - Preview operations on production
+1. **Always Use Time Filters** - Most TD data is time-series. Use `TD_INTERVAL` or `TD_TIME_RANGE` for partition pruning and better performance
+2. **Use Context Management** - Set database/profile once instead of repeating flags
+3. **Use Profiles** - Define prod/dev/staging profiles for easy switching
+4. **Pattern Matching** - Use wildcards (`*`) to filter databases/tables
+5. **Right Output Format** - JSON/JSONL for scripting, table for review
+6. **Never Commit Keys** - Store API keys in `~/.config/tdx/.env`, not in git
+7. **Test with LIMIT** - Add LIMIT when exploring to avoid long queries
+8. **Use --dry-run** - Preview operations on production
 
 ## TD-Specific Conventions
 
@@ -361,6 +311,15 @@ TD uses dot notation: `database_name.table_name`
 
 ```bash
 tdx show sample_datasets.www_access
+```
+
+### Time Column
+
+The `time` column in TD tables is a **Unix timestamp** (seconds since epoch 1970-01-01 00:00:00 UTC). This is an integer value, not a datetime.
+
+```sql
+-- time column contains values like: 1735689600 (2025-01-01 00:00:00 UTC)
+SELECT time, FROM_UNIXTIME(time) AS datetime FROM mydb.events LIMIT 1
 ```
 
 ### Time-Based Filtering
@@ -424,34 +383,6 @@ WHERE TD_TIME_RANGE(time, '2025-01-01', '2025-01-31')
 1. Always quote patterns: `tdx tables "prod_*"`
 2. Or use `--in` flag: `tdx tables --in mydb`
 
-### Query Timeout
-
-**Solution:**
-1. Increase timeout: `tdx query "..." --timeout 300`
-2. Add LIMIT clause
-3. Use TD_INTERVAL/TD_TIME_RANGE for partition pruning
-
-### Session Context Not Working Across Terminals
-
-**Expected Behavior:** Sessions are scoped per terminal window (by PPID) by default.
-
-**Solution - Use `--session` for shared context:**
-
-```bash
-# Set context with explicit session name
-tdx --session my-workflow use database mydb
-tdx --session my-workflow use site jp01
-
-# Access from any terminal
-tdx --session my-workflow tables
-```
-
-**Alternative solutions:**
-1. Use profiles: `tdx use profile prod` (switch in each terminal)
-2. Use project config: Create `tdx.json` (automatic per directory)
-
-See the Session Context section above for more details on `--session`.
-
 ## Table-Specific Options
 
 For table commands (tables, describe, show):
@@ -477,7 +408,7 @@ For query command:
 ## Complete Command Reference
 
 For full command list and advanced features, visit:
-**https://www.npmjs.com/package/@treasuredata/tdx**
+**https://tdx.treasuredata.com/**
 
 Additional commands available:
 - Job management (submit, list, kill, results)
@@ -496,6 +427,7 @@ Additional commands available:
 
 ## Resources
 
+- Official Documentation: https://tdx.treasuredata.com/
 - npm Package: https://www.npmjs.com/package/@treasuredata/tdx
 - GitHub: https://github.com/treasure-data/tdx
 - TD Documentation: https://docs.treasuredata.com
