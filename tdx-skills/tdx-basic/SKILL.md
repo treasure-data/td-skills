@@ -33,11 +33,15 @@ tdx query "SELECT * FROM mydb.users"
 
 ### Configure API Key
 
-**Recommended: Use the interactive setup command with a profile name**
+**Recommended: Use the interactive setup command**
 
 ```bash
-# Set up with profile name (recommended)
+# Interactive setup (single account)
+tdx auth setup
+
+# Or use profiles for multiple accounts (e.g., dev/prod)
 tdx auth setup --profile development
+tdx auth setup --profile production
 
 # Check authentication status
 tdx auth
