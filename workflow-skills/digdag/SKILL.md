@@ -753,7 +753,20 @@ tdx wf push my_workflow
 cd my_workflow
 tdx wf push .
 
-# After pushing, trigger a manual run via TD Console or wait for scheduled execution
+# Immediately run a workflow (returns attempt_id for monitoring)
+tdx wf run my_project.my_workflow
+
+# Run with custom session time
+tdx wf run my_project.my_workflow --session "2024-01-15T00:00:00+00:00"
+
+# The run command returns an attempt_id that you can use to monitor execution:
+# Example output: "Started session attempt_id: 12345678"
+
+# Use attempt_id to check task status
+tdx wf attempt 12345678 tasks
+
+# View logs for specific tasks
+tdx wf attempt 12345678 logs +task_name
 ```
 
 **Verify created tables:**
@@ -824,10 +837,13 @@ tdx wf attempts my_workflow
 tdx wf attempt <attempt_id>
 
 # Show tasks for an attempt
-tdx wf tasks <attempt_id>
+tdx wf attempt <attempt_id> tasks
+
+# Show tasks including subtasks
+tdx wf attempt <attempt_id> tasks --include-subtasks
 
 # View task logs
-tdx wf logs <attempt_id> +task_name
+tdx wf attempt <attempt_id> logs +task_name
 ```
 
 **Delete workflows:**
@@ -871,29 +887,26 @@ tdx databases --site jp01
 
 **Retry failed workflows:**
 ```bash
-# Retry an entire session
-tdx wf retry session:<session_id>
+# Retry an attempt
+tdx wf attempt <attempt_id> retry
 
 # Retry from a specific task
-tdx wf retry session:<session_id> --from-task +step_name
-
-# Retry an attempt
-tdx wf retry attempt:<attempt_id>
+tdx wf attempt <attempt_id> retry --resume-from +step_name
 
 # Retry with parameter overrides
-tdx wf retry attempt:<attempt_id> --params '{"key":"value"}'
+tdx wf attempt <attempt_id> retry --params '{"key":"value"}'
 
 # Force retry without confirmation
-tdx wf retry attempt:<attempt_id> --force -y
+tdx wf attempt <attempt_id> retry --force -y
 ```
 
 **Kill running workflows:**
 ```bash
 # Kill a running attempt
-tdx wf kill <attempt_id>
+tdx wf attempt <attempt_id> kill
 
 # Kill with reason
-tdx wf kill <attempt_id> --reason "manual stop" -y
+tdx wf attempt <attempt_id> kill --reason "manual stop" -y
 ```
 
 ## Best Practices
@@ -919,11 +932,12 @@ The typical workflow development cycle:
 
 1. **Create project directory** with workflow file and queries
 2. **Push to dev project** - Push with `tdx wf push` to register
-3. **Trigger test run** - Use TD Console to manually trigger execution
-4. **Verify results** - Check created tables with `tdx describe`
-5. **Iterate** - Edit workflow and queries, re-push to test
-6. **Monitor** - Check execution with `tdx wf sessions` and `tdx wf logs`
-7. **Promote to production** - Push to production project when ready
+3. **Trigger test run** - Use `tdx wf run project.workflow` to immediately run
+4. **Monitor execution** - Use returned `attempt_id` with `tdx wf attempt <id> tasks` and `tdx wf attempt <id> logs`
+5. **Verify results** - Check created tables with `tdx describe`
+6. **Iterate** - Edit workflow and queries, re-push and re-run to test
+7. **Monitor scheduled runs** - Check execution with `tdx wf sessions` and `tdx wf attempts`
+8. **Promote to production** - Push to production project when ready
 
 **Example development workflow:**
 ```bash
@@ -958,10 +972,18 @@ EOF
 # Push workflow to TD (registers and schedules)
 tdx wf push .
 
-# Trigger a manual run via TD Console, then verify table was created
+# Immediately run the workflow and get attempt_id
+tdx wf run my_workflow.my_workflow
+# Output: "Started session attempt_id: 12345678"
+
+# Monitor execution using the attempt_id
+tdx wf attempt 12345678 tasks
+tdx wf attempt 12345678 logs +analyze
+
+# Verify table was created after successful completion
 tdx describe analytics.results
 
-# Monitor execution
+# Monitor scheduled runs
 tdx wf sessions my_workflow
 tdx wf attempts my_workflow
 ```
@@ -975,6 +997,16 @@ Test workflow execution:
 # Push workflow to TD for testing
 tdx wf push my_workflow
 
+# Immediately run the workflow
+tdx wf run my_workflow.workflow_name
+# Output: "Started session attempt_id: 12345678"
+
+# Monitor task progress using returned attempt_id
+tdx wf attempt 12345678 tasks
+
+# View logs for a specific task
+tdx wf attempt 12345678 logs +task_name
+
 # Check if tables were created after execution
 tdx describe database_name.table_name
 
@@ -985,7 +1017,7 @@ tdx describe database_name.table_name
 ### Common Issues
 
 **"Task failed with exit code 1"**
-- Check task logs in TD console or with `tdx wf logs <attempt_id> +task_name`
+- Check task logs in TD console or with `tdx wf attempt <attempt_id> logs +task_name`
 - Verify SQL syntax if using td> operator
 - Check file paths for external scripts
 - Verify database and table names
@@ -1026,10 +1058,10 @@ tdx wf sessions my_workflow --status error
 tdx wf attempt <attempt_id>
 
 # Show tasks for an attempt
-tdx wf tasks <attempt_id>
+tdx wf attempt <attempt_id> tasks
 
 # View task logs
-tdx wf logs <attempt_id> +task_name
+tdx wf attempt <attempt_id> logs +task_name
 
 # Check job status in TD Console
 # Visit: console.treasuredata.com/app/jobs
@@ -1149,14 +1181,14 @@ Call another workflow:
 |---------|-------------|
 | `tdx wf projects` | List all workflow projects |
 | `tdx wf workflows [project]` | List workflows (optionally for a project) |
+| `tdx wf run <project>.<workflow>` | Immediately run a workflow, returns attempt_id |
 | `tdx wf sessions [project]` | List workflow sessions |
 | `tdx wf attempts [project]` | List workflow attempts |
 | `tdx wf attempt <id>` | Show attempt details |
-| `tdx wf tasks <attempt-id>` | Show tasks for an attempt |
-| `tdx wf logs <attempt-id> <task>` | View task logs |
-| `tdx wf kill <attempt-id>` | Kill a running attempt |
-| `tdx wf retry session:<id>` | Retry a session |
-| `tdx wf retry attempt:<id>` | Retry an attempt |
+| `tdx wf attempt <id> tasks` | Show tasks for an attempt |
+| `tdx wf attempt <id> logs [+task]` | View task logs (interactive selector if no task specified) |
+| `tdx wf attempt <id> kill` | Kill a running attempt |
+| `tdx wf attempt <id> retry` | Retry an attempt |
 | `tdx wf download <project>` | Download workflow project |
 | `tdx wf push <project>` | Push workflow to TD |
 | `tdx wf delete <project>` | Delete workflow project |
