@@ -30,6 +30,16 @@ tdx wf projects
 # Show workflows in a specific project
 tdx wf workflows <project_name>
 
+# Immediately run a workflow and get attempt_id for monitoring
+tdx wf run <project_name>.<workflow_name>
+# Output: "Started session attempt_id: 12345678"
+
+# Use returned attempt_id to monitor task status
+tdx wf attempt 12345678 tasks
+
+# View logs for specific tasks
+tdx wf attempt 12345678 logs +task_name
+
 # List recent runs (sessions)
 tdx wf sessions <project_name>
 
@@ -49,13 +59,13 @@ tdx wf attempt <attempt_id>
 tdx wf attempt <attempt_id>
 
 # Show tasks for an attempt
-tdx wf tasks <attempt_id>
+tdx wf attempt <attempt_id> tasks
 
 # View task logs
-tdx wf logs <attempt_id> +task_name
+tdx wf attempt <attempt_id> logs +task_name
 
 # Include subtasks in task list
-tdx wf tasks <attempt_id> --include-subtasks
+tdx wf attempt <attempt_id> tasks --include-subtasks
 ```
 
 **Common debugging steps:**
@@ -215,17 +225,17 @@ _export:
 
 **Backfill for date range:**
 
-Use the `tdx wf retry` command to re-run workflows for specific sessions, or use the TD Console to trigger manual runs with custom parameters.
+Use the `tdx wf attempt <id> retry` command to re-run workflows for specific attempts, or use the TD Console to trigger manual runs with custom parameters.
 
 ```bash
-# Retry a failed session
-tdx wf retry session:<session_id>
+# Retry an attempt
+tdx wf attempt <attempt_id> retry
 
 # Retry from a specific task
-tdx wf retry session:<session_id> --from-task +step_name
+tdx wf attempt <attempt_id> retry --resume-from +step_name
 
 # Retry with parameter overrides
-tdx wf retry attempt:<attempt_id> --params '{"session_date":"2024-01-15"}'
+tdx wf attempt <attempt_id> retry --params '{"session_date":"2024-01-15"}'
 ```
 
 **Backfill workflow pattern:**
@@ -503,14 +513,14 @@ Quarterly:
 |---------|-------------|
 | `tdx wf projects` | List all workflow projects |
 | `tdx wf workflows [project]` | List workflows (optionally for a project) |
+| `tdx wf run <project>.<workflow>` | Immediately run a workflow, returns attempt_id |
 | `tdx wf sessions [project]` | List workflow sessions |
 | `tdx wf attempts [project]` | List workflow attempts |
 | `tdx wf attempt <id>` | Show attempt details |
-| `tdx wf tasks <attempt-id>` | Show tasks for an attempt |
-| `tdx wf logs <attempt-id> <task>` | View task logs |
-| `tdx wf kill <attempt-id>` | Kill a running attempt |
-| `tdx wf retry session:<id>` | Retry a session |
-| `tdx wf retry attempt:<id>` | Retry an attempt |
+| `tdx wf attempt <id> tasks` | Show tasks for an attempt |
+| `tdx wf attempt <id> logs [+task]` | View task logs (interactive selector if no task specified) |
+| `tdx wf attempt <id> kill` | Kill a running attempt |
+| `tdx wf attempt <id> retry` | Retry an attempt |
 | `tdx wf download <project>` | Download workflow project |
 | `tdx wf push <project>` | Push workflow to TD |
 | `tdx wf delete <project>` | Delete workflow project |
