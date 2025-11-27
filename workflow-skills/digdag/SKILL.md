@@ -738,35 +738,47 @@ my_workflow/
 - Python scripts go in `scripts/` directory
 - Project name matches the workflow directory name
 
-## Treasure Workflow CLI Commands (td command)
+## Treasure Workflow CLI Commands (tdx command)
 
-Treasure Workflow uses the `td` command-line tool (Treasure Data Toolbelt) for managing workflows. All workflow operations are performed using `td wf`.
+Treasure Workflow uses the `tdx` command-line tool for managing workflows. All workflow operations are performed using `tdx wf` (or `tdx workflow`).
 
 ### Creating and Testing Workflows Locally
 
-**Run workflow once from local machine:**
+**Push and run workflow:**
 ```bash
-# Run workflow in TD environment (creates tables/runs queries)
-td wf run my_workflow
+# Push workflow to TD (this registers and schedules if schedule: is defined)
+tdx wf push my_workflow
 
-# Run from within workflow directory
+# Push from within workflow directory
 cd my_workflow
-td wf run .
-```
+tdx wf push .
 
-**Check workflow syntax:**
-```bash
-# Verify workflow file syntax
-td wf check my_workflow.dig
+# Immediately run a workflow (returns attempt_id for monitoring)
+tdx wf run my_project.my_workflow
+
+# Run with custom session time
+tdx wf run my_project.my_workflow --session "2024-01-15T00:00:00+00:00"
+
+# The run command returns an attempt_id that you can use to monitor execution:
+# Example output: "Started session attempt_id: 12345678"
+
+# Use attempt_id to check task status
+tdx wf attempt 12345678 tasks
+
+# View logs for specific tasks
+tdx wf attempt 12345678 logs +task_name
 ```
 
 **Verify created tables:**
 ```bash
-# Show table details
-td table:show database_name table_name
-
 # List tables in database
-td table:list database_name
+tdx tables "database_name.*"
+
+# Show table schema
+tdx describe database_name.table_name
+
+# Show table contents
+tdx show database_name.table_name --limit 10
 ```
 
 ### Pushing and Scheduling Workflows
@@ -774,11 +786,17 @@ td table:list database_name
 **Register workflow with TD:**
 ```bash
 # Push workflow to TD (registers and schedules if schedule: is defined)
-td wf push my_workflow
+tdx wf push my_workflow
 
 # Push from within workflow directory
 cd my_workflow
-td wf push .
+tdx wf push .
+
+# Push with custom revision name
+tdx wf push my_workflow --revision v1.0.0
+
+# Push with a different project name
+tdx wf push my_workflow --name production_workflow
 ```
 
 **Note:** When you push a workflow with a `schedule:` section, it automatically starts running on that schedule.
@@ -788,45 +806,107 @@ td wf push .
 **List registered workflows:**
 ```bash
 # List all workflow projects
-td wf list
+tdx wf projects
+
+# Filter projects by pattern
+tdx wf projects "my_workflow_*"
 
 # Show workflows in a specific project
-td wf workflows my_workflow
+tdx wf workflows my_workflow
 
-# Show specific workflow definition
-td wf workflows my_workflow workflow_name
+# List all workflows across projects
+tdx wf workflows
 ```
 
 **View workflow execution history:**
 ```bash
 # List workflow sessions (runs)
-td wf sessions my_workflow
+tdx wf sessions my_workflow
 
-# Show details of a specific session
-td wf session my_workflow session_id
+# Filter sessions by status
+tdx wf sessions my_workflow --status error
+tdx wf sessions my_workflow --status running
+
+# Filter sessions by time range
+tdx wf sessions --from "2024-01-01" --to "2024-01-31"
+
+# List workflow attempts
+tdx wf attempts my_workflow
+
+# Show details of a specific attempt
+tdx wf attempt <attempt_id>
+
+# Show tasks for an attempt
+tdx wf attempt <attempt_id> tasks
+
+# Show tasks including subtasks
+tdx wf attempt <attempt_id> tasks --include-subtasks
 
 # View task logs
-td wf log my_workflow session_id +task_name
+tdx wf attempt <attempt_id> logs +task_name
 ```
 
 **Delete workflows:**
 ```bash
 # Delete a workflow project
-td wf delete my_workflow
+tdx wf delete my_workflow
+
+# Delete without confirmation
+tdx wf delete my_workflow -y
+```
+
+**Download workflow project:**
+```bash
+# Download workflow project from TD
+tdx wf download my_workflow
+
+# Download to specific directory
+tdx wf download my_workflow ./local_backup
+
+# Download specific revision
+tdx wf download my_workflow --revision v1.0.0
 ```
 
 ### Database Management
 
-**Create database for workflows:**
+**Manage databases for workflows:**
 ```bash
-# Create a new database
-td db:create database_name
+# List all databases
+tdx databases
 
-# List databases
-td db:list
+# Filter databases by pattern
+tdx databases "prod_*"
 
-# Show database details
-td db:show database_name
+# List databases on a specific site
+tdx databases --site jp01
+```
+
+**Note:** Database creation is typically done via TD Console or API. Use `tdx databases` to verify databases exist before workflow execution.
+
+### Retry and Recovery
+
+**Retry failed workflows:**
+```bash
+# Retry an attempt
+tdx wf attempt <attempt_id> retry
+
+# Retry from a specific task
+tdx wf attempt <attempt_id> retry --resume-from +step_name
+
+# Retry with parameter overrides
+tdx wf attempt <attempt_id> retry --params '{"key":"value"}'
+
+# Force retry without confirmation
+tdx wf attempt <attempt_id> retry --force -y
+```
+
+**Kill running workflows:**
+```bash
+# Kill a running attempt
+tdx wf attempt <attempt_id> kill
+
+# Kill with reason
+tdx wf attempt <attempt_id> kill --reason "manual stop" -y
 ```
 
 ## Best Practices
@@ -840,7 +920,7 @@ td db:show database_name
 7. **Implement parallel execution** where tasks are independent
 8. **Store secrets** in TD parameter store, not in workflow files
 9. **Add logging** with echo or shell tasks for debugging
-10. **Test workflows locally** with `td wf run` before pushing
+10. **Test workflows** by pushing to a development project before production
 11. **Use `_export`** for common parameters (especially `td.database`)
 12. **Document workflows** with comments
 13. **Use `create_table:`** parameter to manage table creation/replacement
@@ -851,11 +931,13 @@ td db:show database_name
 The typical workflow development cycle:
 
 1. **Create project directory** with workflow file and queries
-2. **Test locally** - Run with `td wf run` to execute in TD environment
-3. **Iterate** - Edit workflow and queries, re-run to test
-4. **Verify results** - Check created tables with `td table:show`
-5. **Push to TD** - Register and schedule with `td wf push`
-6. **Monitor** - Check execution with `td wf sessions` and `td wf log`
+2. **Push to dev project** - Push with `tdx wf push` to register
+3. **Trigger test run** - Use `tdx wf run project.workflow` to immediately run
+4. **Monitor execution** - Use returned `attempt_id` with `tdx wf attempt <id> tasks` and `tdx wf attempt <id> logs`
+5. **Verify results** - Check created tables with `tdx describe`
+6. **Iterate** - Edit workflow and queries, re-push and re-run to test
+7. **Monitor scheduled runs** - Check execution with `tdx wf sessions` and `tdx wf attempts`
+8. **Promote to production** - Push to production project when ready
 
 **Example development workflow:**
 ```bash
@@ -887,27 +969,46 @@ FROM events
 WHERE TD_INTERVAL(time, '-1d', 'UTC')
 EOF
 
-# Test workflow locally (runs in TD)
-td wf run .
+# Push workflow to TD (registers and schedules)
+tdx wf push .
 
-# Verify table was created
-td table:show analytics results
+# Immediately run the workflow and get attempt_id
+tdx wf run my_workflow.my_workflow
+# Output: "Started session attempt_id: 12345678"
 
-# Push to TD to schedule
-td wf push .
+# Monitor execution using the attempt_id
+tdx wf attempt 12345678 tasks
+tdx wf attempt 12345678 logs +analyze
+
+# Verify table was created after successful completion
+tdx describe analytics.results
+
+# Monitor scheduled runs
+tdx wf sessions my_workflow
+tdx wf attempts my_workflow
 ```
 
 ## Debugging Workflows
 
-### Local Testing with TD CLI
+### Testing Workflows
 
 Test workflow execution:
 ```bash
-# Run workflow once in TD environment
-td wf run my_workflow
+# Push workflow to TD for testing
+tdx wf push my_workflow
 
-# Check if tables were created
-td table:show database_name table_name
+# Immediately run the workflow
+tdx wf run my_workflow.workflow_name
+# Output: "Started session attempt_id: 12345678"
+
+# Monitor task progress using returned attempt_id
+tdx wf attempt 12345678 tasks
+
+# View logs for a specific task
+tdx wf attempt 12345678 logs +task_name
+
+# Check if tables were created after execution
+tdx describe database_name.table_name
 
 # View recent job history in TD Console
 # Jobs will appear at: console.treasuredata.com/app/jobs
@@ -916,7 +1017,7 @@ td table:show database_name table_name
 ### Common Issues
 
 **"Task failed with exit code 1"**
-- Check task logs in TD console or with `td wf log`
+- Check task logs in TD console or with `tdx wf attempt <attempt_id> logs +task_name`
 - Verify SQL syntax if using td> operator
 - Check file paths for external scripts
 - Verify database and table names
@@ -936,7 +1037,8 @@ td table:show database_name table_name
 - Consider breaking into smaller tasks
 
 **"Database not found"**
-- Create database with `td db:create database_name`
+- List available databases with `tdx databases`
+- Create database via TD Console if needed
 - Verify database name in `_export.td.database`
 
 ### Monitoring Workflows
@@ -944,16 +1046,22 @@ td table:show database_name table_name
 **Check workflow status:**
 ```bash
 # List all workflow projects
-td wf list
+tdx wf projects
 
 # List workflow runs (sessions)
-td wf sessions my_workflow
+tdx wf sessions my_workflow
 
-# Show specific session details
-td wf session my_workflow session_id
+# Filter by status
+tdx wf sessions my_workflow --status error
+
+# Show specific attempt details
+tdx wf attempt <attempt_id>
+
+# Show tasks for an attempt
+tdx wf attempt <attempt_id> tasks
 
 # View task logs
-td wf log my_workflow session_id +task_name
+tdx wf attempt <attempt_id> logs +task_name
 
 # Check job status in TD Console
 # Visit: console.treasuredata.com/app/jobs
@@ -961,8 +1069,8 @@ td wf log my_workflow session_id +task_name
 
 **View workflow definition:**
 ```bash
-# Show registered workflow
-td wf workflows my_workflow workflow_name
+# Show registered workflows in a project
+tdx wf workflows my_workflow
 ```
 
 ## Advanced Features
@@ -1066,3 +1174,21 @@ Call another workflow:
 - TD workflow guide: Check internal TD documentation
 - Operator reference: https://docs.digdag.io/operators.html
 - Session variables: https://docs.digdag.io/workflow_definition.html#session-variables
+
+## tdx Workflow Command Reference
+
+| Command | Description |
+|---------|-------------|
+| `tdx wf projects` | List all workflow projects |
+| `tdx wf workflows [project]` | List workflows (optionally for a project) |
+| `tdx wf run <project>.<workflow>` | Immediately run a workflow, returns attempt_id |
+| `tdx wf sessions [project]` | List workflow sessions |
+| `tdx wf attempts [project]` | List workflow attempts |
+| `tdx wf attempt <id>` | Show attempt details |
+| `tdx wf attempt <id> tasks` | Show tasks for an attempt |
+| `tdx wf attempt <id> logs [+task]` | View task logs (interactive selector if no task specified) |
+| `tdx wf attempt <id> kill` | Kill a running attempt |
+| `tdx wf attempt <id> retry` | Retry an attempt |
+| `tdx wf download <project>` | Download workflow project |
+| `tdx wf push <project>` | Push workflow to TD |
+| `tdx wf delete <project>` | Delete workflow project |

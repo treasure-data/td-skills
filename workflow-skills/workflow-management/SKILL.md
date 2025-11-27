@@ -24,31 +24,48 @@ Use this skill when:
 
 **Check workflow status:**
 ```bash
-# List all workflows
-td wf list
+# List all workflow projects
+tdx wf projects
 
 # Show workflows in a specific project
-td wf workflows <project_name>
+tdx wf workflows <project_name>
 
-# List recent runs
-td wf sessions <project_name>
+# Immediately run a workflow and get attempt_id for monitoring
+tdx wf run <project_name>.<workflow_name>
+# Output: "Started session attempt_id: 12345678"
 
-# View specific session
-td wf session <project_name> <session_id>
+# Use returned attempt_id to monitor task status
+tdx wf attempt 12345678 tasks
+
+# View logs for specific tasks
+tdx wf attempt 12345678 logs +task_name
+
+# List recent runs (sessions)
+tdx wf sessions <project_name>
+
+# Filter sessions by status
+tdx wf sessions <project_name> --status error
+tdx wf sessions <project_name> --status running
+
+# View specific attempt details
+tdx wf attempt <attempt_id>
 ```
 
 ### 2. Debugging Failed Workflows
 
 **Investigate failure:**
 ```bash
-# Get session details
-td wf session <project_name> <session_id>
+# Get attempt details
+tdx wf attempt <attempt_id>
+
+# Show tasks for an attempt
+tdx wf attempt <attempt_id> tasks
 
 # View task logs
-td wf log <project_name> <session_id> +task_name
+tdx wf attempt <attempt_id> logs +task_name
 
-# Get full session logs
-td wf log <project_name> <session_id>
+# Include subtasks in task list
+tdx wf attempt <attempt_id> tasks --include-subtasks
 ```
 
 **Common debugging steps:**
@@ -192,7 +209,7 @@ _export:
 +wait_for_upstream:
   sh>: |
     for i in {1..60}; do
-      if td table:show production_db source_data_${session_date_compact}; then
+      if tdx describe production_db.source_data_${session_date_compact}; then
         exit 0
       fi
       sleep 60
@@ -207,11 +224,18 @@ _export:
 ### 7. Backfill Operations
 
 **Backfill for date range:**
+
+Use the `tdx wf attempt <id> retry` command to re-run workflows for specific attempts, or use the TD Console to trigger manual runs with custom parameters.
+
 ```bash
-# Run workflow for specific dates
-for date in {2024-01-01..2024-01-31}; do
-  td wf run workflow.dig -p session_date=$date
-done
+# Retry an attempt
+tdx wf attempt <attempt_id> retry
+
+# Retry from a specific task
+tdx wf attempt <attempt_id> retry --resume-from +step_name
+
+# Retry with parameter overrides
+tdx wf attempt <attempt_id> retry --params '{"session_date":"2024-01-15"}'
 ```
 
 **Backfill workflow pattern:**
@@ -247,6 +271,10 @@ timezone: Asia/Tokyo
 
 3. **Keep backup of working version:**
 ```bash
+# Download current version from TD before making changes
+tdx wf download my_workflow ./backup
+
+# Or create local backup
 cp workflow.dig workflow.dig.backup.$(date +%Y%m%d)
 ```
 
@@ -396,7 +424,7 @@ def record_completion(workflow, session, duration):
   sh>: |
     # Wait up to 30 minutes for data
     for i in {1..30}; do
-      COUNT=$(td query -d analytics "SELECT COUNT(*) FROM source WHERE date='${session_date}'" -f csv | tail -1)
+      COUNT=$(tdx query -d analytics "SELECT COUNT(*) FROM source WHERE date='${session_date}'" --format csv | tail -1)
       if [ "$COUNT" -gt 0 ]; then
         exit 0
       fi
@@ -475,6 +503,24 @@ Quarterly:
 
 - TD Console: Access workflow logs and monitoring
 - Treasure Workflow Quick Start: https://docs.treasuredata.com/articles/#!pd/treasure-workflow-quick-start-using-td-toolbelt-in-a-cli
-- td CLI: Command-line workflow management using `td wf` commands
+- tdx CLI: Command-line workflow management using `tdx wf` commands
 - Query performance: Use EXPLAIN for query optimization
 - Internal docs: Check TD internal documentation for updates
+
+## tdx Workflow Command Reference
+
+| Command | Description |
+|---------|-------------|
+| `tdx wf projects` | List all workflow projects |
+| `tdx wf workflows [project]` | List workflows (optionally for a project) |
+| `tdx wf run <project>.<workflow>` | Immediately run a workflow, returns attempt_id |
+| `tdx wf sessions [project]` | List workflow sessions |
+| `tdx wf attempts [project]` | List workflow attempts |
+| `tdx wf attempt <id>` | Show attempt details |
+| `tdx wf attempt <id> tasks` | Show tasks for an attempt |
+| `tdx wf attempt <id> logs [+task]` | View task logs (interactive selector if no task specified) |
+| `tdx wf attempt <id> kill` | Kill a running attempt |
+| `tdx wf attempt <id> retry` | Retry an attempt |
+| `tdx wf download <project>` | Download workflow project |
+| `tdx wf push <project>` | Push workflow to TD |
+| `tdx wf delete <project>` | Delete workflow project |
