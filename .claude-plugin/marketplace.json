@@ -82,6 +82,21 @@
       "skills": [
         "./template-skill"
       ]
+    },
+    {
+      "name": "aps-doc-skills",
+      "description": "Modular technical documentation generation for Treasure Data pipeline layers and CDP. Layer-specific expert skills for core patterns, ingestion, staging, hist-union, ID unification, golden layers, and CDP master segment configurations with intelligent auto-detection and comprehensive documentation.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./aps-doc-skills/core",
+        "./aps-doc-skills/ingestion",
+        "./aps-doc-skills/staging",
+        "./aps-doc-skills/hist-union",
+        "./aps-doc-skills/id-unification",
+        "./aps-doc-skills/golden",
+        "./aps-doc-skills/master-segment"
+      ]
     }
   ]
 }
