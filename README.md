@@ -35,7 +35,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ### TDX CLI Skills
 
-- **[tdx-skills/tdx-basic](./tdx-skills/tdx-basic)** - Core tdx CLI operations for managing TD from command line: databases, tables, queries, and context management
+- **[tdx-skills/tdx-basic](./tdx-skills/tdx-basic)** - Core [tdx](https://tdx.treasuredata.com) CLI operations for managing TD from command line: databases, tables, queries, and context management
 
 ### Field Agent Skills
 
