@@ -121,37 +121,22 @@ This is a documentation-only repository with no build, lint, or test commands. C
 
 ### Making Changes via Pull Request
 
-1. **Create a feature branch**:
-   ```bash
-   git checkout -b descriptive-branch-name
-   ```
-
-2. **Make your changes**:
-   - Update relevant SKILL.md files
-   - Update marketplace.json if adding/removing skills
-   - Update README.md if changing installation or usage instructions
-
-3. **Commit with descriptive messages**:
-   ```bash
-   git add .
-   git commit -m "feat: add [skill-name] skill" # or "docs: update [description]"
-   ```
-
-4. **Push branch to remote**:
-   ```bash
-   git push -u origin descriptive-branch-name
-   ```
-
-5. **Create pull request**:
-   ```bash
-   gh pr create --title "Add [feature]" --body "Description of changes"
-   ```
-
-### Direct Push (for urgent fixes only)
-
-For critical fixes, you may push directly to main:
 ```bash
+# Create feature branch and make changes
+git checkout -b descriptive-branch-name
+# Update SKILL.md files, marketplace.json, or README.md as needed
+
+# Commit and push
 git add .
-git commit -m "fix: urgent fix description"
-git push origin main
+git commit -m "feat: add [skill-name]" # or "docs: update [description]"
+git push -u origin descriptive-branch-name
+
+# Create PR
+gh pr create --title "Add [feature]" --body "Description of changes"
+```
+
+### Direct Push (urgent fixes only)
+
+```bash
+git add . && git commit -m "fix: urgent fix" && git push origin main
 ```
