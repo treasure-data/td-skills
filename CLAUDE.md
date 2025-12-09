@@ -98,7 +98,22 @@ When adding a new skill:
 
 ## Claude Code Skills Best Practices
 
-When creating skills, follow these core principles: **be concise** (assume Claude is smart, only add context it doesn't have), **set appropriate degrees of freedom** (match specificity to task fragility), **use progressive disclosure** (keep SKILL.md under 500 lines, split into referenced files), **write effective descriptions** (third person, specific, include key terms and when to use), **implement feedback loops** (validation → fix → repeat), and **test iteratively** (build evaluations first, develop with one Claude instance to help other instances). Use gerund form for naming (`processing-pdfs`), avoid time-sensitive info, maintain consistent terminology, and keep file references one level deep. For comprehensive guidance including workflows, templates, anti-patterns, and executable code patterns, see the [official Skill Authoring Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
+When creating skills, follow these core principles:
+
+- **Be concise**: Assume Claude is smart; only add context it doesn't have.
+- **Set appropriate degrees of freedom**: Match specificity to task fragility.
+- **Use progressive disclosure**: Keep SKILL.md under 500 lines; split into referenced files.
+- **Write effective descriptions**: Use third person, be specific, include key terms and when to use.
+- **Implement feedback loops**: validation → fix → repeat.
+- **Test iteratively**: Build evaluations first; develop with one Claude instance to help other instances.
+
+Additional guidelines:
+- Use gerund form for naming (`processing-pdfs`)
+- Avoid time-sensitive info
+- Maintain consistent terminology
+- Keep file references one level deep
+
+For comprehensive guidance including workflows, templates, anti-patterns, and executable code patterns, see the [official Skill Authoring Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
 
 ## Repository Management
 
