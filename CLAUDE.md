@@ -96,13 +96,47 @@ When adding a new skill:
 - Examples should use TD-specific patterns and conventions
 - Include error handling and troubleshooting sections
 
+## Claude Code Skills Best Practices
+
+When creating skills, follow these core principles: **be concise** (assume Claude is smart, only add context it doesn't have), **set appropriate degrees of freedom** (match specificity to task fragility), **use progressive disclosure** (keep SKILL.md under 500 lines, split into referenced files), **write effective descriptions** (third person, specific, include key terms and when to use), **implement feedback loops** (validation → fix → repeat), and **test iteratively** (build evaluations first, develop with one Claude instance to help other instances). Use gerund form for naming (`processing-pdfs`), avoid time-sensitive info, maintain consistent terminology, and keep file references one level deep. For comprehensive guidance including workflows, templates, anti-patterns, and executable code patterns, see the [official Skill Authoring Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
+
 ## Repository Management
 
-This is a documentation-only repository with no build, lint, or test commands. Changes are committed directly to main branch and pushed to `https://github.com/treasure-data/td-skills.git`.
+This is a documentation-only repository with no build, lint, or test commands. Changes should follow the branch and pull request workflow.
 
-When making changes:
-1. Update relevant SKILL.md files
-2. Update marketplace.json if adding/removing skills
-3. Update README.md if changing installation or usage instructions
-4. Commit with descriptive messages including skill names
-5. Push to remote immediately
+### Making Changes via Pull Request
+
+1. **Create a feature branch**:
+   ```bash
+   git checkout -b descriptive-branch-name
+   ```
+
+2. **Make your changes**:
+   - Update relevant SKILL.md files
+   - Update marketplace.json if adding/removing skills
+   - Update README.md if changing installation or usage instructions
+
+3. **Commit with descriptive messages**:
+   ```bash
+   git add .
+   git commit -m "feat: add [skill-name] skill" # or "docs: update [description]"
+   ```
+
+4. **Push branch to remote**:
+   ```bash
+   git push -u origin descriptive-branch-name
+   ```
+
+5. **Create pull request**:
+   ```bash
+   gh pr create --title "Add [feature]" --body "Description of changes"
+   ```
+
+### Direct Push (for urgent fixes only)
+
+For critical fixes, you may push directly to main:
+```bash
+git add .
+git commit -m "fix: urgent fix description"
+git push origin main
+```
