@@ -134,9 +134,3 @@ git push -u origin descriptive-branch-name
 # Create PR
 gh pr create --title "Add [feature]" --body "Description of changes"
 ```
-
-### Direct Push (urgent fixes only)
-
-```bash
-git add . && git commit -m "fix: urgent fix" && git push origin main
-```
