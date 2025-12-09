@@ -96,13 +96,41 @@ When adding a new skill:
 - Examples should use TD-specific patterns and conventions
 - Include error handling and troubleshooting sections
 
+## Claude Code Skills Best Practices
+
+When creating skills, follow these core principles:
+
+- **Be concise**: Assume Claude is smart; only add context it doesn't have.
+- **Set appropriate degrees of freedom**: Match specificity to task fragility.
+- **Use progressive disclosure**: Keep SKILL.md under 500 lines; split into referenced files.
+- **Write effective descriptions**: Use third person, be specific, include key terms and when to use.
+- **Implement feedback loops**: validation → fix → repeat.
+- **Test iteratively**: Build evaluations first; develop with one Claude instance to help other instances.
+
+Additional guidelines:
+- Use gerund form for naming (`processing-pdfs`)
+- Avoid time-sensitive info
+- Maintain consistent terminology
+- Keep file references one level deep
+
+For comprehensive guidance including workflows, templates, anti-patterns, and executable code patterns, see the [official Skill Authoring Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
+
 ## Repository Management
 
-This is a documentation-only repository with no build, lint, or test commands. Changes are committed directly to main branch and pushed to `https://github.com/treasure-data/td-skills.git`.
+This is a documentation-only repository with no build, lint, or test commands. Changes should follow the branch and pull request workflow.
 
-When making changes:
-1. Update relevant SKILL.md files
-2. Update marketplace.json if adding/removing skills
-3. Update README.md if changing installation or usage instructions
-4. Commit with descriptive messages including skill names
-5. Push to remote immediately
+### Making Changes via Pull Request
+
+```bash
+# Create feature branch and make changes
+git checkout -b descriptive-branch-name
+# Update SKILL.md files, marketplace.json, or README.md as needed
+
+# Commit and push
+git add .
+git commit -m "feat: add [skill-name]" # or "docs: update [description]"
+git push -u origin descriptive-branch-name
+
+# Create PR
+gh pr create --title "Add [feature]" --body "Description of changes"
+```
