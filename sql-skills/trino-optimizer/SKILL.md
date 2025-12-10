@@ -28,13 +28,13 @@ TD tables are partitioned by 1-hour buckets. **Always** filter on time for optim
 **Use TD_INTERVAL or TD_TIME_RANGE:**
 ```sql
 -- Good: Uses partition pruning
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+where TD_INTERVAL(time, '-1d', 'JST')
 
 -- Good: Explicit time range
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
+where TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
 
 -- Bad: No time filter - scans entire table!
-WHERE user_id = 123  -- Missing time filter
+where user_id = 123  -- Missing time filter
 ```
 
 **Impact:** Without time filters, queries scan the entire table instead of just relevant partitions, dramatically increasing execution time and cost.
@@ -45,14 +45,14 @@ TD uses columnar storage format. **Select only needed columns.**
 
 ```sql
 -- Good: Select specific columns
-SELECT user_id, event_type, time
-FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+select user_id, event_type, time
+from events
+where TD_INTERVAL(time, '-1d', 'JST')
 
--- Bad: SELECT * reads all columns
-SELECT *  -- Slower and more expensive
-FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+-- Bad: select * reads all columns
+select *  -- Slower and more expensive
+from events
+where TD_INTERVAL(time, '-1d', 'JST')
 ```
 
 **Impact:** Each additional column increases I/O. Reading 10 columns vs 50 columns can make a significant performance difference.
@@ -61,36 +61,36 @@ WHERE TD_INTERVAL(time, '-1d', 'JST')
 
 Use appropriate output methods for your use case.
 
-**CREATE TABLE AS (CTAS) - 5x faster than SELECT:**
+**create table AS (CTAS) - 5x faster than select:**
 ```sql
 -- Best for large result sets
-CREATE TABLE analysis_results AS
-SELECT
+create table analysis_results AS
+select
   TD_TIME_STRING(time, 'd!', 'JST') as date,
-  COUNT(*) as events
-FROM events
-WHERE TD_INTERVAL(time, '-1M', 'JST')
-GROUP BY 1
+  count(*) as events
+from events
+where TD_INTERVAL(time, '-1M', 'JST')
+group by 1
 ```
 
-**INSERT INTO - For appending to existing tables:**
+**insert into - For appending to existing tables:**
 ```sql
-INSERT INTO daily_summary
-SELECT
+insert into daily_summary
+select
   TD_TIME_STRING(time, 'd!', 'JST') as date,
-  COUNT(*) as events
-FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
-GROUP BY 1
+  count(*) as events
+from events
+where TD_INTERVAL(time, '-1d', 'JST')
+group by 1
 ```
 
-**SELECT with LIMIT - For exploratory queries:**
+**select with limit - For exploratory queries:**
 ```sql
 -- Good for testing/exploration
-SELECT *
-FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
-LIMIT 1000
+select *
+from events
+where TD_INTERVAL(time, '-1d', 'JST')
+limit 1000
 ```
 
 **Impact:** CTAS skips JSON serialization, directly writing to partitioned tables, providing 5x better performance.
@@ -101,14 +101,14 @@ Replace chained LIKE clauses with REGEXP_LIKE for better performance.
 
 ```sql
 -- Bad: Multiple LIKE clauses (slow)
-WHERE (
+where (
   column LIKE '%android%'
-  OR column LIKE '%ios%'
-  OR column LIKE '%mobile%'
+  or column LIKE '%ios%'
+  or column LIKE '%mobile%'
 )
 
 -- Good: Single REGEXP_LIKE (fast)
-WHERE REGEXP_LIKE(column, 'android|ios|mobile')
+where REGEXP_LIKE(column, 'android|ios|mobile')
 ```
 
 **Impact:** Trino's optimizer cannot efficiently handle multiple LIKE clauses chained with OR, but can optimize REGEXP_LIKE.
@@ -119,14 +119,14 @@ Use APPROX_* functions for large-scale aggregations.
 
 ```sql
 -- Fast: Approximate distinct count
-SELECT APPROX_DISTINCT(user_id) as unique_users
-FROM events
-WHERE TD_INTERVAL(time, '-1M', 'JST')
+select APPROX_DISTINCT(user_id) as unique_users
+from events
+where TD_INTERVAL(time, '-1M', 'JST')
 
 -- Slow: Exact distinct count (memory intensive)
-SELECT COUNT(DISTINCT user_id) as unique_users
-FROM events
-WHERE TD_INTERVAL(time, '-1M', 'JST')
+select COUNT(DISTINCT user_id) as unique_users
+from events
+where TD_INTERVAL(time, '-1M', 'JST')
 ```
 
 **Available approximate functions:**
@@ -136,26 +136,26 @@ WHERE TD_INTERVAL(time, '-1M', 'JST')
 
 **Impact:** Approximate functions use HyperLogLog algorithm, dramatically reducing memory usage with ~2% error rate.
 
-### 6. JOIN Optimization
+### 6. join Optimization
 
 Order joins with smaller tables first when possible.
 
 ```sql
 -- Good: Small table joined to large table
-SELECT l.*, s.attribute
-FROM large_table l
-JOIN small_lookup s ON l.id = s.id
-WHERE TD_INTERVAL(l.time, '-1d', 'JST')
+select l.*, s.attribute
+from large_table l
+join small_lookup s ON l.id = s.id
+where TD_INTERVAL(l.time, '-1d', 'JST')
 
 -- Consider: If one table is very small, use a subquery to reduce it first
-SELECT e.*
-FROM events e
-JOIN (
-  SELECT user_id
-  FROM premium_users
-  WHERE subscription_status = 'active'
+select e.*
+from events e
+join (
+  select user_id
+  from premium_users
+  where subscription_status = 'active'
 ) p ON e.user_id = p.user_id
-WHERE TD_INTERVAL(e.time, '-1d', 'JST')
+where TD_INTERVAL(e.time, '-1d', 'JST')
 ```
 
 **Magic Comments for Join Distribution:**
@@ -165,9 +165,9 @@ When joins fail with memory errors or run slowly, use magic comments to control 
 ```sql
 -- BROADCAST: Small right table fits in memory
 -- set session join_distribution_type = 'BROADCAST'
-SELECT *
-FROM large_table, small_lookup
-WHERE large_table.id = small_lookup.id
+select *
+from large_table, small_lookup
+where large_table.id = small_lookup.id
 ```
 
 **Use BROADCAST when:** Right table is very small and fits in memory. Avoids partitioning overhead but uses more memory per node.
@@ -175,34 +175,34 @@ WHERE large_table.id = small_lookup.id
 ```sql
 -- PARTITIONED: Both tables large or memory issues
 -- set session join_distribution_type = 'PARTITIONED'
-SELECT *
-FROM large_table_a, large_table_b
-WHERE large_table_a.id = large_table_b.id
+select *
+from large_table_a, large_table_b
+where large_table_a.id = large_table_b.id
 ```
 
 **Use PARTITIONED when:** Both tables are large or right table doesn't fit in memory. Default algorithm that reduces memory per node.
 
 **Tips:**
-- Always include time filters on all tables in JOIN
+- Always include time filters on all tables in join
 - Consider using IN or EXISTS for single-column lookups
-- Avoid FULL OUTER JOIN when possible (expensive)
+- Avoid FULL OUTER join when possible (expensive)
 
-### 7. GROUP BY Optimization
+### 7. group by Optimization
 
-Use column positions in GROUP BY for complex expressions.
+Use column positions in group by for complex expressions.
 
 ```sql
 -- Good: Use column positions
-SELECT
+select
   TD_TIME_STRING(time, 'd!', 'JST') as date,
   event_type,
   COUNT(*) as cnt
-FROM events
-WHERE TD_INTERVAL(time, '-1M', 'JST')
-GROUP BY 1, 2  -- Cleaner and avoids re-evaluation
+from events
+where TD_INTERVAL(time, '-1M', 'JST')
+group by 1, 2  -- Cleaner and avoids re-evaluation
 
 -- Works but verbose:
-GROUP BY TD_TIME_STRING(time, 'd!', 'JST'), event_type
+group by TD_TIME_STRING(time, 'd!', 'JST'), event_type
 ```
 
 ### 8. Window Functions Optimization
@@ -211,19 +211,19 @@ Partition window functions appropriately to reduce memory usage.
 
 ```sql
 -- Good: Partition by high-cardinality column
-SELECT
+select
   user_id,
   event_time,
-  ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY event_time) as seq
-FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+  ROW_NUMBER() OVER (PARTITION BY user_id order by event_time) as seq
+from events
+where TD_INTERVAL(time, '-1d', 'JST')
 
 -- Be careful: Window over entire dataset (memory intensive)
-SELECT
+select
   event_time,
-  ROW_NUMBER() OVER (ORDER BY event_time) as global_seq
-FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+  ROW_NUMBER() OVER (order by event_time) as global_seq
+from events
+where TD_INTERVAL(time, '-1d', 'JST')
 ```
 
 ### 9. User-Defined Partitioning (UDP)
@@ -232,12 +232,12 @@ Hash partition tables on frequently queried columns for fast ID lookups and larg
 
 ```sql
 -- Create UDP table with bucketing on customer_id
-CREATE TABLE customer_events WITH (
+create table customer_events WITH (
   bucketed_on = array['customer_id'],
   bucket_count = 512
 ) AS
-SELECT * FROM raw_events
-WHERE TD_INTERVAL(time, '-30d', 'JST')
+select * from raw_events
+where TD_INTERVAL(time, '-30d', 'JST')
 ```
 
 **When to use UDP:**
@@ -248,19 +248,19 @@ WHERE TD_INTERVAL(time, '-30d', 'JST')
 
 **Choosing bucketing columns:**
 - High cardinality: `customer_id`, `user_id`, `email`, `account_number`
-- Frequently used with equality predicates (`WHERE customer_id = 12345`)
+- Frequently used with equality predicates (`where customer_id = 12345`)
 - Supported types: int, long, string
 - Maximum 3 columns
 
 ```sql
 -- Accelerated: Equality on all bucketing columns
-SELECT * FROM customer_events
-WHERE customer_id = 12345
+select * from customer_events
+where customer_id = 12345
   AND TD_INTERVAL(time, '-7d', 'JST')
 
 -- NOT accelerated: Missing bucketing column
-SELECT * FROM customer_events
-WHERE TD_INTERVAL(time, '-7d', 'JST')
+select * from customer_events
+where TD_INTERVAL(time, '-7d', 'JST')
 ```
 
 **UDP for large joins:**
@@ -268,10 +268,10 @@ WHERE TD_INTERVAL(time, '-7d', 'JST')
 -- Both tables bucketed on same key enables colocated join
 -- set session join_distribution_type = 'PARTITIONED'
 -- set session colocated_join = 'true'
-SELECT a.*, b.*
-FROM customer_events_a a
-JOIN customer_events_b b ON a.customer_id = b.customer_id
-WHERE TD_INTERVAL(a.time, '-1d', 'JST')
+select a.*, b.*
+from customer_events_a a
+join customer_events_b b ON a.customer_id = b.customer_id
+where TD_INTERVAL(a.time, '-1d', 'JST')
 ```
 
 **Impact:** UDP scans only relevant buckets, dramatically improving performance for ID lookups and reducing memory for large joins.
@@ -287,21 +287,21 @@ WHERE TD_INTERVAL(a.time, '-1d', 'JST')
 **Solutions:**
 1. Add or narrow time filters with TD_INTERVAL/TD_TIME_RANGE
 2. Reduce selected columns
-3. Use LIMIT for testing before full run
+3. Use limit for testing before full run
 4. Break into smaller queries with intermediate tables
 5. Use approximate functions instead of exact aggregations
 
 **Example fix:**
 ```sql
 -- Before: Times out
-SELECT COUNT(DISTINCT user_id)
-FROM events
-WHERE event_type = 'click'
+select COUNT(DISTINCT user_id)
+from events
+where event_type = 'click'
 
 -- After: Much faster
-SELECT APPROX_DISTINCT(user_id)
-FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+select APPROX_DISTINCT(user_id)
+from events
+where TD_INTERVAL(time, '-1d', 'JST')
   AND event_type = 'click'
 ```
 
@@ -314,32 +314,32 @@ WHERE TD_INTERVAL(time, '-1d', 'JST')
 **Solutions:**
 1. Reduce data volume with time filters
 2. Use APPROX_DISTINCT instead of COUNT(DISTINCT)
-3. Reduce number of columns in SELECT
-4. Limit GROUP BY cardinality
-5. Optimize JOIN operations
+3. Reduce number of columns in select
+4. Limit group by cardinality
+5. Optimize join operations
 6. Process data in smaller time chunks
 
 **Example fix:**
 ```sql
 -- Before: Memory exceeded
-SELECT
+select
   user_id,
   COUNT(DISTINCT session_id),
   COUNT(DISTINCT page_url),
   COUNT(DISTINCT referrer)
-FROM events
-WHERE TD_INTERVAL(time, '-1M', 'JST')
-GROUP BY user_id
+from events
+where TD_INTERVAL(time, '-1M', 'JST')
+group by user_id
 
 -- After: Uses approximate functions
-SELECT
+select
   user_id,
   APPROX_DISTINCT(session_id) as sessions,
   APPROX_DISTINCT(page_url) as pages,
   APPROX_DISTINCT(referrer) as referrers
-FROM events
-WHERE TD_INTERVAL(time, '-1M', 'JST')
-GROUP BY user_id
+from events
+where TD_INTERVAL(time, '-1M', 'JST')
+group by user_id
 ```
 
 ### Issue: PAGE_TRANSPORT_TIMEOUT
@@ -350,52 +350,52 @@ GROUP BY user_id
 
 **Solutions:**
 1. Narrow TD_TIME_RANGE to reduce data volume
-2. Reduce number of columns in SELECT
+2. Reduce number of columns in select
 3. Break large queries into smaller time ranges
-4. Use CTAS instead of SELECT for large results
+4. Use CTAS instead of select for large results
 
 **Example fix:**
 ```sql
 -- Before: Transporting too much data
-SELECT *
-FROM events
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-12-31')
+select *
+from events
+where TD_TIME_RANGE(time, '2024-01-01', '2024-12-31')
 
 -- After: Process in chunks
-SELECT user_id, event_type, time
-FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+select user_id, event_type, time
+from events
+where TD_INTERVAL(time, '-1d', 'JST')
 ```
 
 ### Issue: Slow Aggregations
 
 **Symptoms:**
 - COUNT(DISTINCT) taking very long
-- Large GROUP BY queries slow
+- Large group by queries slow
 
 **Solutions:**
 1. Use APPROX_DISTINCT instead of COUNT(DISTINCT)
 2. Filter data with time range first
 3. Consider pre-aggregating with intermediate tables
-4. Reduce GROUP BY dimensions
+4. Reduce group by dimensions
 
 **Example fix:**
 ```sql
 -- Before: Slow exact count
-SELECT
+select
   TD_TIME_STRING(time, 'd!', 'JST') as date,
   COUNT(DISTINCT user_id) as dau
-FROM events
-WHERE TD_INTERVAL(time, '-1M', 'JST')
-GROUP BY 1
+from events
+where TD_INTERVAL(time, '-1M', 'JST')
+group by 1
 
 -- After: Fast approximate count
-SELECT
+select
   TD_TIME_STRING(time, 'd!', 'JST') as date,
   APPROX_DISTINCT(user_id) as dau
-FROM events
-WHERE TD_INTERVAL(time, '-1M', 'JST')
-GROUP BY 1
+from events
+where TD_INTERVAL(time, '-1M', 'JST')
+group by 1
 ```
 
 ## Query Analysis Workflow
@@ -406,22 +406,22 @@ When optimizing a slow query, follow this workflow:
 
 ```sql
 EXPLAIN
-SELECT ...
-FROM ...
-WHERE ...
+select ...
+from ...
+where ...
 ```
 
 Look for:
 - Full table scans (missing time filters)
-- High cardinality GROUP BY
-- Expensive JOINs
+- High cardinality group by
+- Expensive joins
 - Missing filters
 
 ### Step 2: Check Time Filters
 
 ```sql
 -- Ensure time filter exists and is specific
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+where TD_INTERVAL(time, '-1d', 'JST')
   OR TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
 ```
 
@@ -429,8 +429,8 @@ WHERE TD_INTERVAL(time, '-1d', 'JST')
 
 ```sql
 -- Select only needed columns
-SELECT user_id, event_type, time
--- Not SELECT *
+select user_id, event_type, time
+-- Not select *
 ```
 
 ### Step 4: Use Approximate Functions
@@ -440,22 +440,22 @@ SELECT user_id, event_type, time
 -- Replace PERCENTILE with APPROX_PERCENTILE
 ```
 
-### Step 5: Test with LIMIT
+### Step 5: Test with limit
 
 ```sql
 -- Test logic on small subset first
-SELECT ...
-FROM ...
-WHERE TD_INTERVAL(time, '-1d', 'JST')
-LIMIT 1000
+select ...
+from ...
+where TD_INTERVAL(time, '-1d', 'JST')
+limit 1000
 ```
 
 ### Step 6: Use CTAS for Large Results
 
 ```sql
 -- For queries returning many rows
-CREATE TABLE results AS
-SELECT ...
+create table results AS
+select ...
 ```
 
 ## Advanced Optimization Techniques
@@ -466,24 +466,24 @@ For frequently-run queries, create pre-aggregated tables.
 
 ```sql
 -- Daily aggregation job
-CREATE TABLE daily_user_events AS
-SELECT
+create table daily_user_events AS
+select
   TD_TIME_STRING(time, 'd!', 'JST') as date,
   user_id,
   COUNT(*) as event_count,
   APPROX_DISTINCT(session_id) as sessions
-FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
-GROUP BY 1, 2
+from events
+where TD_INTERVAL(time, '-1d', 'JST')
+group by 1, 2
 
 -- Fast queries on pre-aggregated data
-SELECT
+select
   date,
   SUM(event_count) as total_events,
   SUM(sessions) as total_sessions
-FROM daily_user_events
-WHERE date >= '2024-01-01'
-GROUP BY 1
+from daily_user_events
+where date >= '2024-01-01'
+group by 1
 ```
 
 ### Incremental Processing
@@ -496,15 +496,15 @@ Process large time ranges incrementally.
 
 -- Day 1
 INSERT INTO monthly_summary
-SELECT ...
-FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+select ...
+from events
+where TD_INTERVAL(time, '-1d', 'JST')
 
 -- Day 2
 INSERT INTO monthly_summary
-SELECT ...
-FROM events
-WHERE TD_INTERVAL(time, '-2d/-1d', 'JST')
+select ...
+from events
+where TD_INTERVAL(time, '-2d/-1d', 'JST')
 
 -- etc.
 ```
@@ -515,24 +515,24 @@ Create and maintain summary tables for common queries.
 
 ```sql
 -- Create summary table once
-CREATE TABLE user_daily_summary AS
-SELECT
+create table user_daily_summary AS
+select
   TD_TIME_STRING(time, 'd!', 'JST') as date,
   user_id,
-  COUNT(*) as events,
+  count(*) as events,
   APPROX_DISTINCT(page_url) as pages_visited
-FROM events
-WHERE TD_INTERVAL(time, '-30d', 'JST')
-GROUP BY 1, 2
+from events
+where TD_INTERVAL(time, '-30d', 'JST')
+group by 1, 2
 
 -- Query the summary (much faster)
-SELECT
+select
   date,
   AVG(events) as avg_events_per_user,
   AVG(pages_visited) as avg_pages_per_user
-FROM user_daily_summary
-GROUP BY 1
-ORDER BY 1
+from user_daily_summary
+group by 1
+order by 1
 ```
 
 ## Best Practices Checklist
@@ -540,13 +540,13 @@ ORDER BY 1
 Before running a query, verify:
 
 - [ ] Time filter added (TD_INTERVAL or TD_TIME_RANGE)
-- [ ] Selecting specific columns (not SELECT *)
+- [ ] Selecting specific columns (not select *)
 - [ ] Using APPROX_DISTINCT for unique counts
 - [ ] Using REGEXP_LIKE instead of multiple LIKEs
-- [ ] Tested with LIMIT on small dataset first
+- [ ] Tested with limit on small dataset first
 - [ ] Using CTAS for large result sets
 - [ ] All joined tables have time filters
-- [ ] GROUP BY uses reasonable cardinality
+- [ ] group by uses reasonable cardinality
 - [ ] Window functions partition appropriately
 
 ## Cost Optimization

@@ -22,7 +22,7 @@ Use this skill when:
 
 Access TD tables using database.table notation:
 ```sql
-SELECT * FROM database_name.table_name
+select * FROM database_name.table_name
 ```
 
 ### 2. Time-based Partitioning
@@ -30,7 +30,7 @@ SELECT * FROM database_name.table_name
 TD Hive tables are partitioned by time. Always use time predicates:
 
 ```sql
-SELECT *
+select *
 FROM database_name.table_name
 WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31', 'JST')
 ```
@@ -58,7 +58,7 @@ WHERE time >= 1704067200 AND time < 1704153600
 
 **Limit during development:**
 ```sql
-SELECT * FROM table_name
+select * FROM table_name
 WHERE TD_TIME_RANGE(time, '2024-01-01')
 LIMIT 1000
 ```
@@ -96,24 +96,24 @@ TD_TIME_RANGE(time, '2024-01-01', NULL, 'JST')  -- Open-ended
 
 **TD_SCHEDULED_TIME()** - Get workflow execution time:
 ```sql
-SELECT TD_SCHEDULED_TIME()
+select TD_SCHEDULED_TIME()
 -- Returns Unix timestamp of scheduled run
 ```
 
 **TD_TIME_FORMAT** - Format Unix timestamps:
 ```sql
-SELECT TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm:ss', 'JST')
+select TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm:ss', 'JST')
 ```
 
 **TD_TIME_PARSE** - Parse string to Unix timestamp:
 ```sql
-SELECT TD_TIME_PARSE('2024-01-01', 'JST')
+select TD_TIME_PARSE('2024-01-01', 'JST')
 ```
 
 **TD_DATE_TRUNC** - Truncate timestamp to day/hour/etc:
 ```sql
-SELECT TD_DATE_TRUNC('day', time, 'JST')
-SELECT TD_DATE_TRUNC('hour', time, 'UTC')
+select TD_DATE_TRUNC('day', time, 'JST')
+select TD_DATE_TRUNC('hour', time, 'UTC')
 ```
 
 ### 5. JOIN Optimization
@@ -122,7 +122,7 @@ SELECT TD_DATE_TRUNC('hour', time, 'UTC')
 
 ```sql
 -- Map-side JOIN for small tables (use /*+ MAPJOIN */ hint)
-SELECT /*+ MAPJOIN(small_table) */
+select /*+ MAPJOIN(small_table) */
   l.*,
   s.attribute
 FROM large_table l
@@ -133,7 +133,7 @@ WHERE TD_TIME_RANGE(l.time, '2024-01-01')
 **Reduce-side JOIN:**
 ```sql
 -- Default for large-to-large joins
-SELECT *
+select *
 FROM table1 t1
 JOIN table2 t2 ON t1.key = t2.key
 WHERE TD_TIME_RANGE(t1.time, '2024-01-01')
@@ -144,7 +144,7 @@ WHERE TD_TIME_RANGE(t1.time, '2024-01-01')
 
 **Standard aggregations:**
 ```sql
-SELECT
+select
   TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date,
   COUNT(*) as total_count,
   COUNT(DISTINCT user_id) as unique_users,
@@ -158,7 +158,7 @@ GROUP BY TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST')
 **Approximate aggregations for large datasets:**
 ```sql
 -- Not built-in, but can use sampling
-SELECT COUNT(*) * 10 as estimated_count
+select COUNT(*) * 10 as estimated_count
 FROM table_name
 WHERE TD_TIME_RANGE(time, '2024-01-01')
   AND rand() < 0.1  -- 10% sample
@@ -177,7 +177,7 @@ CAST(column_name AS DECIMAL(10,2))
 ### 8. Window Functions
 
 ```sql
-SELECT
+select
   user_id,
   event_time,
   ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY event_time) as event_seq,
@@ -190,7 +190,7 @@ WHERE TD_TIME_RANGE(time, '2024-01-01')
 
 **Array functions:**
 ```sql
-SELECT
+select
   array_contains(tags, 'premium') as is_premium,
   size(tags) as tag_count,
   tags[0] as first_tag
@@ -199,7 +199,7 @@ FROM user_profiles
 
 **Map functions:**
 ```sql
-SELECT
+select
   map_keys(attributes) as attribute_names,
   map_values(attributes) as attribute_values,
   attributes['country'] as country
@@ -210,7 +210,7 @@ FROM events
 
 ### Daily Event Aggregation
 ```sql
-SELECT
+select
   TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date,
   event_type,
   COUNT(*) as event_count,
@@ -225,7 +225,7 @@ ORDER BY date, event_type
 
 ### User Segmentation
 ```sql
-SELECT
+select
   CASE
     WHEN purchase_count >= 10 THEN 'high_value'
     WHEN purchase_count >= 5 THEN 'medium_value'
@@ -234,7 +234,7 @@ SELECT
   COUNT(*) as user_count,
   AVG(total_spend) as avg_spend
 FROM (
-  SELECT
+  select
     user_id,
     COUNT(*) as purchase_count,
     SUM(amount) as total_spend
@@ -252,14 +252,14 @@ GROUP BY
 
 ### Session Analysis
 ```sql
-SELECT
+select
   user_id,
   session_id,
   MIN(time) as session_start,
   MAX(time) as session_end,
   COUNT(*) as events_in_session
 FROM (
-  SELECT
+  select
     user_id,
     time,
     SUM(is_new_session) OVER (
@@ -268,7 +268,7 @@ FROM (
       ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) as session_id
   FROM (
-    SELECT
+    select
       user_id,
       time,
       CASE
@@ -287,7 +287,7 @@ GROUP BY user_id, session_id
 ### Cohort Analysis
 ```sql
 WITH first_purchase AS (
-  SELECT
+  select
     user_id,
     TD_TIME_FORMAT(MIN(time), 'yyyy-MM', 'JST') as cohort_month
   FROM database_name.purchases
@@ -295,7 +295,7 @@ WITH first_purchase AS (
   GROUP BY user_id
 ),
 monthly_purchases AS (
-  SELECT
+  select
     user_id,
     TD_TIME_FORMAT(time, 'yyyy-MM', 'JST') as purchase_month,
     SUM(amount) as monthly_spend
@@ -303,7 +303,7 @@ monthly_purchases AS (
   WHERE TD_TIME_RANGE(time, '2024-01-01', NULL, 'JST')
   GROUP BY user_id, TD_TIME_FORMAT(time, 'yyyy-MM', 'JST')
 )
-SELECT
+select
   f.cohort_month,
   m.purchase_month,
   COUNT(DISTINCT m.user_id) as active_users,
@@ -322,7 +322,7 @@ When working with JSON data:
 ```sql
 -- Usually handled automatically in TD, but awareness is important
 -- JSON SerDe allows querying nested JSON structures
-SELECT
+select
   get_json_object(json_column, '$.user.id') as user_id,
   get_json_object(json_column, '$.event.type') as event_type
 FROM raw_events
@@ -332,7 +332,7 @@ FROM raw_events
 
 Flatten arrays:
 ```sql
-SELECT
+select
   user_id,
   tag
 FROM user_profiles
@@ -342,7 +342,7 @@ WHERE TD_TIME_RANGE(time, '2024-01-01')
 
 Multiple LATERAL VIEWs:
 ```sql
-SELECT
+select
   user_id,
   tag,
   category
@@ -359,7 +359,7 @@ SET hive.exec.dynamic.partition = true;
 SET hive.exec.dynamic.partition.mode = nonstrict;
 
 INSERT OVERWRITE TABLE target_table PARTITION(dt)
-SELECT *, TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as dt
+select *, TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as dt
 FROM source_table
 WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
 ```
@@ -392,7 +392,7 @@ WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
 3. **Use MAPJOIN hint** for small table joins
 4. **Test on small time ranges** before full runs
 5. **Use appropriate timezone** (JST for Japan data)
-6. **Avoid SELECT *** in production queries
+6. **Avoid select *** in production queries
 7. **Use CTEs (WITH clauses)** for complex queries
 8. **Consider data volume** - Hive is batch-oriented
 9. **Monitor query progress** in TD console
