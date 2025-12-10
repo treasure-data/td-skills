@@ -12,6 +12,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 - **[sql-skills/trino](./sql-skills/trino)** - Write and optimize SQL queries for Trino with TD best practices
 - **[sql-skills/hive](./sql-skills/hive)** - Create efficient Hive queries following TD conventions
+- **[sql-skills/time-filtering](./sql-skills/time-filtering)** - Time-based filtering with td_interval() and td_time_range() for partition pruning and query performance
 - **[sql-skills/trino-optimizer](./sql-skills/trino-optimizer)** - Optimize slow Trino queries, fix timeouts and memory errors, reduce costs
 - **[sql-skills/trino-to-hive-migration](./sql-skills/trino-to-hive-migration)** - Convert Trino queries to Hive to resolve memory errors and handle large datasets
 - **[sql-skills/trino-cli](./sql-skills/trino-cli)** - Use Trino CLI for interactive queries, data exploration, and terminal-based workflows with TD
@@ -86,6 +87,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 "Use the Trino skill to extract data from sample_datasets.nasdaq table"
 "Use the Hive skill to write a query for daily user aggregation"
+"Use the time-filtering skill to add partition pruning to my query"
 "Use the Trino CLI skill to help me connect to TD from the terminal"
 "Use the TD MCP skill to set up Claude Code to access my TD databases"
 "Use the activations skill to query activation logs for parent segment 394649"
@@ -103,7 +105,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, Trino CLI, TD MCP, activations, digdag, dbt, JavaScript SDK, pytd, tdx, tdx-basic, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, activations, digdag, dbt, JavaScript SDK, pytd, tdx, tdx-basic, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
