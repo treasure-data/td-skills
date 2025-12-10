@@ -104,17 +104,17 @@ td_time_range(time, '2024-01-01')  -- Single day
 td_time_add(td_scheduled_time(), '-1d')  -- Yesterday
 ```
 
-**TD_TIME_STRING** - Format timestamps (Recommended):
+**td_time_string** - Format timestamps (Recommended):
 ```sql
 -- Uses simple format codes instead of full format strings
-TD_TIME_STRING(time, 'd!', 'JST')     -- Returns: 2018-09-13
-TD_TIME_STRING(time, 's!', 'UTC')     -- Returns: 2018-09-13 16:45:34
-TD_TIME_STRING(time, 'M!', 'JST')     -- Returns: 2018-09 (year-month)
-TD_TIME_STRING(time, 'h!', 'UTC')     -- Returns: 2018-09-13 16 (year-month-day hour)
+td_time_string(time, 'd!', 'JST')     -- Returns: 2018-09-13
+td_time_string(time, 's!', 'UTC')     -- Returns: 2018-09-13 16:45:34
+td_time_string(time, 'M!', 'JST')     -- Returns: 2018-09 (year-month)
+td_time_string(time, 'h!', 'UTC')     -- Returns: 2018-09-13 16 (year-month-day hour)
 
 -- With timezone in output (without ! suffix)
-TD_TIME_STRING(time, 'd', 'JST')      -- Returns: 2018-09-13 00:00:00+0900
-TD_TIME_STRING(time, 's', 'UTC')      -- Returns: 2018-09-13 16:45:34+0000
+td_time_string(time, 'd', 'JST')      -- Returns: 2018-09-13 00:00:00+0900
+td_time_string(time, 's', 'UTC')      -- Returns: 2018-09-13 16:45:34+0000
 ```
 
 **Format codes:**
@@ -128,14 +128,14 @@ TD_TIME_STRING(time, 's', 'UTC')      -- Returns: 2018-09-13 16:45:34+0000
 - `s!` = yyyy-MM-dd HH:mm:ss (second)
 - Without the exclamation mark suffix, timezone offset is included
 
-**TD_TIME_FORMAT** - Format timestamps (Legacy, use TD_TIME_STRING instead):
+**td_time_format** - Format timestamps (Legacy, use td_time_string instead):
 ```sql
-TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm:ss', 'UTC')
+td_time_format(time, 'yyyy-MM-dd HH:mm:ss', 'UTC')
 ```
 
-**TD_SESSIONIZE** - Sessionize events:
+**td_sessionize** - Sessionize events:
 ```sql
-SELECT TD_SESSIONIZE(time, 1800, user_id) as session_id
+SELECT td_sessionize(time, 1800, user_id) as session_id
 FROM events
 ```
 
@@ -186,7 +186,7 @@ WHERE td_time_range(time, '2024-01-01')
 ```sql
 -- Using td_interval for last month
 SELECT
-  TD_TIME_STRING(time, 'd!', 'JST') as date,
+  td_time_string(time, 'd!', 'JST') as date,
   event_type,
   COUNT(*) as event_count,
   APPROX_DISTINCT(user_id) as unique_users
@@ -200,7 +200,7 @@ ORDER BY 1, 2
 **Alternative with explicit date range:**
 ```sql
 SELECT
-  TD_TIME_STRING(time, 'd!', 'JST') as date,
+  td_time_string(time, 'd!', 'JST') as date,
   event_type,
   COUNT(*) as event_count,
   APPROX_DISTINCT(user_id) as unique_users
@@ -232,7 +232,7 @@ FROM events_filtered
 ```sql
 -- Using td_interval for yesterday's data
 SELECT
-  TD_TIME_STRING(time, 'd!', 'JST') as date,
+  td_time_string(time, 'd!', 'JST') as date,
   COUNT(*) as total_events,
   APPROX_DISTINCT(user_id) as daily_active_users,
   AVG(session_duration) as avg_session_duration
@@ -246,7 +246,7 @@ ORDER BY 1
 **For rolling 30-day window:**
 ```sql
 SELECT
-  TD_TIME_STRING(time, 'd!', 'JST') as date,
+  td_time_string(time, 'd!', 'JST') as date,
   COUNT(*) as total_events,
   APPROX_DISTINCT(user_id) as daily_active_users,
   AVG(session_duration) as avg_session_duration
@@ -278,10 +278,10 @@ ORDER BY 1
 1. **Always include time filters** using td_interval or td_time_range for partition pruning
    - Use td_interval for relative dates: `WHERE td_interval(time, '-1d', 'JST')`
    - Use td_time_range for explicit dates: `WHERE td_time_range(time, '2024-01-01', '2024-01-31')`
-   - Never filter by formatted dates: ❌ `WHERE TD_TIME_STRING(time, 'd!', 'JST') = '2024-01-01'`
-2. **Use TD_TIME_STRING for display only**, not for filtering
-   - ✅ `SELECT TD_TIME_STRING(time, 'd!', 'JST') as date`
-   - ❌ `WHERE TD_TIME_STRING(time, 'd!', 'JST') = '2024-01-01'`
+   - Never filter by formatted dates: ❌ `WHERE td_time_string(time, 'd!', 'JST') = '2024-01-01'`
+2. **Use td_time_string for display only**, not for filtering
+   - ✅ `SELECT td_time_string(time, 'd!', 'JST') as date`
+   - ❌ `WHERE td_time_string(time, 'd!', 'JST') = '2024-01-01'`
 3. **Use APPROX functions** for large-scale aggregations (APPROX_DISTINCT, APPROX_PERCENTILE)
 4. **Limit exploratory queries** to reduce costs and scan time
 5. **Test queries on small time ranges** before running on full dataset

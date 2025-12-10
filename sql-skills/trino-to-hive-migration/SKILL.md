@@ -81,7 +81,7 @@ SELECT
   user_id,
   COUNT(*) as event_count
 FROM events
-WHERE TD_INTERVAL(time, '-1M', 'JST')
+WHERE td_interval(time, '-1M', 'JST')
 GROUP BY user_id
 
 -- Hive (same syntax)
@@ -89,31 +89,31 @@ SELECT
   user_id,
   COUNT(*) as event_count
 FROM events
-WHERE TD_INTERVAL(time, '-1M', 'JST')
+WHERE td_interval(time, '-1M', 'JST')
 GROUP BY user_id
 ```
 
 ### Time Functions
 
-**TD_TIME_STRING (Trino only):**
+**td_time_string (Trino only):**
 ```sql
 -- Trino
-SELECT TD_TIME_STRING(time, 'd!', 'JST') as date
+SELECT td_time_string(time, 'd!', 'JST') as date
 
--- Hive: Use TD_TIME_FORMAT instead
-SELECT TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date
+-- Hive: Use td_time_format instead
+SELECT td_time_format(time, 'yyyy-MM-dd', 'JST') as date
 ```
 
-**TD_TIME_RANGE (Compatible):**
+**td_time_range (Compatible):**
 ```sql
 -- Both Trino and Hive
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31', 'JST')
+WHERE td_time_range(time, '2024-01-01', '2024-01-31', 'JST')
 ```
 
-**TD_INTERVAL (Compatible):**
+**td_interval (Compatible):**
 ```sql
 -- Both Trino and Hive
-WHERE TD_INTERVAL(time, '-1M', 'JST')
+WHERE td_interval(time, '-1M', 'JST')
 ```
 
 ### Approximate Functions
@@ -134,7 +134,7 @@ SELECT COUNT(DISTINCT user_id) as unique_users
 -- Hive Option 3: Sample for estimation
 SELECT COUNT(DISTINCT user_id) * 10 as estimated_users
 FROM table_name
-WHERE TD_INTERVAL(time, '-1M', 'JST')
+WHERE td_interval(time, '-1M', 'JST')
   AND rand() < 0.1  -- 10% sample
 ```
 
@@ -205,7 +205,7 @@ SELECT
   ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY event_time) as seq,
   LAG(event_time) OVER (PARTITION BY user_id ORDER BY event_time) as prev_event
 FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+WHERE td_interval(time, '-1d', 'JST')
 ```
 
 ### JOINs (Compatible)
@@ -246,24 +246,24 @@ CAST(column AS BIGINT)  -- Returns NULL on failure in Hive
 ```sql
 SELECT
   user_id,
-  TD_TIME_STRING(time, 'd!', 'JST') as date,
+  td_time_string(time, 'd!', 'JST') as date,
   APPROX_DISTINCT(session_id) as sessions,
   COUNT(*) as events
 FROM events
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-12-31')
-GROUP BY user_id, TD_TIME_STRING(time, 'd!', 'JST')
+WHERE td_time_range(time, '2024-01-01', '2024-12-31')
+GROUP BY user_id, td_time_string(time, 'd!', 'JST')
 ```
 
 **Converted to Hive (works):**
 ```sql
 SELECT
   user_id,
-  TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date,
+  td_time_format(time, 'yyyy-MM-dd', 'JST') as date,
   approx_distinct(session_id) as sessions,  -- Hivemall - same as Trino!
   COUNT(*) as events
 FROM events
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-12-31', 'JST')
-GROUP BY user_id, TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST')
+WHERE td_time_range(time, '2024-01-01', '2024-12-31', 'JST')
+GROUP BY user_id, td_time_format(time, 'yyyy-MM-dd', 'JST')
 ```
 
 ### Example 2: Complex Multi-Way JOIN
@@ -279,7 +279,7 @@ FROM events e
 JOIN users u ON e.user_id = u.user_id
 JOIN products p ON e.product_id = p.product_id
 JOIN orders o ON e.order_id = o.order_id
-WHERE TD_INTERVAL(e.time, '-3M', 'JST')
+WHERE td_interval(e.time, '-3M', 'JST')
   AND REGEXP_LIKE(e.event_type, 'purchase|checkout')
 ```
 
@@ -294,7 +294,7 @@ FROM events e
 JOIN users u ON e.user_id = u.user_id
 JOIN products p ON e.product_id = p.product_id
 JOIN orders o ON e.order_id = o.order_id
-WHERE TD_INTERVAL(e.time, '-3M', 'JST')
+WHERE td_interval(e.time, '-3M', 'JST')
   AND e.event_type RLIKE 'purchase|checkout'
 ```
 
@@ -309,7 +309,7 @@ SELECT
   referrer,
   COUNT(*) as page_views
 FROM page_views
-WHERE TD_INTERVAL(time, '-6M', 'JST')
+WHERE td_interval(time, '-6M', 'JST')
 GROUP BY user_id, session_id, page_url, referrer
 ```
 
@@ -323,7 +323,7 @@ SELECT
   referrer,
   COUNT(*) as page_views
 FROM page_views
-WHERE TD_INTERVAL(time, '-6M', 'JST')
+WHERE td_interval(time, '-6M', 'JST')
 GROUP BY user_id, session_id, page_url, referrer
 ```
 
@@ -332,7 +332,7 @@ GROUP BY user_id, session_id, page_url, referrer
 | Feature | Trino | Hive |
 |---------|-------|------|
 | Execution engine | In-memory | Tez (optimized MapReduce) |
-| Time formatting | `TD_TIME_STRING(time, 'd!', 'JST')` | `TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST')` |
+| Time formatting | `td_time_string(time, 'd!', 'JST')` | `td_time_format(time, 'yyyy-MM-dd', 'JST')` |
 | Approximate distinct | `APPROX_DISTINCT(col)` | `approx_distinct(col)` (Hivemall - compatible!) |
 | Approximate percentile | `APPROX_PERCENTILE(col, 0.95)` | `PERCENTILE(col, 0.95)` |
 | Array aggregation | `ARRAY_AGG(col)` | `COLLECT_LIST(col)` |
@@ -347,7 +347,7 @@ Before converting from Trino to Hive:
 
 - [ ] Confirm memory error or timeout in Trino
 - [ ] Try Trino optimization first (time filters, column reduction, APPROX functions)
-- [ ] Replace `TD_TIME_STRING` with `TD_TIME_FORMAT`
+- [ ] Replace `td_time_string` with `td_time_format`
 - [ ] Keep `approx_distinct` as-is (compatible via Hivemall!) or use `COUNT(DISTINCT)` for exact counts
 - [ ] Replace `REGEXP_LIKE` with `RLIKE`
 - [ ] Replace `ARRAY_AGG` with `COLLECT_LIST`
@@ -368,7 +368,7 @@ Once migrated to Hive, optimize with these techniques:
 SELECT /*+ MAPJOIN(small_table) */ *
 FROM large_table l
 JOIN small_table s ON l.id = s.id
-WHERE TD_INTERVAL(l.time, '-1M', 'JST')
+WHERE td_interval(l.time, '-1M', 'JST')
 ```
 
 ### 2. Enable Dynamic Partitioning
@@ -378,9 +378,9 @@ SET hive.exec.dynamic.partition = true;
 SET hive.exec.dynamic.partition.mode = nonstrict;
 
 INSERT OVERWRITE TABLE target_table PARTITION(dt)
-SELECT *, TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as dt
+SELECT *, td_time_format(time, 'yyyy-MM-dd', 'JST') as dt
 FROM source_table
-WHERE TD_INTERVAL(time, '-1M', 'JST')
+WHERE td_interval(time, '-1M', 'JST')
 ```
 
 ### 3. Process in Chunks for Very Large Datasets
@@ -390,7 +390,7 @@ WHERE TD_INTERVAL(time, '-1M', 'JST')
 INSERT INTO summary_table
 SELECT ...
 FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+WHERE td_interval(time, '-1d', 'JST')
 -- Run daily, much more stable than processing full year
 ```
 
@@ -400,7 +400,7 @@ WHERE TD_INTERVAL(time, '-1d', 'JST')
 -- Test logic first
 SELECT ...
 FROM events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+WHERE td_interval(time, '-1d', 'JST')
 LIMIT 1000
 ```
 
