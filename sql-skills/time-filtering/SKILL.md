@@ -148,8 +148,26 @@ where td_interval(time, '-1d/-7d')
 -- Last 7 days from yesterday
 where td_interval(time, '-7d/-1d')
 
--- Yesterday relative to now (same as '-1d')
+-- Range from yesterday until now (today's current time)
 where td_interval(time, '-1d/now')
+
+-- Beginning of today (00:00:00) until now
+where td_interval(time, '0d/now')
+
+-- Beginning of this month until now
+where td_interval(time, '0M/now')
+
+-- Beginning of this year until now
+where td_interval(time, '0y/now')
+
+-- Yesterday from beginning of today (same as '-1d')
+where td_interval(time, '-1d/0d')
+
+-- Last 7 days from beginning of today
+where td_interval(time, '-7d/0d')
+
+-- Previous month (entire month)
+where td_interval(time, '-1M/0M')
 ```
 
 ### With td_scheduled_time

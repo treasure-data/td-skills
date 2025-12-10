@@ -22,7 +22,7 @@ Use this skill when:
 
 Always use the TD table format:
 ```sql
-SELECT * FROM database_name.table_name
+select * from database_name.table_name
 ```
 
 ### 2. Partitioning and Time-based Queries
