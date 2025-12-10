@@ -261,15 +261,19 @@ tdx sg pull "Customer 360"
 # 2. Edit or create segment YAML
 vim segments/customer-360/vip-customers.yml
 
-# 3. Preview changes
+# 3. Validate YAML syntax (use validate-segment skill for detailed checks)
+
+# 4. Preview changes
 tdx sg push --dry-run
 
-# 4. Push to TD
+# 5. Push to TD
 tdx sg push
 
-# 5. Verify
+# 6. Verify
 tdx sg list -r
 ```
+
+For detailed YAML validation against the CDP API spec, use the **validate-segment** skill.
 
 ## Folder Structure
 
@@ -318,7 +322,8 @@ tdx connections
 
 ## Related Skills
 
-- **tdx-skills/tdx-parent-segment** - Manage parent segments and master tables
+- **tdx-skills/validate-segment** - Validate segment YAML syntax against CDP API spec
+- **tdx-skills/parent-segment** - Manage parent segments and master tables
 - **tdx-skills/tdx-basic** - Core tdx CLI operations and global options
 
 ## Resources
