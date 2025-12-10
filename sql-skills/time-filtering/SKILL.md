@@ -138,12 +138,11 @@ where td_interval(time, '0M/-7d')
 
 ### With td_scheduled_time
 
-In scheduled workflows, `td_scheduled_time()` returns the workflow's scheduled execution time. Since this is the default reference point (same as 'now'), you typically don't need to specify it:
+In scheduled workflows, include `td_scheduled_time()` in your query to establish the reference time for `td_interval()`. This ensures the query uses the workflow's scheduled execution time:
 
 ```sql
--- These are equivalent in a scheduled workflow:
-select * from mydb.events where td_interval(time, '-1d', 'JST')  -- uses current time
-select * from mydb.events where td_interval(time, '-1d', 'JST', td_scheduled_time())  -- explicit but redundant
+-- Use td_scheduled_time() to set the reference date in scheduled workflows
+select td_scheduled_time(), * from mydb.events where td_interval(time, '-1d', 'JST')
 ```
 
 ### Verify Time Range with td_interval_range
