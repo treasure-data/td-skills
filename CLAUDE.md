@@ -82,6 +82,7 @@ When adding a new skill:
 
 ## Validation Requirements
 
+- All SQL example must use lower case keywords and function names consistently
 - All skill paths in `marketplace.json` must start with `./`
 - YAML frontmatter must include both `name` and `description`
 - Examples should use TD-specific patterns and conventions
