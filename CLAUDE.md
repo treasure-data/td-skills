@@ -60,17 +60,8 @@ When adding a new skill:
 
 ## TD-Specific Conventions
 
-### SQL Skills
-- Always include time filters using `TD_INTERVAL` or `TD_TIME_RANGE` for partition pruning
-- Prefer `TD_INTERVAL` for relative time filtering (e.g., `-1d` for yesterday)
-- Use `APPROX_*` functions for large-scale aggregations in Trino
-- Include timezone parameter in all TD time functions
-
-### Workflow Skills
-- Digdag workflows use `.dig` files with YAML syntax
-- Session variables: `${session_date}`, `${session_time}`, `${session_date_compact}`
-- Always include error handling with `_error:` tasks
-- Use `TD_SCHEDULED_TIME()` to establish reference date for `TD_INTERVAL`
+- Always include time filters using `td_interval(time, '(relative time range)')`  (e.g., `td_interval(time, '-1d')` for yesterday) to avoid unnecessary full table scans.
+- Use `approx_*` functions for large-scale aggregations in Trino
 
 ## Testing Skills
 
@@ -91,6 +82,7 @@ When adding a new skill:
 
 ## Validation Requirements
 
+- All SQL example must use lower case keywords and function names consistently
 - All skill paths in `marketplace.json` must start with `./`
 - YAML frontmatter must include both `name` and `description`
 - Examples should use TD-specific patterns and conventions
@@ -103,7 +95,7 @@ When creating skills, follow these core principles:
 - **Be concise**: Assume Claude is smart; only add context it doesn't have.
 - **Set appropriate degrees of freedom**: Match specificity to task fragility.
 - **Use progressive disclosure**: Keep SKILL.md under 500 lines; split into referenced files.
-- **Write effective descriptions**: Use third person, be specific, include key terms and when to use.
+- **Write effective descriptions**: Use third person, be specific, include key terms and when to use, within 1000 characters.
 - **Implement feedback loops**: validation → fix → repeat.
 - **Test iteratively**: Build evaluations first; develop with one Claude instance to help other instances.
 

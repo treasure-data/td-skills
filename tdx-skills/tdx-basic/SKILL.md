@@ -1,6 +1,6 @@
 ---
 name: tdx-basic
-description: Core tdx CLI operations for managing Treasure Data from the command line including database management, table operations, queries, and context management. Use this skill when helping users with tdx commands, configuration, or basic data operations.
+description: Executes tdx CLI commands for Treasure Data. Covers `tdx databases`, `tdx tables`, `tdx query`, `tdx auth setup`, context management with profiles/sessions, and output formats (JSON/TSV/table). Use when users need tdx command syntax, authentication setup, database/table exploration, or query execution.
 ---
 
 # tdx CLI - Basic Operations
@@ -28,7 +28,7 @@ After installation, use `tdx` command directly:
 ```bash
 tdx databases
 tdx tables
-tdx query "SELECT * FROM mydb.users"
+tdx query "select * from mydb.users"
 ```
 
 ### Configure API Key
@@ -188,13 +188,13 @@ tdx describe mydb.users
 ### Queries
 
 ```bash
-# Execute SQL query
-tdx query "SELECT * FROM mydb.users LIMIT 10"
+# Simple query (single line)
+tdx query "select * from mydb.users limit 10"
 
 # With database context
-tdx query "SELECT * FROM users" --database mydb
+tdx query "select * from users limit 10" --database mydb
 
-# From file (recommended for complex queries)
+# Complex query (use file)
 tdx query -f query.sql
 
 # Multi-statement from file
@@ -219,7 +219,7 @@ tdx databases
 tdx databases --json
 
 # JSON Lines (streaming)
-tdx query "SELECT * FROM users" --jsonl
+tdx query "select * from users" --jsonl
 
 # TSV (tab-separated)
 tdx databases --tsv
@@ -259,10 +259,10 @@ tdx tables
 
 ```bash
 # Query and pipe to jq
-tdx query "SELECT * FROM users" --json | jq '.[0]'
+tdx query "select * from users" --json | jq '.[0]'
 
 # Query as JSONL and process line by line
-tdx query "SELECT * FROM users" --jsonl | while read line; do
+tdx query "select * from users" --jsonl | while read line; do
   echo "$line" | jq '.name'
 done
 ```
@@ -277,24 +277,16 @@ tdx databases --site jp01 --json > jp_dbs.json
 
 ## Global Options
 
-Available for all commands:
-
-- `--profile <name>` - Use specific profile configuration
-- `--site <site>` - TD site/region (us01, jp01, eu01, ap02)
-- `--format <format>` - Output format (table, json, jsonl, tsv)
-- `--json` - JSON output (shorthand)
-- `--jsonl` - JSON Lines output (shorthand)
-- `--tsv` - TSV output (shorthand)
+Use `tdx --help` or `tdx <command> --help` for complete options. Common options:
+- `--profile <name>` - Use specific profile
+- `--site <site>` - TD site (us01, jp01, eu01, ap02)
+- `--json` / `--jsonl` / `--tsv` - Output format
 - `--output <file>` - Save to file
-- `--limit <rows>` - Max rows (table format, default: 40)
-- `--verbose` - Verbose logging
-- `--timeout <seconds>` - Timeout (default: 30)
 - `--dry-run` - Preview without executing
-- `-y, --yes` - Skip confirmations
 
 ## Best Practices
 
-1. **Always Use Time Filters** - Most TD data is time-series. Use `TD_INTERVAL` or `TD_TIME_RANGE` for partition pruning and better performance
+1. **Always Use Time Filters** - Most TD data is time-series. Use `td_interval` or `td_time_range` for partition pruning and better performance
 2. **Use Context Management** - Set database/profile once instead of repeating flags
 3. **Use Profiles** - Define prod/dev/staging profiles for easy switching
 4. **Pattern Matching** - Use wildcards (`*`) to filter databases/tables
@@ -319,7 +311,7 @@ The `time` column in TD tables is a **Unix timestamp** (seconds since epoch 1970
 
 ```sql
 -- time column contains values like: 1735689600 (2025-01-01 00:00:00 UTC)
-SELECT time, FROM_UNIXTIME(time) AS datetime FROM mydb.events LIMIT 1
+select time, from_unixtime(time) as datetime from mydb.events limit 1
 ```
 
 ### Time-Based Filtering
@@ -327,32 +319,21 @@ SELECT time, FROM_UNIXTIME(time) AS datetime FROM mydb.events LIMIT 1
 For partitioned tables, use time filters for performance:
 
 ```bash
-# Use TD_INTERVAL for relative time (UTC default)
-tdx query "
-SELECT COUNT(*)
-FROM mydb.access_logs
-WHERE TD_INTERVAL(time, '-1d')
-"
+# Simple queries - use single-line format
+tdx query "select count(*) from mydb.access_logs where td_interval(time, '-1d')"
+tdx query "select count(*) from mydb.access_logs where td_interval(time, '-1d', 'JST')"
+tdx query "select count(*) from mydb.access_logs where td_time_range(time, '2025-01-01', '2025-01-31')"
 
-# With explicit timezone for Japan data
-tdx query "
-SELECT COUNT(*)
-FROM mydb.access_logs
-WHERE TD_INTERVAL(time, '-1d', 'JST')
-"
-
-# Use TD_TIME_RANGE for absolute time (UTC default)
-tdx query "
-SELECT COUNT(*)
-FROM mydb.access_logs
-WHERE TD_TIME_RANGE(time, '2025-01-01', '2025-01-31')
-"
+# Complex queries - use file with -f flag
+tdx query -f time_analysis.sql
 ```
+
+See **sql-skills/time-filtering** for comprehensive time filtering patterns.
 
 ### Timezone
 
 - **UTC is the default** - timezone parameter can be omitted
-- **JST for Japan data** - must specify explicitly: `TD_INTERVAL(time, '-1d', 'JST')`
+- **JST for Japan data** - must specify explicitly: `td_interval(time, '-1d', 'JST')`
 - Other timezones must be explicitly specified
 
 ## Common Issues
@@ -383,27 +364,12 @@ WHERE TD_TIME_RANGE(time, '2025-01-01', '2025-01-31')
 1. Always quote patterns: `tdx tables "prod_*"`
 2. Or use `--in` flag: `tdx tables --in mydb`
 
-## Table-Specific Options
+## Command-Specific Options
 
-For table commands (tables, describe, show):
+For table commands: `-d, --database <name>` or `--in <database>`
+For query command: `-f, --file <path>` to read SQL from file
 
-- `-d, --database <name>` - Specify database
-- `--in <database>` - Alias for --database (natural language)
-
-```bash
-# All equivalent
-tdx tables "mydb.*"
-tdx tables --in mydb
-tdx tables -d mydb
-```
-
-## Query-Specific Options
-
-For query command:
-
-- `-f, --file <path>` - Read SQL from file
-- `-d, --database <db>` - Database to query (default: information_schema)
-- `--catalog <catalog>` - Trino catalog (default: td)
+Use `tdx <command> --help` for complete options.
 
 ## Complete Command Reference
 
