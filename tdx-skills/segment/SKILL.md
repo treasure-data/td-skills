@@ -209,14 +209,14 @@ See [full operator reference](https://tdx.treasuredata.com/commands/segment.html
 
 ### List Operators
 
-- **In**: Value in set - `values: ["US", "CA", "MX"]`
-- **NotIn**: Value not in set - `values: ["spam", "test"]`
+- **In**: Value in set - `value: ["US", "CA", "MX"]`
+- **NotIn**: Value not in set - `value: ["spam", "test"]`
 
 ### String Operators
 
-- **Contain**: Contains substring - `values: ["@gmail.com"]`
-- **StartWith**: Starts with prefix - `values: ["Premium"]`
-- **EndWith**: Ends with suffix - `values: [".com"]`
+- **Contain**: Contains substring - `value: ["@gmail.com"]`
+- **StartWith**: Starts with prefix - `value: ["Premium"]`
+- **EndWith**: Ends with suffix - `value: [".com"]`
 - **Regexp**: Regex match - `value: "^[A-Z]{2}[0-9]{4}$"`
 
 ### Null Operators
@@ -237,7 +237,7 @@ See [full operator reference](https://tdx.treasuredata.com/commands/segment.html
 - `minute` - Minutes
 - `second` - Seconds
 
-**Note**: Most operators use singular `value`, while set-based operators (In, NotIn, Contain, StartWith, EndWith) use plural `values`.
+**Note**: All operators use unified `value` field. For set-based operators (In, NotIn, Contain, StartWith, EndWith), provide an array. The CLI auto-detects single vs array values.
 
 ## Accessing Segment Data
 
