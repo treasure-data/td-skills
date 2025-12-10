@@ -197,9 +197,21 @@ tdx query "select * from users limit 10" --database mydb
 # Complex query (use file)
 tdx query -f query.sql
 
+# Read SQL from stdin (use - as file argument)
+echo "select 1" | tdx query -
+cat query.sql | tdx query -
+
+# Pipe segment SQL to query (see segment skill)
+tdx sg sql "High Value Customers" | tdx query -
+
 # Multi-statement from file
 tdx query -f setup-and-query.sql
 ```
+
+**Input options:**
+- Inline SQL string: `tdx query "select ..."`
+- File: `tdx query -f query.sql` or `tdx query query.sql`
+- Stdin: `tdx query -` (reads from pipe or stdin)
 
 **Best Practice:** For complex or multi-line SQL queries, save to a file and use `-f` option:
 ```bash
@@ -267,7 +279,20 @@ tdx query "select * from users" --jsonl | while read line; do
 done
 ```
 
-### Pattern 4: Multi-Site Comparison
+### Pattern 4: Segment Data Analysis
+
+```bash
+# Get segment SQL and run custom analysis
+tdx sg sql "High Value Customers" | tdx query -
+
+# Run segment SQL with output format
+tdx sg sql "Active Users" | tdx query - --json
+
+# Save segment data to file
+tdx sg sql "VIP Customers" | tdx query - --json --output vip_data.json
+```
+
+### Pattern 5: Multi-Site Comparison
 
 ```bash
 # Check databases in different regions
