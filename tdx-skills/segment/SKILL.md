@@ -120,7 +120,7 @@ rule:
       operator:
         type: TimeWithinPast
         value: 30
-        unit: days
+        unit: day  # Valid units: year, quarter, month, week, day, hour, minute, second
 ```
 
 ### String Matching
@@ -225,7 +225,17 @@ See [full operator reference](https://tdx.treasuredata.com/commands/segment.html
 
 ### Time Operators
 
-- **TimeWithinPast**: Within past N units - `value: 30, unit: days`
+- **TimeWithinPast**: Within past N units - `value: 30, unit: day`
+
+**Available time units** (per [CDP API spec](https://api-docs.treasuredata.com/apis/td_cdp_api-public/segments)):
+- `year` - Calendar years
+- `quarter` - Calendar quarters
+- `month` - Calendar months
+- `week` - Weeks
+- `day` - Days
+- `hour` - Hours
+- `minute` - Minutes
+- `second` - Seconds
 
 **Note**: Most operators use singular `value`, while set-based operators (In, NotIn, Contain, StartWith, EndWith) use plural `values`.
 
