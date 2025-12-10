@@ -42,8 +42,11 @@ tdx sg desc "High Value Customers"  # Show schema/fields
 # Check segment data
 tdx sg show "High Value Customers"  # Execute query and show sample results
 
-# Get SQL query for segment data access (use with tdx query -f)
+# Get SQL query for segment data access
 tdx sg sql "High Value Customers"
+
+# Pipe segment SQL directly to query
+tdx sg sql "High Value Customers" | tdx query -
 
 # List available fields
 tdx sg fields
@@ -241,7 +244,7 @@ See [full operator reference](https://tdx.treasuredata.com/commands/segment.html
 
 ## Accessing Segment Data
 
-Use `tdx sg sql` to get the exact SQL query that accesses segment data, then combine with `tdx query` for custom analysis:
+Use `tdx sg sql` to get the exact SQL query that accesses segment data, then pipe to `tdx query` for custom analysis:
 
 ```bash
 # Quick data check - show sample results directly
@@ -250,6 +253,16 @@ tdx sg show "High Value Customers"
 # Get the SQL query for segment data
 tdx sg sql "High Value Customers"
 # Output: SELECT * FROM cdp_audience_xxxxxx.segment_yyyyyy WHERE ...
+
+# Pipe segment SQL directly to tdx query (stdin support)
+tdx sg sql "High Value Customers" | tdx query -
+
+# Works with segment name or YAML path
+tdx sg sql segments/customer-360/vip.yml | tdx query -
+
+# Add output format options
+tdx sg sql "High Value Customers" | tdx query - --json
+tdx sg sql "Active Users" | tdx query - --json --output active_users.json
 ```
 
 ## Typical Workflow
