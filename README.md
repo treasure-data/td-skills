@@ -36,6 +36,8 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 ### TDX CLI Skills
 
 - **[tdx-skills/tdx-basic](./tdx-skills/tdx-basic)** - Core [tdx](https://tdx.treasuredata.com) CLI operations for managing TD from command line: databases, tables, queries, and context management
+- **[tdx-skills/tdx-parent-segment](./tdx-skills/tdx-parent-segment)** - Manage CDP parent segments with YAML-based configuration for master tables, attributes, and behaviors
+- **[tdx-skills/tdx-segment](./tdx-skills/tdx-segment)** - Manage CDP child segments with rules, activations, and folder organization
 
 ### Field Agent Skills
 
@@ -93,7 +95,8 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the JavaScript SDK skill to implement event tracking on my website"
 "Use the pytd skill to query TD from Python and load results into pandas"
 "Use the tdx-basic skill to list all databases in the Tokyo region"
-"Use the tdx skill to query the users table and save results as JSON"
+"Use the tdx-parent-segment skill to configure a CDP parent segment"
+"Use the tdx-segment skill to create child segments with activation rules"
 "Use the deployment skill to set up a production publishing workflow"
 "Use the documentation skill to create comprehensive Field Agent documentation"
 "Use the visualization skill to create a Plotly chart with TD colors"
