@@ -1,6 +1,6 @@
 ---
 name: time-filtering
-description: Time-based filtering patterns for Treasure Data using td_interval and td_time_range functions. Covers relative time filtering (yesterday, last 7 days), offset dates (-1d/2025-10-01), absolute time ranges, td_time_string for date formatting, timezone handling (UTC/JST), and partition pruning for performance. Use when writing queries with time-based WHERE clauses or troubleshooting slow queries on time-series data.
+description: Time-based filtering using `td_interval()`, `td_time_range()`, and `td_time_string()` for Treasure Data queries. Covers relative filtering (-1d=yesterday, -7d=last week), offset dates (absolute/relative/now), time range verification, date formatting (date/date_hour/iso), and partition pruning. Use when writing time-based WHERE clauses, troubleshooting slow time-series queries, or formatting dates in SELECT.
 ---
 
 # TD Time Filtering - Partition Pruning and Performance
