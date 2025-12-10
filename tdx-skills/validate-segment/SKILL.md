@@ -64,7 +64,7 @@ Each condition must have:
 |------|-----------------|-------|
 | `TimeWithinPast` | `value`, `unit` | value is numeric, unit from enum |
 | `TimeWithinNext` | `value`, `unit` | value is numeric, unit from enum |
-| `TimeRange` | `from`, `not` | complex time range |
+| `TimeRange` | `from`, `to` | complex time range |
 | `TimeToday` | (none) | matches today |
 | `TimeThis` | `from.unit` | current period |
 | `TimeNext` | `from.unit` | next period |
