@@ -1,5 +1,5 @@
 ---
-name: tdx-segment
+name: segment
 description: Manage CDP child segments with tdx CLI using YAML-based configuration for rules and activations. Use when creating segments, setting up audience filters, or configuring data exports to external systems.
 ---
 
@@ -192,11 +192,38 @@ activations:
 
 ## Supported Operators
 
-**Comparison**: Equal, NotEqual, Greater, GreaterEqual, Less, LessEqual
-**List**: In, NotIn
-**String**: Contain, StartWith, EndWith, Regexp
-**Null**: IsNull
-**Time**: TimeWithinPast
+See [full operator reference](https://tdx.treasuredata.com/commands/segment.html#supported-operators) for complete details.
+
+### Comparison Operators
+
+- **Equal**: Exact match - `value: "active"`
+- **NotEqual**: Not equal - `value: "inactive"`
+- **Greater**: Greater than - `value: 1000`
+- **GreaterEqual**: Greater or equal - `value: 18`
+- **Less**: Less than - `value: 100`
+- **LessEqual**: Less or equal - `value: 65`
+
+### List Operators
+
+- **In**: Value in set - `values: ["US", "CA", "MX"]`
+- **NotIn**: Value not in set - `values: ["spam", "test"]`
+
+### String Operators
+
+- **Contain**: Contains substring - `values: ["@gmail.com"]`
+- **StartWith**: Starts with prefix - `values: ["Premium"]`
+- **EndWith**: Ends with suffix - `values: [".com"]`
+- **Regexp**: Regex match - `value: "^[A-Z]{2}[0-9]{4}$"`
+
+### Null Operators
+
+- **IsNull**: Field is null - (no value needed)
+
+### Time Operators
+
+- **TimeWithinPast**: Within past N units - `value: 30, unit: days`
+
+**Note**: Most operators use singular `value`, while set-based operators (In, NotIn, Contain, StartWith, EndWith) use plural `values`.
 
 ## Typical Workflow
 

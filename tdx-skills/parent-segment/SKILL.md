@@ -1,5 +1,5 @@
 ---
-name: tdx-parent-segment
+name: parent-segment
 description: Manage CDP parent segments with tdx CLI using YAML-based configuration for master tables, attributes, and behaviors. Use when setting up parent segments, validating configurations, or running parent segment workflows.
 ---
 
