@@ -99,7 +99,9 @@ where td_interval(time, '-1h')
 - `m` - minutes
 - `h` - hours
 - `d` - days
+- `w` - weeks
 - `M` - months
+- `q` - quarters
 - `y` - years
 
 ### Timezone Handling
