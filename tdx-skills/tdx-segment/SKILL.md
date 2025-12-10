@@ -270,4 +270,3 @@ tdx connections
 ## Resources
 
 - Full documentation: https://tdx.treasuredata.com/commands/segment.html
-- CDP Guide: https://docs.treasuredata.com/display/PD/Segments

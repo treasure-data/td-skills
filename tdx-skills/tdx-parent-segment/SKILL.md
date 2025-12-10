@@ -186,4 +186,3 @@ tdx ps validate "Customer 360" --behavior
 ## Resources
 
 - Full documentation: https://tdx.treasuredata.com/commands/parent-segment.html
-- CDP Guide: https://docs.treasuredata.com/display/PD/Parent+Segments
