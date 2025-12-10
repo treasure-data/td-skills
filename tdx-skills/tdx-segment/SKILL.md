@@ -1,5 +1,5 @@
 ---
-name: segment
+name: tdx-segment
 description: Manage CDP child segments with tdx CLI using YAML-based configuration for rules and activations. Use when creating segments, setting up audience filters, or configuring data exports to external systems.
 ---
 
@@ -264,7 +264,7 @@ tdx connections
 
 ## Related Skills
 
-- **tdx-skills/parent-segment** - Manage parent segments and master tables
+- **tdx-skills/tdx-parent-segment** - Manage parent segments and master tables
 - **tdx-skills/tdx-basic** - Core tdx CLI operations and global options
 
 ## Resources

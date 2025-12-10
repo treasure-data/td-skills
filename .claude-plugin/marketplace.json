@@ -72,8 +72,8 @@
       "strict": false,
       "skills": [
         "./tdx-skills/tdx-basic",
-        "./tdx-skills/parent-segment",
-        "./tdx-skills/segment"
+        "./tdx-skills/tdx-parent-segment",
+        "./tdx-skills/tdx-segment"
       ]
     },
     {

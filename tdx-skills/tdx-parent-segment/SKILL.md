@@ -1,5 +1,5 @@
 ---
-name: parent-segment
+name: tdx-parent-segment
 description: Manage CDP parent segments with tdx CLI using YAML-based configuration for master tables, attributes, and behaviors. Use when setting up parent segments, validating configurations, or running parent segment workflows.
 ---
 
@@ -23,29 +23,30 @@ Parent workflows create output database `cdp_audience_xxx` with enriched `custom
 tdx ps list
 tdx ps list "Customer*"  # Filter with pattern
 
-# Pull configuration to YAML (auto-sets context)
+# Pull configuration to YAML (sets context to this parent segment)
 tdx ps pull "Customer 360"
 # Creates: parent_segments/customer-360.yml
+# After pull, context is set, so you can omit parent segment name:
 
 # Push configuration (create/update)
-tdx ps push "Customer 360"
+tdx ps push
 
 # Validate configuration
-tdx ps validate "Customer 360"
-tdx ps validate "Customer 360" --master
-tdx ps validate "Customer 360" --attribute "User Profile"
-tdx ps validate "Customer 360" --behavior "Purchases" --interval "-7d"
+tdx ps validate
+tdx ps validate --master
+tdx ps validate --attribute "User Profile"
+tdx ps validate --behavior "Purchases" --interval "-7d"
 
 # Preview sample data
-tdx ps preview "Customer 360" --master
-tdx ps preview "Customer 360" --attribute "User Profile"
-tdx ps preview "Customer 360" --enriched
+tdx ps preview --master
+tdx ps preview --attribute "User Profile"
+tdx ps preview --enriched
 
 # Push and run workflow
-tdx ps run "Customer 360"
+tdx ps run
 
 # List segmentation fields
-tdx ps fields "Customer 360"
+tdx ps fields
 ```
 
 ## YAML Configuration
@@ -65,7 +66,7 @@ master:
 
 schedule:
   type: daily
-  time: "03:00"
+  time: "03:00:00"
   timezone: "America/Los_Angeles"
 
 attributes:
@@ -107,13 +108,13 @@ schedule:
 
 schedule:
   type: daily
-  time: "03:00"
+  time: "03:00:00"
   timezone: "America/Los_Angeles"
 
 schedule:
   type: weekly
   repeat_sub_frequency: ["Monday", "Friday"]
-  time: "03:00"
+  time: "03:00:00"
   timezone: "America/Los_Angeles"
 
 schedule:
