@@ -151,7 +151,7 @@ Use `td_interval_range()` to confirm the exact time range that td_interval will 
 
 ```sql
 -- Check what time range '-7d' covers
-SELECT td_interval_range('-7d', 'UTC')
+select td_interval_range('-7d', 'UTC')
 -- Returns: [start_timestamp, end_timestamp]
 
 -- Check time range with offset date

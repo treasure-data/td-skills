@@ -148,8 +148,8 @@ select
   TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date,
   count(*) as total_count,
   count(distinct user_id) as unique_users,
-  AVG(value) as avg_value,
-  SUM(amount) as total_amount
+  avg(value) as avg_value,
+  sum(amount) as total_amount
 from database_name.events
 where td_time_range(time, '2024-01-01', '2024-01-31')
 GROUP BY TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST')
@@ -232,12 +232,12 @@ select
     else 'low_value'
   end as segment,
   count(*) as user_count,
-  AVG(total_spend) as avg_spend
+  avg(total_spend) as avg_spend
 from (
   select
     user_id,
     count(*) as purchase_count,
-    SUM(amount) as total_spend
+    sum(amount) as total_spend
   from database_name.purchases
   where td_time_range(time, '2024-01-01', '2024-01-31', 'JST')
   GROUP BY user_id
@@ -255,14 +255,14 @@ GROUP BY
 select
   user_id,
   session_id,
-  MIN(time) as session_start,
+  min(time) as session_start,
   MAX(time) as session_end,
   count(*) as events_in_session
 from (
   select
     user_id,
     time,
-    SUM(is_new_session) OVER (
+    sum(is_new_session) OVER (
       PARTITIon BY user_id
       ORDER BY time
       ROWS BETWEEN UNBOUNDED PRECEDING and CURRENT ROW
@@ -289,7 +289,7 @@ GROUP BY user_id, session_id
 WITH first_purchase AS (
   select
     user_id,
-    TD_TIME_FORMAT(MIN(time), 'yyyy-MM', 'JST') as cohort_month
+    TD_TIME_FORMAT(min(time), 'yyyy-MM', 'JST') as cohort_month
   from database_name.purchases
   where td_time_range(time, '2024-01-01', null, 'JST')
   GROUP BY user_id
@@ -298,7 +298,7 @@ monthly_purchases AS (
   select
     user_id,
     TD_TIME_FORMAT(time, 'yyyy-MM', 'JST') as purchase_month,
-    SUM(amount) as monthly_spend
+    sum(amount) as monthly_spend
   from database_name.purchases
   where td_time_range(time, '2024-01-01', null, 'JST')
   GROUP BY user_id, TD_TIME_FORMAT(time, 'yyyy-MM', 'JST')
@@ -307,7 +307,7 @@ select
   f.cohort_month,
   m.purchase_month,
   count(distinct m.user_id) as active_users,
-  SUM(m.monthly_spend) as total_spend
+  sum(m.monthly_spend) as total_spend
 from first_purchase f
 join monthly_purchases m on f.user_id = m.user_id
 GROUP BY f.cohort_month, m.purchase_month
@@ -383,7 +383,7 @@ where td_time_range(time, '2024-01-01', '2024-01-31')
 
 **"Expression not in GROUP BY key"**
 - All non-aggregated columns must be in GROUP BY
-- Or use aggregate functions (MAX, MIN, etc.)
+- Or use aggregate functions (MAX, min, etc.)
 
 ## Best Practices
 

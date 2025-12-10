@@ -45,8 +45,8 @@ where td_time_range(time, td_time_add(td_scheduled_time(), '-7d'), td_scheduled_
 **Use APPROX functions for large datasets:**
 ```sql
 select
-  APPROX_distinct(user_id) as unique_users,
-  APPROX_PERCENTILE(response_time, 0.95) as p95_response
+  approx_distinct(user_id) as unique_users,
+  approx_percentile(response_time, 0.95) as p95_response
 from database_name.events
 where td_time_range(time, '2024-01-01')
 ```
@@ -189,7 +189,7 @@ select
   td_time_string(time, 'd!', 'JST') as date,
   event_type,
   count(*) as event_count,
-  APPROX_distinct(user_id) as unique_users
+  approx_distinct(user_id) as unique_users
 from database_name.events
 where td_interval(time, '-1M', 'JST')
   AND event_type IN ('page_view', 'click', 'purchase')
@@ -203,7 +203,7 @@ select
   td_time_string(time, 'd!', 'JST') as date,
   event_type,
   count(*) as event_count,
-  APPROX_distinct(user_id) as unique_users
+  approx_distinct(user_id) as unique_users
 from database_name.events
 where td_time_range(time, '2024-01-01', '2024-01-31')
   AND event_type IN ('page_view', 'click', 'purchase')
@@ -234,7 +234,7 @@ from events_filtered
 select
   td_time_string(time, 'd!', 'JST') as date,
   count(*) as total_events,
-  APPROX_distinct(user_id) as daily_active_users,
+  approx_distinct(user_id) as daily_active_users,
   avg(session_duration) as avg_session_duration
 from database_name.events
 where td_interval(time, '-1d', 'JST')
@@ -248,7 +248,7 @@ order by 1
 select
   td_time_string(time, 'd!', 'JST') as date,
   count(*) as total_events,
-  APPROX_distinct(user_id) as daily_active_users,
+  approx_distinct(user_id) as daily_active_users,
   avg(session_duration) as avg_session_duration
 from database_name.events
 where td_time_range(time, td_time_add(td_scheduled_time(), '-30d'), td_scheduled_time())
@@ -266,7 +266,7 @@ order by 1
 
 **"Query exceeded memory limit"**
 - Add time filters with td_time_range
-- Use APPROX_ functions instead of exact aggregations
+- Use approx_ functions instead of exact aggregations
 - Reduce JOIN complexity or data volume
 
 **"Partition not found"**
@@ -282,7 +282,7 @@ order by 1
 2. **Use td_time_string for display only**, not for filtering
    - ✅ `select td_time_string(time, 'd!', 'JST') as date`
    - ❌ `where td_time_string(time, 'd!', 'JST') = '2024-01-01'`
-3. **Use APPROX functions** for large-scale aggregations (APPROX_distinct, APPROX_PERCENTILE)
+3. **Use APPROX functions** for large-scale aggregations (approx_distinct, approx_percentile)
 4. **Limit exploratory queries** to reduce costs and scan time
 5. **Test queries on small time ranges** before running on full dataset
 6. **Use CTEs (WITH clauses)** for complex queries to improve readability
