@@ -25,13 +25,13 @@ Use this skill when:
 
 TD tables are partitioned by 1-hour buckets. **Always** filter on time for optimal performance.
 
-**Use TD_INTERVAL or TD_TIME_RANGE:**
+**Use td_interval or td_time_range:**
 ```sql
 -- Good: Uses partition pruning
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 
 -- Good: Explicit time range
-where TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
+where td_time_range(time, '2024-01-01', '2024-01-31')
 
 -- Bad: No time filter - scans entire table!
 where user_id = 123  -- Missing time filter
@@ -47,12 +47,12 @@ TD uses columnar storage format. **Select only needed columns.**
 -- Good: Select specific columns
 select user_id, event_type, time
 from events
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 
 -- Bad: select * reads all columns
 select *  -- Slower and more expensive
 from events
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 ```
 
 **Impact:** Each additional column increases I/O. Reading 10 columns vs 50 columns can make a significant performance difference.
@@ -69,7 +69,7 @@ select
   TD_TIME_STRING(time, 'd!', 'JST') as date,
   count(*) as events
 from events
-where TD_INTERVAL(time, '-1M', 'JST')
+where td_interval(time, '-1M', 'JST')
 group by 1
 ```
 
@@ -80,7 +80,7 @@ select
   TD_TIME_STRING(time, 'd!', 'JST') as date,
   count(*) as events
 from events
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 group by 1
 ```
 
@@ -89,7 +89,7 @@ group by 1
 -- Good for testing/exploration
 select *
 from events
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 limit 1000
 ```
 
@@ -121,12 +121,12 @@ Use APPROX_* functions for large-scale aggregations.
 -- Fast: Approximate distinct count
 select APPROX_DISTINCT(user_id) as unique_users
 from events
-where TD_INTERVAL(time, '-1M', 'JST')
+where td_interval(time, '-1M', 'JST')
 
 -- Slow: Exact distinct count (memory intensive)
 select COUNT(DISTINCT user_id) as unique_users
 from events
-where TD_INTERVAL(time, '-1M', 'JST')
+where td_interval(time, '-1M', 'JST')
 ```
 
 **Available approximate functions:**
@@ -145,7 +145,7 @@ Order joins with smaller tables first when possible.
 select l.*, s.attribute
 from large_table l
 join small_lookup s ON l.id = s.id
-where TD_INTERVAL(l.time, '-1d', 'JST')
+where td_interval(l.time, '-1d', 'JST')
 
 -- Consider: If one table is very small, use a subquery to reduce it first
 select e.*
@@ -155,7 +155,7 @@ join (
   from premium_users
   where subscription_status = 'active'
 ) p ON e.user_id = p.user_id
-where TD_INTERVAL(e.time, '-1d', 'JST')
+where td_interval(e.time, '-1d', 'JST')
 ```
 
 **Magic Comments for Join Distribution:**
@@ -198,7 +198,7 @@ select
   event_type,
   COUNT(*) as cnt
 from events
-where TD_INTERVAL(time, '-1M', 'JST')
+where td_interval(time, '-1M', 'JST')
 group by 1, 2  -- Cleaner and avoids re-evaluation
 
 -- Works but verbose:
@@ -216,14 +216,14 @@ select
   event_time,
   ROW_NUMBER() OVER (PARTITION BY user_id order by event_time) as seq
 from events
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 
 -- Be careful: Window over entire dataset (memory intensive)
 select
   event_time,
   ROW_NUMBER() OVER (order by event_time) as global_seq
 from events
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 ```
 
 ### 9. User-Defined Partitioning (UDP)
@@ -237,7 +237,7 @@ create table customer_events WITH (
   bucket_count = 512
 ) AS
 select * from raw_events
-where TD_INTERVAL(time, '-30d', 'JST')
+where td_interval(time, '-30d', 'JST')
 ```
 
 **When to use UDP:**
@@ -256,11 +256,11 @@ where TD_INTERVAL(time, '-30d', 'JST')
 -- Accelerated: Equality on all bucketing columns
 select * from customer_events
 where customer_id = 12345
-  AND TD_INTERVAL(time, '-7d', 'JST')
+  AND td_interval(time, '-7d', 'JST')
 
 -- NOT accelerated: Missing bucketing column
 select * from customer_events
-where TD_INTERVAL(time, '-7d', 'JST')
+where td_interval(time, '-7d', 'JST')
 ```
 
 **UDP for large joins:**
@@ -271,7 +271,7 @@ where TD_INTERVAL(time, '-7d', 'JST')
 select a.*, b.*
 from customer_events_a a
 join customer_events_b b ON a.customer_id = b.customer_id
-where TD_INTERVAL(a.time, '-1d', 'JST')
+where td_interval(a.time, '-1d', 'JST')
 ```
 
 **Impact:** UDP scans only relevant buckets, dramatically improving performance for ID lookups and reducing memory for large joins.
@@ -285,7 +285,7 @@ where TD_INTERVAL(a.time, '-1d', 'JST')
 - "Query exceeded maximum time" error
 
 **Solutions:**
-1. Add or narrow time filters with TD_INTERVAL/TD_TIME_RANGE
+1. Add or narrow time filters with td_interval/td_time_range
 2. Reduce selected columns
 3. Use limit for testing before full run
 4. Break into smaller queries with intermediate tables
@@ -301,7 +301,7 @@ where event_type = 'click'
 -- After: Much faster
 select APPROX_DISTINCT(user_id)
 from events
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
   AND event_type = 'click'
 ```
 
@@ -328,7 +328,7 @@ select
   COUNT(DISTINCT page_url),
   COUNT(DISTINCT referrer)
 from events
-where TD_INTERVAL(time, '-1M', 'JST')
+where td_interval(time, '-1M', 'JST')
 group by user_id
 
 -- After: Uses approximate functions
@@ -338,7 +338,7 @@ select
   APPROX_DISTINCT(page_url) as pages,
   APPROX_DISTINCT(referrer) as referrers
 from events
-where TD_INTERVAL(time, '-1M', 'JST')
+where td_interval(time, '-1M', 'JST')
 group by user_id
 ```
 
@@ -349,7 +349,7 @@ group by user_id
 - Network-related query failures
 
 **Solutions:**
-1. Narrow TD_TIME_RANGE to reduce data volume
+1. Narrow td_time_range to reduce data volume
 2. Reduce number of columns in select
 3. Break large queries into smaller time ranges
 4. Use CTAS instead of select for large results
@@ -359,12 +359,12 @@ group by user_id
 -- Before: Transporting too much data
 select *
 from events
-where TD_TIME_RANGE(time, '2024-01-01', '2024-12-31')
+where td_time_range(time, '2024-01-01', '2024-12-31')
 
 -- After: Process in chunks
 select user_id, event_type, time
 from events
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 ```
 
 ### Issue: Slow Aggregations
@@ -386,7 +386,7 @@ select
   TD_TIME_STRING(time, 'd!', 'JST') as date,
   COUNT(DISTINCT user_id) as dau
 from events
-where TD_INTERVAL(time, '-1M', 'JST')
+where td_interval(time, '-1M', 'JST')
 group by 1
 
 -- After: Fast approximate count
@@ -394,7 +394,7 @@ select
   TD_TIME_STRING(time, 'd!', 'JST') as date,
   APPROX_DISTINCT(user_id) as dau
 from events
-where TD_INTERVAL(time, '-1M', 'JST')
+where td_interval(time, '-1M', 'JST')
 group by 1
 ```
 
@@ -421,8 +421,8 @@ Look for:
 
 ```sql
 -- Ensure time filter exists and is specific
-where TD_INTERVAL(time, '-1d', 'JST')
-  OR TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
+where td_interval(time, '-1d', 'JST')
+  OR td_time_range(time, '2024-01-01', '2024-01-31')
 ```
 
 ### Step 3: Reduce Column Count
@@ -446,7 +446,7 @@ select user_id, event_type, time
 -- Test logic on small subset first
 select ...
 from ...
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 limit 1000
 ```
 
@@ -473,7 +473,7 @@ select
   COUNT(*) as event_count,
   APPROX_DISTINCT(session_id) as sessions
 from events
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 group by 1, 2
 
 -- Fast queries on pre-aggregated data
@@ -498,13 +498,13 @@ Process large time ranges incrementally.
 INSERT INTO monthly_summary
 select ...
 from events
-where TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 
 -- Day 2
 INSERT INTO monthly_summary
 select ...
 from events
-where TD_INTERVAL(time, '-2d/-1d', 'JST')
+where td_interval(time, '-2d/-1d', 'JST')
 
 -- etc.
 ```
@@ -522,7 +522,7 @@ select
   count(*) as events,
   APPROX_DISTINCT(page_url) as pages_visited
 from events
-where TD_INTERVAL(time, '-30d', 'JST')
+where td_interval(time, '-30d', 'JST')
 group by 1, 2
 
 -- Query the summary (much faster)
@@ -539,7 +539,7 @@ order by 1
 
 Before running a query, verify:
 
-- [ ] Time filter added (TD_INTERVAL or TD_TIME_RANGE)
+- [ ] Time filter added (td_interval or td_time_range)
 - [ ] Selecting specific columns (not select *)
 - [ ] Using APPROX_DISTINCT for unique counts
 - [ ] Using REGEXP_LIKE instead of multiple LIKEs
