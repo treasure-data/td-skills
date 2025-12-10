@@ -43,15 +43,15 @@ Each condition must have:
 **List Operators**:
 | Type | Required Fields | Value Type |
 |------|-----------------|------------|
-| `In` | `values` | array of strings/numbers |
-| `NotIn` | `values` | array of strings/numbers |
+| `In` | `value` | array of strings/numbers |
+| `NotIn` | `value` | array of strings/numbers |
 
 **String Operators**:
 | Type | Required Fields | Value Type |
 |------|-----------------|------------|
-| `Contain` | `values` | array of strings |
-| `StartWith` | `values` | array of strings |
-| `EndWith` | `values` | array of strings |
+| `Contain` | `value` | array of strings |
+| `StartWith` | `value` | array of strings |
+| `EndWith` | `value` | array of strings |
 | `Regexp` | `value` | regex pattern string |
 
 **Null Operators**:
@@ -104,7 +104,7 @@ rule:
       attribute: country
       operator:
         type: In
-        values: ["US", "CA"]  # Correct: 'values' for In operator
+        value: ["US", "CA"]  # Correct: 'value' with array for In operator
     - type: Value
       attribute: ltv
       operator:
@@ -135,17 +135,17 @@ operator:
   unit: day  # Correct: singular form
 ```
 
-**Error: Wrong field name for list operators**
+**Error: Array value for comparison operator**
 ```yaml
 # INVALID
 operator:
-  type: In
-  value: ["US", "CA"]  # Wrong: should be 'values'
+  type: Equal
+  value: ["US", "CA"]  # Wrong: Equal expects single value, use In for arrays
 
 # VALID
 operator:
   type: In
-  values: ["US", "CA"]  # Correct: plural 'values'
+  value: ["US", "CA"]  # Correct: In operator for multiple values
 ```
 
 **Error: Missing required fields**
@@ -186,8 +186,9 @@ tdx sg push
 | Check | Rule |
 |-------|------|
 | Time units | Must be singular: `day`, `month`, `year` (not `days`, `months`, `years`) |
-| List operators (In, NotIn, Contain, StartWith, EndWith) | Use `values` (plural) |
-| Comparison operators (Equal, Greater, etc.) | Use `value` (singular) |
+| All operators | Use unified `value` field (CLI auto-detects single vs array) |
+| List operators (In, NotIn, Contain, StartWith, EndWith) | Provide array in `value` field |
+| Comparison operators (Equal, Greater, etc.) | Provide single value in `value` field |
 | TimeWithinPast/TimeWithinNext | Requires both `value` and `unit` |
 | Segment kind | Must be `batch`, `realtime`, or `funnel_stage` |
 | Rule type | Must be `And` or `Or` |
