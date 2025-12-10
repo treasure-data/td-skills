@@ -1,6 +1,6 @@
 ---
 name: parent-segment
-description: Manage CDP parent segments with tdx CLI using YAML-based configuration for master tables, attributes, and behaviors. Use when setting up parent segments, validating configurations, or running parent segment workflows.
+description: Manages CDP parent segments using `tdx ps` commands with YAML configs. Covers master tables, attributes, behaviors, `tdx ps validate` for join validation, `tdx ps preview` for data preview, and schedule configuration (daily/hourly/cron). Use when creating customer master tables, validating join match rates, or troubleshooting parent segment workflows.
 ---
 
 # tdx Parent-Segment - CDP Parent Segment Management

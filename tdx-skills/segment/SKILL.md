@@ -1,6 +1,6 @@
 ---
 name: segment
-description: Manage CDP child segments with tdx CLI using YAML-based configuration for rules and activations. Use when creating segments, setting up audience filters, or configuring data exports to external systems.
+description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers filtering with operators (Equal, In, Greater, TimeWithinPast, Contain), folder organization, and activations for Salesforce/Google Ads exports. Use when creating audience segments, validating with `tdx sg push --dry-run`, or listing fields with `tdx sg fields`.
 ---
 
 # tdx Segment - CDP Child Segment Management

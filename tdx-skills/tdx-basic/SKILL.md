@@ -1,6 +1,6 @@
 ---
 name: tdx-basic
-description: Core tdx CLI operations for managing Treasure Data from the command line including database management, table operations, queries, and context management. Use this skill when helping users with tdx commands, configuration, or basic data operations.
+description: Executes tdx CLI commands for Treasure Data. Covers `tdx databases`, `tdx tables`, `tdx query`, `tdx auth setup`, context management with profiles/sessions, and output formats (JSON/TSV/table). Use when users need tdx command syntax, authentication setup, database/table exploration, or query execution.
 ---
 
 # tdx CLI - Basic Operations
@@ -277,20 +277,12 @@ tdx databases --site jp01 --json > jp_dbs.json
 
 ## Global Options
 
-Available for all commands:
-
-- `--profile <name>` - Use specific profile configuration
-- `--site <site>` - TD site/region (us01, jp01, eu01, ap02)
-- `--format <format>` - Output format (table, json, jsonl, tsv)
-- `--json` - JSON output (shorthand)
-- `--jsonl` - JSON Lines output (shorthand)
-- `--tsv` - TSV output (shorthand)
+Use `tdx --help` or `tdx <command> --help` for complete options. Common options:
+- `--profile <name>` - Use specific profile
+- `--site <site>` - TD site (us01, jp01, eu01, ap02)
+- `--json` / `--jsonl` / `--tsv` - Output format
 - `--output <file>` - Save to file
-- `--limit <rows>` - Max rows (table format, default: 40)
-- `--verbose` - Verbose logging
-- `--timeout <seconds>` - Timeout (default: 30)
 - `--dry-run` - Preview without executing
-- `-y, --yes` - Skip confirmations
 
 ## Best Practices
 
@@ -383,27 +375,12 @@ WHERE TD_TIME_RANGE(time, '2025-01-01', '2025-01-31')
 1. Always quote patterns: `tdx tables "prod_*"`
 2. Or use `--in` flag: `tdx tables --in mydb`
 
-## Table-Specific Options
+## Command-Specific Options
 
-For table commands (tables, describe, show):
+For table commands: `-d, --database <name>` or `--in <database>`
+For query command: `-f, --file <path>` to read SQL from file
 
-- `-d, --database <name>` - Specify database
-- `--in <database>` - Alias for --database (natural language)
-
-```bash
-# All equivalent
-tdx tables "mydb.*"
-tdx tables --in mydb
-tdx tables -d mydb
-```
-
-## Query-Specific Options
-
-For query command:
-
-- `-f, --file <path>` - Read SQL from file
-- `-d, --database <db>` - Database to query (default: information_schema)
-- `--catalog <catalog>` - Trino catalog (default: td)
+Use `tdx <command> --help` for complete options.
 
 ## Complete Command Reference
 
