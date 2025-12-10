@@ -32,12 +32,12 @@ TD tables are typically partitioned by time. Always include time filters for per
 ```sql
 SELECT *
 FROM database_name.table_name
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
+WHERE td_time_range(time, '2024-01-01', '2024-01-31')
 ```
 
 Or use relative time ranges:
 ```sql
-WHERE TD_TIME_RANGE(time, TD_TIME_ADD(TD_SCHEDULED_TIME(), '-7d'), TD_SCHEDULED_TIME())
+WHERE td_time_range(time, td_time_add(td_scheduled_time(), '-7d'), td_scheduled_time())
 ```
 
 ### 3. Performance Optimization
@@ -48,13 +48,13 @@ SELECT
   APPROX_DISTINCT(user_id) as unique_users,
   APPROX_PERCENTILE(response_time, 0.95) as p95_response
 FROM database_name.events
-WHERE TD_TIME_RANGE(time, '2024-01-01')
+WHERE td_time_range(time, '2024-01-01')
 ```
 
 **Partition pruning:**
 ```sql
 -- Good: Filters on partition column
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-02')
+WHERE td_time_range(time, '2024-01-01', '2024-01-02')
 
 -- Avoid: Non-partition column filters without time filter
 WHERE event_type = 'click'  -- Missing time filter!
@@ -64,44 +64,44 @@ WHERE event_type = 'click'  -- Missing time filter!
 ```sql
 -- Use LIMIT for exploratory queries
 SELECT * FROM table_name
-WHERE TD_TIME_RANGE(time, '2024-01-01')
+WHERE td_time_range(time, '2024-01-01')
 LIMIT 1000
 ```
 
 ### 4. Common TD Functions
 
-**TD_INTERVAL** - Simplified relative time filtering (Recommended):
+**td_interval** - Simplified relative time filtering (Recommended):
 ```sql
 -- Current day
-WHERE TD_INTERVAL(time, '1d', 'JST')
+WHERE td_interval(time, '1d', 'JST')
 
 -- Yesterday
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+WHERE td_interval(time, '-1d', 'JST')
 
 -- Previous week
-WHERE TD_INTERVAL(time, '-1w', 'JST')
+WHERE td_interval(time, '-1w', 'JST')
 
 -- Previous month
-WHERE TD_INTERVAL(time, '-1M', 'JST')
+WHERE td_interval(time, '-1M', 'JST')
 
 -- 2 days ago (offset syntax)
-WHERE TD_INTERVAL(time, '-1d/-1d', 'JST')
+WHERE td_interval(time, '-1d/-1d', 'JST')
 
 -- 3 months ago (combined offset)
-WHERE TD_INTERVAL(time, '-1M/-2M', 'JST')
+WHERE td_interval(time, '-1M/-2M', 'JST')
 ```
 
-**Note:** TD_INTERVAL simplifies relative time queries and is preferred over combining TD_TIME_RANGE with TD_DATE_TRUNC. Cannot accept TD_SCHEDULED_TIME as first argument, but including TD_SCHEDULED_TIME elsewhere in the query establishes the reference date.
+**Note:** td_interval simplifies relative time queries and is preferred over combining td_time_range with TD_DATE_TRUNC. Cannot accept td_scheduled_time as first argument, but including td_scheduled_time elsewhere in the query establishes the reference date.
 
-**TD_TIME_RANGE** - Filter by time partitions (explicit dates):
+**td_time_range** - Filter by time partitions (explicit dates):
 ```sql
-TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
-TD_TIME_RANGE(time, '2024-01-01')  -- Single day
+td_time_range(time, '2024-01-01', '2024-01-31')
+td_time_range(time, '2024-01-01')  -- Single day
 ```
 
-**TD_SCHEDULED_TIME()** - Get scheduled execution time:
+**td_scheduled_time()** - Get scheduled execution time:
 ```sql
-TD_TIME_ADD(TD_SCHEDULED_TIME(), '-1d')  -- Yesterday
+td_time_add(td_scheduled_time(), '-1d')  -- Yesterday
 ```
 
 **TD_TIME_STRING** - Format timestamps (Recommended):
@@ -177,21 +177,21 @@ SELECT
   ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY event_time) as event_seq,
   LAG(event_time) OVER (PARTITION BY user_id ORDER BY event_time) as prev_event
 FROM events
-WHERE TD_TIME_RANGE(time, '2024-01-01')
+WHERE td_time_range(time, '2024-01-01')
 ```
 
 ## Common Patterns
 
 ### User Event Analysis
 ```sql
--- Using TD_INTERVAL for last month
+-- Using td_interval for last month
 SELECT
   TD_TIME_STRING(time, 'd!', 'JST') as date,
   event_type,
   COUNT(*) as event_count,
   APPROX_DISTINCT(user_id) as unique_users
 FROM database_name.events
-WHERE TD_INTERVAL(time, '-1M', 'JST')
+WHERE td_interval(time, '-1M', 'JST')
   AND event_type IN ('page_view', 'click', 'purchase')
 GROUP BY 1, 2
 ORDER BY 1, 2
@@ -205,7 +205,7 @@ SELECT
   COUNT(*) as event_count,
   APPROX_DISTINCT(user_id) as unique_users
 FROM database_name.events
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
+WHERE td_time_range(time, '2024-01-01', '2024-01-31')
   AND event_type IN ('page_view', 'click', 'purchase')
 GROUP BY 1, 2
 ORDER BY 1, 2
@@ -219,7 +219,7 @@ WITH events_filtered AS (
     event_type,
     time
   FROM database_name.events
-  WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
+  WHERE td_time_range(time, '2024-01-01', '2024-01-31')
 )
 SELECT
   COUNT(DISTINCT CASE WHEN event_type = 'page_view' THEN user_id END) as step1_users,
@@ -230,15 +230,15 @@ FROM events_filtered
 
 ### Daily Aggregation
 ```sql
--- Using TD_INTERVAL for yesterday's data
+-- Using td_interval for yesterday's data
 SELECT
   TD_TIME_STRING(time, 'd!', 'JST') as date,
   COUNT(*) as total_events,
   APPROX_DISTINCT(user_id) as daily_active_users,
   AVG(session_duration) as avg_session_duration
 FROM database_name.events
-WHERE TD_INTERVAL(time, '-1d', 'JST')
-  AND TD_SCHEDULED_TIME() IS NOT NULL  -- Establishes reference date for TD_INTERVAL
+WHERE td_interval(time, '-1d', 'JST')
+  AND td_scheduled_time() IS NOT NULL  -- Establishes reference date for td_interval
 GROUP BY 1
 ORDER BY 1
 ```
@@ -251,7 +251,7 @@ SELECT
   APPROX_DISTINCT(user_id) as daily_active_users,
   AVG(session_duration) as avg_session_duration
 FROM database_name.events
-WHERE TD_TIME_RANGE(time, TD_TIME_ADD(TD_SCHEDULED_TIME(), '-30d'), TD_SCHEDULED_TIME())
+WHERE td_time_range(time, td_time_add(td_scheduled_time(), '-30d'), td_scheduled_time())
 GROUP BY 1
 ORDER BY 1
 ```
@@ -265,19 +265,19 @@ ORDER BY 1
 - Check that column exists in table schema
 
 **"Query exceeded memory limit"**
-- Add time filters with TD_TIME_RANGE
+- Add time filters with td_time_range
 - Use APPROX_ functions instead of exact aggregations
 - Reduce JOIN complexity or data volume
 
 **"Partition not found"**
 - Verify time range covers existing partitions
-- Check TD_TIME_RANGE syntax
+- Check td_time_range syntax
 
 ## Best Practices
 
-1. **Always include time filters** using TD_INTERVAL or TD_TIME_RANGE for partition pruning
-   - Use TD_INTERVAL for relative dates: `WHERE TD_INTERVAL(time, '-1d', 'JST')`
-   - Use TD_TIME_RANGE for explicit dates: `WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')`
+1. **Always include time filters** using td_interval or td_time_range for partition pruning
+   - Use td_interval for relative dates: `WHERE td_interval(time, '-1d', 'JST')`
+   - Use td_time_range for explicit dates: `WHERE td_time_range(time, '2024-01-01', '2024-01-31')`
    - Never filter by formatted dates: ❌ `WHERE TD_TIME_STRING(time, 'd!', 'JST') = '2024-01-01'`
 2. **Use TD_TIME_STRING for display only**, not for filtering
    - ✅ `SELECT TD_TIME_STRING(time, 'd!', 'JST') as date`
