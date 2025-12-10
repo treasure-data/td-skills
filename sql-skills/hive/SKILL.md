@@ -22,7 +22,7 @@ Use this skill when:
 
 Access TD tables using database.table notation:
 ```sql
-select * FROM database_name.table_name
+select * from database_name.table_name
 ```
 
 ### 2. Time-based Partitioning
@@ -31,14 +31,14 @@ TD Hive tables are partitioned by time. Always use time predicates:
 
 ```sql
 select *
-FROM database_name.table_name
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31', 'JST')
+from database_name.table_name
+where td_time_range(time, '2024-01-01', '2024-01-31', 'JST')
 ```
 
 Unix timestamp format:
 ```sql
-WHERE time >= unix_timestamp('2024-01-01 00:00:00')
-  AND time < unix_timestamp('2024-01-02 00:00:00')
+where time >= unix_timestamp('2024-01-01 00:00:00')
+  and time < unix_timestamp('2024-01-02 00:00:00')
 ```
 
 ### 3. Performance Optimization
@@ -50,48 +50,48 @@ WHERE time >= unix_timestamp('2024-01-01 00:00:00')
 **Partition pruning:**
 ```sql
 -- Good: Uses partition columns
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-02')
+where td_time_range(time, '2024-01-01', '2024-01-02')
 
 -- Good: Direct time filter
-WHERE time >= 1704067200 AND time < 1704153600
+where time >= 1704067200 and time < 1704153600
 ```
 
 **Limit during development:**
 ```sql
-select * FROM table_name
-WHERE TD_TIME_RANGE(time, '2024-01-01')
-LIMIT 1000
+select * from table_name
+where td_time_range(time, '2024-01-01')
+limit 1000
 ```
 
 ### 4. Common TD Hive Functions
 
-**TD_INTERVAL** - Simplified relative time filtering (Recommended):
+**td_interval** - Simplified relative time filtering (Recommended):
 ```sql
 -- Current day
-WHERE TD_INTERVAL(time, '1d', 'JST')
+where td_interval(time, '1d', 'JST')
 
 -- Yesterday
-WHERE TD_INTERVAL(time, '-1d', 'JST')
+where td_interval(time, '-1d', 'JST')
 
 -- Previous week
-WHERE TD_INTERVAL(time, '-1w', 'JST')
+where td_interval(time, '-1w', 'JST')
 
 -- Previous month
-WHERE TD_INTERVAL(time, '-1M', 'JST')
+where td_interval(time, '-1M', 'JST')
 
 -- 2 days ago (offset syntax)
-WHERE TD_INTERVAL(time, '-1d/-1d', 'JST')
+where td_interval(time, '-1d/-1d', 'JST')
 
 -- 3 months ago (combined offset)
-WHERE TD_INTERVAL(time, '-1M/-2M', 'JST')
+where td_interval(time, '-1M/-2M', 'JST')
 ```
 
-**Note:** TD_INTERVAL simplifies relative time queries and is preferred over combining TD_TIME_RANGE with TD_DATE_TRUNC. Cannot accept TD_SCHEDULED_TIME as first argument, but including TD_SCHEDULED_TIME elsewhere in the query establishes the reference date.
+**Note:** td_interval simplifies relative time queries and is preferred over combining td_time_range with TD_DATE_TRUNC. Cannot accept TD_SCHEDULED_TIME as first argument, but including TD_SCHEDULED_TIME elsewhere in the query establishes the reference date.
 
-**TD_TIME_RANGE** - Partition-aware time filtering (explicit dates):
+**td_time_range** - Partition-aware time filtering (explicit dates):
 ```sql
-TD_TIME_RANGE(time, '2024-01-01', '2024-01-31', 'JST')
-TD_TIME_RANGE(time, '2024-01-01', NULL, 'JST')  -- Open-ended
+td_time_range(time, '2024-01-01', '2024-01-31', 'JST')
+td_time_range(time, '2024-01-01', null, 'JST')  -- Open-ended
 ```
 
 **TD_SCHEDULED_TIME()** - Get workflow execution time:
@@ -116,28 +116,28 @@ select TD_DATE_TRUNC('day', time, 'JST')
 select TD_DATE_TRUNC('hour', time, 'UTC')
 ```
 
-### 5. JOIN Optimization
+### 5. join Optimization
 
-**MapReduce JOIN strategies:**
+**MapReduce join strategies:**
 
 ```sql
--- Map-side JOIN for small tables (use /*+ MAPJOIN */ hint)
+-- Map-side join for small tables (use /*+ MAPJOIN */ hint)
 select /*+ MAPJOIN(small_table) */
   l.*,
   s.attribute
-FROM large_table l
-JOIN small_table s ON l.id = s.id
-WHERE TD_TIME_RANGE(l.time, '2024-01-01')
+from large_table l
+join small_table s on l.id = s.id
+where td_time_range(l.time, '2024-01-01')
 ```
 
-**Reduce-side JOIN:**
+**Reduce-side join:**
 ```sql
 -- Default for large-to-large joins
 select *
-FROM table1 t1
-JOIN table2 t2 ON t1.key = t2.key
-WHERE TD_TIME_RANGE(t1.time, '2024-01-01')
-  AND TD_TIME_RANGE(t2.time, '2024-01-01')
+from table1 t1
+join table2 t2 on t1.key = t2.key
+where td_time_range(t1.time, '2024-01-01')
+  and td_time_range(t2.time, '2024-01-01')
 ```
 
 ### 6. Aggregations
@@ -146,22 +146,22 @@ WHERE TD_TIME_RANGE(t1.time, '2024-01-01')
 ```sql
 select
   TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date,
-  COUNT(*) as total_count,
-  COUNT(DISTINCT user_id) as unique_users,
+  count(*) as total_count,
+  count(distinct user_id) as unique_users,
   AVG(value) as avg_value,
   SUM(amount) as total_amount
-FROM database_name.events
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
+from database_name.events
+where td_time_range(time, '2024-01-01', '2024-01-31')
 GROUP BY TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST')
 ```
 
 **Approximate aggregations for large datasets:**
 ```sql
 -- Not built-in, but can use sampling
-select COUNT(*) * 10 as estimated_count
-FROM table_name
-WHERE TD_TIME_RANGE(time, '2024-01-01')
-  AND rand() < 0.1  -- 10% sample
+select count(*) * 10 as estimated_count
+from table_name
+where td_time_range(time, '2024-01-01')
+  and rand() < 0.1  -- 10% sample
 ```
 
 ### 7. Data Types and Casting
@@ -180,10 +180,10 @@ CAST(column_name AS DECIMAL(10,2))
 select
   user_id,
   event_time,
-  ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY event_time) as event_seq,
-  LAG(event_time, 1) OVER (PARTITION BY user_id ORDER BY event_time) as prev_event
-FROM events
-WHERE TD_TIME_RANGE(time, '2024-01-01')
+  ROW_NUMBER() OVER (PARTITIon BY user_id ORDER BY event_time) as event_seq,
+  LAG(event_time, 1) OVER (PARTITIon BY user_id ORDER BY event_time) as prev_event
+from events
+where td_time_range(time, '2024-01-01')
 ```
 
 ### 9. Array and Map Operations
@@ -194,7 +194,7 @@ select
   array_contains(tags, 'premium') as is_premium,
   size(tags) as tag_count,
   tags[0] as first_tag
-FROM user_profiles
+from user_profiles
 ```
 
 **Map functions:**
@@ -203,7 +203,7 @@ select
   map_keys(attributes) as attribute_names,
   map_values(attributes) as attribute_values,
   attributes['country'] as country
-FROM events
+from events
 ```
 
 ## Common Patterns
@@ -213,10 +213,10 @@ FROM events
 select
   TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as date,
   event_type,
-  COUNT(*) as event_count,
-  COUNT(DISTINCT user_id) as unique_users
-FROM database_name.events
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31', 'JST')
+  count(*) as event_count,
+  count(distinct user_id) as unique_users
+from database_name.events
+where td_time_range(time, '2024-01-01', '2024-01-31', 'JST')
 GROUP BY
   TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST'),
   event_type
@@ -226,28 +226,28 @@ ORDER BY date, event_type
 ### User Segmentation
 ```sql
 select
-  CASE
-    WHEN purchase_count >= 10 THEN 'high_value'
-    WHEN purchase_count >= 5 THEN 'medium_value'
-    ELSE 'low_value'
-  END as segment,
-  COUNT(*) as user_count,
+  case
+    when purchase_count >= 10 then 'high_value'
+    when purchase_count >= 5 then 'medium_value'
+    else 'low_value'
+  end as segment,
+  count(*) as user_count,
   AVG(total_spend) as avg_spend
-FROM (
+from (
   select
     user_id,
-    COUNT(*) as purchase_count,
+    count(*) as purchase_count,
     SUM(amount) as total_spend
-  FROM database_name.purchases
-  WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31', 'JST')
+  from database_name.purchases
+  where td_time_range(time, '2024-01-01', '2024-01-31', 'JST')
   GROUP BY user_id
 ) user_stats
 GROUP BY
-  CASE
-    WHEN purchase_count >= 10 THEN 'high_value'
-    WHEN purchase_count >= 5 THEN 'medium_value'
-    ELSE 'low_value'
-  END
+  case
+    when purchase_count >= 10 then 'high_value'
+    when purchase_count >= 5 then 'medium_value'
+    else 'low_value'
+  end
 ```
 
 ### Session Analysis
@@ -257,28 +257,28 @@ select
   session_id,
   MIN(time) as session_start,
   MAX(time) as session_end,
-  COUNT(*) as events_in_session
-FROM (
+  count(*) as events_in_session
+from (
   select
     user_id,
     time,
     SUM(is_new_session) OVER (
-      PARTITION BY user_id
+      PARTITIon BY user_id
       ORDER BY time
-      ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+      ROWS BETWEEN UNBOUNDED PRECEDING and CURRENT ROW
     ) as session_id
-  FROM (
+  from (
     select
       user_id,
       time,
-      CASE
-        WHEN time - LAG(time) OVER (PARTITION BY user_id ORDER BY time) > 1800
-          OR LAG(time) OVER (PARTITION BY user_id ORDER BY time) IS NULL
-        THEN 1
-        ELSE 0
-      END as is_new_session
-    FROM database_name.events
-    WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-02', 'JST')
+      case
+        when time - LAG(time) OVER (PARTITIon BY user_id ORDER BY time) > 1800
+          OR LAG(time) OVER (PARTITIon BY user_id ORDER BY time) IS null
+        then 1
+        else 0
+      end as is_new_session
+    from database_name.events
+    where td_time_range(time, '2024-01-01', '2024-01-02', 'JST')
   ) with_session_flag
 ) with_session_id
 GROUP BY user_id, session_id
@@ -290,8 +290,8 @@ WITH first_purchase AS (
   select
     user_id,
     TD_TIME_FORMAT(MIN(time), 'yyyy-MM', 'JST') as cohort_month
-  FROM database_name.purchases
-  WHERE TD_TIME_RANGE(time, '2024-01-01', NULL, 'JST')
+  from database_name.purchases
+  where td_time_range(time, '2024-01-01', null, 'JST')
   GROUP BY user_id
 ),
 monthly_purchases AS (
@@ -299,17 +299,17 @@ monthly_purchases AS (
     user_id,
     TD_TIME_FORMAT(time, 'yyyy-MM', 'JST') as purchase_month,
     SUM(amount) as monthly_spend
-  FROM database_name.purchases
-  WHERE TD_TIME_RANGE(time, '2024-01-01', NULL, 'JST')
+  from database_name.purchases
+  where td_time_range(time, '2024-01-01', null, 'JST')
   GROUP BY user_id, TD_TIME_FORMAT(time, 'yyyy-MM', 'JST')
 )
 select
   f.cohort_month,
   m.purchase_month,
-  COUNT(DISTINCT m.user_id) as active_users,
+  count(distinct m.user_id) as active_users,
   SUM(m.monthly_spend) as total_spend
-FROM first_purchase f
-JOIN monthly_purchases m ON f.user_id = m.user_id
+from first_purchase f
+join monthly_purchases m on f.user_id = m.user_id
 GROUP BY f.cohort_month, m.purchase_month
 ORDER BY f.cohort_month, m.purchase_month
 ```
@@ -318,37 +318,37 @@ ORDER BY f.cohort_month, m.purchase_month
 
 ### SerDe (Serializer/Deserializer)
 
-When working with JSON data:
+When working with JSon data:
 ```sql
 -- Usually handled automatically in TD, but awareness is important
--- JSON SerDe allows querying nested JSON structures
+-- JSon SerDe allows querying nested JSon structures
 select
   get_json_object(json_column, '$.user.id') as user_id,
   get_json_object(json_column, '$.event.type') as event_type
-FROM raw_events
+from raw_events
 ```
 
-### LATERAL VIEW with EXPLODE
+### lateral view with explode
 
 Flatten arrays:
 ```sql
 select
   user_id,
   tag
-FROM user_profiles
-LATERAL VIEW EXPLODE(tags) tags_table AS tag
-WHERE TD_TIME_RANGE(time, '2024-01-01')
+from user_profiles
+lateral view explode(tags) tags_table AS tag
+where td_time_range(time, '2024-01-01')
 ```
 
-Multiple LATERAL VIEWs:
+Multiple lateral views:
 ```sql
 select
   user_id,
   tag,
   category
-FROM user_profiles
-LATERAL VIEW EXPLODE(tags) tags_table AS tag
-LATERAL VIEW EXPLODE(categories) cat_table AS category
+from user_profiles
+lateral view explode(tags) tags_table AS tag
+lateral view explode(categories) cat_table AS category
 ```
 
 ### Dynamic Partitioning
@@ -358,10 +358,10 @@ When creating tables (less common in TD):
 SET hive.exec.dynamic.partition = true;
 SET hive.exec.dynamic.partition.mode = nonstrict;
 
-INSERT OVERWRITE TABLE target_table PARTITION(dt)
+INSERT OVERWRITE TABLE target_table PARTITIon(dt)
 select *, TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'JST') as dt
-FROM source_table
-WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
+from source_table
+where td_time_range(time, '2024-01-01', '2024-01-31')
 ```
 
 ## Error Handling
@@ -374,8 +374,8 @@ WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
 
 **"OutOfMemoryError: Java heap space"**
 - Reduce time range in query
-- Use LIMIT for testing
-- Optimize JOINs (use MAPJOIN hint for small tables)
+- Use limit for testing
+- Optimize joins (use MAPJOIN hint for small tables)
 
 **"Too many dynamic partitions"**
 - Reduce partition count
@@ -387,7 +387,7 @@ WHERE TD_TIME_RANGE(time, '2024-01-01', '2024-01-31')
 
 ## Best Practices
 
-1. **Always use time filters** with TD_TIME_RANGE or direct time comparisons
+1. **Always use time filters** with td_time_range or direct time comparisons
 2. **Select only needed columns** to reduce I/O
 3. **Use MAPJOIN hint** for small table joins
 4. **Test on small time ranges** before full runs
@@ -413,9 +413,9 @@ When helping users write Hive queries:
 
 1. **Understand requirements** - What analysis is needed?
 2. **Identify tables** - Which TD tables to query?
-3. **Add time filters** - Always include TD_TIME_RANGE
+3. **Add time filters** - Always include td_time_range
 4. **Write base query** - Start simple
-5. **Add transformations** - Aggregations, JOINs, etc.
+5. **Add transformations** - Aggregations, joins, etc.
 6. **Optimize** - Use MAPJOIN hints, select only needed columns
 7. **Test** - Run on small dataset first
 8. **Scale** - Extend to full time range
