@@ -36,10 +36,14 @@ tdx sg push --dry-run  # Preview changes
 tdx sg push --delete  # Delete segments not in local files
 
 # View segment details
-tdx sg view "High Value Customers"
-tdx sg desc "High Value Customers"  # Show schema
-tdx sg sql "High Value Customers"  # Get SQL query
-tdx sg show "High Value Customers"  # Execute and show results
+tdx sg view "High Value Customers"  # Show segment metadata
+tdx sg desc "High Value Customers"  # Show schema/fields
+
+# Check segment data
+tdx sg show "High Value Customers"  # Execute query and show sample results
+
+# Get SQL query for segment data access (use with tdx query -f)
+tdx sg sql "High Value Customers"
 
 # List available fields
 tdx sg fields
@@ -224,6 +228,19 @@ See [full operator reference](https://tdx.treasuredata.com/commands/segment.html
 - **TimeWithinPast**: Within past N units - `value: 30, unit: days`
 
 **Note**: Most operators use singular `value`, while set-based operators (In, NotIn, Contain, StartWith, EndWith) use plural `values`.
+
+## Accessing Segment Data
+
+Use `tdx sg sql` to get the exact SQL query that accesses segment data, then combine with `tdx query` for custom analysis:
+
+```bash
+# Quick data check - show sample results directly
+tdx sg show "High Value Customers"
+
+# Get the SQL query for segment data
+tdx sg sql "High Value Customers"
+# Output: SELECT * FROM cdp_audience_xxxxxx.segment_yyyyyy WHERE ...
+```
 
 ## Typical Workflow
 
