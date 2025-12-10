@@ -314,6 +314,6 @@ select count(*) from mydb.events where td_interval(time, '-1d', 'JST') -- Try JS
 
 ## Resources
 
-- [TD_INTERVAL Documentation](https://docs.treasuredata.com/)
-- [TD_TIME_RANGE Documentation](https://docs.treasuredata.com/)
+- [td_interval Documentation](https://docs.treasuredata.com/)
+- [td_time_range Documentation](https://docs.treasuredata.com/)
 - [Timezone List](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
