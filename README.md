@@ -47,6 +47,10 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[field-agent-skills/documentation](./field-agent-skills/documentation)** - Comprehensive templates and guidelines for documenting Field Agents with standardized structure, system prompts, and tool specifications
 - **[field-agent-skills/visualization](./field-agent-skills/visualization)** - Professional Plotly visualization best practices with TD color palette, chart specifications, and formatting standards for executive-ready visualizations
 
+### Product Skills
+
+- **[product-skills/prd-creation-assistant](./product-skills/prd-creation-assistant)** - Expert guidance for creating Product Requirements Documents (PRDs) using Agile framework for both general product features and AI agent development
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
@@ -69,6 +73,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `tdx-skills` - tdx CLI for managing TD from command line
    - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
+   - `product-skills` - Product Requirements Document (PRD) creation for features and agents
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -79,6 +84,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    /plugin install sdk-skills@td-skills
    /plugin install tdx-skills@td-skills
    /plugin install field-agent-skills@td-skills
+   /plugin install product-skills@td-skills
    ```
 
 ### Invoking Skills
@@ -104,10 +110,12 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the deployment skill to set up a production publishing workflow"
 "Use the documentation skill to create comprehensive Field Agent documentation"
 "Use the visualization skill to create a Plotly chart with TD colors"
+"Use the prd-creation-assistant skill to write a PRD for a new feature"
+"Use the product skill to create a PRD for an AI agent project"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, activations, digdag, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, activations, digdag, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, deployment, documentation, visualization, prd-creation-assistant, product)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 

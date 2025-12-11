@@ -101,6 +101,15 @@
         "./aps-doc-skills/golden",
         "./aps-doc-skills/master-segment"
       ]
+    },
+    {
+      "name": "product-skills",
+      "description": "Product Management skills for creating Product Requirements Documents (PRDs) using Agile framework for both general product features and AI agent development",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./product-skills/prd-creation-assistant"
+      ]
     }
   ]
 }
