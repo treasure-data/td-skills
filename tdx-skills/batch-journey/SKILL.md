@@ -380,8 +380,49 @@ journeys:
 | State | Description | Can Modify |
 |-------|-------------|------------|
 | `draft` | Being edited | Yes |
+| `simulation` | Testing mode | Yes |
 | `launched` | Live and active | Limited |
 | `paused` | Paused execution | Yes |
+
+## Journey Simulation (Recommended)
+
+**Best Practice**: Always push journeys as `draft` first and use simulation mode to validate before launching.
+
+Simulation mode allows you to:
+- Verify entry criteria accuracy
+- Preview how profiles navigate decision points and A/B tests
+- Test wait steps without real-time delays (fast-forwarded)
+- Review branching logic with path visualization
+- Conduct QA reviews collaboratively
+
+### Simulation Workflow
+
+```yaml
+# 1. Push journey as draft (default state)
+journeys:
+  - state: draft  # Or omit state - defaults to draft
+    latest: true
+    stages: [...]
+```
+
+```bash
+# 2. Push draft journey to Treasure Data
+tdx sg push
+
+# 3. Open journey in TD Console and click "Simulation Mode"
+# 4. Review highlighted paths and simulation log
+# 5. Fix any issues and re-push
+# 6. Launch when validated
+```
+
+### Simulation Limitations
+
+- Only available for `draft` journeys (not launched)
+- Jump steps not supported in simulation
+- All qualifying profiles enter simultaneously (static simulation)
+- Results visible only while in Simulation Mode
+
+See: https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration/journey-simulation
 
 ## Reentry Modes
 
@@ -418,7 +459,7 @@ tdx sg use "Customer 360"
 # 2. Pull existing journeys
 tdx journey pull
 
-# 3. Create/edit journey YAML
+# 3. Create/edit journey YAML (use state: draft)
 vim segments/customer-360/onboarding-journey.yml
 
 # 4. Validate YAML (use validate-batch-journey skill)
@@ -426,10 +467,18 @@ vim segments/customer-360/onboarding-journey.yml
 # 5. Preview changes
 tdx sg push --dry-run
 
-# 6. Push to Treasure Data
+# 6. Push draft journey to Treasure Data
 tdx sg push
 
-# 7. Verify and monitor
+# 7. Run simulation in TD Console (Recommended)
+#    - Open journey and click "Simulation Mode"
+#    - Validate entry criteria and branching logic
+#    - Review path visualization and logs
+
+# 8. Launch journey when simulation passes
+#    - Update state: launched in YAML, or launch via TD Console
+
+# 9. Monitor
 tdx journey view "Onboarding Journey" --include-stats
 ```
 
