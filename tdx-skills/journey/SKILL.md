@@ -1,15 +1,15 @@
 ---
-name: batch-journey
-description: Creates CDP batch journey definitions in YAML using `tdx journey` commands. Covers journey stages, steps (wait, activation, decision_point, ab_test, merge, jump, end), entry/exit criteria, goals, embedded segments, and versioning. Use when building customer journey orchestration workflows or managing journey YAML files.
+name: journey
+description: Creates CDP journey definitions in YAML using `tdx journey` commands. Covers journey stages, steps (wait, activation, decision_point, ab_test, merge, jump, end), entry/exit criteria, goals, embedded segments, and versioning. Use when building customer journey orchestration workflows or managing journey YAML files.
 ---
 
-# tdx Batch Journey - CDP Journey Orchestration
+# tdx Journey - CDP Journey Orchestration
 
-Create and manage CDP batch journeys using `tdx journey` commands with YAML-based configuration.
+Create and manage CDP journeys using `tdx journey` commands with YAML-based configuration.
 
-## What is a Batch Journey?
+## What is a Journey?
 
-Batch journeys orchestrate customer experiences through multi-stage workflows:
+Journeys orchestrate customer experiences through multi-stage workflows:
 - Maximum 8 stages per journey, 120 events per journey (70 per stage)
 - Support versioning (up to 30 versions)
 - Enable A/B testing, decision points, and cross-journey jumps
@@ -180,11 +180,11 @@ tdx journey view "Journey Name" --include-stats
 
 ## Related Skills
 
-- **validate-batch-journey** - Validate journey YAML syntax
+- **validate-journey** - Validate journey YAML syntax
 - **segment** - Manage child segments for journey criteria
 - **parent-segment** - Manage parent segment (journey context)
 
 ## Resources
 
-- Batch Journey: https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration/batch
+- Journey Orchestration: https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration
 - Simulation: https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration/journey-simulation

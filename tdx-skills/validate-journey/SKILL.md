@@ -1,11 +1,11 @@
 ---
-name: validate-batch-journey
-description: Validates CDP batch journey YAML configurations against tdx schema requirements. Use when reviewing journey structure, checking step types and parameters, verifying segment references, or troubleshooting journey configuration errors before pushing to Treasure Data.
+name: validate-journey
+description: Validates CDP journey YAML configurations against tdx schema requirements. Use when reviewing journey structure, checking step types and parameters, verifying segment references, or troubleshooting journey configuration errors before pushing to Treasure Data.
 ---
 
-# Batch Journey YAML Validation
+# Journey YAML Validation
 
-Validate CDP batch journey YAML configurations against the tdx schema requirements.
+Validate CDP journey YAML configurations against the tdx schema requirements.
 
 ## Validation Checklist
 
@@ -367,6 +367,6 @@ tdx journey push
 
 ## Related Skills
 
-- **tdx-skills/batch-journey** - Full journey creation and management
+- **tdx-skills/journey** - Full journey creation and management
 - **tdx-skills/validate-segment** - Validate segment rule syntax
 - **tdx-skills/segment** - Manage child segments for journey criteria
