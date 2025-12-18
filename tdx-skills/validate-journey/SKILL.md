@@ -7,6 +7,13 @@ description: Validates CDP journey YAML configurations against tdx schema requir
 
 Validate CDP journey YAML configurations against the tdx schema requirements.
 
+## File Location
+
+Journey files are stored in the parent segment folder:
+```
+./segments/(parent-segment-name)/journey-name.yml
+```
+
 ## Validation Checklist
 
 When reviewing journey YAML files, verify the following:
@@ -47,12 +54,25 @@ Optional stage fields:
 | Step Type | Required `with` Parameters | Notes |
 |-----------|---------------------------|-------|
 | `wait` | `duration` + `unit` OR `condition` | Duration or conditional wait |
-| `activation` | `activation` | Reference to activation name |
+| `activation` | `activation` | Reference to activation key name |
 | `decision_point` | `branches` | Array of branch definitions |
 | `ab_test` | `variants` | Array of variant definitions |
 | `merge` | (none) | Only uses `next` field |
 | `jump` | `target` | Journey/stage target |
 | `end` | (none) | No `with` or `next` |
+
+### 4a. Step Structure
+
+All steps (except `end`) can have an optional `next` field as a **direct field**, not inside `with`:
+
+```yaml
+- type: wait
+  name: Wait Step
+  next: next-step-name    # Direct field (not inside with:)
+  with:
+    duration: 7
+    unit: day
+```
 
 ### 5. Wait Step Parameters
 
@@ -320,21 +340,24 @@ journeys:
 ## Validation Workflow
 
 ```bash
-# 1. Pull existing journey
+# 1. Set parent segment context
+tdx sg use "Parent Segment Name"
+
+# 2. Pull existing journey
 tdx journey pull "Journey Name"
 
-# 2. Edit journey YAML
-vim segments/parent-segment/journey-name.yml
+# 3. Edit journey YAML (stored in parent segment folder)
+vim segments/(parent-segment-name)/journey-name.yml
 
-# 3. Validate with dry-run before pushing
+# 4. Validate with dry-run before pushing
 tdx journey push --dry-run
 
-# 4. Check for errors in output
+# 5. Check for errors in output
 # - JOURNEY_SYNTAX_ERROR: Invalid YAML structure
 # - JOURNEY_NOT_FOUND: Invalid segment/journey reference
 # - Validation errors with helpful messages
 
-# 5. Fix errors and push
+# 6. Fix errors and push
 tdx journey push
 ```
 
@@ -342,9 +365,11 @@ tdx journey push
 
 | Check | Rule |
 |-------|------|
+| File location | `./segments/(parent-segment-name)/journey-name.yml` |
 | File type | Must have `type: journey` |
 | Wait units | Only `day` or `week` (singular) |
 | Step types | `wait`, `activation`, `decision_point`, `ab_test`, `merge`, `jump`, `end` |
+| Step `next` | Direct field on step (not inside `with:`) |
 | End steps | No `next` or `with` fields |
 | A/B test | Variant percentages must sum to 100 |
 | Reentry | `no_reentry`, `reentry_unless_goal_achieved`, `reentry_always` |
@@ -354,6 +379,7 @@ tdx journey push
 | Events | Maximum 120 per journey, 70 per stage |
 | Latest version | Exactly one version must have `latest: true` |
 | Segment refs | Embedded: `name`, External: `ref:Name` |
+| Activations | Reference key in `activations:` section |
 
 ## Constraint Limits Summary
 

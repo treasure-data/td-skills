@@ -1,9 +1,39 @@
 # Basic Journey Example
 # A simple onboarding journey with one stage
+# File location: ./segments/(parent-segment-name)/onboarding-journey.yml
 
 type: journey
 name: Onboarding Journey
+
+journeys:
+  - stages:
+      - name: Welcome
+        entry_criteria:
+          name: New Customers
+          segment: new-customers
+        steps:
+          - type: wait
+            name: Wait 1 Day
+            with:
+              duration: 1
+              unit: day  # day | week (singular only)
+          - type: activation
+            name: Send Welcome Email
+            next: Complete  # Direct field for branching
+            with:
+              activation: welcome-email  # References key in activations:
+          - type: end
+            name: Complete
+    state: draft  # Push as draft first, use simulation to validate
+
 description: 30-day customer onboarding
+
+reentry: no_reentry  # no_reentry | reentry_unless_goal_achieved | reentry_always
+
+# Journey-level goal (optional)
+goal:
+  name: Completed Onboarding
+  segment: completed-users
 
 # Embedded segments (journey-local)
 segments:
@@ -26,32 +56,14 @@ segments:
         type: Equal
         value: true
 
-# Journey-level goal (optional)
-goal:
-  name: Completed Onboarding
-  segment: completed-users
-
-# Reentry mode: no_reentry | reentry_unless_goal_achieved | reentry_always
-reentry: no_reentry
-
-# Journey versions (unified format)
-journeys:
-  - state: draft  # Push as draft first, use simulation to validate
-    latest: true
-    stages:
-      - name: Welcome
-        entry_criteria:
-          name: New Customers
-          segment: new-customers
-        steps:
-          - type: wait
-            name: Wait 1 Day
-            with:
-              duration: 1
-              unit: day  # day | week
-          - type: activation
-            name: Send Welcome Email
-            with:
-              activation: welcome-email  # From tdx connection list
-          - type: end
-            name: Complete
+# Embedded activations (optional)
+activations:
+  welcome-email:
+    name: Welcome Email Campaign
+    connection: email-connector  # From tdx connection list
+    all_columns: true
+    schedule:
+      type: none
+      timezone: UTC
+    connector_config:
+      mode: append

@@ -14,6 +14,20 @@ Journeys orchestrate customer experiences through multi-stage workflows:
 - Support versioning (up to 30 versions)
 - Enable A/B testing, decision points, and cross-journey jumps
 
+## File Structure
+
+Journey and segment files are stored in the parent segment folder:
+
+```
+./segments/(parent-segment-name)/
+├── segment1.yml           # Child segment
+├── segment2.yml           # Child segment
+├── journey1.yml           # Journey file (type: journey)
+└── journey2.yml           # Journey file
+```
+
+All files in a parent segment folder share the same parent segment context.
+
 ## Core Commands
 
 ```bash
@@ -76,18 +90,20 @@ journeys:               # Required: array of journey versions
 ### Step Examples
 
 ```yaml
-# Wait step
+# Wait step (with next to branch)
 - type: wait
   name: Wait 7 Days
+  next: next-step        # Optional: branch to named step
   with:
     duration: 7
-    unit: day
+    unit: day            # day | week (singular form only)
 
 # Activation step
 - type: activation
   name: Send Email
+  next: after-email      # Optional: branch to named step
   with:
-    activation: email-campaign  # From tdx connection list
+    activation: email-campaign  # References key in activations: section
 
 # Decision point
 - type: decision_point
@@ -98,13 +114,15 @@ journeys:               # Required: array of journey versions
         segment: premium-tier
         next: premium-path
       - name: Others
-        excluded: true  # Else branch
+        excluded: true   # Else/default branch
         next: default-path
 
 # A/B test
 - type: ab_test
   name: Test Offers
   with:
+    customized_split: false   # false = equal split
+    unique_id: cdp_customer_id  # Optional: tracking ID
     variants:
       - name: Variant A
         percentage: 50
@@ -113,10 +131,39 @@ journeys:               # Required: array of journey versions
         percentage: 50
         next: path-b
 
-# End step
+# End step (no next or with)
 - type: end
   name: Complete
 ```
+
+**Important**: The `next:` field is a direct field on steps, not inside `with:`.
+
+## Activations Section
+
+Define embedded activations in the `activations:` section. These are referenced by key name in activation steps.
+
+```yaml
+activations:
+  welcome-email:                    # Key name referenced in steps
+    name: Welcome Email Campaign    # Display name
+    connection: salesforce-mc       # From tdx connection list
+    all_columns: true               # Export all attributes
+    schedule:
+      type: none                    # none | daily | hourly
+      timezone: UTC
+    notification:
+      notify_on:
+        - onSuccess
+        - onFailure
+      email_recipients:
+        - team@example.com
+    connector_config:               # Connection-specific config
+      userDatabaseName: mydb
+      userTableName: welcome_emails
+      mode: append                  # append | replace
+```
+
+Use `tdx connection list` to find available connection names.
 
 ## Segment References
 
