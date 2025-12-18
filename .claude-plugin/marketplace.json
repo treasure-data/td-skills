@@ -68,14 +68,16 @@
     },
     {
       "name": "tdx-skills",
-      "description": "tdx CLI for managing Treasure Data from the command line including database management, table operations, queries, context configuration, CDP parent segments, child segments with activations, and segment validation against CDP API spec",
+      "description": "tdx CLI for managing Treasure Data from the command line including database management, table operations, queries, context configuration, CDP parent segments, child segments with activations, segment validation, and batch journey orchestration",
       "source": "./",
       "strict": false,
       "skills": [
         "./tdx-skills/tdx-basic",
         "./tdx-skills/parent-segment",
         "./tdx-skills/segment",
-        "./tdx-skills/validate-segment"
+        "./tdx-skills/validate-segment",
+        "./tdx-skills/batch-journey",
+        "./tdx-skills/validate-batch-journey"
       ]
     },
     {
