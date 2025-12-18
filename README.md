@@ -40,6 +40,8 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[tdx-skills/parent-segment](./tdx-skills/parent-segment)** - Manage CDP parent segments with YAML-based configuration for master tables, attributes, and behaviors
 - **[tdx-skills/segment](./tdx-skills/segment)** - Manage CDP child segments with rules, activations, and folder organization
 - **[tdx-skills/validate-segment](./tdx-skills/validate-segment)** - Validate segment YAML configurations against CDP API spec for correct operators, time units, and field names
+- **[tdx-skills/journey](./tdx-skills/journey)** - Create CDP journey definitions in YAML with stages, steps (wait, activation, decision_point, ab_test, merge, jump, end), and simulation workflow
+- **[tdx-skills/validate-journey](./tdx-skills/validate-journey)** - Validate journey YAML configurations for correct step types, parameters, and segment references
 
 ### Field Agent Skills
 
@@ -101,13 +103,15 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the parent-segment skill to configure a CDP parent segment"
 "Use the segment skill to create child segments with activation rules"
 "Use the validate-segment skill to check my segment YAML for errors"
+"Use the journey skill to create a customer onboarding journey"
+"Use the validate-journey skill to check my journey YAML for errors"
 "Use the deployment skill to set up a production publishing workflow"
 "Use the documentation skill to create comprehensive Field Agent documentation"
 "Use the visualization skill to create a Plotly chart with TD colors"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, activations, digdag, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, activations, digdag, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
