@@ -5,6 +5,27 @@ type: journey
 name: Onboarding Journey
 description: 30-day customer onboarding
 
+# Embedded segments (journey-local)
+segments:
+  new-customers:
+    description: Customers created in last 30 days
+    rule:
+      type: Value
+      attribute: created_at
+      operator:
+        type: TimeWithinPast
+        value: 30
+        unit: day
+
+  completed-users:
+    description: Users who completed onboarding
+    rule:
+      type: Value
+      attribute: onboarding_completed
+      operator:
+        type: Equal
+        value: true
+
 # Journey-level goal (optional)
 goal:
   name: Completed Onboarding
