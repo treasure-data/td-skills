@@ -36,9 +36,10 @@ tdx journey pull  # All journeys in parent segment
 tdx journey pull "Onboarding Journey"  # Specific journey
 tdx journey pull --dry-run  # Preview without writing
 
-# Push YAML to Treasure Data (via segment push)
-tdx sg push
-tdx sg push --dry-run  # Preview changes
+# Push journey YAML to Treasure Data
+tdx journey push
+tdx journey push --dry-run  # Preview changes
+tdx journey push "onboarding-journey.yml"  # Specific file
 
 # Journey lifecycle
 tdx journey pause "Onboarding Journey"
@@ -407,7 +408,7 @@ journeys:
 
 ```bash
 # 2. Push draft journey to Treasure Data
-tdx sg push
+tdx journey push
 
 # 3. Open journey in TD Console and click "Simulation Mode"
 # 4. Review highlighted paths and simulation log
@@ -465,10 +466,10 @@ vim segments/customer-360/onboarding-journey.yml
 # 4. Validate YAML (use validate-batch-journey skill)
 
 # 5. Preview changes
-tdx sg push --dry-run
+tdx journey push --dry-run
 
 # 6. Push draft journey to Treasure Data
-tdx sg push
+tdx journey push
 
 # 7. Run simulation in TD Console (Recommended)
 #    - Open journey and click "Simulation Mode"

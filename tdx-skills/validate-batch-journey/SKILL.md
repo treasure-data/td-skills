@@ -327,7 +327,7 @@ tdx journey pull "Journey Name"
 vim segments/parent-segment/journey-name.yml
 
 # 3. Validate with dry-run before pushing
-tdx sg push --dry-run
+tdx journey push --dry-run
 
 # 4. Check for errors in output
 # - JOURNEY_SYNTAX_ERROR: Invalid YAML structure
@@ -335,7 +335,7 @@ tdx sg push --dry-run
 # - Validation errors with helpful messages
 
 # 5. Fix errors and push
-tdx sg push
+tdx journey push
 ```
 
 ## Quick Reference Card
