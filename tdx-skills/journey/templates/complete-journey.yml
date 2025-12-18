@@ -1,0 +1,168 @@
+# Complete Journey Example
+# Multi-stage retention campaign with all features
+
+type: journey
+name: Customer Retention Journey
+description: Multi-stage retention campaign
+
+# Embedded segments (journey-local)
+# These are defined within the journey and referenced by key name
+segments:
+  new-customers:
+    description: Customers in last 30 days
+    rule:
+      type: Value
+      attribute: created_at
+      operator:
+        type: TimeWithinPast
+        value: 30
+        unit: day
+
+  engaged-users:
+    description: Users who opened email
+    rule:
+      type: Value
+      attribute: email_opened
+      operator:
+        type: Equal
+        value: true
+
+# Embedded activations (journey-local)
+# Use `tdx connection list` to find available connection names
+activations:
+  welcome-email:
+    name: Send Welcome Email
+    connection: salesforce-marketing  # From tdx connection list
+    connector_config:
+      template: welcome_template
+
+  reminder-email:
+    name: Send Reminder Email
+    connection: salesforce-marketing
+    connector_config:
+      template: reminder_template
+
+# Journey-level settings
+goal:
+  name: Made Purchase
+  segment: ref:Purchasers  # External segment reference (use ref: prefix)
+  target:  # Optional: jump when goal met
+    journey: Post-Purchase Journey
+    stage: Thank You
+
+reentry: reentry_unless_goal_achieved
+
+# Journey versions
+journeys:
+  - version: v1
+    state: draft  # Push as draft, validate with simulation before launching
+    latest: true
+    stages:
+      # Stage 1: Welcome Stage
+      - name: Welcome Stage
+        description: Initial customer engagement
+
+        entry_criteria:
+          name: New Customers
+          segment: new-customers  # References embedded segment
+
+        exit_criteria:
+          - name: Churned
+            segment: ref:Churned Users  # External segment (ref: prefix)
+
+        milestone:
+          name: Email Opened
+          segment: engaged-users
+
+        steps:
+          # Wait step - duration-based
+          - type: wait
+            name: Wait 1 Day
+            with:
+              duration: 1
+              unit: day
+
+          # Activation step - send to external system
+          - type: activation
+            name: Send Welcome
+            next: check-engagement  # Branch to decision point
+            with:
+              activation: welcome-email
+
+          # Decision point - branch based on segment
+          - type: decision_point
+            name: check-engagement
+            with:
+              branches:
+                - name: Engaged
+                  segment: engaged-users
+                  next: premium-path
+                - name: Not Engaged
+                  segment: ref:Non-Engaged
+                  excluded: true  # Else/default branch
+                  next: reminder-path
+
+          # Branch A: Premium path
+          - type: wait
+            name: premium-path
+            with:
+              duration: 3
+              unit: day
+
+          # Branch B: Reminder path
+          - type: activation
+            name: reminder-path
+            with:
+              activation: reminder-email
+
+          # Merge - rejoin branched paths
+          - type: merge
+            name: Rejoin Paths
+            next: final-check
+
+          # End step - terminate stage
+          - type: end
+            name: final-check
+
+      # Stage 2: Conversion Stage
+      - name: Conversion Stage
+        entry_criteria:
+          name: Engaged Users
+          segment: engaged-users
+
+        steps:
+          # A/B test - split traffic
+          - type: ab_test
+            name: Test Offers
+            with:
+              customized_split: true  # Manual percentages (false = equal)
+              unique_id: offer_test_001  # Optional
+              variants:
+                - name: Discount Offer
+                  percentage: 50
+                  next: discount-path
+                - name: Free Trial
+                  percentage: 50
+                  next: trial-path
+
+          - type: activation
+            name: discount-path
+            with:
+              activation: discount-email
+
+          - type: activation
+            name: trial-path
+            with:
+              activation: trial-email
+
+          # Jump - route to another journey
+          - type: jump
+            name: Jump to Nurture
+            with:
+              target:
+                journey: Nurture Journey
+                stage: Follow Up
+                # bundle_id: optional-for-versioned-journeys
+
+          - type: end
+            name: Stage Complete
