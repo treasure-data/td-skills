@@ -10,9 +10,7 @@ Create and manage CDP batch journeys using `tdx journey` commands with YAML-base
 ## What is a Batch Journey?
 
 Batch journeys orchestrate customer experiences through multi-stage workflows:
-- Process profiles through workflow sessions (updates may take a day)
-- Maximum 8 stages per journey
-- Up to 120 events per journey (70 per stage)
+- Maximum 8 stages per journey, 120 events per journey (70 per stage)
 - Support versioning (up to 30 versions)
 - Enable A/B testing, decision points, and cross-journey jumps
 
@@ -22,529 +20,171 @@ Batch journeys orchestrate customer experiences through multi-stage workflows:
 # Set parent segment context (required)
 tdx sg use "Customer 360"
 
-# List journeys
+# List and view journeys
 tdx journey list
-tdx journey list "onboarding*"  # Pattern matching
-tdx journey list -r  # Recursive tree view
-
-# View journey details
-tdx journey view "Onboarding Journey"
 tdx journey view "Onboarding Journey" --include-stats
 
-# Pull journeys to YAML
-tdx journey pull  # All journeys in parent segment
-tdx journey pull "Onboarding Journey"  # Specific journey
-tdx journey pull --dry-run  # Preview without writing
-
-# Push journey YAML to Treasure Data
+# Pull/push journeys
+tdx journey pull "Onboarding Journey"
+tdx journey push --dry-run
 tdx journey push
-tdx journey push --dry-run  # Preview changes
-tdx journey push "onboarding-journey.yml"  # Specific file
 
 # Journey lifecycle
 tdx journey pause "Onboarding Journey"
 tdx journey resume "Onboarding Journey"
 
-# Statistics
-tdx journey stats "Onboarding Journey"
-tdx journey stats "Onboarding Journey" --stage "Welcome"
-
 # List available connections (for activations)
 tdx connection list
 ```
 
-## Journey YAML Structure
+## Journey YAML Templates
 
-### Basic Journey
+**Basic journey**: See [templates/basic-journey.yml](templates/basic-journey.yml)
+**Complete journey with all features**: See [templates/complete-journey.yml](templates/complete-journey.yml)
 
-```yaml
-type: journey  # Required: identifies as journey file
-name: Onboarding Journey
-description: 30-day customer onboarding
-
-# Journey-level goal (optional)
-goal:
-  name: Completed Onboarding
-  segment: completed-users
-
-# Reentry mode
-reentry: no_reentry  # no_reentry | reentry_unless_goal_achieved | reentry_always
-
-# Journey versions (unified format)
-journeys:
-  - stages:
-      - name: Welcome
-        entry_criteria:
-          name: New Customers
-          segment: new-customers
-        steps:
-          - type: wait
-            name: Wait 1 Day
-            with:
-              duration: 1
-              unit: day
-          - type: activation
-            name: Send Welcome Email
-            with:
-              activation: welcome-email
-          - type: end
-            name: Complete
-```
-
-### Complete Journey with All Features
+### Required Structure
 
 ```yaml
-type: journey
-name: Customer Retention Journey
-description: Multi-stage retention campaign
+type: journey           # Required: identifies as journey file
+name: Journey Name      # Required
+description: Optional
 
-# Embedded segments (journey-local)
-segments:
-  new-customers:
-    description: Customers in last 30 days
-    rule:
-      type: Value
-      attribute: created_at
-      operator:
-        type: TimeWithinPast
-        value: 30
-        unit: day
+goal:                   # Optional: journey completion goal
+  name: Goal Name
+  segment: segment-name
 
-  engaged-users:
-    description: Users who opened email
-    rule:
-      type: Value
-      attribute: email_opened
-      operator:
-        type: Equal
-        value: true
+reentry: no_reentry     # no_reentry | reentry_unless_goal_achieved | reentry_always
 
-# Embedded activations (journey-local)
-# Use `tdx connection list` to find available connection names
-activations:
-  welcome-email:
-    name: Send Welcome Email
-    connection: salesforce-marketing  # From tdx connection list
-    connector_config:
-      template: welcome_template
-
-# Journey-level settings
-goal:
-  name: Made Purchase
-  segment: ref:Purchasers  # External segment reference
-  target:  # Optional: jump when goal met
-    journey: Post-Purchase Journey
-    stage: Thank You
-
-reentry: reentry_unless_goal_achieved
-
-# Journey versions
-journeys:
-  - version: v1
-    state: launched
-    latest: true
-    stages:
-      - name: Welcome Stage
-        description: Initial customer engagement
-
-        entry_criteria:
-          name: New Customers
-          segment: new-customers
-
-        exit_criteria:
-          - name: Churned
-            segment: ref:Churned Users
-
-        milestone:
-          name: Email Opened
-          segment: engaged-users
-
-        steps:
-          - type: wait
-            name: Wait 1 Day
-            with:
-              duration: 1
-              unit: day
-
-          - type: activation
-            name: Send Welcome
-            next: check-engagement
-            with:
-              activation: welcome-email
-
-          - type: decision_point
-            name: check-engagement
-            with:
-              branches:
-                - name: Engaged
-                  segment: engaged-users
-                  next: premium-path
-                - name: Not Engaged
-                  segment: ref:Non-Engaged
-                  excluded: true  # Else branch
-                  next: reminder-path
-
-          - type: wait
-            name: premium-path
-            with:
-              duration: 3
-              unit: day
-
-          - type: activation
-            name: reminder-path
-            with:
-              activation: reminder-email
-
-          - type: merge
-            name: Rejoin Paths
-            next: final-check
-
-          - type: end
-            name: final-check
-
-      - name: Conversion Stage
-        entry_criteria:
-          name: Engaged Users
-          segment: engaged-users
-        steps:
-          - type: ab_test
-            name: Test Offers
-            with:
-              customized_split: true
-              variants:
-                - name: Discount Offer
-                  percentage: 50
-                  next: discount-path
-                - name: Free Trial
-                  percentage: 50
-                  next: trial-path
-
-          - type: activation
-            name: discount-path
-            with:
-              activation: discount-email
-
-          - type: activation
-            name: trial-path
-            with:
-              activation: trial-email
-
-          - type: jump
-            name: Jump to Nurture
-            with:
-              target:
-                journey: Nurture Journey
-                stage: Follow Up
-
-          - type: end
-            name: Stage Complete
+journeys:               # Required: array of journey versions
+  - state: draft        # draft | launched
+    latest: true        # Exactly one must be true
+    stages: [...]
 ```
 
 ## Step Types Reference
 
-### Wait Step
+| Type | Purpose | Key Parameters |
+|------|---------|----------------|
+| `wait` | Pause execution | `duration`, `unit` (day/week), or `condition` |
+| `activation` | Send to external system | `activation` (connection name) |
+| `decision_point` | Branch by segment | `branches[]` with segment, next |
+| `ab_test` | Split traffic | `variants[]` with percentage, next |
+| `merge` | Rejoin branches | `next` (optional) |
+| `jump` | Go to another journey | `target.journey`, `target.stage` |
+| `end` | Exit stage | No parameters |
+
+### Step Examples
 
 ```yaml
-# Duration-based wait
+# Wait step
 - type: wait
   name: Wait 7 Days
   with:
     duration: 7
-    unit: day  # day | week
+    unit: day
 
-# Conditional wait (wait until segment match or timeout)
-- type: wait
-  name: Wait For Purchase
-  with:
-    condition:
-      segment: made-purchase
-      timeout:
-        duration: 14
-        unit: day
-
-# Wait until specific date
-- type: wait
-  name: Wait Until Monday
-  with:
-    days_of_week: [1]  # 0=Sunday, 1=Monday, etc.
-```
-
-### Activation Step
-
-```yaml
+# Activation step
 - type: activation
-  name: Send Email Campaign
-  next: next-step-name  # Optional: for branching
+  name: Send Email
   with:
-    activation: email-campaign  # Reference to embedded or external activation
-```
+    activation: email-campaign  # From tdx connection list
 
-### Decision Point Step
-
-```yaml
+# Decision point
 - type: decision_point
-  name: Check Customer Tier
+  name: Check Tier
   with:
     branches:
-      - name: Premium Customers
+      - name: Premium
         segment: premium-tier
         next: premium-path
-      - name: Standard Customers
-        segment: standard-tier
-        next: standard-path
       - name: Others
-        segment: ref:All Others
-        excluded: true  # Else/default branch
+        excluded: true  # Else branch
         next: default-path
-```
 
-### A/B Test Step
-
-```yaml
+# A/B test
 - type: ab_test
-  name: Test Email Subject Lines
+  name: Test Offers
   with:
-    customized_split: true  # Manual percentages (false = equal split)
-    unique_id: subject_test_001  # Optional: auto-generated if omitted
     variants:
-      - name: Subject A
-        percentage: 33
-        next: variant-a-path
-      - name: Subject B
-        percentage: 33
-        next: variant-b-path
-      - name: Subject C
-        percentage: 34
-        next: variant-c-path
-```
+      - name: Variant A
+        percentage: 50
+        next: path-a
+      - name: Variant B
+        percentage: 50
+        next: path-b
 
-### Merge Step
-
-```yaml
-- type: merge
-  name: Rejoin Branches
-  next: continue-flow  # Optional: next step after merge
-```
-
-### Jump Step
-
-```yaml
-- type: jump
-  name: Move to Conversion Journey
-  with:
-    target:
-      journey: Conversion Journey
-      stage: Entry Stage
-      bundle_id: optional-bundle-id  # For versioned journeys
-```
-
-### End Step
-
-```yaml
+# End step
 - type: end
-  name: Journey Complete
-  # No 'next' or 'with' fields
+  name: Complete
 ```
 
 ## Segment References
 
-### Embedded Segments (Journey-Local)
-
-```yaml
-segments:
-  vip-customers:
-    description: VIP tier customers
-    rule:
-      type: Value
-      attribute: tier
-      operator:
-        type: Equal
-        value: VIP
-
-journeys:
-  - stages:
-      - entry_criteria:
-          segment: vip-customers  # Direct reference
-```
-
-### External Segments
-
-```yaml
-journeys:
-  - stages:
-      - entry_criteria:
-          segment: ref:High Value Customers  # Use ref: prefix
-```
-
-## Journey States
-
-| State | Description | Can Modify |
-|-------|-------------|------------|
-| `draft` | Being edited | Yes |
-| `simulation` | Testing mode | Yes |
-| `launched` | Live and active | Limited |
-| `paused` | Paused execution | Yes |
+- **Embedded**: `segment: my-segment` (defined in `segments:` section)
+- **External**: `segment: ref:Existing Segment` (use `ref:` prefix)
 
 ## Journey Simulation (Recommended)
 
-**Best Practice**: Always push journeys as `draft` first and use simulation mode to validate before launching.
-
-Simulation mode allows you to:
-- Verify entry criteria accuracy
-- Preview how profiles navigate decision points and A/B tests
-- Test wait steps without real-time delays (fast-forwarded)
-- Review branching logic with path visualization
-- Conduct QA reviews collaboratively
-
-### Simulation Workflow
-
-```yaml
-# 1. Push journey as draft (default state)
-journeys:
-  - state: draft  # Or omit state - defaults to draft
-    latest: true
-    stages: [...]
-```
+**Best Practice**: Push as `draft` first, use simulation to validate before launching.
 
 ```bash
-# 2. Push draft journey to Treasure Data
+# 1. Push draft journey
 tdx journey push
 
-# 3. Open journey in TD Console and click "Simulation Mode"
-# 4. Review highlighted paths and simulation log
-# 5. Fix any issues and re-push
-# 6. Launch when validated
+# 2. Open in TD Console → click "Simulation Mode"
+# 3. Review paths and logs
+# 4. Launch when validated
 ```
 
-### Simulation Limitations
+Simulation allows you to:
+- Verify entry criteria and branching logic
+- Test wait steps instantly (fast-forwarded)
+- Review path visualization
 
-- Only available for `draft` journeys (not launched)
-- Jump steps not supported in simulation
-- All qualifying profiles enter simultaneously (static simulation)
-- Results visible only while in Simulation Mode
+**Limitations**: Draft journeys only, jump steps not supported in simulation.
 
 See: https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration/journey-simulation
-
-## Reentry Modes
-
-| Mode | Behavior |
-|------|----------|
-| `no_reentry` | Profiles enter once only |
-| `reentry_unless_goal_achieved` | Can re-enter until goal met |
-| `reentry_always` | Can re-enter repeatedly |
-
-## Versioning
-
-```yaml
-journeys:
-  - version: v1
-    state: launched
-    latest: false  # Previous version
-    stages: [...]
-
-  - version: v2
-    state: launched
-    latest: true  # Active version
-    stages: [...]
-    goal:  # Per-version override
-      name: V2 Goal
-      segment: v2-completers
-```
 
 ## Typical Workflow
 
 ```bash
-# 1. Set context
+# 1. Set context and pull
 tdx sg use "Customer 360"
-
-# 2. Pull existing journeys
 tdx journey pull
 
-# 3. Create/edit journey YAML (use state: draft)
-vim segments/customer-360/onboarding-journey.yml
-
-# 4. Validate YAML (use validate-batch-journey skill)
-
-# 5. Preview changes
+# 2. Create/edit journey YAML (state: draft)
+# 3. Preview and push
 tdx journey push --dry-run
-
-# 6. Push draft journey to Treasure Data
 tdx journey push
 
-# 7. Run simulation in TD Console (Recommended)
-#    - Open journey and click "Simulation Mode"
-#    - Validate entry criteria and branching logic
-#    - Review path visualization and logs
-
-# 8. Launch journey when simulation passes
-#    - Update state: launched in YAML, or launch via TD Console
-
-# 9. Monitor
-tdx journey view "Onboarding Journey" --include-stats
-```
-
-## File Organization
-
-```
-segments/customer-360/
-├── active-users.yml          # Child segment
-├── high-value.yml            # Child segment
-├── onboarding-journey.yml    # Journey (type: journey)
-└── retention-journey.yml     # Journey (type: journey)
+# 4. Simulate in TD Console
+# 5. Launch when validated
+# 6. Monitor
+tdx journey view "Journey Name" --include-stats
 ```
 
 ## Constraints
 
-- Maximum 8 stages per journey
-- Maximum 120 events per journey
-- Maximum 70 events per stage
+- Maximum 8 stages, 120 events per journey, 70 events per stage
 - Maximum 30 versions per journey
-- Parent segments must run daily for accurate activation accounting
 - Stage names cannot be changed after launch
+- Parent segments must run daily
 
 ## Common Issues
 
-### Journey Not Processing
-
-```bash
-# Check journey state
-tdx journey view "Journey Name"
-
-# Resume if paused
-tdx journey resume "Journey Name"
-
-# Verify parent segment runs daily
-tdx ps view "Parent Segment"
-```
-
-### Segment Reference Not Found
-
-```bash
-# List available segments
-tdx sg list -r
-
-# Use ref: prefix for external segments
-segment: ref:Existing Segment Name
-```
-
-### Activation Not Triggering
-
-```bash
-# List available connections and verify connection name
-tdx connection list
-
-# Check activation configuration
-tdx journey view "Journey Name" --include-stats
-```
+| Issue | Solution |
+|-------|----------|
+| Journey not processing | `tdx journey resume "Name"` or check parent segment |
+| Segment not found | Use `ref:` prefix for external segments |
+| Activation not triggering | Verify connection with `tdx connection list` |
 
 ## Related Skills
 
-- **tdx-skills/validate-batch-journey** - Validate journey YAML syntax
-- **tdx-skills/segment** - Manage child segments for journey criteria
-- **tdx-skills/parent-segment** - Manage parent segment (journey context)
-- **tdx-skills/tdx-basic** - Core tdx CLI operations
+- **validate-batch-journey** - Validate journey YAML syntax
+- **segment** - Manage child segments for journey criteria
+- **parent-segment** - Manage parent segment (journey context)
 
 ## Resources
 
-- Batch Journey Concepts: https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration/batch
-- tdx Documentation: https://tdx.treasuredata.com/commands/journey.html
+- Batch Journey: https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration/batch
+- Simulation: https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration/journey-simulation
