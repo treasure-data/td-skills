@@ -47,6 +47,9 @@ tdx journey resume "Onboarding Journey"
 # Statistics
 tdx journey stats "Onboarding Journey"
 tdx journey stats "Onboarding Journey" --stage "Welcome"
+
+# List available connections (for activations)
+tdx connection list
 ```
 
 ## Journey YAML Structure
@@ -116,10 +119,11 @@ segments:
         value: true
 
 # Embedded activations (journey-local)
+# Use `tdx connection list` to find available connection names
 activations:
   welcome-email:
     name: Send Welcome Email
-    connection: salesforce-marketing
+    connection: salesforce-marketing  # From tdx connection list
     connector_config:
       template: welcome_template
 
@@ -476,8 +480,8 @@ segment: ref:Existing Segment Name
 ### Activation Not Triggering
 
 ```bash
-# Verify connection exists
-tdx connections
+# List available connections and verify connection name
+tdx connection list
 
 # Check activation configuration
 tdx journey view "Journey Name" --include-stats
