@@ -103,6 +103,15 @@
         "./aps-doc-skills/golden",
         "./aps-doc-skills/master-segment"
       ]
+    },
+    {
+      "name": "agent-skills",
+      "description": "Skills for building and deploying AI agents with TD Agent Builder wizard including agent configuration, knowledge base management, testing, and deployment to Treasure Data Agent Foundry",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./agent-skills/agent-builder"
+      ]
     }
   ]
 }
