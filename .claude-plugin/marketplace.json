@@ -110,7 +110,7 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./agent-skills/agent-builder"
+        "./agent-skills/td-agent-builder"
       ]
     }
   ]
