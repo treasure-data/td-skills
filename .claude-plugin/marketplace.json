@@ -78,7 +78,8 @@
         "./tdx-skills/validate-segment",
         "./tdx-skills/journey",
         "./tdx-skills/validate-journey",
-        "./tdx-skills/connector-config"
+        "./tdx-skills/connector-config",
+        "./tdx-skills/agent"
       ]
     },
     {
