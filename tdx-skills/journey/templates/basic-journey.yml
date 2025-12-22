@@ -57,13 +57,16 @@ segments:
         value: true
 
 # Embedded activations (optional)
+# Use `tdx connection schema <type>` to discover connector_config fields
 activations:
   welcome-email:
     name: Welcome Email Campaign
-    connection: email-connector  # From tdx connection list
+    connection: salesforce-marketing  # From tdx connection list
     all_columns: true
     schedule:
       type: none
       timezone: UTC
     connector_config:
-      mode: append
+      de_name: WelcomeEmails
+      shared_data_extension: false
+      data_operation: upsert

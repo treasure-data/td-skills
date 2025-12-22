@@ -155,18 +155,20 @@ segments:
         value: true
 
 # Embedded activations (journey-local)
-# Use `tdx connection list` to find available connection names
+# Use `tdx connection list` to find connection names
+# Use `tdx connection schema <type>` to discover connector_config fields
 activations:
   welcome-email:
     name: Send Welcome Email
-    connection: salesforce-marketing  # From tdx connection list
+    connection: salesforce-marketing  # salesforce_marketing_cloud_v2 connection
     all_columns: true
     schedule:
       type: none
       timezone: UTC
     connector_config:
-      template: welcome_template
-      mode: append
+      de_name: WelcomeEmails
+      shared_data_extension: false
+      data_operation: upsert
 
   reminder-email:
     name: Send Reminder Email
@@ -176,8 +178,9 @@ activations:
       type: none
       timezone: UTC
     connector_config:
-      template: reminder_template
-      mode: append
+      de_name: ReminderEmails
+      shared_data_extension: false
+      data_operation: upsert
 
   discount-email:
     name: Discount Offer Email
@@ -187,8 +190,9 @@ activations:
       type: none
       timezone: UTC
     connector_config:
-      template: discount_template
-      mode: append
+      de_name: DiscountOffers
+      shared_data_extension: false
+      data_operation: upsert
 
   trial-email:
     name: Free Trial Email
@@ -198,5 +202,6 @@ activations:
       type: none
       timezone: UTC
     connector_config:
-      template: trial_template
-      mode: append
+      de_name: TrialOffers
+      shared_data_extension: false
+      data_operation: upsert

@@ -77,7 +77,8 @@
         "./tdx-skills/segment",
         "./tdx-skills/validate-segment",
         "./tdx-skills/journey",
-        "./tdx-skills/validate-journey"
+        "./tdx-skills/validate-journey",
+        "./tdx-skills/connector-config"
       ]
     },
     {
