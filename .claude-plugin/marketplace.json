@@ -79,7 +79,8 @@
         "./tdx-skills/journey",
         "./tdx-skills/validate-journey",
         "./tdx-skills/connector-config",
-        "./tdx-skills/agent"
+        "./tdx-skills/agent",
+        "./tdx-skills/agent-prompt"
       ]
     },
     {
