@@ -146,7 +146,7 @@ Define embedded activations in the `activations:` section. These are referenced 
 activations:
   welcome-email:                    # Key name referenced in steps
     name: Welcome Email Campaign    # Display name
-    connection: salesforce-mc       # From tdx connection list
+    connection: salesforce-marketing  # From tdx connection list
     all_columns: true               # Export all attributes
     schedule:
       type: none                    # none | daily | hourly
@@ -158,12 +158,12 @@ activations:
       email_recipients:
         - team@example.com
     connector_config:               # Connection-specific config
-      userDatabaseName: mydb
-      userTableName: welcome_emails
-      mode: append                  # append | replace
+      de_name: WelcomeEmails
+      shared_data_extension: false
+      data_operation: upsert
 ```
 
-Use `tdx connection list` to find available connection names.
+Use `tdx connection list` to find available connection names and `tdx connection schema <type>` to discover `connector_config` fields. See **connector-config** skill for detailed guidance.
 
 ## Segment References
 
@@ -227,6 +227,7 @@ tdx journey view "Journey Name" --include-stats
 
 ## Related Skills
 
+- **connector-config** - Configure connector_config for activations
 - **validate-journey** - Validate journey YAML syntax
 - **segment** - Manage child segments for journey criteria
 - **parent-segment** - Manage parent segment (journey context)

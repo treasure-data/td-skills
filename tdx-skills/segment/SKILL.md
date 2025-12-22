@@ -162,10 +162,12 @@ activations:
 
 ### Activation with Connector Config
 
+Use `tdx connection schema <type>` to discover available fields for `connector_config`. See **connector-config** skill for detailed guidance.
+
 ```yaml
 activations:
-  - name: Salesforce Contact Sync
-    connection: salesforce-prod
+  - name: SFMC Contact Sync
+    connection: salesforce-marketing
     columns:
       - email
       - first_name
@@ -173,9 +175,9 @@ activations:
       type: daily
       timezone: America/Los_Angeles
     connector_config:
-      object: Contact
-      mode: upsert
-      external_id: email
+      de_name: ContactSync
+      shared_data_extension: false
+      data_operation: upsert
 ```
 
 ### Activation with Notifications
@@ -335,6 +337,7 @@ tdx connections
 
 ## Related Skills
 
+- **tdx-skills/connector-config** - Configure connector_config for activations
 - **tdx-skills/validate-segment** - Validate segment YAML syntax against CDP API spec
 - **tdx-skills/parent-segment** - Manage parent segments and master tables
 - **tdx-skills/tdx-basic** - Core tdx CLI operations and global options
