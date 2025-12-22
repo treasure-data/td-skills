@@ -90,20 +90,59 @@ When adding a new skill:
 
 ## Claude Code Skills Best Practices
 
-When creating skills, follow these core principles:
+**Default assumption: Claude is already very smart.**
 
-- **Be concise**: Assume Claude is smart; only add context it doesn't have.
-- **Set appropriate degrees of freedom**: Match specificity to task fragility.
-- **Use progressive disclosure**: Keep SKILL.md under 500 lines; split into referenced files.
-- **Write effective descriptions**: Use third person, be specific, include key terms and when to use, within 1000 characters.
-- **Implement feedback loops**: validation → fix → repeat.
-- **Test iteratively**: Build evaluations first; develop with one Claude instance to help other instances.
+Only add context Claude doesn't already have. Challenge each piece of information:
+- "Does Claude really need this explanation?"
+- "Can I assume Claude knows this?"
+- "Does this paragraph justify its token cost?"
 
-Additional guidelines:
-- Use gerund form for naming (`processing-pdfs`)
-- Avoid time-sensitive info
-- Maintain consistent terminology
-- Keep file references one level deep
+### Good Example (~50 tokens)
+
+```markdown
+## Extract PDF text
+
+Use pdfplumber:
+
+\`\`\`python
+import pdfplumber
+
+with pdfplumber.open("file.pdf") as pdf:
+    text = pdf.pages[0].extract_text()
+\`\`\`
+```
+
+### Bad Example (~150 tokens)
+
+```markdown
+## Extract PDF text
+
+PDF (Portable Document Format) files are a common file format that contains
+text, images, and other content. To extract text from a PDF, you'll need to
+use a library. There are many libraries available for PDF processing, but we
+recommend pdfplumber because it's easy to use...
+```
+
+### Core Principles
+
+- **Be concise**: Only add TD-specific context Claude doesn't have
+- **Skip explanations of general concepts**: Claude knows YAML, SQL, REST APIs, etc.
+- **Show, don't explain**: A code example is worth more than a paragraph
+- **Use progressive disclosure**: Keep SKILL.md under 500 lines; split into referenced files
+
+### What to Include
+
+- TD-specific command syntax and options
+- TD-specific field names, enums, and constraints
+- Non-obvious TD conventions and patterns
+- Working examples with realistic values
+
+### What to Omit
+
+- Explanations of what things are ("A segment is a group of users...")
+- Generic best practices Claude already knows
+- Verbose step-by-step instructions for simple tasks
+- Redundant examples showing the same pattern
 
 For comprehensive guidance including workflows, templates, anti-patterns, and executable code patterns, see the [official Skill Authoring Best Practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
 
