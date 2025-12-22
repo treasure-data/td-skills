@@ -5,195 +5,67 @@ description: Validates CDP segment YAML configurations against the TD CDP API sp
 
 # Segment YAML Validation
 
-Validate CDP segment YAML configurations against the [TD CDP API specification](https://api-docs.treasuredata.com/apis/td_cdp_api-public/segments).
+Validate with `tdx sg push --dry-run` before pushing.
 
-## Validation Checklist
-
-When reviewing segment YAML files, verify the following:
-
-### 1. Required Fields
+## Required Structure
 
 ```yaml
-name: string          # Required: segment name
-kind: batch|realtime|funnel_stage  # Required: segment type
-rule:                 # Required: filtering rules
-  type: And|Or
-  conditions: []
+name: string
+kind: batch                    # batch | realtime | funnel_stage
+rule:
+  type: And                    # And | Or
+  conditions:
+    - type: Value
+      attribute: field_name
+      operator:
+        type: OperatorType
+        value: ...
 ```
 
-### 2. Rule Structure
+## Operators Quick Reference
 
-Each condition must have:
-- `type`: `Value` (for attribute-based filtering)
-- `attribute`: field name from parent segment
-- `operator`: operator configuration
+| Type | Value | Notes |
+|------|-------|-------|
+| `Equal`, `NotEqual` | single value | |
+| `Greater`, `GreaterEqual`, `Less`, `LessEqual` | number | |
+| `In`, `NotIn` | array | `["US", "CA"]` |
+| `Contain`, `StartWith`, `EndWith` | array | `["@gmail.com"]` |
+| `Regexp` | string | regex pattern |
+| `IsNull` | (none) | |
+| `TimeWithinPast`, `TimeWithinNext` | number + unit | `value: 30, unit: day` |
 
-### 3. Valid Operator Types
+## Time Units (Singular Form Only)
 
-**Comparison Operators**:
-| Type | Required Fields | Value Type |
-|------|-----------------|------------|
-| `Equal` | `value` | string, number, boolean |
-| `NotEqual` | `value` | string, number, boolean |
-| `Greater` | `value` | number |
-| `GreaterEqual` | `value` | number |
-| `Less` | `value` | number |
-| `LessEqual` | `value` | number |
-
-**List Operators**:
-| Type | Required Fields | Value Type |
-|------|-----------------|------------|
-| `In` | `value` | array of strings/numbers |
-| `NotIn` | `value` | array of strings/numbers |
-
-**String Operators**:
-| Type | Required Fields | Value Type |
-|------|-----------------|------------|
-| `Contain` | `value` | array of strings |
-| `StartWith` | `value` | array of strings |
-| `EndWith` | `value` | array of strings |
-| `Regexp` | `value` | regex pattern string |
-
-**Null Operators**:
-| Type | Required Fields |
-|------|-----------------|
-| `IsNull` | (none) |
-
-**Time Operators**:
-| Type | Required Fields | Notes |
-|------|-----------------|-------|
-| `TimeWithinPast` | `value`, `unit` | value is numeric, unit from enum |
-| `TimeWithinNext` | `value`, `unit` | value is numeric, unit from enum |
-| `TimeRange` | `from`, `to` | complex time range |
-| `TimeToday` | (none) | matches today |
-| `TimeThis` | `from.unit` | current period |
-| `TimeNext` | `from.unit` | next period |
-
-### 4. Valid Time Units
-
-Per the CDP API spec, `unit` must be one of:
 ```
 year | quarter | month | week | day | hour | minute | second
 ```
 
-**Common mistakes**:
-- `days` (invalid) → `day` (valid)
-- `months` (invalid) → `month` (valid)
-- `hours` (invalid) → `hour` (valid)
+**Common mistake**: `days` → `day`, `months` → `month`
 
-### 5. Activation Schedule Units
-
-For activation `repeatUnit`, valid values are:
-```
-none | minute | hour | day | week | month | once
-```
-
-## Validation Examples
-
-### Valid Segment
+## Common Errors
 
 ```yaml
-name: Recent High-Value Customers
-kind: batch
-visible: true
+# WRONG: plural unit
+unit: days
+# CORRECT
+unit: day
 
-rule:
-  type: And
-  conditions:
-    - type: Value
-      attribute: country
-      operator:
-        type: In
-        value: ["US", "CA"]  # Correct: 'value' with array for In operator
-    - type: Value
-      attribute: ltv
-      operator:
-        type: Greater
-        value: 1000  # Correct: 'value' for comparison operator
-    - type: Value
-      attribute: last_purchase_date
-      operator:
-        type: TimeWithinPast
-        value: 30
-        unit: day  # Correct: singular 'day', not 'days'
+# WRONG: array for Equal
+type: Equal
+value: ["US", "CA"]
+# CORRECT: use In for arrays
+type: In
+value: ["US", "CA"]
+
+# WRONG: missing unit
+type: TimeWithinPast
+value: 30
+# CORRECT
+type: TimeWithinPast
+value: 30
+unit: day
 ```
-
-### Common Validation Errors
-
-**Error: Wrong unit format**
-```yaml
-# INVALID
-operator:
-  type: TimeWithinPast
-  value: 30
-  unit: days  # Wrong: plural form
-
-# VALID
-operator:
-  type: TimeWithinPast
-  value: 30
-  unit: day  # Correct: singular form
-```
-
-**Error: Array value for comparison operator**
-```yaml
-# INVALID
-operator:
-  type: Equal
-  value: ["US", "CA"]  # Wrong: Equal expects single value, use In for arrays
-
-# VALID
-operator:
-  type: In
-  value: ["US", "CA"]  # Correct: In operator for multiple values
-```
-
-**Error: Missing required fields**
-```yaml
-# INVALID - missing 'unit'
-operator:
-  type: TimeWithinPast
-  value: 30
-
-# VALID
-operator:
-  type: TimeWithinPast
-  value: 30
-  unit: day
-```
-
-## Validation Workflow
-
-```bash
-# 1. Pull existing segments
-tdx sg pull "Parent Segment Name"
-
-# 2. Edit or create segment YAML
-vim segments/parent-segment/my-segment.yml
-
-# 3. Validate with dry-run before pushing
-tdx sg push --dry-run
-
-# 4. Check for API errors in output
-# Common errors indicate validation failures
-
-# 5. Push if validation passes
-tdx sg push
-```
-
-## Quick Reference Card
-
-| Check | Rule |
-|-------|------|
-| Time units | Must be singular: `day`, `month`, `year` (not `days`, `months`, `years`) |
-| All operators | Use unified `value` field (CLI auto-detects single vs array) |
-| List operators (In, NotIn, Contain, StartWith, EndWith) | Provide array in `value` field |
-| Comparison operators (Equal, Greater, etc.) | Provide single value in `value` field |
-| TimeWithinPast/TimeWithinNext | Requires both `value` and `unit` |
-| Segment kind | Must be `batch`, `realtime`, or `funnel_stage` |
-| Rule type | Must be `And` or `Or` |
 
 ## Related Skills
 
-- **tdx-skills/segment** - Full segment management with tdx CLI
-- **tdx-skills/parent-segment** - Parent segment configuration
+- **segment** - Full segment management
