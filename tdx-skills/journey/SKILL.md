@@ -75,8 +75,8 @@ steps:
     with:
       condition:
         segment: made-purchase   # Wait until segment match
-        next: follow-up          # Step when condition matched
-        timeout:                 # Max wait duration (optional)
+        next: follow-up          # Optional: defaults to next sequential step
+        timeout:                 # Max wait duration
           duration: 14
           unit: day
           next: timeout-path     # Step when max wait exceeded

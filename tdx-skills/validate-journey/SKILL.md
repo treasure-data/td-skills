@@ -48,11 +48,11 @@ journeys:
   with:
     condition:
       segment: made-purchase    # Wait until segment match
-      next: follow-up           # Step when matched (optional)
-      timeout:                  # Max wait duration (optional)
+      next: follow-up           # Optional: defaults to next sequential step
+      timeout:                  # Max wait duration
         duration: 14
         unit: day
-        next: timeout-path      # Step when timeout (optional)
+        next: timeout-path      # Required when using different paths
 ```
 
 ## Segment References
