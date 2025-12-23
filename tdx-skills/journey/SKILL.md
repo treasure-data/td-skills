@@ -35,9 +35,11 @@ goal:
 
 journeys:
   - state: draft             # draft | launched
-    latest: true             # Exactly one must be true
     stages:
       - name: Welcome
+        entry_criteria:      # Who enters this stage
+          name: New Users
+          segment: new-users
         steps: [...]
 ```
 
@@ -65,6 +67,13 @@ steps:
     with:
       duration: 7
       unit: day          # day | week only
+
+  - type: wait
+    name: Wait for Purchase
+    next: follow-up
+    with:
+      condition:
+        segment: made-purchase   # Wait until segment match
 
   - type: activation
     name: Send Email

@@ -29,7 +29,7 @@ journeys:
 
 | Type | Required `with` | Notes |
 |------|-----------------|-------|
-| `wait` | `duration` + `unit` OR `condition` | unit: day/week only |
+| `wait` | `duration` + `unit` OR `condition` | condition: `{segment, timeout}` |
 | `activation` | `activation` | key from activations section |
 | `decision_point` | `branches[]` | each needs segment, next |
 | `ab_test` | `variants[]` | percentages must sum to 100 |
