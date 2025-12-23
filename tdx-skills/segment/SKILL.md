@@ -83,6 +83,20 @@ See **connector-config** skill for `connector_config` details.
 | `IsNull` | (no value) |
 | `TimeWithinPast` | `value: 30, unit: day` |
 
+## Segment References (Include/Exclude)
+
+Reuse conditions from existing segments:
+
+```yaml
+rule:
+  type: And
+  conditions:
+    - type: include              # Include members of another segment
+      segment: high-value-users
+    - type: exclude              # Exclude members of another segment
+      segment: churned-users
+```
+
 **Time units**: `year`, `quarter`, `month`, `week`, `day`, `hour`, `minute`, `second` (singular form only)
 
 ## Folder Structure
