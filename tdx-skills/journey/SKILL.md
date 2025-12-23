@@ -72,13 +72,14 @@ steps:
 
   - type: wait
     name: Wait for Purchase
-    next: follow-up
     with:
       condition:
         segment: made-purchase   # Wait until segment match
+        next: follow-up          # Step when condition matched
         timeout:                 # Max wait duration (optional)
           duration: 14
           unit: day
+          next: timeout-path     # Step when max wait exceeded
 
   - type: activation
     name: Send Email

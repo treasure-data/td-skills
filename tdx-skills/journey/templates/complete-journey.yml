@@ -114,6 +114,18 @@ journeys:
               duration: 1
               unit: day
 
+          # Wait step - condition-based with different paths
+          - type: wait
+            name: Wait for Purchase
+            with:
+              condition:
+                segment: engaged-users       # Wait until segment match
+                next: premium-path           # Step when condition matched
+                timeout:
+                  duration: 7
+                  unit: day
+                  next: reminder-path        # Step when max wait exceeded
+
           # Activation step - send to external system
           - type: activation
             name: Send Welcome
