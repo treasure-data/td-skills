@@ -29,7 +29,7 @@ journeys:
 
 | Type | Required `with` | Notes |
 |------|-----------------|-------|
-| `wait` | `duration` + `unit` OR `condition` | condition: `{segment, timeout}` |
+| `wait` | `duration` + `unit` OR `condition` | condition has `segment`, optional `next`, `timeout` |
 | `activation` | `activation` | key from activations section |
 | `decision_point` | `branches[]` | each needs segment, next |
 | `ab_test` | `variants[]` | percentages must sum to 100 |
@@ -38,6 +38,22 @@ journeys:
 | `end` | (none) | no `next` or `with` |
 
 **Important**: `next:` is a direct field on step, not inside `with:`
+
+## Wait Condition Format
+
+```yaml
+# Wait for segment match with different paths for matched vs timeout
+- type: wait
+  name: Wait for Purchase
+  with:
+    condition:
+      segment: made-purchase    # Wait until segment match
+      next: follow-up           # Optional: defaults to next sequential step
+      timeout:                  # Max wait duration
+        duration: 14
+        unit: day
+        next: timeout-path      # Required when using different paths
+```
 
 ## Segment References
 
