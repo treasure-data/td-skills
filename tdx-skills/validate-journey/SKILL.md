@@ -34,7 +34,7 @@ journeys:
 | `decision_point` | `branches[]` | each needs segment, next |
 | `ab_test` | `variants[]` | percentages must sum to 100 |
 | `merge` | (none) | |
-| `jump` | `target.journey`, `target.stage` | |
+| `jump` | `target` with `journey`, `stage` | target is an object |
 | `end` | (none) | no `next` or `with` |
 
 **Important**: `next:` is a direct field on step, not inside `with:`
@@ -88,6 +88,7 @@ journeys:
 journeys:
   - latest: false
   - latest: true
+
 ```
 
 ## Related Skills
