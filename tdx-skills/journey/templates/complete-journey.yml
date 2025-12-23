@@ -4,26 +4,108 @@
 
 type: journey
 name: Customer Retention Journey
+description: Multi-stage retention campaign
+
+goal:
+  name: Made Purchase
+  segment: ref:Purchasers  # External segment reference (use ref: prefix)
+  target:  # Optional: jump when goal met
+    journey: Post-Purchase Journey
+    stage: Thank You
+
+reentry: reentry_unless_goal_achieved
+
+# Embedded segments (journey-local)
+# These are defined within the journey and referenced by key name
+segments:
+  engaged-users:
+    description: Users who opened email
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: email_opened
+          operator:
+            type: Equal
+            value: "true"
+  new-customers:
+    description: Customers in last 30 days
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: created_at
+          operator:
+            type: TimeWithinPast
+            value: 30
+            unit: day
+
+# Embedded activations (journey-local)
+# Use `tdx connection list` to find connection names
+# Use `tdx connection schema <connection-type>` to discover connector_config fields
+# Example: `tdx connection schema salesforce_marketing_cloud_v2`
+activations:
+  discount-email:
+    name: Discount Offer Email
+    connection: My SFMC Connection
+    all_columns: true
+    schedule:
+      type: none
+      timezone: UTC
+    connector_config:
+      de_name: DiscountOffers
+      shared_data_extension: false
+      data_operation: upsert
+  reminder-email:
+    name: Send Reminder Email
+    connection: My SFMC Connection
+    all_columns: true
+    schedule:
+      type: none
+      timezone: UTC
+    connector_config:
+      de_name: ReminderEmails
+      shared_data_extension: false
+      data_operation: upsert
+  trial-email:
+    name: Free Trial Email
+    connection: My SFMC Connection
+    all_columns: true
+    schedule:
+      type: none
+      timezone: UTC
+    connector_config:
+      de_name: TrialOffers
+      shared_data_extension: false
+      data_operation: upsert
+  welcome-email:
+    name: Send Welcome Email
+    connection: My SFMC Connection
+    all_columns: true
+    schedule:
+      type: none
+      timezone: UTC
+    connector_config:
+      de_name: WelcomeEmails
+      shared_data_extension: false
+      data_operation: upsert
 
 # Journey versions
 journeys:
-  - stages:
+  - state: draft  # Push as draft, validate with simulation before launching
+    stages:
       # Stage 1: Welcome Stage
       - name: Welcome Stage
         description: Initial customer engagement
-
         entry_criteria:
           name: New Customers
           segment: new-customers  # References embedded segment
-
         exit_criteria:
           - name: Churned
             segment: ref:Churned Users  # External segment (ref: prefix)
-
         milestone:
           name: Email Opened
           segment: engaged-users
-
         steps:
           # Wait step - duration-based
           - type: wait
@@ -35,7 +117,6 @@ journeys:
           # Activation step - send to external system
           - type: activation
             name: Send Welcome
-            next: check-engagement  # Branch to decision point
             with:
               activation: welcome-email
 
@@ -68,7 +149,6 @@ journeys:
           # Merge - rejoin branched paths
           - type: merge
             name: Rejoin Paths
-            next: final-check
 
           # End step - terminate stage
           - type: end
@@ -79,7 +159,6 @@ journeys:
         entry_criteria:
           name: Engaged Users
           segment: engaged-users
-
         steps:
           # A/B test - split traffic
           - type: ab_test
@@ -112,96 +191,6 @@ journeys:
               target:
                 journey: Nurture Journey
                 stage: Follow Up
-                # bundle_id: optional-for-versioned-journeys
 
           - type: end
             name: Stage Complete
-    version: v1
-    state: draft  # Push as draft, validate with simulation before launching
-    latest: true
-
-description: Multi-stage retention campaign
-
-reentry: reentry_unless_goal_achieved
-
-# Journey-level goal (optional)
-goal:
-  name: Made Purchase
-  segment: ref:Purchasers  # External segment reference (use ref: prefix)
-  target:  # Optional: jump when goal met
-    journey: Post-Purchase Journey
-    stage: Thank You
-
-# Embedded segments (journey-local)
-# These are defined within the journey and referenced by key name
-segments:
-  new-customers:
-    description: Customers in last 30 days
-    rule:
-      type: Value
-      attribute: created_at
-      operator:
-        type: TimeWithinPast
-        value: 30
-        unit: day
-
-  engaged-users:
-    description: Users who opened email
-    rule:
-      type: Value
-      attribute: email_opened
-      operator:
-        type: Equal
-        value: true
-
-# Embedded activations (journey-local)
-# Use `tdx connection list` to find connection names
-# Use `tdx connection schema <type>` to discover connector_config fields
-activations:
-  welcome-email:
-    name: Send Welcome Email
-    connection: salesforce-marketing  # salesforce_marketing_cloud_v2 connection
-    all_columns: true
-    schedule:
-      type: none
-      timezone: UTC
-    connector_config:
-      de_name: WelcomeEmails
-      shared_data_extension: false
-      data_operation: upsert
-
-  reminder-email:
-    name: Send Reminder Email
-    connection: salesforce-marketing
-    all_columns: true
-    schedule:
-      type: none
-      timezone: UTC
-    connector_config:
-      de_name: ReminderEmails
-      shared_data_extension: false
-      data_operation: upsert
-
-  discount-email:
-    name: Discount Offer Email
-    connection: salesforce-marketing
-    all_columns: true
-    schedule:
-      type: none
-      timezone: UTC
-    connector_config:
-      de_name: DiscountOffers
-      shared_data_extension: false
-      data_operation: upsert
-
-  trial-email:
-    name: Free Trial Email
-    connection: salesforce-marketing
-    all_columns: true
-    schedule:
-      type: none
-      timezone: UTC
-    connector_config:
-      de_name: TrialOffers
-      shared_data_extension: false
-      data_operation: upsert

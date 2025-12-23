@@ -4,9 +4,57 @@
 
 type: journey
 name: Onboarding Journey
+description: 30-day customer onboarding
+
+goal:
+  name: Completed Onboarding
+  segment: completed-users
+
+reentry: no_reentry  # no_reentry | reentry_unless_goal_achieved | reentry_always
+
+# Embedded segments (journey-local)
+segments:
+  completed-users:
+    description: Users who completed onboarding
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: onboarding_completed
+          operator:
+            type: Equal
+            value: "true"
+  new-customers:
+    description: Customers created in last 30 days
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: created_at
+          operator:
+            type: TimeWithinPast
+            value: 30
+            unit: day
+
+# Embedded activations
+# Use `tdx connection schema <connection-type>` to discover connector_config fields
+# Example: `tdx connection schema salesforce_marketing_cloud_v2`
+activations:
+  welcome-email:
+    name: Welcome Email Campaign
+    connection: My SFMC Connection  # Connection name from `tdx connection list`
+    all_columns: true
+    schedule:
+      type: none
+      timezone: UTC
+    connector_config:
+      de_name: WelcomeEmails
+      shared_data_extension: false
+      data_operation: upsert
 
 journeys:
-  - stages:
+  - state: draft  # Push as draft first, use simulation to validate
+    stages:
       - name: Welcome
         entry_criteria:
           name: New Customers
@@ -19,54 +67,7 @@ journeys:
               unit: day  # day | week (singular only)
           - type: activation
             name: Send Welcome Email
-            next: Complete  # Direct field for branching
             with:
               activation: welcome-email  # References key in activations:
           - type: end
             name: Complete
-    state: draft  # Push as draft first, use simulation to validate
-
-description: 30-day customer onboarding
-
-reentry: no_reentry  # no_reentry | reentry_unless_goal_achieved | reentry_always
-
-# Journey-level goal (optional)
-goal:
-  name: Completed Onboarding
-  segment: completed-users
-
-# Embedded segments (journey-local)
-segments:
-  new-customers:
-    description: Customers created in last 30 days
-    rule:
-      type: Value
-      attribute: created_at
-      operator:
-        type: TimeWithinPast
-        value: 30
-        unit: day
-
-  completed-users:
-    description: Users who completed onboarding
-    rule:
-      type: Value
-      attribute: onboarding_completed
-      operator:
-        type: Equal
-        value: true
-
-# Embedded activations (optional)
-# Use `tdx connection schema <type>` to discover connector_config fields
-activations:
-  welcome-email:
-    name: Welcome Email Campaign
-    connection: salesforce-marketing  # From tdx connection list
-    all_columns: true
-    schedule:
-      type: none
-      timezone: UTC
-    connector_config:
-      de_name: WelcomeEmails
-      shared_data_extension: false
-      data_operation: upsert

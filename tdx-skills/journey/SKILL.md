@@ -8,10 +8,12 @@ description: Creates CDP journey definitions in YAML using `tdx journey` command
 ## Core Commands
 
 ```bash
-tdx sg use "Customer 360"                    # Set parent segment context
-tdx journey pull                             # Pull journeys to YAML
+tdx sg pull "Customer 360"                   # Pull all segments & journeys (sets context)
+tdx journey pull                             # Pull all journeys to YAML
+tdx journey pull path/to/journey.yml         # Pull specific journey
 tdx journey push --dry-run                   # Preview changes
-tdx journey push                             # Push to TD
+tdx journey push --yes                       # Push all journeys (skip confirmation)
+tdx journey push path/to/journey.yml --yes   # Push specific journey
 tdx journey pause "Journey Name"             # Pause
 tdx journey resume "Journey Name"            # Resume
 tdx journey view "Journey Name" --include-stats
@@ -74,6 +76,9 @@ steps:
     with:
       condition:
         segment: made-purchase   # Wait until segment match
+        timeout:                 # Max wait duration (optional)
+          duration: 14
+          unit: day
 
   - type: activation
     name: Send Email
@@ -108,7 +113,7 @@ steps:
 activations:
   welcome-email:                    # Key referenced in steps
     name: Welcome Email Campaign
-    connection: salesforce-marketing  # From tdx connection list
+    connection: My SFMC Connection  # Connection name from `tdx connection list`
     all_columns: true
     schedule:
       type: none                    # none | daily | hourly

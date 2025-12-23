@@ -33,6 +33,7 @@ rule:
 | `Regexp` | string | regex pattern |
 | `IsNull` | (none) | |
 | `TimeWithinPast`, `TimeWithinNext` | number + unit | `value: 30, unit: day` |
+| `include`, `exclude` | segment name | reuse existing segment |
 
 ## Time Units (Singular Form Only)
 
