@@ -52,7 +52,7 @@ journeys:
 | `decision_point` | `branches[]` with segment, next |
 | `ab_test` | `variants[]` with percentage, next (must sum to 100) |
 | `merge` | (none) |
-| `jump` | `target.journey`, `target.stage` |
+| `jump` | `target` with `journey`, `stage` |
 | `end` | (none, no next) |
 
 **Important**: `next:` is a direct field on step, not inside `with:`
@@ -81,6 +81,13 @@ steps:
         - name: Others
           excluded: true         # Default branch
           next: default-path
+
+  - type: jump
+    name: Go to Retention
+    with:
+      target:
+        journey: Retention Journey   # Target journey name
+        stage: Welcome Stage         # Target stage name
 
   - type: end
     name: Complete
