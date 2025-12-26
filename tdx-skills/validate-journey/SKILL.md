@@ -5,7 +5,11 @@ description: Validates CDP journey YAML configurations against tdx schema requir
 
 # Journey YAML Validation
 
-Validate with `tdx journey push --dry-run` before pushing.
+```bash
+tdx sg validate                           # Validate all segment & journey YAML files
+tdx sg validate path/to/journey.yml       # Validate specific file
+tdx journey push --dry-run                # Preview changes before push
+```
 
 ## Required Structure
 
@@ -59,53 +63,6 @@ journeys:
 
 - Embedded: `segment: my-segment` (defined in `segments:` section)
 - External: `segment: ref:Existing Segment` (use `ref:` prefix)
-
-## Common Errors
-
-```yaml
-# WRONG: missing type: journey
-name: My Journey
-journeys: [...]
-# CORRECT
-type: journey
-name: My Journey
-
-# WRONG: plural wait unit
-unit: days
-# CORRECT
-unit: day                    # day | week only
-
-# WRONG: invalid step type
-type: delay
-# CORRECT
-type: wait
-
-# WRONG: end step with next
-- type: end
-  next: another-step
-# CORRECT
-- type: end
-  name: Complete
-
-# WRONG: percentages don't sum to 100
-variants:
-  - percentage: 40
-  - percentage: 40
-# CORRECT
-variants:
-  - percentage: 50
-  - percentage: 50
-
-# WRONG: multiple latest: true
-journeys:
-  - latest: true
-  - latest: true
-# CORRECT: exactly one
-journeys:
-  - latest: false
-  - latest: true
-
-```
 
 ## Related Skills
 
