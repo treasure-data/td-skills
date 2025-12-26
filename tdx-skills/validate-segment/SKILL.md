@@ -43,29 +43,21 @@ year | quarter | month | week | day | hour | minute | second
 
 **Common mistake**: `days` → `day`, `months` → `month`
 
-## Common Errors
+## Behavior Aggregation Structure
 
 ```yaml
-# WRONG: plural unit
-unit: days
-# CORRECT
-unit: day
-
-# WRONG: array for Equal
-type: Equal
-value: ["US", "CA"]
-# CORRECT: use In for arrays
-type: In
-value: ["US", "CA"]
-
-# WRONG: missing unit
-type: TimeWithinPast
-value: 30
-# CORRECT
-type: TimeWithinPast
-value: 30
-unit: day
+# Behavior condition with aggregation
+- type: Value
+  attribute: field_name          # Or "" for pure count
+  operator:
+    type: GreaterEqual
+    value: 1
+  aggregation:
+    type: Count                  # Count | Sum | Avg | Min | Max
+  source: behavior_name          # Behavior from parent segment
 ```
+
+**Required fields**: `aggregation.type` and `source` must both be present
 
 ## Related Skills
 

@@ -131,6 +131,39 @@ See **connector-config** skill for `connector_config` details.
 - **Embedded**: `segment: my-segment` (defined in `segments:` section)
 - **External**: `segment: ref:Existing Segment` (use `ref:` prefix)
 
+## Embedded Segment with Behavior
+
+Use behavior data from parent segment in journey segments:
+
+```yaml
+segments:
+  active_website_visitors:
+    description: Users who visited website
+    rule:
+      type: And
+      conditions:
+        # Attribute condition
+        - type: Value
+          attribute: pv
+          operator:
+            type: GreaterEqual
+            value: 5
+        # Behavior aggregation condition
+        - type: And
+          conditions:
+            - type: Value
+              attribute: ""                    # Empty for behavior count
+              operator:
+                type: GreaterEqual
+                value: 1
+              aggregation:
+                type: Count
+              source: behavior_behv_website    # behavior_<table_name>
+          description: has visited website
+```
+
+**Note**: Journey embedded segments use `source: behavior_<table_name>` (with `behavior_` prefix), unlike standalone segments which use `source: <behavior_name>`.
+
 ## Simulation (Recommended)
 
 Push as `draft` first, then use TD Console → "Simulation Mode" to validate before launching.
@@ -145,7 +178,7 @@ Push as `draft` first, then use TD Console → "Simulation Mode" to validate bef
 
 ## Related Skills
 
-- **connector-config**, **validate-journey**, **segment**, **parent-segment**
+- **connector-config**, **validate-journey**, **segment**, **validate-segment**, **parent-segment**
 
 ## Resources
 

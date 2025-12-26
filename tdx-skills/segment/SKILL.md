@@ -83,6 +83,48 @@ See **connector-config** skill for `connector_config` details.
 | `IsNull` | (no value) |
 | `TimeWithinPast` | `value: 30, unit: day` |
 
+## Behavior Conditions (Aggregations)
+
+Query behavior data from parent segment with aggregations:
+
+```yaml
+rule:
+  type: And
+  conditions:
+    # Count behavior occurrences
+    - type: Value
+      attribute: add_to_cart_event
+      operator:
+        type: GreaterEqual
+        value: 1
+      aggregation:
+        type: Count              # Count | Sum | Avg | Min | Max
+      source: cart_abandonment   # Behavior name from parent segment
+
+    # Sum behavior values
+    - type: Value
+      attribute: order_total
+      operator:
+        type: Greater
+        value: 500
+      aggregation:
+        type: Sum
+      source: purchase_history
+
+    # Time-based behavior filtering
+    - type: Value
+      attribute: timestamp
+      operator:
+        type: GreaterEqual
+        value: 30
+        unit: days               # Filter to last 30 days
+      aggregation:
+        type: Max
+      source: purchase_history
+```
+
+**Aggregation types**: `Count`, `Sum`, `Avg`, `Min`, `Max`
+
 ## Segment References (Include/Exclude)
 
 Reuse conditions from existing segments:
