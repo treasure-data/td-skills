@@ -5,7 +5,11 @@ description: Validates CDP segment YAML configurations against the TD CDP API sp
 
 # Segment YAML Validation
 
-Validate with `tdx sg push --dry-run` before pushing.
+```bash
+tdx sg validate                           # Validate all YAML files locally
+tdx sg validate path/to/segment.yml       # Validate specific file
+tdx sg push --dry-run                     # Preview changes before push
+```
 
 ## Required Structure
 
