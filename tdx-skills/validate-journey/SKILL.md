@@ -5,7 +5,11 @@ description: Validates CDP journey YAML configurations against tdx schema requir
 
 # Journey YAML Validation
 
-Validate with `tdx journey push --dry-run` before pushing.
+```bash
+tdx sg validate                           # Validate all segment & journey YAML files
+tdx sg validate path/to/journey.yml       # Validate specific file
+tdx journey push --dry-run                # Preview changes before push
+```
 
 ## Required Structure
 
