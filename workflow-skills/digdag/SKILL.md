@@ -163,24 +163,45 @@ trigger:
 ## tdx wf Commands
 
 ```bash
-tdx wf push my_workflow              # Push to TD
-tdx wf run my_project.my_workflow    # Run immediately
-tdx wf sessions my_workflow          # List runs
-tdx wf attempt <id> tasks            # Show tasks
+# Project sync (recommended workflow)
+tdx wf pull my_project               # Pull project to local folder
+tdx wf push                          # Push local changes with diff preview
+tdx wf clone --name my_project_prod  # Clone to new project name
+
+# Context & discovery
+tdx wf use my_project                # Set default project for session
+tdx wf projects                      # List all projects
+tdx wf workflows                     # List workflows in project
+
+# Running & monitoring
+tdx wf run                           # Interactive workflow selector
+tdx wf run my_project.my_workflow    # Run specific workflow
+tdx wf sessions                      # List runs
+tdx wf attempt <id> tasks            # Show task status
 tdx wf attempt <id> logs +task_name  # View logs
 tdx wf attempt <id> retry            # Retry failed
 tdx wf attempt <id> kill             # Stop running
+
+# Secrets
+tdx wf secrets list                  # List secret keys
+tdx wf secrets set KEY=value         # Set a secret
+tdx wf secrets delete KEY            # Delete a secret
+
+# Legacy (digdag-style)
+tdx wf upload my_workflow            # Push without sync tracking
 ```
 
 ## Project Structure
 
 ```
-my_workflow/
-├── my_workflow.dig
-├── queries/
-│   └── analysis.sql
-└── scripts/
-    └── process.py
+workflows/
+└── my_project/              # Created by tdx wf pull
+    ├── tdx.json             # Sync tracking (auto-generated)
+    ├── main.dig             # Workflow definition
+    ├── queries/
+    │   └── analysis.sql
+    └── scripts/
+        └── process.py
 ```
 
 ## Schedule Options

@@ -5,11 +5,19 @@ description: TD workflow debugging and operations. Covers tdx wf commands for mo
 
 # TD Workflow Management
 
+## Setup & Context
+
+```bash
+tdx wf use my_project                # Set default project for session
+tdx wf pull my_project               # Pull project locally for editing
+tdx wf push                          # Push changes with diff preview
+```
+
 ## Monitoring Commands
 
 ```bash
-tdx wf sessions my_project           # List runs
-tdx wf sessions my_project --status error
+tdx wf sessions                      # List runs (uses session context)
+tdx wf sessions --status error       # Filter by status
 tdx wf attempt <id> tasks            # Show task status
 tdx wf attempt <id> logs +task_name  # View logs
 ```
@@ -101,6 +109,20 @@ tdx wf attempt <id> kill                           # Stop running
       call>: main_workflow.dig
       params:
         session_date: ${dates}
+```
+
+## Secrets Management
+
+```bash
+tdx wf secrets list                  # List secret keys (values hidden)
+tdx wf secrets set API_KEY=xxx       # Set a secret
+tdx wf secrets delete API_KEY        # Delete a secret
+```
+
+**Usage in .dig files:**
+```yaml
++task:
+  sh>: curl -H "Authorization: ${secret:API_KEY}" https://api.example.com
 ```
 
 ## Common Issues
