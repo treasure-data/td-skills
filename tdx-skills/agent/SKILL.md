@@ -26,6 +26,10 @@ tdx agent clone ./agents/my-project/ --name "Prod" --profile production
 # List/show agents
 tdx agents                                    # List in current project
 tdx agent show "Agent Name"
+
+# Test agents with chat
+tdx chat --agent "project/Agent Name" "Your message"
+tdx chat --new --agent "project/Agent Name" "Start new conversation"
 ```
 
 ## Folder Structure
@@ -48,12 +52,11 @@ agents/{project-name}/
 
 ```yaml
 name: Support Agent
-description: Customer support assistant
 
-model: claude-4.5-sonnet          # claude-4.5-sonnet, claude-4.5-haiku
-temperature: 0.7
+model: claude-4-sonnet            # claude-4-sonnet, claude-4-haiku
+temperature: 1                    # REQUIRED: must be 1 when reasoning_effort is set
 max_tool_iterations: 5
-reasoning_effort: medium          # none, minimal, low, medium, high
+reasoning_effort: medium          # none, minimal, low, medium, high (requires temperature: 1)
 
 starter_message: Hello! How can I help?
 
@@ -159,7 +162,45 @@ tdx agent push --dry-run
 
 # 4. Push to TD
 tdx agent push
+
+# 5. Test with tdx chat
+tdx chat --agent "My Project/My Agent" "Hello, test message"
 ```
+
+## Testing Agents
+
+Use `tdx chat` to test agents from the command line:
+
+```bash
+# Basic chat
+tdx chat --agent "project-name/Agent Name" "Your question here"
+
+# Start new conversation (clears history)
+tdx chat --new --agent "project-name/Agent Name" "Fresh start"
+
+# Continue existing conversation
+tdx chat --agent "project-name/Agent Name" "Follow-up question"
+```
+
+## Extended Thinking (Reasoning)
+
+To enable extended thinking/reasoning, you must set `temperature: 1`:
+
+```yaml
+# With reasoning enabled
+model: claude-4-sonnet
+temperature: 1                    # REQUIRED when using reasoning_effort
+reasoning_effort: medium          # none, minimal, low, medium, high
+
+# Without reasoning (flexible temperature)
+model: claude-4-sonnet
+temperature: 0.7                  # Can be any value 0-1
+# reasoning_effort: omit or set to none
+```
+
+**Note:** If you get the error `temperature may only be set to 1 when thinking is enabled`, either:
+1. Set `temperature: 1`, or
+2. Remove the `reasoning_effort` field
 
 ## Related Skills
 
