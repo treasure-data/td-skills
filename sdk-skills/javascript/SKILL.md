@@ -12,9 +12,9 @@ Browser-only SDK for client-side event tracking. For server-side, use REST API o
 Add to HTML `<head>`:
 
 ```html
-<!-- TD JS SDK Loader (v4.4) -->
+<!-- TD JS SDK Loader (v4.4.1) -->
 <script type="text/javascript">
-!function(t,e){if(void 0===e[t]){e[t]=function(){e[t].clients.push(this),this._init=[Array.prototype.slice.call(arguments)]},e[t].clients=[];for(var r=function(t){return function(){return this["_"+t]=this["_"+t]||[],this["_"+t].push(Array.prototype.slice.call(arguments)),this}},s=["collectTags","addRecord","blockEvents","fetchServerCookie","fetchGlobalID","fetchUserSegments","fetchPersonalization","resetUUID","ready","setSignedMode","setAnonymousMode","set","trackEvent","trackPageview","trackClicks","unblockEvents"],c=0;c<s.length;c++){var o=s[c];e[t].prototype[o]=r(o)}var n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src="https://cdn.treasuredata.com/sdk/4.4/td.min.js";var i=document.getElementsByTagName("script")[0];i.parentNode.insertBefore(n,i)}}("Treasure",this);
+!function(t,e){if(void 0===e[t]){e[t]=function(){e[t].clients.push(this),this._init=[Array.prototype.slice.call(arguments)]},e[t].clients=[];for(var r=function(t){return function(){return this["_"+t]=this["_"+t]||[],this["_"+t].push(Array.prototype.slice.call(arguments)),this}},s=["collectTags","addRecord","blockEvents","fetchServerCookie","fetchGlobalID","fetchUserSegments","fetchPersonalization","resetUUID","ready","setSignedMode","setAnonymousMode","set","trackEvent","trackPageview","trackClicks","unblockEvents"],c=0;c<s.length;c++){var o=s[c];e[t].prototype[o]=r(o)}var n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src="https://cdn.treasuredata.com/sdk/4.4.1/td.min.js";var i=document.getElementsByTagName("script")[0];i.parentNode.insertBefore(n,i)}}("Treasure",this);
 </script>
 
 <!-- Initialize and track -->
@@ -97,4 +97,4 @@ import Treasure from 'td-js-sdk';
 ## Resources
 
 - GitHub: https://github.com/treasure-data/td-js-sdk
-- CDN: `https://cdn.treasuredata.com/sdk/4.4/td.min.js`
+- CDN: `https://cdn.treasuredata.com/sdk/4.4.1/td.min.js`
