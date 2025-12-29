@@ -131,6 +131,39 @@ select time, from_unixtime(time) as datetime from mydb.events limit 1
 | Database not found | Check site: `tdx databases --site jp01` |
 | Pattern not working | Quote patterns: `tdx tables "prod_*"` |
 
+## Project Folder Structure
+
+tdx organizes resources into conventional folders:
+
+```
+my-project/
+├── tdx.json                    # Project config (site, database, contexts)
+├── parent_segments/            # Parent segment definitions
+│   ├── customer-360.yml
+│   └── demo-audience.yml
+├── segments/                   # Child segments and journeys (per parent)
+│   └── customer-360/
+│       ├── tdx.json            # { "parent_segment": "Customer 360" }
+│       ├── high-value.yml      # Segment
+│       ├── onboarding.yml      # Journey (type: journey)
+│       └── marketing/          # Folder organization
+│           └── newsletter.yml
+├── workflows/                  # Digdag workflow projects
+│   └── daily-etl/
+│       ├── tdx.json            # { "workflow_project": "daily-etl" }
+│       └── main.dig
+└── agents/                     # LLM agents (per project)
+    └── my-llm-project/
+        ├── tdx.json            # { "llm_project": "My LLM Project" }
+        ├── support-agent/
+        │   ├── agent.yml
+        │   └── prompt.md
+        └── knowledge_bases/
+            └── faq.yml
+```
+
+Each `tdx.json` stores context for its directory—commands run from any subdirectory use the nearest config.
+
 ## Resources
 
 - Documentation: https://tdx.treasuredata.com/
