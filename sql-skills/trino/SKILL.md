@@ -10,12 +10,15 @@ description: TD Trino SQL with TD-specific functions (td_interval, td_time_range
 ### td_interval (Recommended for relative time)
 
 ```sql
-where td_interval(time, '-1d', 'JST')      -- Yesterday
+where td_interval(time, '-1d', 'JST')      -- Yesterday (JST)
+where td_interval(time, '-1d')             -- Yesterday (UTC)
 where td_interval(time, '-1w', 'JST')      -- Previous week
 where td_interval(time, '-1M', 'JST')      -- Previous month
 where td_interval(time, '-1d/-1d', 'JST')  -- 2 days ago
 where td_interval(time, '-1M/-2M', 'JST')  -- 3 months ago
 ```
+
+Timezone is optional (defaults to UTC).
 
 **Note**: Cannot use `td_scheduled_time()` as first arg. Include `td_scheduled_time()` elsewhere in query to establish reference date.
 

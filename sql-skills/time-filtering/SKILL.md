@@ -1,6 +1,6 @@
 ---
 name: time-filtering
-description: Advanced td_interval patterns including offset dates (-1d/2025-10-01, -7d/-1d, 0M/now), td_interval_range for debugging, and partition pruning optimization.
+description: Advanced td_interval patterns including offset dates (-1d/2025-10-01, -7d/-1d, 0M/now), td_interval_range for debugging, td_time_string for display formatting, and partition pruning optimization.
 ---
 
 # TD Time Filtering - Advanced Patterns
@@ -40,6 +40,17 @@ select td_interval_range('-7d', 'UTC')              -- Returns [start, end] time
 select td_interval_range('-1d/2025-10-01', 'JST')   -- Check offset date range
 select td_interval_range('0M/now', 'JST')           -- Verify month-to-date range
 ```
+
+## td_time_string for Display
+
+```sql
+select td_time_string(time, 'd!')              -- 2025-01-15 (UTC)
+select td_time_string(time, 'd!', 'JST')       -- 2025-01-15 (JST)
+select td_time_string(time, 'M!', 'JST')       -- 2025-01
+select td_time_string(time, 'h!', 'JST')       -- 2025-01-15 10
+```
+
+Codes: `y!` `q!` `M!` `w!` `d!` `h!` `m!` `s!`. Timezone optional (defaults to UTC). Use for display/grouping only, not filtering.
 
 ## td_scheduled_time Reference
 
