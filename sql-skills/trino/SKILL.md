@@ -29,17 +29,18 @@ where td_time_range(time, td_time_add(td_scheduled_time(), '-7d'), td_scheduled_
 ### td_time_string (Display formatting)
 
 ```sql
-td_time_string(time, 'd!', 'JST')  -- 2024-01-15
+td_time_string(time, 'd!')         -- 2024-01-15 (UTC)
+td_time_string(time, 'd!', 'JST')  -- 2024-01-15 (JST)
 td_time_string(time, 's!', 'JST')  -- 2024-01-15 10:30:45
-td_time_string(time, 'M!', 'JST')  -- 2024-01
-td_time_string(time, 'h!', 'JST')  -- 2024-01-15 10
+td_time_string(time, 'M!')         -- 2024-01
+td_time_string(time, 'h!')         -- 2024-01-15 10
 ```
 
-Format codes: `y!`=year, `q!`=quarter, `M!`=month, `w!`=week, `d!`=day, `h!`=hour, `m!`=minute, `s!`=second. Without `!`, includes timezone offset.
+Format codes: `y!`=year, `q!`=quarter, `M!`=month, `w!`=week, `d!`=day, `h!`=hour, `m!`=minute, `s!`=second. Without `!`, includes timezone offset. Timezone is optional (defaults to UTC).
 
 **Critical**: Use for display only, never for filtering:
-- ✅ `select td_time_string(time, 'd!', 'JST') as date`
-- ❌ `where td_time_string(time, 'd!', 'JST') = '2024-01-01'`
+- Good: `select td_time_string(time, 'd!', 'JST') as date`
+- Bad: `where td_time_string(time, 'd!', 'JST') = '2024-01-01'`
 
 ### td_time_format (Legacy)
 
