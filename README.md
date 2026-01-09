@@ -15,7 +15,6 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[sql-skills/time-filtering](./sql-skills/time-filtering)** - Time-based filtering with td_interval() and td_time_range() for partition pruning and query performance
 - **[sql-skills/trino-optimizer](./sql-skills/trino-optimizer)** - Optimize slow Trino queries, fix timeouts and memory errors, reduce costs
 - **[sql-skills/trino-to-hive-migration](./sql-skills/trino-to-hive-migration)** - Convert Trino queries to Hive to resolve memory errors and handle large datasets
-- **[sql-skills/trino-cli](./sql-skills/trino-cli)** - Use Trino CLI for interactive queries, data exploration, and terminal-based workflows with TD
 - **[sql-skills/td-mcp](./sql-skills/td-mcp)** - Connect Claude Code to TD via MCP server for natural language data exploration and queries
 
 ### Realtime Skills
