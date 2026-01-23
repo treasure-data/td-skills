@@ -29,9 +29,18 @@ Context priority: CLI flags > session > project `tdx.json` > profile > global co
 # Session context
 tdx use database mydb
 tdx use site jp01
-tdx use profile production
-tdx context              # View current
-tdx context --clear      # Clear session
+tdx profile use production   # Switch profile
+tdx status                   # View current context and auth
+tdx use --clear              # Clear session
+```
+
+### Profile Management
+
+```bash
+tdx profile list             # List all profiles
+tdx profile create staging   # Create new profile (interactive)
+tdx profile set database=dev # Set profile config
+tdx --profile staging query "..." # One-off with different profile
 ```
 
 ### Profiles (~/.config/tdx/tdx.json)
