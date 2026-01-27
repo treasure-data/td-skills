@@ -39,9 +39,9 @@ td_time_string(time, 'M!')         -- 2024-01
 td_time_string(time, 'h!')         -- 2024-01-15 10
 ```
 
-Format codes: `y!`=year, `q!`=quarter, `M!`=month, `w!`=week, `d!`=day, `h!`=hour, `m!`=minute, `s!`=second. Without `!`, includes timezone offset. Timezone is optional (defaults to UTC).
+Format codes: y!=year, q!=quarter, M!=month, w!=week, d!=day, h!=hour, m!=minute, s!=second. Without the exclamation mark, includes timezone offset. Timezone is optional (defaults to UTC).
 
-**Critical**: Use for display only, never for filtering:
+Use for display only, never for filtering:
 - Good: `select td_time_string(time, 'd!', 'JST') as date`
 - Bad: `where td_time_string(time, 'd!', 'JST') = '2024-01-01'`
 
