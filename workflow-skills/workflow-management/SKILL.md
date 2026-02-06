@@ -5,7 +5,9 @@ description: TD workflow debugging and operations. Covers tdx wf commands for mo
 
 # TD Workflow Management
 
-## Setup & Context
+## Setup & CLI Commands
+
+For full CLI reference, see **tdx-skills/workflow**. Quick start:
 
 ```bash
 tdx wf use my_project                # Set default project for session
@@ -13,31 +15,16 @@ tdx wf pull my_project               # Pull project locally for editing
 tdx wf push                          # Push changes with diff preview
 ```
 
-## Monitoring Commands
-
-```bash
-tdx wf sessions                      # List runs (uses session context)
-tdx wf sessions --status error       # Filter by status
-tdx wf attempt <id> tasks            # Show task status
-tdx wf attempt <id> logs +task_name  # View logs
-```
-
 ## Debugging Steps
 
-1. Check error in `tdx wf attempt <id> logs +failed_task`
-2. Verify query syntax if td> failed
-3. Check time ranges - does data exist for session_date?
-4. Validate parameter values
-5. Check resource limits (memory, timeout)
-
-## Retry Operations
-
-```bash
-tdx wf attempt <id> retry                          # Retry from start
-tdx wf attempt <id> retry --resume-from +step     # Retry from task
-tdx wf attempt <id> retry --params '{"key":"val"}' # Override params
-tdx wf attempt <id> kill                           # Stop running
-```
+1. `tdx wf sessions --status error` - find failed sessions
+2. `tdx wf timeline --session-id <id>` - visualize task execution
+3. `tdx wf attempt <id> logs +failed_task` - read error logs
+4. Verify query syntax if td> failed
+5. Check time ranges - does data exist for session_date?
+6. Validate parameter values
+7. Check resource limits (memory, timeout)
+8. `tdx wf attempt <id> retry --resume-from +failed_task` - retry from failure
 
 ## Alerting
 
@@ -111,15 +98,10 @@ tdx wf attempt <id> kill                           # Stop running
         session_date: ${dates}
 ```
 
-## Secrets Management
+## Secrets
 
-```bash
-tdx wf secrets list                  # List secret keys (values hidden)
-tdx wf secrets set API_KEY=xxx       # Set a secret
-tdx wf secrets delete API_KEY        # Delete a secret
-```
+See **tdx-skills/workflow** for `tdx wf secrets` commands. Usage in .dig files:
 
-**Usage in .dig files:**
 ```yaml
 +task:
   sh>: curl -H "Authorization: ${secret:API_KEY}" https://api.example.com
