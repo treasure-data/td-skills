@@ -79,6 +79,7 @@
         "./tdx-skills/validate-journey",
         "./tdx-skills/connector-config",
         "./tdx-skills/agent",
+        "./tdx-skills/agent-test",
         "./tdx-skills/agent-prompt",
         "./tdx-skills/workflow"
       ]

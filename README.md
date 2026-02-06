@@ -43,6 +43,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[tdx-skills/validate-journey](./tdx-skills/validate-journey)** - Validate journey YAML configurations for correct step types, parameters, and segment references
 - **[tdx-skills/connector-config](./tdx-skills/connector-config)** - Configure connector_config for segment/journey activations using `tdx connection schema` to discover fields
 - **[tdx-skills/agent](./tdx-skills/agent)** - Build LLM agents using `tdx agent pull/push` with YAML/Markdown config, tools, and knowledge bases
+- **[tdx-skills/agent-test](./tdx-skills/agent-test)** - Run automated tests for LLM agents using `tdx agent test` with test.yml format and judge evaluation
 - **[tdx-skills/agent-prompt](./tdx-skills/agent-prompt)** - Write effective system prompts for TD AI agents with role definition, constraints, and output formatting
 - **[tdx-skills/workflow](./tdx-skills/workflow)** - Manage TD workflows via `tdx wf` commands: project sync, run, sessions, timeline, attempts, retry, and secrets
 
@@ -110,6 +111,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the validate-journey skill to check my journey YAML for errors"
 "Use the connector-config skill to configure an SFMC activation"
 "Use the agent skill to create an LLM agent with knowledge base tools"
+"Use the agent-test skill to run automated tests for my agent"
 "Use the agent-prompt skill to write an effective system prompt for my agent"
 "Use the workflow skill to debug a failing workflow session"
 "Use the deployment skill to set up a production publishing workflow"
@@ -118,7 +120,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, activations, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-prompt, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, activations, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
