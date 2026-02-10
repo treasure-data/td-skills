@@ -81,7 +81,8 @@
         "./tdx-skills/agent",
         "./tdx-skills/agent-test",
         "./tdx-skills/agent-prompt",
-        "./tdx-skills/workflow"
+        "./tdx-skills/workflow",
+        "./tdx-skills/parent-segment-analysis"
       ]
     },
     {
