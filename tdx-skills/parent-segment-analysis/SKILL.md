@@ -23,7 +23,7 @@ Parent segments generate an output database (`cdp_audience_{id}`) with:
 tdx ps desc "Customer 360" -o customer_360_schema.json
 
 # Output summary:
-# Schema saved to schema.json
+# Schema saved to customer_360_schema.json
 #   Database: cdp_audience_12345
 #   Tables: 1 customers + 5 behaviors
 #   Columns: 42 total
@@ -59,12 +59,12 @@ One column per line for grep and progressive disclosure:
 
 ## Discovering Relevant Columns
 
-**IMPORTANT:** Always read the full schema file before analysis. Do NOT grep for specific terms in column names - you need to understand what data is available.
+**IMPORTANT:** Always read the full schema file first to understand what data is available. After reviewing the schema, you can use grep/search to find specific columns.
 
 - For small schemas (<50 columns): Read the file directly
-- For large schemas (50+ columns): Use a sub-agent (Task tool with Explore) to discover relevant columns for your analysis goal
+- For large schemas (50+ columns): Summarize the schema in multiple passes to discover relevant columns for your analysis goal
 
-# Analysis Guidelines
+## Analysis Guidelines
 
 - Check null ratios for identified customer columns and exclude null values from aggregations to ensure accurate analysis.
 - Build queries incrementally rather than attempting everything at once.
@@ -76,22 +76,22 @@ One column per line for grep and progressive disclosure:
 - **For SQL queries needing array analysis/aggregation**: Use CROSS JOIN UNNEST.
   ```sql
   SELECT
-    {alias_name},
+    tag,
     count(0) AS cnt
   FROM customers
-  CROSS JOIN UNNEST({column_name}) AS T({alias_name})
+  CROSS JOIN UNNEST(tags) AS t(tag)
   GROUP BY 1 ORDER BY 2 DESC LIMIT 10
   ```
-- Don't use the same name for alias as column name
-- Never use ARRAY_CONTAINS as it is not supported in Presto SQL
+- Don't use the same name for alias as column name (e.g., use `tag` not `tags` for the alias)
+- Never use `ARRAY_CONTAINS` — use `contains(array_column, value)` or filter via CROSS JOIN UNNEST
 
 ## Time Function Usage
 
 Always first check the format of the time column before applying time functions.
 
 Time functions:
-- `TD_INTERVAL(int/long unix_timestamp, string interval_string, string default_timezone = 'UTC')`
-- `TD_TIME_PARSE(string time, string default_timezone = 'UTC')`
+- `td_interval(time, '-1d')` — filter records within a time interval
+- `td_time_parse('2024-01-01', 'UTC')` — parse a time string into Unix timestamp (seconds)
 
 ## Related Skills
 
