@@ -61,8 +61,7 @@ One column per line for grep and progressive disclosure:
 
 **IMPORTANT:** Always read the full schema file first to understand what data is available. After reviewing the schema, you can use grep/search to find specific columns.
 
-- For small schemas (<50 columns): Read the file directly
-- For large schemas (50+ columns): Summarize the schema in multiple passes to discover relevant columns for your analysis goal
+For large schemas: use a sub-agent to discover relevant columns for your analysis goal
 
 ## Analysis Guidelines
 
