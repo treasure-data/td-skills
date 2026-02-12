@@ -32,9 +32,25 @@
 # FLOW CONTROL RULES (CRITICAL)
 # =============================================================================
 #
-# Rule 1: Every branch MUST have an activation step before merge.
-#   GOOD: Branch → Activation → Merge
-#   BAD:  Branch → Merge                    ← INVALID, no action in branch
+# Rule 1: Every branch MUST perform a different action. A branch that merges
+#   without doing anything is pointless — if branches do the same thing,
+#   there is no reason to branch.
+#   This applies to ALL branching types: decision_point, wait condition, ab_test.
+#
+#   decision_point / ab_test:
+#     GOOD: Branch A → Activation X → Merge
+#           Branch B → Activation Y → Merge
+#     BAD:  Branch A → Merge                  ← No action in branch
+#     BAD:  Branch A → Activation X → Merge
+#           Branch B → Activation X → Merge   ← Same action, no point branching
+#
+#   wait condition:
+#     GOOD: Matched → Activation X → Merge    ← Different actions per path
+#           Timeout → Activation Y → Merge
+#     BAD:  Matched → Merge                   ← Both paths do nothing different
+#           Timeout → Merge
+#     If both paths lead to the same place with no different actions,
+#     use a simple duration wait instead of a condition wait.
 #
 # Rule 2: Multiple paths MUST converge through a Merge step.
 #   GOOD: Branch A → Activation → Merge → End
@@ -62,7 +78,9 @@
 #
 # After sketching the flow, verify ALL of the following:
 #
-# [ ] Every decision_point/ab_test branch has at least one activation before merge
+# [ ] Every branch (decision_point, ab_test, wait condition) performs a different action
+# [ ] No branch goes directly to merge without an activation
+# [ ] Wait condition paths lead to different actions (otherwise use duration wait)
 # [ ] All branching paths converge through a Merge step (not directly to End)
 # [ ] No Merge → Merge chains exist
 # [ ] Every activation is followed by a wait (or merge then wait)
