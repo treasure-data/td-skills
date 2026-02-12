@@ -54,13 +54,13 @@ tdx journey push --dry-run                # Preview changes before push
 | `CONVERGENCE_WITHOUT_MERGE` | error | Multiple paths converge on a non-merge step |
 | `SINGLE_INPUT_MERGE` | warning | Merge step has only one input path |
 | `MERGE_TO_MERGE_CHAIN` | error | Merge step's `next` is another merge step |
-| `BRANCH_DIRECTLY_TO_MERGE` | error | Decision/AB test branch goes directly to merge (no action) |
+| `BRANCH_DIRECTLY_TO_MERGE` | error | Decision/AB test/wait condition branch goes directly to merge (no action) |
 
 ### API Constraints (not checked by `tdx journey validate`, but rejected by the API)
 
 | Constraint | Description |
 |-----------|-------------|
-| Branch must have activation | Every decision_point/ab_test branch MUST have an activation step before merge |
+| Branch must have activation | Every decision_point/ab_test/wait condition branch MUST have an activation step before merge |
 | Wait after activation | A wait step must follow every activation step. If activation → merge, place wait after merge |
 
 ### Reference Validation
