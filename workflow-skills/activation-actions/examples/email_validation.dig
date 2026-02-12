@@ -1,0 +1,155 @@
+# Email Validation Activation Action
+# Use case: Validate email addresses and filter out invalid ones before export
+
+timezone: UTC
+
+_export:
+  # Activation parameters (automatically provided)
+  segment_id: ${segment_id}
+  activation_id: ${activation_id}
+  activation_output_database: ${activation_output_database}
+  activation_output_table: ${activation_output_table}
+  profile_count: ${profile_count}
+
+  # Email validation configuration
+  block_test_domains: true
+  block_disposable_emails: true
+
+  td:
+    database: ${activation_output_database}
+
++start:
+  echo>: "Starting email validation for activation ${activation_id}"
+
++validate_emails:
+  td>: |
+    SELECT
+      *,
+
+      -- Email validation checks
+      CASE
+        WHEN email IS NULL THEN 'NULL_EMAIL'
+        WHEN TRIM(email) = '' THEN 'EMPTY_EMAIL'
+        WHEN LENGTH(email) < 5 THEN 'TOO_SHORT'
+        WHEN LENGTH(email) > 320 THEN 'TOO_LONG'
+        WHEN email NOT LIKE '%@%' THEN 'NO_AT_SIGN'
+        WHEN email NOT LIKE '%.%' THEN 'NO_DOMAIN'
+        WHEN email LIKE '%@%@%' THEN 'MULTIPLE_AT_SIGNS'
+        WHEN email LIKE '% %' THEN 'CONTAINS_SPACE'
+        WHEN email LIKE '%@example.com' THEN 'EXAMPLE_DOMAIN'
+        WHEN email LIKE '%@test.com' THEN 'TEST_DOMAIN'
+        WHEN email LIKE '%@localhost%' THEN 'LOCALHOST_DOMAIN'
+        WHEN email LIKE '%@invalid%' THEN 'INVALID_DOMAIN'
+        WHEN email LIKE '%+test@%' THEN 'TEST_ALIAS'
+        WHEN email LIKE '%@guerrillamail.%' THEN 'DISPOSABLE_EMAIL'
+        WHEN email LIKE '%@mailinator.%' THEN 'DISPOSABLE_EMAIL'
+        WHEN email LIKE '%@10minutemail.%' THEN 'DISPOSABLE_EMAIL'
+        WHEN email LIKE '%@tempmail.%' THEN 'DISPOSABLE_EMAIL'
+        ELSE 'VALID'
+      END AS email_status,
+
+      -- Extract email domain for analysis
+      SUBSTRING(email, POSITION('@' IN email) + 1) AS email_domain,
+
+      -- Extract username part
+      SUBSTRING(email, 1, POSITION('@' IN email) - 1) AS email_username,
+
+      -- Clean email (lowercase, trimmed)
+      LOWER(TRIM(email)) AS email_clean
+
+    FROM ${activation_output_database}.${activation_output_table}
+  database: ${activation_output_database}
+  create_table: email_validated_${activation_id}
+
++analyze_email_domains:
+  td>: |
+    SELECT
+      email_domain,
+      COUNT(*) AS domain_count,
+      SUM(CASE WHEN email_status = 'VALID' THEN 1 ELSE 0 END) AS valid_count,
+      SUM(CASE WHEN email_status != 'VALID' THEN 1 ELSE 0 END) AS invalid_count
+    FROM ${activation_output_database}.email_validated_${activation_id}
+    WHERE email_domain IS NOT NULL
+    GROUP BY email_domain
+    ORDER BY domain_count DESC
+    LIMIT 100
+  database: analytics
+  create_table: email_domain_analysis_${activation_id}
+
++filter_valid_emails:
+  td>: |
+    SELECT
+      customer_id,
+      email_clean AS email,
+      first_name,
+      last_name,
+      phone,
+      country,
+      city,
+      email_domain
+    FROM ${activation_output_database}.email_validated_${activation_id}
+    WHERE email_status = 'VALID'
+  database: ${activation_output_database}
+  create_table: valid_profiles_${activation_id}
+
++log_invalid_emails:
+  td>: |
+    SELECT
+      '${activation_id}' AS activation_id,
+      '${segment_id}' AS segment_id,
+      email,
+      email_status AS invalid_reason,
+      email_domain,
+      CURRENT_TIMESTAMP AS logged_at
+    FROM ${activation_output_database}.email_validated_${activation_id}
+    WHERE email_status != 'VALID'
+  database: analytics
+  insert_into: invalid_email_log
+
++create_validation_summary:
+  td>: |
+    SELECT
+      '${activation_id}' AS activation_id,
+      COUNT(*) AS total_profiles,
+      SUM(CASE WHEN email_status = 'VALID' THEN 1 ELSE 0 END) AS valid_count,
+      SUM(CASE WHEN email_status = 'NULL_EMAIL' THEN 1 ELSE 0 END) AS null_count,
+      SUM(CASE WHEN email_status = 'EXAMPLE_DOMAIN' THEN 1 ELSE 0 END) AS test_domain_count,
+      SUM(CASE WHEN email_status = 'DISPOSABLE_EMAIL' THEN 1 ELSE 0 END) AS disposable_count,
+      SUM(CASE WHEN email_status NOT IN ('VALID', 'NULL_EMAIL', 'EXAMPLE_DOMAIN', 'DISPOSABLE_EMAIL') THEN 1 ELSE 0 END) AS other_invalid_count,
+      ROUND(100.0 * SUM(CASE WHEN email_status = 'VALID' THEN 1 ELSE 0 END) / COUNT(*), 2) AS valid_percentage,
+      CURRENT_TIMESTAMP AS summary_timestamp
+    FROM ${activation_output_database}.email_validated_${activation_id}
+  database: analytics
+  create_table: email_validation_summary_${activation_id}
+
++log_summary:
+  td>: |
+    SELECT
+      'Email Validation Summary for Activation ${activation_id}' AS summary,
+      total_profiles,
+      valid_count,
+      null_count,
+      test_domain_count,
+      disposable_count,
+      other_invalid_count,
+      valid_percentage || '%' AS valid_pct
+    FROM analytics.email_validation_summary_${activation_id}
+
++export_valid_profiles:
+  td_result_export>:
+    database: ${activation_output_database}
+    table: valid_profiles_${activation_id}
+    result_url: "sendgrid://your-sendgrid-authentication"
+    # Replace with your email platform authentication
+
++cleanup:
+  td_ddl>:
+  drop_tables:
+    - ${activation_output_database}.email_validated_${activation_id}
+    - ${activation_output_database}.valid_profiles_${activation_id}
+
++finish:
+  echo>: "Email validation completed for activation ${activation_id}"
+
+_error:
+  echo>: "Email validation failed for activation ${activation_id}. Check logs for details."
