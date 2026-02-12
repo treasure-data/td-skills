@@ -1,8 +1,20 @@
 # =============================================================================
-# Step 5: Stage Steps
+# Step 3: Journey Structure + Stage Steps
 # =============================================================================
 #
-# Build steps ONE STAGE AT A TIME. Do not write all stages at once.
+# Build the full journey: skeleton, goal, stage criteria, and steps.
+# Segments (Step 1) and activations (Step 2) are already defined.
+#
+# --- Ask the client for ---
+#   - Journey name and description
+#   - Reentry mode:
+#       no_reentry                    — users enter once only
+#       reentry_unless_goal_achieved  — re-enter if goal not yet met
+#       reentry_always                — always allow re-entry
+#   - Stage names, entry/exit criteria, milestones
+#
+# --- Build steps ONE STAGE AT A TIME ---
+# Do not write all stages at once.
 #
 # For each stage:
 #   1. Sketch the flow as a comment before writing steps
@@ -16,7 +28,7 @@
 #   end:         no next or with allowed
 #   merge:       rejoin all branches before end
 #   activation:  with.activation references a key from activations: section
-#   decision_point: branches reference segments from Steps 2-3
+#   decision_point: branches reference segments from Step 1
 #   ab_test:     variant percentages must sum to 100
 #   wait:        duration + unit (day/week) or condition with optional timeout
 #
@@ -47,12 +59,21 @@
 #   | jump           | target with journey, stage                |
 #   | end            | (none) — no next or with allowed          |
 #
-# --- Wait Condition (advanced) ---
+# --- Wait Step Types ---
+#   Duration (fixed time delay):
+#   - type: wait
+#     name: Wait 3 Days
+#     next: Next Step
+#     with:
+#       duration: 3
+#       unit: day
+#
+#   Condition (wait for user action):
 #   - type: wait
 #     name: Wait for Purchase
 #     with:
 #       condition:
-#         segment: made-purchase     # Wait until segment match
+#         segment: made-purchase     # Segment from Step 1
 #         next: follow-up            # Path when matched
 #         timeout:                   # Max wait duration
 #           duration: 14
@@ -60,12 +81,12 @@
 #           next: timeout-path       # Path when timed out
 #
 # --- After updating the YAML ---
-#   1. Write steps for ONE stage
+#   1. Write full journey structure with first stage's steps
 #   2. Write the updated YAML to the journey file
 #   3. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
 #      Auto mode: Proceed directly to the next stage
 #   4. Repeat for each remaining stage
-#   5. After ALL stages are done, proceed to Step 6 (validate)
+#   5. After ALL stages are done, proceed to Step 4 (validate)
 #
 # =============================================================================
 #
@@ -78,166 +99,10 @@ description: 3-stage onboarding flow for new customers
 reentry: no_reentry
 
 segments:
-  # -- Goal --
-  onboarding_completed:
-    description: User completed product setup
-    rule:
-      type: And
-      conditions:
-        - type: Value
-          attribute: onboarding_status
-          operator:
-            type: Equal
-            value: "completed"
-
-  # -- Stage 1: Welcome & Engagement --
-  new_signups:
-    description: Users who signed up in the last 7 days
-    rule:
-      type: And
-      conditions:
-        - type: Value
-          attribute: signup_date
-          operator:
-            type: TimeWithinPast
-            value: 7
-            unit: day
-  email_engaged:
-    description: Users who opened welcome email
-    rule:
-      type: And
-      conditions:
-        - type: Value
-          attribute: email_opened
-          operator:
-            type: Equal
-            value: "true"
-
-  # -- Stage 2: Product Activation --
-  power_users:
-    description: Users with 10+ logins and 5+ features used
-    rule:
-      type: And
-      conditions:
-        - type: Value
-          attribute: login_count_7d
-          operator:
-            type: GreaterEqual
-            value: 10
-        - type: Value
-          attribute: feature_usage_count
-          operator:
-            type: GreaterEqual
-            value: 5
-
-  # -- Stage 3: Retention & Loyalty --
-  active_users:
-    description: Users with 3+ logins in 7 days
-    rule:
-      type: And
-      conditions:
-        - type: Value
-          attribute: login_count_7d
-          operator:
-            type: GreaterEqual
-            value: 3
-  nps_promoters:
-    description: NPS score 9 or above
-    rule:
-      type: And
-      conditions:
-        - type: Value
-          attribute: nps_score
-          operator:
-            type: GreaterEqual
-            value: 9
-  nps_detractors:
-    description: NPS score 6 or below
-    rule:
-      type: And
-      conditions:
-        - type: Value
-          attribute: nps_score
-          operator:
-            type: LessEqual
-            value: 6
+  # (from Step 1 — do not modify)
 
 activations:
-  welcome-email:
-    name: Welcome Email Campaign
-    connection: My SFMC Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      de_name: WelcomeEmails
-      shared_data_extension: false
-      data_operation: upsert
-  sms-reminder:
-    name: SMS Reminder
-    connection: Twilio SMS Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      message_template: welcome_reminder
-  upsell-email:
-    name: Upsell Offer Email
-    connection: My SFMC Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      de_name: UpsellOffers
-      shared_data_extension: false
-      data_operation: upsert
-  feature-tips-email:
-    name: Feature Tips Email
-    connection: My SFMC Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      de_name: FeatureTips
-      shared_data_extension: false
-      data_operation: upsert
-  reengage-push:
-    name: Re-engagement Push Notification
-    connection: Braze Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      campaign_id: reengage_001
-  nps-survey-email:
-    name: NPS Survey Email
-    connection: My SFMC Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      de_name: NPSSurvey
-      shared_data_extension: false
-      data_operation: upsert
-  referral-invite-email:
-    name: Referral Invite Email
-    connection: My SFMC Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      de_name: ReferralInvites
-      shared_data_extension: false
-      data_operation: upsert
-  support-call:
-    name: Schedule Support Call
-    connection: Calendly Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      event_type: support_call
-  thankyou-email:
-    name: Thank You Email
-    connection: My SFMC Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      de_name: ThankYouEmails
-      shared_data_extension: false
-      data_operation: upsert
+  # (from Step 2 — do not modify)
 
 goal:
   name: Onboarding Complete
@@ -245,7 +110,6 @@ goal:
 
 journeys:
   - state: draft
-    latest: true
     stages:
       # ================================================================
       # Stage 1: Welcome & Engagement

@@ -1,6 +1,6 @@
 ---
 name: journey
-description: Creates CDP journey definitions in YAML using `tdx journey` commands. Builds journeys incrementally through 6 steps - skeleton, criteria segments, decision points, activations, stage steps, and validation. Use when building customer journey orchestration workflows or managing journey YAML files.
+description: Creates CDP journey definitions in YAML using `tdx journey` commands. Builds journeys incrementally through 4 steps - segments, activations, journey structure with steps, and validation. Use when building customer journey orchestration workflows or managing journey YAML files.
 ---
 
 # tdx Journey - CDP Journey Orchestration
@@ -14,7 +14,7 @@ Before starting, ask the client which mode to use:
 
 ## Build Process
 
-Build journey YAML **incrementally** through 6 steps. **You MUST complete one step at a time.**
+Build journey YAML **incrementally** through 4 steps. **You MUST complete one step at a time.**
 
 **Workflow for EACH step:**
 1. Read the template file for that step
@@ -43,22 +43,20 @@ tdx journey resume "Journey Name"          # Resume paused journey
 tdx journey view "Journey Name" --include-stats
 ```
 
-## The 6 Steps
+## The 4 Steps
 
 | Step | What to do | Template |
 |------|-----------|----------|
-| 1 | Journey skeleton (name, stages) | `templates/step1-skeleton.yml` |
-| 2 | Goal and stage criteria segments | `templates/step2-criteria.yml` |
-| 3 | Decision point segments | `templates/step3-decision-points.yml` |
-| 4 | Activations | `templates/step4-activations.yml` |
-| 5 | Stage steps (one stage at a time) | `templates/step5-steps.yml` |
-| 6 | Validate and push | (see below) |
+| 1 | All segments (criteria, decision points, wait conditions) | `templates/step1-segments.yml` |
+| 2 | Activations | `templates/step2-activations.yml` |
+| 3 | Journey structure + stage steps (one stage at a time) | `templates/step3-journey.yml` |
+| 4 | Validate and push | (see below) |
 
-**Start with Step 1**: Read `templates/step1-skeleton.yml` and follow the instructions inside.
+**Start with Step 1**: Read `templates/step1-segments.yml` and follow the instructions inside.
 
-### Step 6: Validate and Push
+### Step 4: Validate and Push
 
-After completing Step 5, validate and iterate:
+After completing Step 3, validate and iterate:
 
 ```bash
 tdx journey validate path/to/journey.yml   # Local validation

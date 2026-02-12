@@ -1,5 +1,5 @@
 # =============================================================================
-# Step 4: Activations
+# Step 2: Activations
 # =============================================================================
 #
 # Define activation destinations for each stage's outbound actions.
@@ -18,7 +18,7 @@
 #
 #   run_after_journey_refresh: true   — run after parent segment refresh (most common)
 #   schedule:                         — fixed schedule
-#     type: daily
+#     type: daily | none
 #     timezone: America/Los_Angeles
 #
 # --- Activation Structure ---
@@ -35,7 +35,7 @@
 #   1. Add activations: section organized by stage with comments
 #   2. Write the updated YAML to the journey file
 #   3. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
-#      Auto mode: Proceed directly to Step 5
+#      Auto mode: Proceed directly to Step 3
 #
 # =============================================================================
 
@@ -45,9 +45,9 @@ description: 3-stage onboarding flow for new customers
 reentry: no_reentry
 
 segments:
-  # (segments from Steps 2-3, omitted for brevity)
+  # (segments from Step 1, omitted for brevity)
 
-# Activation definitions — referenced by key in steps (Step 5)
+# Activation definitions — referenced by key in steps (Step 3)
 activations:
   # -- Stage 1: Welcome & Engagement --
   welcome-email:
@@ -129,38 +129,3 @@ activations:
   #   connector_config:
   #     de_name: WeeklyDigest
   #     data_operation: upsert
-
-goal:
-  name: Onboarding Complete
-  segment: onboarding_completed
-
-journeys:
-  - state: draft
-    latest: true
-    stages:
-      - name: "Stage 1: Welcome & Engagement"
-        entry_criteria:
-          name: New Signups
-          segment: new_signups
-        milestone:
-          name: Email Engaged
-          segment: email_engaged
-        exit_criteria:
-          - name: Churned Users
-            segment: ref:Churned Users
-
-      - name: "Stage 2: Product Activation"
-        entry_criteria:
-          name: Engaged Users
-          segment: email_engaged
-        exit_criteria:
-          - name: Churned Users
-            segment: ref:Churned Users
-
-      - name: "Stage 3: Retention & Loyalty"
-        entry_criteria:
-          name: Activated Users
-          segment: active_users
-        exit_criteria:
-          - name: Churned Users
-            segment: ref:Churned Users

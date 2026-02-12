@@ -1,30 +1,75 @@
 # =============================================================================
-# Step 3: Decision Point Segments
+# Step 1: Segments
 # =============================================================================
 #
-# Add segments for all decision_point branches across every stage.
-# Same segment building approach as Step 2.
+# Build ALL segments the journey needs in a single step:
+#   - Goal segment
+#   - Stage criteria (entry_criteria, exit_criteria, milestone)
+#   - Decision point branches
+#   - Wait condition triggers
 #
-# For each decision_point:
-#   - Define a segment for each branch that filters by specific criteria
-#   - Use excluded: true for the "everyone else" branch — no segment needed
-#   - Organize in segments: with comments identifying the decision_point
-#   - Segments from Step 2 can be reused (e.g., email_engaged as both milestone and branch)
+# --- Segment Strategy ---
+# Ask the client which approach to use:
 #
-# Excluded branch example:
-#   - name: Not Opened
-#     excluded: true    # No segment required — catches everyone else
-#     next: reminder-path
+# Option A: Create new embedded segments (recommended)
+#   - Run `tdx sg fields` to discover available attributes and behaviors
+#   - Define segments inline in the segments: section
 #
-# At the bottom, summarize each decision_point's branch structure for Step 5.
+# Option B: Reuse existing segments
+#   - Run `tdx sg list` to discover existing child segments
+#   - Run `tdx sg sql "Segment Name"` to inspect segment rules
+#   - Reference with ref: prefix: segment: ref:Existing Segment
+#   - Even with this approach, some segments will likely need to be embedded
+#
+# --- Segment Rule Reference ---
+# Use `tdx sg fields` output to build rules. Common operators:
+#
+#   Equal             Exact match:     value: "true"
+#   In                Multiple values: value: ["a", "b"]
+#   GreaterEqual      Numeric:         value: 1000
+#   LessEqual         Numeric:         value: 7
+#   TimeWithinPast    Recency:         value: 7, unit: day
+#   TimeBeforePast    Inactivity:      value: 30, unit: day
+#   Contain           String contains: value: "@gmail.com"
+#
+# Behavior aggregation (requires source: behavior_<table_name>):
+#   - type: Value
+#     attribute: ""                # Empty for behavior count
+#     operator:
+#       type: GreaterEqual
+#       value: 1
+#     aggregation:
+#       type: Count                # Count | Sum | Avg | Min | Max
+#     source: behavior_purchases   # behavior_<table_name>
+#
+# --- Organization ---
+# Group segments by purpose with comments:
+#   # -- Goal --
+#   # -- Stage 1: Name --
+#   # entry_criteria / milestone / exit_criteria / decision_point / wait_condition
+#
+# --- Wait Condition Segments ---
+# Wait steps come in two types. Ask the client which they need:
+#
+#   1. Duration wait (no segment needed):
+#      Wait a fixed number of days/weeks before continuing.
+#      Example: "Wait 3 days after sending email"
+#
+#   2. Condition wait (segment needed):
+#      Wait until the user matches a segment, with optional timeout.
+#      Example: "Wait until user makes a purchase, up to 7 days"
+#      The segment defines the condition to watch for.
+#
+# For each stage, ask: "Do any wait steps need to watch for a user action
+# (condition), or are they all fixed time delays (duration)?"
 #
 # --- After updating the YAML ---
-#   1. Add new decision point segments to the segments: section
-#   2. Add "# NEW" comments to highlight additions
-#   3. Write branch structure summary at the bottom as comments
+#   1. Write ONLY the segments: section (no goal, stages, or steps yet)
+#   2. Add "# NEW" comments to highlight additions beyond criteria
+#   3. Summarize decision/wait structure at the bottom as comments
 #   4. Write the updated YAML to the journey file
 #   5. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
-#      Auto mode: Proceed directly to Step 4
+#      Auto mode: Proceed directly to Step 2
 #
 # =============================================================================
 
@@ -75,13 +120,14 @@ segments:
   # decision_point: Email Open Check
   # - "Opened" branch (reuses: email_engaged)
   # - "Not Opened" branch (excluded — no segment needed)
+  #
+  # wait steps: duration only (no segments needed)
 
   # -- Stage 2: Product Activation --
   # entry_criteria (reuses: email_engaged)
   # exit_criteria (ref:Churned Users)
   #
-  # decision_point: Usage Level Check                          # NEW
-  # - "Power User" branch
+  # decision_point: Usage Level Check
   power_users:                                                 # NEW
     description: Users with 10+ logins and 5+ features used
     rule:
@@ -99,6 +145,8 @@ segments:
             value: 5
   # - "Active" branch (reuses: active_users)
   # - "Inactive" branch (excluded — no segment needed)
+  #
+  # wait steps: duration only (no segments needed)
 
   # -- Stage 3: Retention & Loyalty --
   # entry_criteria
@@ -114,8 +162,7 @@ segments:
             value: 3
   # exit_criteria (ref:Churned Users)
   #
-  # decision_point: NPS Score Check                            # NEW
-  # - "Promoter" branch
+  # decision_point: NPS Score Check
   nps_promoters:                                               # NEW
     description: NPS score 9 or above
     rule:
@@ -126,7 +173,6 @@ segments:
           operator:
             type: GreaterEqual
             value: 9
-  # - "Detractor" branch
   nps_detractors:                                              # NEW
     description: NPS score 6 or below
     rule:
@@ -138,54 +184,41 @@ segments:
             type: LessEqual
             value: 6
   # - "Passive" branch (excluded — no segment needed)
+  #
+  # wait steps: duration only (no segments needed)
 
-goal:
-  name: Onboarding Complete
-  segment: onboarding_completed
+  # --- Example: Wait condition segment ---
+  # If a stage needs a condition-based wait (e.g., "wait until purchase"):
+  #
+  # made_purchase:                                             # NEW (wait_condition)
+  #   description: User completed a purchase
+  #   rule:
+  #     type: And
+  #     conditions:
+  #       - type: Value
+  #         attribute: ""
+  #         operator:
+  #           type: GreaterEqual
+  #           value: 1
+  #         aggregation:
+  #           type: Count
+  #         source: behavior_purchases
 
-journeys:
-  - state: draft
-    latest: true
-    stages:
-      - name: "Stage 1: Welcome & Engagement"
-        entry_criteria:
-          name: New Signups
-          segment: new_signups
-        milestone:
-          name: Email Engaged
-          segment: email_engaged
-        exit_criteria:
-          - name: Churned Users
-            segment: ref:Churned Users
-
-      - name: "Stage 2: Product Activation"
-        entry_criteria:
-          name: Engaged Users
-          segment: email_engaged
-        exit_criteria:
-          - name: Churned Users
-            segment: ref:Churned Users
-
-      - name: "Stage 3: Retention & Loyalty"
-        entry_criteria:
-          name: Activated Users
-          segment: active_users
-        exit_criteria:
-          - name: Churned Users
-            segment: ref:Churned Users
-
-# Decision point branch structure (for reference when building steps in Step 5):
+# Structure summary (for reference when building steps in Step 3):
 #
-# Stage 1 — Email Open Check:
+# Stage 1 — Email Open Check (decision_point):
 #   - Opened:      segment: email_engaged  → next: (content path)
 #   - Not Opened:  excluded: true          → next: (reminder path)
+#   Waits: duration only
 #
-# Stage 2 — Usage Level Check:
+# Stage 2 — Usage Level Check (decision_point):
 #   - Power User:  segment: power_users    → next: (upsell path)
 #   - Active:      segment: active_users   → next: (tips path)
 #   - Inactive:    excluded: true          → next: (reengage path)
+#   Waits: duration only
 #
-# Stage 3 — NPS Score Check:
+# Stage 3 — NPS Score Check (decision_point):
 #   - Promoter:    segment: nps_promoters  → next: (referral path)
 #   - Detractor:   segment: nps_detractors → next: (support path)
 #   - Passive:     excluded: true          → next: (thank you path)
+#   Waits: duration only
