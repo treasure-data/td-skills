@@ -69,7 +69,7 @@
 #   3. Summarize decision/wait structure at the bottom as comments
 #   4. Write the updated YAML to the journey file
 #   5. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
-#      Auto mode: Proceed directly to Step 2
+#      Auto mode: Proceed to Step 2 (still write YAML first, then move on)
 #
 # =============================================================================
 

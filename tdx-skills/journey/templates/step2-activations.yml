@@ -35,7 +35,7 @@
 #   1. Add activations: section organized by stage with comments
 #   2. Write the updated YAML to the journey file
 #   3. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
-#      Auto mode: Proceed directly to Step 3
+#      Auto mode: Proceed to Step 3 (still write YAML first, then move on)
 #
 # =============================================================================
 

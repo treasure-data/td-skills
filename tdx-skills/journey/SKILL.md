@@ -1,6 +1,6 @@
 ---
 name: journey
-description: Creates CDP journey definitions in YAML using `tdx journey` commands. Builds journeys incrementally through 4 steps - segments, activations, journey structure with steps, and validation. Use when building customer journey orchestration workflows or managing journey YAML files.
+description: Load when the client wants to create, edit, or manage a CDP customer journey. Use for building journey YAML with segments, activations, and stage steps, modifying journey stages or flow logic (decision points, wait conditions, A/B tests), or pushing journey changes to Treasure Data.
 ---
 
 # tdx Journey - CDP Journey Orchestration
@@ -9,19 +9,22 @@ description: Creates CDP journey definitions in YAML using `tdx journey` command
 
 Before starting, ask the client which mode to use:
 
-- **Interactive mode** — Pause after each step for review and confirmation. Best for learning or complex journeys.
-- **Auto mode** — Execute all steps continuously without pausing. Best when the client has provided clear requirements upfront.
+- **Interactive mode** — Pause after each step for review and confirmation.
+- **Auto mode** — Skip confirmation pauses, but still follow the same step-by-step order.
 
 ## Build Process
 
-Build journey YAML **incrementally** through 4 steps. **You MUST complete one step at a time.**
+Build journey YAML **incrementally** through 4 steps.
+
+**CRITICAL: You MUST complete steps in order, one at a time. NEVER skip steps or combine multiple steps into one. Even in Auto mode, follow the exact same sequence — the only difference is you don't pause for confirmation.**
 
 **Workflow for EACH step:**
 1. Read the template file for that step
 2. Ask the client for the required information (if not already provided)
 3. Update the journey YAML file with only that step's changes
-4. **Interactive mode**: Show the updated YAML and STOP. Do NOT ask "shall we proceed?" — just wait for the client to respond.
-5. **Auto mode**: Proceed directly to the next step without pausing
+4. Write the updated YAML to the journey file
+5. **Interactive mode**: Show the result and STOP. Do NOT ask "shall we proceed?" — just wait.
+6. **Auto mode**: Proceed to the next step (still one step at a time)
 
 **File location**: `./segments/(parent-segment-name)/journey-name.yml`
 

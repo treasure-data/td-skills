@@ -84,7 +84,7 @@
 #   1. Write full journey structure with first stage's steps
 #   2. Write the updated YAML to the journey file
 #   3. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
-#      Auto mode: Proceed directly to the next stage
+#      Auto mode: Proceed to the next stage (still write YAML first, then move on)
 #   4. Repeat for each remaining stage
 #   5. After ALL stages are done, proceed to Step 4 (validate)
 #
