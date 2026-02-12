@@ -20,6 +20,17 @@
 #   ab_test:     variant percentages must sum to 100
 #   wait:        duration + unit (day/week) or condition with optional timeout
 #
+# --- API Constraints (CRITICAL) ---
+#   1. Every branch MUST have an activation step before merge.
+#      A branch going directly to merge is invalid.
+#      Good: Branch → Activation → Merge
+#      Bad:  Branch → Merge
+#   2. Always insert a wait step after an activation step.
+#      If activation is immediately followed by merge, place wait AFTER the merge.
+#      Good: Activation → Merge → Wait → End
+#      Good: Activation → Wait → next step
+#      Bad:  Activation → Activation (no wait between)
+#
 # --- Flow Sketch Pattern ---
 #   # Flow: Wait → Email → Wait → Decision(Opened/Not Opened)
 #   #       Opened → Follow Up → Merge → End
