@@ -5,13 +5,18 @@
 # Build the full journey: skeleton, goal, stage criteria, and steps.
 # Segments (Step 1) and activations (Step 2) are already defined.
 #
-# --- Ask the client for ---
+# --- REQUIRED: Confirm with client before writing (do NOT skip) ---
+# Ask the client for (if not already provided):
 #   - Journey name and description
 #   - Reentry mode:
 #       no_reentry                    — users enter once only
 #       reentry_unless_goal_achieved  — re-enter if goal not yet met
 #       reentry_always                — always allow re-entry
 #   - Stage names, entry/exit criteria, milestones
+#   - Flow for each stage (what steps, what order)
+#
+# Do NOT invent journey structure. Use segments from Step 1 and
+# activations from Step 2 — only reference keys that already exist.
 #
 # --- Build steps ONE STAGE AT A TIME ---
 # Do not write all stages at once.
@@ -83,8 +88,9 @@
 # --- After updating the YAML ---
 #   1. Write full journey structure with first stage's steps
 #   2. Write the updated YAML to the journey file
-#   3. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
-#      Auto mode: Proceed to the next stage (still write YAML first, then move on)
+#   3. Show the stage design to the client and get confirmation.
+#      Once confirmed, write the YAML and immediately move to the next stage.
+#      Do NOT ask "shall we proceed?" after writing — confirmation was already given.
 #   4. Repeat for each remaining stage
 #   5. After ALL stages are done, proceed to Step 4 (validate)
 #

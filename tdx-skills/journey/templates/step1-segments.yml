@@ -8,11 +8,31 @@
 #   - Decision point branches
 #   - Wait condition triggers
 #
+# --- REQUIRED: Discovery & Data Analysis First (do NOT skip) ---
+# Before writing ANY segment rules, you MUST:
+#
+# 1. Discover available attributes and behaviors:
+#      tdx sg fields
+#
+# 2. Analyze actual data values to determine rule thresholds:
+#      tdx query "SELECT column, COUNT(*) FROM table GROUP BY 1 ORDER BY 2 DESC LIMIT 20"
+#
+#    Column names alone are NOT enough to write rules.
+#    You MUST query actual data to understand:
+#      - What values exist (e.g., status column: "active", "churned", "pending"?)
+#      - Value distributions (e.g., avg purchase amount, login count ranges)
+#      - Behavior table names and their row counts
+#
+#    Use `tdx ps desc -o` to get the output database/table name for queries.
+#
+# Do NOT guess attribute names or threshold values.
+# Always verify with real data before writing segment rules.
+#
 # --- Segment Strategy ---
 # Ask the client which approach to use:
 #
 # Option A: Create new embedded segments (recommended)
-#   - Run `tdx sg fields` to discover available attributes and behaviors
+#   - Use `tdx sg fields` output to build rules
 #   - Define segments inline in the segments: section
 #
 # Option B: Reuse existing segments
@@ -68,8 +88,9 @@
 #   2. Add "# NEW" comments to highlight additions beyond criteria
 #   3. Summarize decision/wait structure at the bottom as comments
 #   4. Write the updated YAML to the journey file
-#   5. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
-#      Auto mode: Proceed to Step 2 (still write YAML first, then move on)
+#   5. Show the segment design to the client and get confirmation.
+#      Once confirmed, write the YAML and immediately move to Step 2.
+#      Do NOT ask "shall we proceed?" after writing — confirmation was already given.
 #
 # =============================================================================
 

@@ -4,12 +4,17 @@
 #
 # Define activation destinations for each stage's outbound actions.
 #
-# --- Discovery Workflow ---
-# Run these commands to find connections and their config fields:
+# --- REQUIRED: Discovery First (do NOT skip) ---
+# Before writing ANY activation definitions, you MUST run:
 #
 #   tdx connection list                       # List available connections
-#   tdx connection types                      # List all connector types
-#   tdx connection schema "My SFMC Connection" # Get connector_config fields
+#
+# Then for each connection the client wants to use:
+#
+#   tdx connection schema "Connection Name"   # Get connector_config fields
+#
+# Do NOT guess connection names or connector_config fields.
+# Always use actual values from these commands.
 #
 # See connector-config skill for connector-specific fields.
 #
@@ -34,8 +39,9 @@
 # --- After updating the YAML ---
 #   1. Add activations: section organized by stage with comments
 #   2. Write the updated YAML to the journey file
-#   3. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
-#      Auto mode: Proceed to Step 3 (still write YAML first, then move on)
+#   3. Show the activation design to the client and get confirmation.
+#      Once confirmed, write the YAML and immediately move to Step 3.
+#      Do NOT ask "shall we proceed?" after writing — confirmation was already given.
 #
 # =============================================================================
 
