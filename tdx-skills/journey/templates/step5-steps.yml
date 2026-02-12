@@ -1,9 +1,65 @@
+# =============================================================================
 # Step 5: Stage Steps
-# Build steps for each stage one at a time.
-# Important: `next:` is a direct field on step, NOT inside `with:`
+# =============================================================================
 #
-# This is the complete journey with all steps filled in.
-# Build one stage at a time, validate mentally, then move to the next.
+# Build steps ONE STAGE AT A TIME. Do not write all stages at once.
+#
+# For each stage:
+#   1. Sketch the flow as a comment before writing steps
+#   2. Write steps following the flow
+#   3. Verify all next: references point to valid step names within the stage
+#   4. Write the updated YAML, show to client, get confirmation
+#   5. Then move to the next stage
+#
+# --- Step Rules ---
+#   next:        is a direct field on step, NOT inside with:
+#   end:         no next or with allowed
+#   merge:       rejoin all branches before end
+#   activation:  with.activation references a key from activations: section
+#   decision_point: branches reference segments from Steps 2-3
+#   ab_test:     variant percentages must sum to 100
+#   wait:        duration + unit (day/week) or condition with optional timeout
+#
+# --- Flow Sketch Pattern ---
+#   # Flow: Wait → Email → Wait → Decision(Opened/Not Opened)
+#   #       Opened → Follow Up → Merge → End
+#   #       Not Opened → SMS → Merge → End
+#
+# --- Step Types Quick Reference ---
+#   | Type           | with Parameters                          |
+#   |----------------|------------------------------------------|
+#   | wait           | duration + unit (day/week) or condition   |
+#   | activation     | activation (key from activations section) |
+#   | decision_point | branches[] with segment, next             |
+#   | ab_test        | variants[] with percentage, next          |
+#   | merge          | (none)                                    |
+#   | jump           | target with journey, stage                |
+#   | end            | (none) — no next or with allowed          |
+#
+# --- Wait Condition (advanced) ---
+#   - type: wait
+#     name: Wait for Purchase
+#     with:
+#       condition:
+#         segment: made-purchase     # Wait until segment match
+#         next: follow-up            # Path when matched
+#         timeout:                   # Max wait duration
+#           duration: 14
+#           unit: day
+#           next: timeout-path       # Path when timed out
+#
+# --- After updating the YAML ---
+#   1. Write steps for ONE stage
+#   2. Write the updated YAML to the journey file
+#   3. Show the result to the client
+#   4. STOP — get confirmation before writing the next stage's steps
+#   5. Repeat for each remaining stage
+#   6. After ALL stages are done, proceed to Step 6 (validate)
+#
+# =============================================================================
+#
+# Below is the complete example with all stages filled in.
+# When building for the client, do ONE STAGE AT A TIME.
 
 type: journey
 name: Welcome Onboarding Journey
@@ -24,7 +80,6 @@ segments:
             value: "completed"
 
   # -- Stage 1: Welcome & Engagement --
-  # entry_criteria
   new_signups:
     description: Users who signed up in the last 7 days
     rule:
@@ -36,7 +91,6 @@ segments:
             type: TimeWithinPast
             value: 7
             unit: day
-  # milestone
   email_engaged:
     description: Users who opened welcome email
     rule:
@@ -47,18 +101,8 @@ segments:
           operator:
             type: Equal
             value: "true"
-  # exit_criteria (ref:Churned Users)
-  #
-  # decision_point: Email Open Check
-  # - "Opened" branch (reuses: email_engaged)
-  # - "Not Opened" branch (excluded)
 
   # -- Stage 2: Product Activation --
-  # entry_criteria (reuses: email_engaged)
-  # exit_criteria (ref:Churned Users)
-  #
-  # decision_point: Usage Level Check
-  # - "Power User" branch
   power_users:
     description: Users with 10+ logins and 5+ features used
     rule:
@@ -74,11 +118,8 @@ segments:
           operator:
             type: GreaterEqual
             value: 5
-  # - "Active" branch (reuses: active_users)
-  # - "Inactive" branch (excluded)
 
   # -- Stage 3: Retention & Loyalty --
-  # entry_criteria
   active_users:
     description: Users with 3+ logins in 7 days
     rule:
@@ -89,10 +130,6 @@ segments:
           operator:
             type: GreaterEqual
             value: 3
-  # exit_criteria (ref:Churned Users)
-  #
-  # decision_point: NPS Score Check
-  # - "Promoter" branch
   nps_promoters:
     description: NPS score 9 or above
     rule:
@@ -103,7 +140,6 @@ segments:
           operator:
             type: GreaterEqual
             value: 9
-  # - "Detractor" branch
   nps_detractors:
     description: NPS score 6 or below
     rule:
@@ -114,10 +150,8 @@ segments:
           operator:
             type: LessEqual
             value: 6
-  # - "Passive" branch (excluded)
 
 activations:
-  # -- Stage 1 --
   welcome-email:
     name: Welcome Email Campaign
     connection: My SFMC Connection
@@ -134,8 +168,6 @@ activations:
     run_after_journey_refresh: true
     connector_config:
       message_template: welcome_reminder
-
-  # -- Stage 2 --
   upsell-email:
     name: Upsell Offer Email
     connection: My SFMC Connection
@@ -161,8 +193,6 @@ activations:
     run_after_journey_refresh: true
     connector_config:
       campaign_id: reengage_001
-
-  # -- Stage 3 --
   nps-survey-email:
     name: NPS Survey Email
     connection: My SFMC Connection
@@ -208,8 +238,8 @@ journeys:
     stages:
       # ================================================================
       # Stage 1: Welcome & Engagement
-      # Flow: Wait → Email → Wait → Decision(Opened/Not Opened)
-      #       Opened → Activation → Merge → End
+      # Flow: Email → Wait → Decision(Opened/Not Opened)
+      #       Opened → Follow Up → Merge → End
       #       Not Opened → SMS → Merge → End
       # ================================================================
       - name: "Stage 1: Welcome & Engagement"

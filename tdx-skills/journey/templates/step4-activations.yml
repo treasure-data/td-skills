@@ -1,8 +1,43 @@
+# =============================================================================
 # Step 4: Activations
-# Define activation destinations for each stage's activation steps.
-# Use `tdx connection list` and `tdx connection schema` to discover fields.
+# =============================================================================
 #
-# Build on top of Step 3 output. Only new additions shown with "# NEW" comments.
+# Define activation destinations for each stage's outbound actions.
+#
+# --- Discovery Workflow ---
+# Run these commands to find connections and their config fields:
+#
+#   tdx connection list                       # List available connections
+#   tdx connection types                      # List all connector types
+#   tdx connection schema "My SFMC Connection" # Get connector_config fields
+#
+# See connector-config skill for connector-specific fields.
+#
+# --- Schedule Strategy ---
+# Ask the client which timing to use:
+#
+#   run_after_journey_refresh: true   — run after parent segment refresh (most common)
+#   schedule:                         — fixed schedule
+#     type: daily
+#     timezone: America/Los_Angeles
+#
+# --- Activation Structure ---
+#   activations:
+#     activation-key:                     # key — referenced in step's with.activation
+#       name: Display Name                # display name
+#       connection: Connection Name       # from tdx connection list
+#       all_columns: true
+#       run_after_journey_refresh: true    # or use schedule: { type: daily, ... }
+#       connector_config:                  # from tdx connection schema
+#         field_name: value
+#
+# --- After updating the YAML ---
+#   1. Add activations: section organized by stage with comments
+#   2. Write the updated YAML to the journey file
+#   3. Show the result to the client
+#   4. STOP — wait for client confirmation before proceeding to Step 5
+#
+# =============================================================================
 
 type: journey
 name: Welcome Onboarding Journey
@@ -13,9 +48,6 @@ segments:
   # (segments from Steps 2-3, omitted for brevity)
 
 # Activation definitions — referenced by key in steps (Step 5)
-# Schedule: ask the client whether to use:
-#   - run_after_journey_refresh: true  (run after parent segment refresh — most common)
-#   - schedule with fixed time           (daily/hourly + timezone)
 activations:
   # -- Stage 1: Welcome & Engagement --
   welcome-email:

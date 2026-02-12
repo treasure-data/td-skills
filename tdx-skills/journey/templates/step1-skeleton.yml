@@ -1,6 +1,24 @@
+# =============================================================================
 # Step 1: Journey Skeleton
+# =============================================================================
+#
 # Create the minimal structure: name, description, reentry mode, and stage names.
-# This will NOT pass `tdx journey validate` yet.
+# This will NOT pass `tdx journey validate` yet — that's expected.
+#
+# Ask the client for:
+#   - Journey name and description
+#   - Number of stages and their names
+#   - Reentry mode:
+#       no_reentry                    — users enter once only
+#       reentry_unless_goal_achieved  — re-enter if goal not yet met
+#       reentry_always                — always allow re-entry
+#
+# After creating the file:
+#   1. Write the YAML to the journey file
+#   2. Show the result to the client
+#   3. STOP — wait for client confirmation before proceeding to Step 2
+#
+# =============================================================================
 
 type: journey
 name: Welcome Onboarding Journey

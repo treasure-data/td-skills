@@ -1,8 +1,32 @@
+# =============================================================================
 # Step 3: Decision Point Segments
-# Add segments for all decision_point branches (except excluded branches).
-# Excluded branch = "everyone else" — no segment needed, just `excluded: true`.
+# =============================================================================
 #
-# Build on top of Step 2 output. Only new additions shown with "# NEW" comments.
+# Add segments for all decision_point branches across every stage.
+# Same segment building approach as Step 2.
+#
+# For each decision_point:
+#   - Define a segment for each branch that filters by specific criteria
+#   - Use excluded: true for the "everyone else" branch — no segment needed
+#   - Organize in segments: with comments identifying the decision_point
+#   - Segments from Step 2 can be reused (e.g., email_engaged as both milestone and branch)
+#
+# Excluded branch example:
+#   - name: Not Opened
+#     excluded: true    # No segment required — catches everyone else
+#     next: reminder-path
+#
+# At the bottom, summarize each decision_point's branch structure for Step 5.
+#
+# --- After updating the YAML ---
+#   1. Add new decision point segments to the segments: section
+#   2. Add "# NEW" comments to highlight additions
+#   3. Write branch structure summary at the bottom as comments
+#   4. Write the updated YAML to the journey file
+#   5. Show the result to the client
+#   6. STOP — wait for client confirmation before proceeding to Step 4
+#
+# =============================================================================
 
 type: journey
 name: Welcome Onboarding Journey
