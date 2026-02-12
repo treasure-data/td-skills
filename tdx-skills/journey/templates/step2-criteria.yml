@@ -1,0 +1,102 @@
+# Step 2: Goal and Stage Criteria (Segments)
+# Build segments: section, then wire up goal, entry/exit criteria, and milestones.
+# Use `tdx sg fields` to discover available attributes and behaviors for rules.
+
+type: journey
+name: Welcome Onboarding Journey
+description: 3-stage onboarding flow for new customers
+reentry: no_reentry
+
+# Embedded segments organized by usage and stage.
+# ref: segments are noted as comments for visibility.
+segments:
+  # -- Goal --
+  onboarding_completed:
+    description: User completed product setup
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: onboarding_status
+          operator:
+            type: Equal
+            value: "completed"
+
+  # -- Stage 1: Welcome & Engagement --
+  # entry_criteria
+  new_signups:
+    description: Users who signed up in the last 7 days
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: signup_date
+          operator:
+            type: TimeWithinPast
+            value: 7
+            unit: day
+  # milestone
+  email_engaged:
+    description: Users who opened welcome email
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: email_opened
+          operator:
+            type: Equal
+            value: "true"
+  # exit_criteria (ref:Churned Users)
+
+  # -- Stage 2: Product Activation --
+  # entry_criteria (reuses: email_engaged)
+  # exit_criteria (ref:Churned Users)
+
+  # -- Stage 3: Retention & Loyalty --
+  # entry_criteria
+  active_users:
+    description: Users with 3+ logins in 7 days
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: login_count_7d
+          operator:
+            type: GreaterEqual
+            value: 3
+  # exit_criteria (ref:Churned Users)
+
+goal:
+  name: Onboarding Complete
+  segment: onboarding_completed
+
+journeys:
+  - state: draft
+    latest: true
+    stages:
+      - name: "Stage 1: Welcome & Engagement"
+        entry_criteria:
+          name: New Signups
+          segment: new_signups
+        milestone:
+          name: Email Engaged
+          segment: email_engaged
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users
+
+      - name: "Stage 2: Product Activation"
+        entry_criteria:
+          name: Engaged Users
+          segment: email_engaged
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users
+
+      - name: "Stage 3: Retention & Loyalty"
+        entry_criteria:
+          name: Activated Users
+          segment: active_users
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users

@@ -1,0 +1,167 @@
+# Step 3: Decision Point Segments
+# Add segments for all decision_point branches (except excluded branches).
+# Excluded branch = "everyone else" — no segment needed, just `excluded: true`.
+#
+# Build on top of Step 2 output. Only new additions shown with "# NEW" comments.
+
+type: journey
+name: Welcome Onboarding Journey
+description: 3-stage onboarding flow for new customers
+reentry: no_reentry
+
+segments:
+  # -- Goal --
+  onboarding_completed:
+    description: User completed product setup
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: onboarding_status
+          operator:
+            type: Equal
+            value: "completed"
+
+  # -- Stage 1: Welcome & Engagement --
+  # entry_criteria
+  new_signups:
+    description: Users who signed up in the last 7 days
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: signup_date
+          operator:
+            type: TimeWithinPast
+            value: 7
+            unit: day
+  # milestone
+  email_engaged:
+    description: Users who opened welcome email
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: email_opened
+          operator:
+            type: Equal
+            value: "true"
+  # exit_criteria (ref:Churned Users)
+  #
+  # decision_point: Email Open Check
+  # - "Opened" branch (reuses: email_engaged)
+  # - "Not Opened" branch (excluded — no segment needed)
+
+  # -- Stage 2: Product Activation --
+  # entry_criteria (reuses: email_engaged)
+  # exit_criteria (ref:Churned Users)
+  #
+  # decision_point: Usage Level Check                          # NEW
+  # - "Power User" branch
+  power_users:                                                 # NEW
+    description: Users with 10+ logins and 5+ features used
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: login_count_7d
+          operator:
+            type: GreaterEqual
+            value: 10
+        - type: Value
+          attribute: feature_usage_count
+          operator:
+            type: GreaterEqual
+            value: 5
+  # - "Active" branch (reuses: active_users)
+  # - "Inactive" branch (excluded — no segment needed)
+
+  # -- Stage 3: Retention & Loyalty --
+  # entry_criteria
+  active_users:
+    description: Users with 3+ logins in 7 days
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: login_count_7d
+          operator:
+            type: GreaterEqual
+            value: 3
+  # exit_criteria (ref:Churned Users)
+  #
+  # decision_point: NPS Score Check                            # NEW
+  # - "Promoter" branch
+  nps_promoters:                                               # NEW
+    description: NPS score 9 or above
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: nps_score
+          operator:
+            type: GreaterEqual
+            value: 9
+  # - "Detractor" branch
+  nps_detractors:                                              # NEW
+    description: NPS score 6 or below
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: nps_score
+          operator:
+            type: LessEqual
+            value: 6
+  # - "Passive" branch (excluded — no segment needed)
+
+goal:
+  name: Onboarding Complete
+  segment: onboarding_completed
+
+journeys:
+  - state: draft
+    latest: true
+    stages:
+      - name: "Stage 1: Welcome & Engagement"
+        entry_criteria:
+          name: New Signups
+          segment: new_signups
+        milestone:
+          name: Email Engaged
+          segment: email_engaged
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users
+
+      - name: "Stage 2: Product Activation"
+        entry_criteria:
+          name: Engaged Users
+          segment: email_engaged
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users
+
+      - name: "Stage 3: Retention & Loyalty"
+        entry_criteria:
+          name: Activated Users
+          segment: active_users
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users
+
+# Decision point branch structure (for reference when building steps in Step 5):
+#
+# Stage 1 — Email Open Check:
+#   - Opened:      segment: email_engaged  → next: (content path)
+#   - Not Opened:  excluded: true          → next: (reminder path)
+#
+# Stage 2 — Usage Level Check:
+#   - Power User:  segment: power_users    → next: (upsell path)
+#   - Active:      segment: active_users   → next: (tips path)
+#   - Inactive:    excluded: true          → next: (reengage path)
+#
+# Stage 3 — NPS Score Check:
+#   - Promoter:    segment: nps_promoters  → next: (referral path)
+#   - Detractor:   segment: nps_detractors → next: (support path)
+#   - Passive:     excluded: true          → next: (thank you path)

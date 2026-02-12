@@ -1,0 +1,134 @@
+# Step 4: Activations
+# Define activation destinations for each stage's activation steps.
+# Use `tdx connection list` and `tdx connection schema` to discover fields.
+#
+# Build on top of Step 3 output. Only new additions shown with "# NEW" comments.
+
+type: journey
+name: Welcome Onboarding Journey
+description: 3-stage onboarding flow for new customers
+reentry: no_reentry
+
+segments:
+  # (segments from Steps 2-3, omitted for brevity)
+
+# Activation definitions — referenced by key in steps (Step 5)
+# Schedule: ask the client whether to use:
+#   - run_after_journey_refresh: true  (run after parent segment refresh — most common)
+#   - schedule with fixed time           (daily/hourly + timezone)
+activations:
+  # -- Stage 1: Welcome & Engagement --
+  welcome-email:
+    name: Welcome Email Campaign
+    connection: My SFMC Connection         # from `tdx connection list`
+    all_columns: true
+    run_after_journey_refresh: true         # run after parent segment refresh
+    connector_config:                       # from `tdx connection schema "My SFMC Connection"`
+      de_name: WelcomeEmails
+      shared_data_extension: false
+      data_operation: upsert
+
+  sms-reminder:
+    name: SMS Reminder
+    connection: Twilio SMS Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      message_template: welcome_reminder
+
+  # -- Stage 2: Product Activation --
+  upsell-email:
+    name: Upsell Offer Email
+    connection: My SFMC Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      de_name: UpsellOffers
+      shared_data_extension: false
+      data_operation: upsert
+
+  feature-tips-email:
+    name: Feature Tips Email
+    connection: My SFMC Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      de_name: FeatureTips
+      shared_data_extension: false
+      data_operation: upsert
+
+  reengage-push:
+    name: Re-engagement Push Notification
+    connection: Braze Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      campaign_id: reengage_001
+
+  # -- Stage 3: Retention & Loyalty --
+  nps-survey-email:
+    name: NPS Survey Email
+    connection: My SFMC Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      de_name: NPSSurvey
+      shared_data_extension: false
+      data_operation: upsert
+
+  referral-invite-email:
+    name: Referral Invite Email
+    connection: My SFMC Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      de_name: ReferralInvites
+      shared_data_extension: false
+      data_operation: upsert
+
+  # Example: fixed schedule instead of run_after_journey_refresh
+  # weekly-digest:
+  #   name: Weekly Digest
+  #   connection: My SFMC Connection
+  #   all_columns: true
+  #   schedule:
+  #     type: daily
+  #     timezone: America/Los_Angeles
+  #   connector_config:
+  #     de_name: WeeklyDigest
+  #     data_operation: upsert
+
+goal:
+  name: Onboarding Complete
+  segment: onboarding_completed
+
+journeys:
+  - state: draft
+    latest: true
+    stages:
+      - name: "Stage 1: Welcome & Engagement"
+        entry_criteria:
+          name: New Signups
+          segment: new_signups
+        milestone:
+          name: Email Engaged
+          segment: email_engaged
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users
+
+      - name: "Stage 2: Product Activation"
+        entry_criteria:
+          name: Engaged Users
+          segment: email_engaged
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users
+
+      - name: "Stage 3: Retention & Loyalty"
+        entry_criteria:
+          name: Activated Users
+          segment: active_users
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users

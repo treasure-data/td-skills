@@ -1,0 +1,415 @@
+# Step 5: Stage Steps
+# Build steps for each stage one at a time.
+# Important: `next:` is a direct field on step, NOT inside `with:`
+#
+# This is the complete journey with all steps filled in.
+# Build one stage at a time, validate mentally, then move to the next.
+
+type: journey
+name: Welcome Onboarding Journey
+description: 3-stage onboarding flow for new customers
+reentry: no_reentry
+
+segments:
+  # -- Goal --
+  onboarding_completed:
+    description: User completed product setup
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: onboarding_status
+          operator:
+            type: Equal
+            value: "completed"
+
+  # -- Stage 1: Welcome & Engagement --
+  # entry_criteria
+  new_signups:
+    description: Users who signed up in the last 7 days
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: signup_date
+          operator:
+            type: TimeWithinPast
+            value: 7
+            unit: day
+  # milestone
+  email_engaged:
+    description: Users who opened welcome email
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: email_opened
+          operator:
+            type: Equal
+            value: "true"
+  # exit_criteria (ref:Churned Users)
+  #
+  # decision_point: Email Open Check
+  # - "Opened" branch (reuses: email_engaged)
+  # - "Not Opened" branch (excluded)
+
+  # -- Stage 2: Product Activation --
+  # entry_criteria (reuses: email_engaged)
+  # exit_criteria (ref:Churned Users)
+  #
+  # decision_point: Usage Level Check
+  # - "Power User" branch
+  power_users:
+    description: Users with 10+ logins and 5+ features used
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: login_count_7d
+          operator:
+            type: GreaterEqual
+            value: 10
+        - type: Value
+          attribute: feature_usage_count
+          operator:
+            type: GreaterEqual
+            value: 5
+  # - "Active" branch (reuses: active_users)
+  # - "Inactive" branch (excluded)
+
+  # -- Stage 3: Retention & Loyalty --
+  # entry_criteria
+  active_users:
+    description: Users with 3+ logins in 7 days
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: login_count_7d
+          operator:
+            type: GreaterEqual
+            value: 3
+  # exit_criteria (ref:Churned Users)
+  #
+  # decision_point: NPS Score Check
+  # - "Promoter" branch
+  nps_promoters:
+    description: NPS score 9 or above
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: nps_score
+          operator:
+            type: GreaterEqual
+            value: 9
+  # - "Detractor" branch
+  nps_detractors:
+    description: NPS score 6 or below
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: nps_score
+          operator:
+            type: LessEqual
+            value: 6
+  # - "Passive" branch (excluded)
+
+activations:
+  # -- Stage 1 --
+  welcome-email:
+    name: Welcome Email Campaign
+    connection: My SFMC Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      de_name: WelcomeEmails
+      shared_data_extension: false
+      data_operation: upsert
+  sms-reminder:
+    name: SMS Reminder
+    connection: Twilio SMS Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      message_template: welcome_reminder
+
+  # -- Stage 2 --
+  upsell-email:
+    name: Upsell Offer Email
+    connection: My SFMC Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      de_name: UpsellOffers
+      shared_data_extension: false
+      data_operation: upsert
+  feature-tips-email:
+    name: Feature Tips Email
+    connection: My SFMC Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      de_name: FeatureTips
+      shared_data_extension: false
+      data_operation: upsert
+  reengage-push:
+    name: Re-engagement Push Notification
+    connection: Braze Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      campaign_id: reengage_001
+
+  # -- Stage 3 --
+  nps-survey-email:
+    name: NPS Survey Email
+    connection: My SFMC Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      de_name: NPSSurvey
+      shared_data_extension: false
+      data_operation: upsert
+  referral-invite-email:
+    name: Referral Invite Email
+    connection: My SFMC Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      de_name: ReferralInvites
+      shared_data_extension: false
+      data_operation: upsert
+  support-call:
+    name: Schedule Support Call
+    connection: Calendly Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      event_type: support_call
+  thankyou-email:
+    name: Thank You Email
+    connection: My SFMC Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      de_name: ThankYouEmails
+      shared_data_extension: false
+      data_operation: upsert
+
+goal:
+  name: Onboarding Complete
+  segment: onboarding_completed
+
+journeys:
+  - state: draft
+    latest: true
+    stages:
+      # ================================================================
+      # Stage 1: Welcome & Engagement
+      # Flow: Wait → Email → Wait → Decision(Opened/Not Opened)
+      #       Opened → Activation → Merge → End
+      #       Not Opened → SMS → Merge → End
+      # ================================================================
+      - name: "Stage 1: Welcome & Engagement"
+        entry_criteria:
+          name: New Signups
+          segment: new_signups
+        milestone:
+          name: Email Engaged
+          segment: email_engaged
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users
+        steps:
+          - type: activation
+            name: Send Welcome Email
+            next: Wait 3 Days
+            with:
+              activation: welcome-email
+
+          - type: wait
+            name: Wait 3 Days
+            next: Email Open Check
+            with:
+              duration: 3
+              unit: day
+
+          - type: decision_point
+            name: Email Open Check
+            with:
+              branches:
+                - name: Opened
+                  segment: email_engaged
+                  next: Send Follow Up
+                - name: Not Opened
+                  excluded: true
+                  next: Send SMS Reminder
+
+          - type: activation
+            name: Send Follow Up
+            next: Merge Welcome
+            with:
+              activation: welcome-email
+
+          - type: activation
+            name: Send SMS Reminder
+            next: Merge Welcome
+            with:
+              activation: sms-reminder
+
+          - type: merge
+            name: Merge Welcome
+            next: End Stage 1
+
+          - type: end
+            name: End Stage 1
+
+      # ================================================================
+      # Stage 2: Product Activation
+      # Flow: Wait → Decision(Power User/Active/Inactive)
+      #       Power User → Upsell → Merge → End
+      #       Active → Tips → Merge → End
+      #       Inactive → Push → Wait → Tips → Merge → End
+      # ================================================================
+      - name: "Stage 2: Product Activation"
+        entry_criteria:
+          name: Engaged Users
+          segment: email_engaged
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users
+        steps:
+          - type: wait
+            name: Wait 1 Day
+            next: Usage Level Check
+            with:
+              duration: 1
+              unit: day
+
+          - type: decision_point
+            name: Usage Level Check
+            with:
+              branches:
+                - name: Power User
+                  segment: power_users
+                  next: Send Upsell Offer
+                - name: Active
+                  segment: active_users
+                  next: Send Feature Tips
+                - name: Inactive
+                  excluded: true
+                  next: Reengagement Push
+
+          - type: activation
+            name: Send Upsell Offer
+            next: Merge Activation
+            with:
+              activation: upsell-email
+
+          - type: activation
+            name: Send Feature Tips
+            next: Merge Activation
+            with:
+              activation: feature-tips-email
+
+          - type: activation
+            name: Reengagement Push
+            next: Wait 2 Days
+            with:
+              activation: reengage-push
+
+          - type: wait
+            name: Wait 2 Days
+            next: Send Reminder Tips
+            with:
+              duration: 2
+              unit: day
+
+          - type: activation
+            name: Send Reminder Tips
+            next: Merge Activation
+            with:
+              activation: feature-tips-email
+
+          - type: merge
+            name: Merge Activation
+            next: End Stage 2
+
+          - type: end
+            name: End Stage 2
+
+      # ================================================================
+      # Stage 3: Retention & Loyalty
+      # Flow: Wait → Survey → Wait → Decision(Promoter/Detractor/Passive)
+      #       Promoter → Referral → Merge → End
+      #       Detractor → Support Call → Merge → End
+      #       Passive → Thank You → Merge → End
+      # ================================================================
+      - name: "Stage 3: Retention & Loyalty"
+        entry_criteria:
+          name: Activated Users
+          segment: active_users
+        exit_criteria:
+          - name: Churned Users
+            segment: ref:Churned Users
+        steps:
+          - type: wait
+            name: Wait 7 Days
+            next: Send NPS Survey
+            with:
+              duration: 7
+              unit: day
+
+          - type: activation
+            name: Send NPS Survey
+            next: Wait for Response
+            with:
+              activation: nps-survey-email
+
+          - type: wait
+            name: Wait for Response
+            next: NPS Score Check
+            with:
+              duration: 3
+              unit: day
+
+          - type: decision_point
+            name: NPS Score Check
+            with:
+              branches:
+                - name: Promoter
+                  segment: nps_promoters
+                  next: Send Referral Invite
+                - name: Detractor
+                  segment: nps_detractors
+                  next: Schedule Support Call
+                - name: Passive
+                  excluded: true
+                  next: Send Thank You
+
+          - type: activation
+            name: Send Referral Invite
+            next: Merge Retention
+            with:
+              activation: referral-invite-email
+
+          - type: activation
+            name: Schedule Support Call
+            next: Merge Retention
+            with:
+              activation: support-call
+
+          - type: activation
+            name: Send Thank You
+            next: Merge Retention
+            with:
+              activation: thankyou-email
+
+          - type: merge
+            name: Merge Retention
+            next: End Stage 3
+
+          - type: end
+            name: End Stage 3
