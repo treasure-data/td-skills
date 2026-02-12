@@ -7,7 +7,7 @@ description: Load when the client wants to create, edit, or manage a CDP custome
 
 ## Build Process
 
-Build journey YAML **incrementally** through 4 steps.
+Build journey YAML **incrementally** through 5 steps.
 
 **FIRST: Create a TODO list** with one task per step before starting any work. This ensures you follow the step-by-step process and do not skip ahead. Mark each task as in_progress when you start it and completed when done.
 
@@ -44,20 +44,21 @@ tdx journey resume "Journey Name"          # Resume paused journey
 tdx journey view "Journey Name" --include-stats
 ```
 
-## The 4 Steps
+## The 5 Steps
 
 | Step | What to do | Template |
 |------|-----------|----------|
-| 1 | All segments (criteria, decision points, wait conditions) | `templates/step1-segments.yml` |
-| 2 | Activations | `templates/step2-activations.yml` |
-| 3 | Journey structure + stage steps (one stage at a time) | `templates/step3-journey.yml` |
-| 4 | Validate and push | (see below) |
+| 1 | Criteria segments (goal, entry/exit, milestone) | `templates/step1-criteria.yml` |
+| 2 | Decision point branches + wait condition segments | `templates/step2-decisions.yml` |
+| 3 | Activations | `templates/step3-activations.yml` |
+| 4 | Journey structure + stage steps (one stage at a time) | `templates/step4-journey.yml` |
+| 5 | Validate and push | (see below) |
 
-**Start with Step 1**: Read `templates/step1-segments.yml` and follow the instructions inside.
+**Start with Step 1**: Read `templates/step1-criteria.yml` and follow the instructions inside.
 
-### Step 4: Validate and Push
+### Step 5: Validate and Push
 
-After completing Step 3, validate and iterate:
+After completing Step 4, validate and iterate:
 
 ```bash
 tdx journey validate path/to/journey.yml   # Local validation

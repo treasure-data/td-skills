@@ -1,0 +1,139 @@
+# =============================================================================
+# Step 2: Decision Point & Wait Condition Segments
+# =============================================================================
+#
+# Build segments for decision point branches and wait conditions.
+# Criteria segments (goal, entry, exit, milestone) are already done in Step 1.
+#
+# --- REQUIRED: Plan the stage flows first (do NOT skip) ---
+# Before writing segments, you must understand what decisions and waits
+# each stage needs. For each stage, ask the client:
+#
+#   1. What decision points exist? (e.g., "Did user open email?",
+#      "What is the user's engagement level?")
+#   2. For each decision point, what are the branches?
+#      - Which branches need a NEW segment?
+#      - Which branches reuse an existing segment from Step 1?
+#      - Which branch is the "excluded" catch-all (no segment needed)?
+#   3. Are there any condition-based waits?
+#      (e.g., "Wait until user makes a purchase, up to 7 days")
+#      Duration waits (e.g., "Wait 3 days") do NOT need segments.
+#
+# --- Discovery (if not already done in Step 1) ---
+# Use the same discovery commands as Step 1 to verify attribute names:
+#      tdx sg fields
+#      tdx query "SELECT column, COUNT(*) FROM table GROUP BY 1 ORDER BY 2 DESC LIMIT 20"
+#
+# --- Checklist ---
+# For EVERY decision point, ensure ALL non-excluded branches have a segment.
+# For EVERY condition wait, ensure the trigger condition has a segment.
+# Missing even one segment will cause errors in later steps.
+#
+# --- After updating the YAML ---
+#   1. Add the new segments to the segments: section with "# NEW" comments
+#   2. Add a structure summary at the bottom as comments
+#   3. Write the updated YAML to the journey file
+#   4. Show the segment design to the client and get confirmation.
+#      Once confirmed, write the YAML and immediately move to Step 3.
+#      Do NOT ask "shall we proceed?" after writing — confirmation was already given.
+#
+# =============================================================================
+
+type: journey
+name: Welcome Onboarding Journey
+description: 3-stage onboarding flow for new customers
+reentry: no_reentry
+
+segments:
+  # (criteria segments from Step 1 — do not modify)
+
+  # -- Stage 1: Welcome & Engagement --
+  # decision_point: Email Open Check
+  # - "Opened" branch (reuses: email_engaged from Step 1)
+  # - "Not Opened" branch (excluded — no segment needed)
+  #
+  # wait steps: duration only (no segments needed)
+
+  # -- Stage 2: Product Activation --
+  # decision_point: Usage Level Check
+  power_users:                                                 # NEW
+    description: Users with 10+ logins and 5+ features used
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: login_count_7d
+          operator:
+            type: GreaterEqual
+            value: 10
+        - type: Value
+          attribute: feature_usage_count
+          operator:
+            type: GreaterEqual
+            value: 5
+  # - "Active" branch (reuses: active_users from Step 1)
+  # - "Inactive" branch (excluded — no segment needed)
+  #
+  # wait steps: duration only (no segments needed)
+
+  # -- Stage 3: Retention & Loyalty --
+  # decision_point: NPS Score Check
+  nps_promoters:                                               # NEW
+    description: NPS score 9 or above
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: nps_score
+          operator:
+            type: GreaterEqual
+            value: 9
+  nps_detractors:                                              # NEW
+    description: NPS score 6 or below
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: nps_score
+          operator:
+            type: LessEqual
+            value: 6
+  # - "Passive" branch (excluded — no segment needed)
+  #
+  # wait steps: duration only (no segments needed)
+
+  # --- Example: Wait condition segment ---
+  # If a stage needs a condition-based wait (e.g., "wait until purchase"):
+  #
+  # made_purchase:                                             # NEW (wait_condition)
+  #   description: User completed a purchase
+  #   rule:
+  #     type: And
+  #     conditions:
+  #       - type: Value
+  #         attribute: ""
+  #         operator:
+  #           type: GreaterEqual
+  #           value: 1
+  #         aggregation:
+  #           type: Count
+  #         source: behavior_purchases
+
+# Structure summary (for reference when building steps in Step 4):
+#
+# Stage 1 — Email Open Check (decision_point):
+#   - Opened:      segment: email_engaged  → next: (content path)
+#   - Not Opened:  excluded: true          → next: (reminder path)
+#   Waits: duration only
+#
+# Stage 2 — Usage Level Check (decision_point):
+#   - Power User:  segment: power_users    → next: (upsell path)
+#   - Active:      segment: active_users   → next: (tips path)
+#   - Inactive:    excluded: true          → next: (reengage path)
+#   Waits: duration only
+#
+# Stage 3 — NPS Score Check (decision_point):
+#   - Promoter:    segment: nps_promoters  → next: (referral path)
+#   - Detractor:   segment: nps_detractors → next: (support path)
+#   - Passive:     excluded: true          → next: (thank you path)
+#   Waits: duration only

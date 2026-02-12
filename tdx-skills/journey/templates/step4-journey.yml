@@ -1,9 +1,9 @@
 # =============================================================================
-# Step 3: Journey Structure + Stage Steps
+# Step 4: Journey Structure + Stage Steps
 # =============================================================================
 #
 # Build the full journey: skeleton, goal, stage criteria, and steps.
-# Segments (Step 1) and activations (Step 2) are already defined.
+# Segments (Steps 1-2) and activations (Step 3) are already defined.
 #
 # --- REQUIRED: Confirm with client before writing (do NOT skip) ---
 # Ask the client for (if not already provided):
@@ -15,45 +15,75 @@
 #   - Stage names, entry/exit criteria, milestones
 #   - Flow for each stage (what steps, what order)
 #
-# Do NOT invent journey structure. Use segments from Step 1 and
-# activations from Step 2 — only reference keys that already exist.
+# Do NOT invent journey structure. Use segments from Steps 1-2 and
+# activations from Step 3 — only reference keys that already exist.
 #
 # --- Build steps ONE STAGE AT A TIME ---
 # Do not write all stages at once.
 #
 # For each stage:
-#   1. Sketch the flow as a comment before writing steps
+#   1. Sketch the flow as a comment (MANDATORY — see format below)
 #   2. Write steps following the flow
-#   3. Verify all next: references point to valid step names within the stage
+#   3. Run the flow validation checklist (MANDATORY — see below)
 #   4. Write the updated YAML, show to client, get confirmation
 #   5. Then move to the next stage
 #
-# --- Step Rules ---
-#   next:        is a direct field on step, NOT inside with:
-#   end:         no next or with allowed
-#   merge:       rejoin all branches before end
-#   activation:  with.activation references a key from activations: section
-#   decision_point: branches reference segments from Step 1
-#   ab_test:     variant percentages must sum to 100
-#   wait:        duration + unit (day/week) or condition with optional timeout
+# =============================================================================
+# FLOW CONTROL RULES (CRITICAL)
+# =============================================================================
 #
-# --- API Constraints (CRITICAL) ---
-#   1. Every branch MUST have an activation step before merge.
-#      A branch going directly to merge is invalid.
-#      Good: Branch → Activation → Merge
-#      Bad:  Branch → Merge
-#   2. Always insert a wait step after an activation step.
-#      If activation is immediately followed by merge, place wait AFTER the merge.
-#      Good: Activation → Merge → Wait → End
-#      Good: Activation → Wait → next step
-#      Bad:  Activation → Activation (no wait between)
+# Rule 1: Every branch MUST have an activation step before merge.
+#   GOOD: Branch → Activation → Merge
+#   BAD:  Branch → Merge                    ← INVALID, no action in branch
 #
-# --- Flow Sketch Pattern ---
-#   # Flow: Wait → Email → Wait → Decision(Opened/Not Opened)
-#   #       Opened → Follow Up → Merge → End
-#   #       Not Opened → SMS → Merge → End
+# Rule 2: Multiple paths MUST converge through a Merge step.
+#   GOOD: Branch A → Activation → Merge → End
+#         Branch B → Activation → Merge
+#   BAD:  Branch A → Activation → End       ← Two paths to same End
+#         Branch B → Activation → End
 #
-# --- Step Types Quick Reference ---
+# Rule 3: Do NOT chain Merge → Merge.
+#   GOOD: Merge → Wait → End
+#   BAD:  Merge → Merge → End              ← Invalid chain
+#
+# Rule 4: Always insert a wait step after an activation step.
+#   GOOD: Activation → Wait → next step
+#   GOOD: Activation → Merge → Wait → End   (wait after merge is OK)
+#   BAD:  Activation → Activation            ← No wait between
+#
+# Rule 5: Single-input Merge is unnecessary.
+#   If only one path leads to a Merge, remove it and go directly to next step.
+#
+# Rule 6: End step must have NO next and NO with.
+#
+# =============================================================================
+# FLOW VALIDATION CHECKLIST (run for EACH stage before writing)
+# =============================================================================
+#
+# After sketching the flow, verify ALL of the following:
+#
+# [ ] Every decision_point/ab_test branch has at least one activation before merge
+# [ ] All branching paths converge through a Merge step (not directly to End)
+# [ ] No Merge → Merge chains exist
+# [ ] Every activation is followed by a wait (or merge then wait)
+# [ ] Every next: reference points to a valid step name in THIS stage
+# [ ] Stage has exactly one End step with no next/with
+# [ ] No orphaned steps (every step is reachable from the first step)
+#
+# =============================================================================
+# FLOW SKETCH FORMAT (MANDATORY before writing steps)
+# =============================================================================
+#
+# Use this format — list every step, show branches with indentation:
+#
+#   # Flow: [First Step] → [Second Step] → Decision([Branch Names])
+#   #       [Branch A] → [Activation] → Merge → Wait → End
+#   #       [Branch B] → [Activation] → Merge
+#
+# =============================================================================
+# STEP TYPES QUICK REFERENCE
+# =============================================================================
+#
 #   | Type           | with Parameters                          |
 #   |----------------|------------------------------------------|
 #   | wait           | duration + unit (day/week) or condition   |
@@ -78,7 +108,7 @@
 #     name: Wait for Purchase
 #     with:
 #       condition:
-#         segment: made-purchase     # Segment from Step 1
+#         segment: made-purchase     # Segment from Step 2
 #         next: follow-up            # Path when matched
 #         timeout:                   # Max wait duration
 #           duration: 14
@@ -92,12 +122,20 @@
 #      Once confirmed, write the YAML and immediately move to the next stage.
 #      Do NOT ask "shall we proceed?" after writing — confirmation was already given.
 #   4. Repeat for each remaining stage
-#   5. After ALL stages are done, proceed to Step 4 (validate)
+#   5. After ALL stages are done, proceed to Step 5 (validate)
 #
 # =============================================================================
+# EXAMPLE PATTERNS
+# =============================================================================
 #
-# Below is the complete example with all stages filled in.
-# When building for the client, do ONE STAGE AT A TIME.
+# Below are 3 common stage patterns. Use these as reference when building.
+
+# =============================================================================
+# Pattern A: Simple branch with Merge
+# Flow: Activation → Wait → Decision(Opened/Not Opened)
+#       Opened → Follow Up → Merge → End
+#       Not Opened → SMS → Merge
+# =============================================================================
 
 type: journey
 name: Welcome Onboarding Journey
@@ -105,10 +143,10 @@ description: 3-stage onboarding flow for new customers
 reentry: no_reentry
 
 segments:
-  # (from Step 1 — do not modify)
+  # (from Steps 1-2 — do not modify)
 
 activations:
-  # (from Step 2 — do not modify)
+  # (from Step 3 — do not modify)
 
 goal:
   name: Onboarding Complete
@@ -118,10 +156,10 @@ journeys:
   - state: draft
     stages:
       # ================================================================
-      # Stage 1: Welcome & Engagement
+      # Pattern A: Simple branch with Merge
       # Flow: Email → Wait → Decision(Opened/Not Opened)
       #       Opened → Follow Up → Merge → End
-      #       Not Opened → SMS → Merge → End
+      #       Not Opened → SMS → Merge
       # ================================================================
       - name: "Stage 1: Welcome & Engagement"
         entry_criteria:
@@ -178,11 +216,11 @@ journeys:
             name: End Stage 1
 
       # ================================================================
-      # Stage 2: Product Activation
+      # Pattern B: 3-way branch with longer path on one branch
       # Flow: Wait → Decision(Power User/Active/Inactive)
       #       Power User → Upsell → Merge → End
-      #       Active → Tips → Merge → End
-      #       Inactive → Push → Wait → Tips → Merge → End
+      #       Active → Tips → Merge
+      #       Inactive → Push → Wait → Tips → Merge
       # ================================================================
       - name: "Stage 2: Product Activation"
         entry_criteria:
@@ -252,11 +290,11 @@ journeys:
             name: End Stage 2
 
       # ================================================================
-      # Stage 3: Retention & Loyalty
+      # Pattern C: Linear flow with decision (no branching merge needed)
       # Flow: Wait → Survey → Wait → Decision(Promoter/Detractor/Passive)
       #       Promoter → Referral → Merge → End
-      #       Detractor → Support Call → Merge → End
-      #       Passive → Thank You → Merge → End
+      #       Detractor → Support Call → Merge
+      #       Passive → Thank You → Merge
       # ================================================================
       - name: "Stage 3: Retention & Loyalty"
         entry_criteria:
@@ -324,3 +362,56 @@ journeys:
 
           - type: end
             name: End Stage 3
+
+# =============================================================================
+# A/B Test Pattern (use when client wants to test variants)
+# =============================================================================
+#
+# Flow: Wait → A/B Test(Variant A 50% / Variant B 50%)
+#       Variant A → Email A → Merge → Wait → End
+#       Variant B → Email B → Merge
+#
+# steps:
+#   - type: wait
+#     name: Wait 1 Day
+#     next: Message Test
+#     with:
+#       duration: 1
+#       unit: day
+#
+#   - type: ab_test
+#     name: Message Test
+#     with:
+#       variants:
+#         - name: Casual Tone
+#           percentage: 50
+#           next: Send Casual Email
+#         - name: Professional Tone
+#           percentage: 50
+#           next: Send Pro Email
+#
+#   - type: activation
+#     name: Send Casual Email
+#     next: Merge Test
+#     with:
+#       activation: casual-email
+#
+#   - type: activation
+#     name: Send Pro Email
+#     next: Merge Test
+#     with:
+#       activation: pro-email
+#
+#   - type: merge
+#     name: Merge Test
+#     next: Wait After Test
+#
+#   - type: wait
+#     name: Wait After Test
+#     next: End Stage
+#     with:
+#       duration: 3
+#       unit: day
+#
+#   - type: end
+#     name: End Stage

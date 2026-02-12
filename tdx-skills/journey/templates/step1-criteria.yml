@@ -1,0 +1,179 @@
+# =============================================================================
+# Step 1: Criteria Segments
+# =============================================================================
+#
+# Build segments for journey criteria ONLY:
+#   - Goal segment
+#   - Stage entry_criteria
+#   - Stage milestones
+#   - Stage exit_criteria
+#
+# Decision point branches and wait conditions come in Step 2.
+#
+# =============================================================================
+# CRITERIA RULES (CRITICAL — understand before writing segments)
+# =============================================================================
+#
+# 1. Goal: Journey-level success condition. One segment required.
+#
+# 2. entry_criteria: ONLY for Stage 1.
+#    Stage 2+ entry is automatically set by the PREVIOUS stage's milestone.
+#    Do NOT define entry_criteria segments for Stage 2, 3, etc.
+#
+# 3. milestone: Defines WHO ENTERS THE NEXT STAGE (not this stage).
+#    - Stage 1 milestone = Stage 2 entry criteria
+#    - Stage 2 milestone = Stage 3 entry criteria
+#    - Last stage: NO milestone needed (no next stage)
+#    Common mistake: creating a milestone segment for the current stage's users
+#    instead of for users ready to move to the next stage.
+#
+# 4. exit_criteria: Users removed from the stage (e.g., churned, unsubscribed).
+#    At least one per stage recommended. Can reuse the same segment across stages.
+#
+# =============================================================================
+# CRITERIA CHECKLIST (verify before showing to client)
+# =============================================================================
+#
+# [ ] Goal segment defined
+# [ ] Stage 1 has entry_criteria segment
+# [ ] Every non-last stage has a milestone segment (for next stage entry)
+# [ ] Last stage has NO milestone
+# [ ] Stage 2+ do NOT have explicit entry_criteria (uses previous milestone)
+# [ ] Every stage has at least one exit_criteria (or ref: to shared one)
+#
+# =============================================================================
+#
+# --- REQUIRED: Discovery & Data Analysis First (do NOT skip) ---
+# Before writing ANY segment rules, you MUST:
+#
+# 1. Discover available attributes and behaviors:
+#      tdx sg fields
+#
+# 2. Analyze actual data values to determine rule thresholds:
+#      tdx query "SELECT column, COUNT(*) FROM table GROUP BY 1 ORDER BY 2 DESC LIMIT 20"
+#
+#    Column names alone are NOT enough to write rules.
+#    You MUST query actual data to understand:
+#      - What values exist (e.g., status column: "active", "churned", "pending"?)
+#      - Value distributions (e.g., avg purchase amount, login count ranges)
+#      - Behavior table names and their row counts
+#
+#    Use `tdx ps desc -o` to get the output database/table name for queries.
+#
+# Do NOT guess attribute names or threshold values.
+# Always verify with real data before writing segment rules.
+#
+# --- Segment Strategy ---
+# Ask the client which approach to use:
+#
+# Option A: Create new embedded segments (recommended)
+#   - Use `tdx sg fields` output to build rules
+#   - Define segments inline in the segments: section
+#
+# Option B: Reuse existing segments
+#   - Run `tdx sg list` to discover existing child segments
+#   - Run `tdx sg sql "Segment Name"` to inspect segment rules
+#   - Reference with ref: prefix: segment: ref:Existing Segment
+#   - Even with this approach, some segments will likely need to be embedded
+#
+# --- Segment Rule Reference ---
+# Use `tdx sg fields` output to build rules. Common operators:
+#
+#   Equal             Exact match:     value: "true"
+#   In                Multiple values: value: ["a", "b"]
+#   GreaterEqual      Numeric:         value: 1000
+#   LessEqual         Numeric:         value: 7
+#   TimeWithinPast    Recency:         value: 7, unit: day
+#   TimeBeforePast    Inactivity:      value: 30, unit: day
+#   Contain           String contains: value: "@gmail.com"
+#
+# Behavior aggregation (requires source: behavior_<table_name>):
+#   - type: Value
+#     attribute: ""                # Empty for behavior count
+#     operator:
+#       type: GreaterEqual
+#       value: 1
+#     aggregation:
+#       type: Count                # Count | Sum | Avg | Min | Max
+#     source: behavior_purchases   # behavior_<table_name>
+#
+# --- After updating the YAML ---
+#   1. Write ONLY the segments: section with criteria segments
+#   2. Write the updated YAML to the journey file
+#   3. Show the segment design to the client and get confirmation.
+#      Once confirmed, write the YAML and immediately move to Step 2.
+#      Do NOT ask "shall we proceed?" after writing — confirmation was already given.
+#
+# =============================================================================
+#
+# Example: 3-stage journey criteria segments
+#
+# Milestone flow:
+#   Stage 1 entry_criteria: new_signups (who enters Stage 1)
+#   Stage 1 milestone:      email_engaged (who enters Stage 2)
+#   Stage 2 milestone:      active_users (who enters Stage 3)
+#   Stage 3:                no milestone (last stage)
+
+type: journey
+name: Welcome Onboarding Journey
+description: 3-stage onboarding flow for new customers
+reentry: no_reentry
+
+segments:
+  # -- Goal --
+  onboarding_completed:
+    description: User completed product setup
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: onboarding_status
+          operator:
+            type: Equal
+            value: "completed"
+
+  # -- Stage 1: Welcome & Engagement --
+  # entry_criteria (Stage 1 ONLY — Stage 2+ use previous milestone)
+  new_signups:
+    description: Users who signed up in the last 7 days
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: signup_date
+          operator:
+            type: TimeWithinPast
+            value: 7
+            unit: day
+  # milestone (defines who enters Stage 2)
+  email_engaged:
+    description: Users who opened welcome email — ready for Stage 2
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: email_opened
+          operator:
+            type: Equal
+            value: "true"
+  # exit_criteria (ref:Churned Users — existing segment, no definition needed)
+
+  # -- Stage 2: Product Activation --
+  # entry_criteria: automatic (= Stage 1 milestone: email_engaged)
+  # milestone (defines who enters Stage 3)
+  active_users:
+    description: Users with 3+ logins in 7 days — ready for Stage 3
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: login_count_7d
+          operator:
+            type: GreaterEqual
+            value: 3
+  # exit_criteria (ref:Churned Users)
+
+  # -- Stage 3: Retention & Loyalty (last stage) --
+  # entry_criteria: automatic (= Stage 2 milestone: active_users)
+  # milestone: NONE (last stage — no next stage to enter)
+  # exit_criteria (ref:Churned Users)

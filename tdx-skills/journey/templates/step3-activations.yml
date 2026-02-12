@@ -1,5 +1,5 @@
 # =============================================================================
-# Step 2: Activations
+# Step 3: Activations
 # =============================================================================
 #
 # Define activation destinations for each stage's outbound actions.
@@ -40,7 +40,7 @@
 #   1. Add activations: section organized by stage with comments
 #   2. Write the updated YAML to the journey file
 #   3. Show the activation design to the client and get confirmation.
-#      Once confirmed, write the YAML and immediately move to Step 3.
+#      Once confirmed, write the YAML and immediately move to Step 4.
 #      Do NOT ask "shall we proceed?" after writing — confirmation was already given.
 #
 # =============================================================================
@@ -51,9 +51,9 @@ description: 3-stage onboarding flow for new customers
 reentry: no_reentry
 
 segments:
-  # (segments from Step 1, omitted for brevity)
+  # (segments from Steps 1-2, omitted for brevity)
 
-# Activation definitions — referenced by key in steps (Step 3)
+# Activation definitions — referenced by key in steps (Step 4)
 activations:
   # -- Stage 1: Welcome & Engagement --
   welcome-email:
