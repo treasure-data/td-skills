@@ -49,8 +49,8 @@
 #   1. Add segments: section with all criteria segments
 #   2. Wire up goal, entry_criteria, exit_criteria, milestone in each stage
 #   3. Write the updated YAML to the journey file
-#   4. Show the result to the client
-#   5. STOP — wait for client confirmation before proceeding to Step 3
+#   4. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
+#      Auto mode: Proceed directly to Step 3
 #
 # =============================================================================
 

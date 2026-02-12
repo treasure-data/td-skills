@@ -15,8 +15,8 @@
 #
 # After creating the file:
 #   1. Write the YAML to the journey file
-#   2. Show the result to the client
-#   3. STOP — wait for client confirmation before proceeding to Step 2
+#   2. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
+#      Auto mode: Proceed directly to Step 2
 #
 # =============================================================================
 

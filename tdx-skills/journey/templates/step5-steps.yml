@@ -51,10 +51,10 @@
 # --- After updating the YAML ---
 #   1. Write steps for ONE stage
 #   2. Write the updated YAML to the journey file
-#   3. Show the result to the client
-#   4. STOP — get confirmation before writing the next stage's steps
-#   5. Repeat for each remaining stage
-#   6. After ALL stages are done, proceed to Step 6 (validate)
+#   3. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
+#      Auto mode: Proceed directly to the next stage
+#   4. Repeat for each remaining stage
+#   5. After ALL stages are done, proceed to Step 6 (validate)
 #
 # =============================================================================
 #

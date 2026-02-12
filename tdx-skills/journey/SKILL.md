@@ -5,16 +5,23 @@ description: Creates CDP journey definitions in YAML using `tdx journey` command
 
 # tdx Journey - CDP Journey Orchestration
 
-## CRITICAL: Step-by-Step Build Process
+## First: Ask the Client for Build Mode
+
+Before starting, ask the client which mode to use:
+
+- **Interactive mode** — Pause after each step for review and confirmation. Best for learning or complex journeys.
+- **Auto mode** — Execute all steps continuously without pausing. Best when the client has provided clear requirements upfront.
+
+## Build Process
 
 Build journey YAML **incrementally** through 6 steps. **You MUST complete one step at a time.**
 
 **Workflow for EACH step:**
 1. Read the template file for that step
-2. Ask the client for the required information
+2. Ask the client for the required information (if not already provided)
 3. Update the journey YAML file with only that step's changes
-4. Show the updated YAML to the client and confirm before moving on
-5. **STOP. Do NOT read the next step's template until the client confirms.**
+4. **Interactive mode**: Show the updated YAML and STOP. Do NOT ask "shall we proceed?" — just wait for the client to respond.
+5. **Auto mode**: Proceed directly to the next step without pausing
 
 **File location**: `./segments/(parent-segment-name)/journey-name.yml`
 

@@ -23,8 +23,8 @@
 #   2. Add "# NEW" comments to highlight additions
 #   3. Write branch structure summary at the bottom as comments
 #   4. Write the updated YAML to the journey file
-#   5. Show the result to the client
-#   6. STOP — wait for client confirmation before proceeding to Step 4
+#   5. Interactive mode: Show the result and STOP. Do NOT ask "proceed?" — just wait.
+#      Auto mode: Proceed directly to Step 4
 #
 # =============================================================================
 
