@@ -146,10 +146,20 @@
 # EXAMPLE PATTERNS
 # =============================================================================
 #
-# Below are 3 common stage patterns. Use these as reference when building.
+# Below are common stage patterns. Use these as reference when building.
+# Pattern A: Simple branch (decision_point)
+# Pattern B: 3-way branch (decision_point)
+# Pattern C: Linear flow with decision
+# A/B Test Pattern (commented)
+# Wait Condition Pattern (commented) — MUST have different actions per path
 
 # =============================================================================
 # Pattern A: Simple branch with Merge
+#
+# IMPORTANT: Each branch MUST lead to a DIFFERENT activation.
+# A branch that goes directly to Merge or End without an action is pointless.
+# If all branches do the same thing, remove the decision_point entirely.
+#
 # Flow: Activation → Wait → Decision(Opened/Not Opened)
 #       Opened → Follow Up → Merge → End
 #       Not Opened → SMS → Merge
@@ -385,6 +395,10 @@ journeys:
 # A/B Test Pattern (use when client wants to test variants)
 # =============================================================================
 #
+# IMPORTANT: Each variant MUST lead to a DIFFERENT activation.
+# If all variants send the same content, there is nothing to test.
+# A variant that goes directly to Merge or End without an action is pointless.
+#
 # Flow: Wait → A/B Test(Variant A 50% / Variant B 50%)
 #       Variant A → Email A → Merge → Wait → End
 #       Variant B → Email B → Merge
@@ -430,6 +444,55 @@ journeys:
 #     with:
 #       duration: 3
 #       unit: day
+#
+#   - type: end
+#     name: End Stage
+
+# =============================================================================
+# Wait Condition Pattern (use when waiting for a user action with timeout)
+# =============================================================================
+#
+# IMPORTANT: Each path (met / timeout) MUST lead to a DIFFERENT action.
+# If both paths do the same thing or both go straight to End/Merge,
+# the condition wait is pointless — use a simple duration wait instead.
+#
+# Flow: Offer Email → Wait for Purchase(Met/Timeout)
+#       Met → Thank You Email → Merge → End
+#       Timeout → Discount Coupon → Merge
+#
+# steps:
+#   - type: activation
+#     name: Send Offer Email
+#     next: Wait for Purchase
+#     with:
+#       activation: offer-email
+#
+#   - type: wait
+#     name: Wait for Purchase
+#     with:
+#       condition:
+#         segment: made_purchase
+#         next: Send Thank You
+#         timeout:
+#           duration: 7
+#           unit: day
+#           next: Send Discount Coupon
+#
+#   - type: activation
+#     name: Send Thank You
+#     next: Merge Purchase
+#     with:
+#       activation: thankyou-email
+#
+#   - type: activation
+#     name: Send Discount Coupon
+#     next: Merge Purchase
+#     with:
+#       activation: discount-email
+#
+#   - type: merge
+#     name: Merge Purchase
+#     next: End Stage
 #
 #   - type: end
 #     name: End Stage
