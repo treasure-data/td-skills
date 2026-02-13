@@ -19,10 +19,24 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ### Realtime Skills
 
-#### RT 2.0 (Real-Time Personalization)
-- **[realtime-skills/rt-config](./realtime-skills/rt-config)** - Configure RT 2.0 for parent segments including event tables, key events, RT attributes, and ID stitching using `tdx ps rt` commands or API
-- **[realtime-skills/rt-personalization](./realtime-skills/rt-personalization)** - Create personalization services that return real-time personalized responses via API using `tdx ps pz` commands or API
-- **[realtime-skills/rt-triggers](./realtime-skills/rt-triggers)** - Create RT journeys (real-time triggers) that activate when specific events occur, triggering activations to external systems via API
+#### RT 2.0 Setup & Configuration
+- **[realtime-skills/rt-config](./realtime-skills/rt-config)** - RT 2.0 configuration overview (entry point)
+- **[realtime-skills/rt-config-setup](./realtime-skills/rt-config-setup)** - Initial RT setup: check enablement, initialize configuration, verify prerequisites
+- **[realtime-skills/rt-config-events](./realtime-skills/rt-config-events)** - Configure event tables and key events with filters
+- **[realtime-skills/rt-config-attributes](./realtime-skills/rt-config-attributes)** - Configure RT attributes: single, list, counter, and batch attributes
+- **[realtime-skills/rt-config-id-stitching](./realtime-skills/rt-config-id-stitching)** - Configure ID stitching and profile merging
+
+#### RT Personalization
+- **[realtime-skills/rt-personalization](./realtime-skills/rt-personalization)** - RT personalization overview (entry point)
+- **[realtime-skills/rt-pz-service](./realtime-skills/rt-pz-service)** - Create and manage personalization services
+- **[realtime-skills/rt-pz-sections](./realtime-skills/rt-pz-sections)** - Configure section criteria with operators and targeting logic
+- **[realtime-skills/rt-pz-api](./realtime-skills/rt-pz-api)** - Integrate personalization APIs with web/mobile apps
+
+#### RT Journeys (Triggers)
+- **[realtime-skills/rt-triggers](./realtime-skills/rt-triggers)** - RT journeys overview (entry point)
+- **[realtime-skills/rt-journey-create](./realtime-skills/rt-journey-create)** - Create RT journeys with event triggers
+- **[realtime-skills/rt-journey-activations](./realtime-skills/rt-journey-activations)** - Configure activations: webhook, Salesforce, email
+- **[realtime-skills/rt-journey-monitor](./realtime-skills/rt-journey-monitor)** - Monitor journeys, debug failures, query activation logs
 
 #### Activation & Identity Monitoring
 - **[realtime-skills/activations](./realtime-skills/activations)** - Query activation logs to check for errors and view volume for digital marketing activations
@@ -103,11 +117,18 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the time-filtering skill to add partition pruning to my query"
 "Use the Trino CLI skill to help me connect to TD from the terminal"
 "Use the TD MCP skill to set up Claude Code to access my TD databases"
-""Use the rt-config skill to configure event tables for parent segment 394649"
-"Use the rt-personalization skill to create a recommendation service"
-"Use the rt-triggers skill to create a welcome email journey"
+"Use the rt-config-setup skill to check RT enablement status"
+"Use the rt-config-events skill to configure event tables for parent segment 394649"
+"Use the rt-config-attributes skill to add RT attributes"
+"Use the rt-config-id-stitching skill to configure profile merging"
+"Use the rt-pz-service skill to create a product recommendation service"
+"Use the rt-pz-sections skill to configure targeting criteria"
+"Use the rt-pz-api skill to integrate personalization with my web app"
+"Use the rt-journey-create skill to create a welcome email journey"
+"Use the rt-journey-activations skill to configure webhook activations"
+"Use the rt-journey-monitor skill to debug activation failures"
 "Use the activations skill to query activation logs for parent segment 394649"
-"Use the identity skill to check recent profile merges for parent segment 394649""
+"Use the identity skill to check recent profile merges for parent segment 394649"
 "Use the digdag skill to create a workflow that runs every morning"
 "Use the workflow-management skill to debug this failing workflow"
 "Use the dbt skill to create an incremental model for user events"
@@ -130,7 +151,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-config, rt-personalization, rt-triggers, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-pz-service, rt-pz-sections, rt-pz-api, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
