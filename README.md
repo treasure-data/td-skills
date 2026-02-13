@@ -19,6 +19,12 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ### Realtime Skills
 
+#### RT 2.0 (Real-Time Personalization)
+- **[realtime-skills/rt-config](./realtime-skills/rt-config)** - Configure RT 2.0 for parent segments including event tables, key events, RT attributes, and ID stitching using `tdx ps rt` commands or API
+- **[realtime-skills/rt-personalization](./realtime-skills/rt-personalization)** - Create personalization services that return real-time personalized responses via API using `tdx ps pz` commands or API
+- **[realtime-skills/rt-triggers](./realtime-skills/rt-triggers)** - Create RT journeys (real-time triggers) that activate when specific events occur, triggering activations to external systems via API
+
+#### Activation & Identity Monitoring
 - **[realtime-skills/activations](./realtime-skills/activations)** - Query activation logs to check for errors and view volume for digital marketing activations
 - **[realtime-skills/identity](./realtime-skills/identity)** - Query id change logs to get information about new, updated and merged realtime profiles
 
@@ -70,7 +76,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
    Select "Browse and install plugins" from the menu, then choose from:
    - `sql-skills` - Trino and Hive query assistance, Trino CLI, and TD MCP server
-   - `realtime-skills` - Query activation logs for digital marketing activations
+   - `realtime-skills` - RT 2.0 configuration, personalization services, real-time journeys, and activation/identity log monitoring
    - `workflow-skills` - Treasure Workflow creation, management, and dbt transformations
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `tdx-skills` - tdx CLI for managing TD from command line
@@ -97,7 +103,11 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the time-filtering skill to add partition pruning to my query"
 "Use the Trino CLI skill to help me connect to TD from the terminal"
 "Use the TD MCP skill to set up Claude Code to access my TD databases"
+""Use the rt-config skill to configure event tables for parent segment 394649"
+"Use the rt-personalization skill to create a recommendation service"
+"Use the rt-triggers skill to create a welcome email journey"
 "Use the activations skill to query activation logs for parent segment 394649"
+"Use the identity skill to check recent profile merges for parent segment 394649""
 "Use the digdag skill to create a workflow that runs every morning"
 "Use the workflow-management skill to debug this failing workflow"
 "Use the dbt skill to create an incremental model for user events"
@@ -120,7 +130,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, activations, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-config, rt-personalization, rt-triggers, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 

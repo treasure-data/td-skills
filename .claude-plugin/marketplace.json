@@ -25,12 +25,15 @@
     },
     {
       "name": "realtime-skills",
-      "description": "Skills related to real time",
+      "description": "RT 2.0 (Real-Time Personalization) skills for configuring parent segments with event tables and RT attributes, creating personalization services for real-time API responses, managing real-time journeys with event-triggered activations, and querying activation/identity logs",
       "source": "./",
       "strict": false,
       "skills": [
         "./realtime-skills/activations",
-        "./realtime-skills/identity"
+        "./realtime-skills/identity",
+        "./realtime-skills/rt-config",
+        "./realtime-skills/rt-personalization",
+        "./realtime-skills/rt-triggers"
       ]
     },
     {
