@@ -1,6 +1,6 @@
-# =============================================================================
+# ---
 # Step 1: Criteria Segments
-# =============================================================================
+# ---
 #
 # Build segments for journey criteria ONLY:
 #   - Goal segment
@@ -10,9 +10,9 @@
 #
 # Decision point branches and condition waits come in Step 2.
 #
-# =============================================================================
+# ---
 # *** STOP — Discovery & Data Analysis FIRST (do NOT skip) ***
-# =============================================================================
+# ---
 #
 # You MUST run these commands and analyze real data BEFORE writing any segments.
 # Do NOT propose segment rules based on guesses or assumptions.
@@ -47,9 +47,9 @@
 # other journey (`tdx journey pull`) and copy the segment rules into your
 # new journey's embedded segments.
 #
-# =============================================================================
+# ---
 # CRITERIA RULES (CRITICAL — understand before writing segments)
-# =============================================================================
+# ---
 #
 # 1. Goal: Journey-level success condition. One segment required.
 #
@@ -69,9 +69,9 @@
 # 4. exit_criteria: Users removed from the stage (e.g., churned, unsubscribed).
 #    At least one per stage recommended. Can reuse the same segment across stages.
 #
-# =============================================================================
+# ---
 # CRITERIA CHECKLIST (verify before showing to client)
-# =============================================================================
+# ---
 #
 # [ ] Goal segment defined
 # [ ] Stage 1 has entry_criteria segment
@@ -115,7 +115,7 @@
 #   2. Once confirmed, write the segments: section to the journey file
 #   3. Immediately move to Step 2 — do NOT ask "shall we proceed?"
 #
-# =============================================================================
+# ---
 #
 # Example: 3-stage journey criteria segments
 #

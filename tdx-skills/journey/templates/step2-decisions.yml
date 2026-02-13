@@ -1,6 +1,6 @@
-# =============================================================================
+# ---
 # Step 2: Decision Point & Condition Wait Segments
-# =============================================================================
+# ---
 #
 # Build segments for decision point branches and condition waits.
 # Criteria segments (goal, entry, exit, milestone) are already done in Step 1.
@@ -49,15 +49,14 @@
 # Load the **segment** skill for full operator reference, Behavior conditions,
 # filter/timeWindow syntax, and nested condition groups.
 #
-# --- After updating the YAML ---
+# --- After designing the segments ---
 #   1. Add the new segments to the segments: section with "# NEW" comments
 #   2. Add a structure summary at the bottom as comments
-#   3. Write the updated YAML to the journey file
-#   4. Show the segment design to the client and get confirmation.
-#      Once confirmed, write the YAML and immediately move to Step 3.
-#      Do NOT ask "shall we proceed?" after writing — confirmation was already given.
+#   3. Show the segment design to the client and get confirmation
+#   4. Once confirmed, write the updated YAML and immediately move to Step 3.
+#      Do NOT ask "shall we proceed?" — confirmation was already given.
 #
-# =============================================================================
+# ---
 
 type: journey
 name: Welcome Onboarding Journey
@@ -139,21 +138,4 @@ segments:
   #           type: Count
   #         source: behavior_purchases
 
-# Structure summary (for reference when building steps in Step 4):
-#
-# Stage 1 — Email Open Check (decision_point):
-#   - Opened:      segment: email_engaged  → next: (content path)
-#   - Not Opened:  excluded: true          → next: (reminder path)
-#   Waits: duration only
-#
-# Stage 2 — Usage Level Check (decision_point):
-#   - Power User:  segment: power_users    → next: (upsell path)
-#   - Active:      segment: active_users   → next: (tips path)
-#   - Inactive:    excluded: true          → next: (reengage path)
-#   Waits: duration only
-#
-# Stage 3 — NPS Score Check (decision_point):
-#   - Promoter:    segment: nps_promoters  → next: (referral path)
-#   - Detractor:   segment: nps_detractors → next: (support path)
-#   - Passive:     excluded: true          → next: (thank you path)
-#   Waits: duration only
+# Stage flows: S1=EmailOpen(Opened/NotOpened) S2=Usage(Power/Active/Inactive) S3=NPS(Promoter/Detractor/Passive)

@@ -54,7 +54,7 @@ tdx journey push --dry-run                # Preview changes before push
 | `CONVERGENCE_WITHOUT_MERGE` | error | Multiple paths converge on a non-merge step |
 | `SINGLE_INPUT_MERGE` | warning | Merge step has only one input path |
 | `MERGE_TO_MERGE_CHAIN` | error | Merge step's `next` is another merge step |
-| `BRANCH_DIRECTLY_TO_MERGE` | error | Decision/AB test/condition wait branch goes directly to merge (no action) |
+| `BRANCH_DIRECTLY_TO_MERGE` | error | Decision/A/B test/condition wait branch goes directly to merge (no action) |
 
 ### API Constraints (not checked by `tdx journey validate`, but rejected by the API)
 
@@ -75,30 +75,33 @@ tdx journey push --dry-run                # Preview changes before push
 ```yaml
 type: journey              # Required
 name: Journey Name
+reentry: no_reentry        # no_reentry | reentry_unless_goal_achieved | reentry_always
 
 goal:                      # Required
   name: Goal Name
   segment: goal-segment    # Embedded segment (defined in segments: section)
 
-stages:
-  - name: Stage Name
-    entry_criteria:        # Required
-      name: Entry Name
-      segment: entry-segment
-    exit_criteria:         # Recommended (warning if missing)
-      - name: Exit Name
-        segment: exit-segment
-    milestone:             # Required for non-last stages
-      name: Milestone Name
-      segment: milestone-segment
-    steps:                 # At least 2 steps required (4+ recommended)
-      - type: activation
-        name: Send Email
-        next: end
-        with:
-          activation: email-key
-      - type: end
-        name: end
+journeys:
+  - state: draft
+    stages:
+      - name: Stage Name
+        entry_criteria:        # Required
+          name: Entry Name
+          segment: entry-segment
+        exit_criteria:         # Recommended (warning if missing)
+          - name: Exit Name
+            segment: exit-segment
+        milestone:             # Required for non-last stages
+          name: Milestone Name
+          segment: milestone-segment
+        steps:                 # At least 2 steps required (4+ recommended)
+          - type: activation
+            name: Send Email
+            next: End Stage
+            with:
+              activation: email-key
+          - type: end
+            name: End Stage
 ```
 
 **Limits**: Max 8 stages (validated locally). API constraints: 120 events/journey, 70 events/stage, 30 versions
@@ -154,7 +157,7 @@ stages:
     unit: day
 
 - type: end
-  name: end                       # Required: every stage needs an end step
+  name: End Stage                 # Required: every stage needs an end step
 ```
 
 ## Condition Wait Format

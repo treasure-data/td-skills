@@ -153,6 +153,6 @@ behavior:
 
 ## Related Skills
 
-- **connector-config** — `connector_config` fields per connector type (SFMC, S3, BigQuery, etc.)
-- **segment** — Segment rule syntax
-- **journey** — Journey structure and activation steps
+- **connector-config** - `connector_config` fields per connector type (SFMC, S3, BigQuery, etc.)
+- **segment** - Segment rule syntax
+- **journey** - Journey structure and activation steps

@@ -1,6 +1,6 @@
-# =============================================================================
+# ---
 # Step 3: Activations
-# =============================================================================
+# ---
 #
 # Define activation destinations for each stage's outbound actions.
 #
@@ -39,14 +39,13 @@
 #       connector_config:                  # from tdx connection schema
 #         field_name: value
 #
-# --- After updating the YAML ---
+# --- After designing the activations ---
 #   1. Add activations: section organized by stage with comments
-#   2. Write the updated YAML to the journey file
-#   3. Show the activation design to the client and get confirmation.
-#      Once confirmed, write the YAML and immediately move to Step 4.
-#      Do NOT ask "shall we proceed?" after writing — confirmation was already given.
+#   2. Show the activation design to the client and get confirmation
+#   3. Once confirmed, write the updated YAML and immediately move to Step 4.
+#      Do NOT ask "shall we proceed?" — confirmation was already given.
 #
-# =============================================================================
+# ---
 
 type: journey
 name: Welcome Onboarding Journey
@@ -56,19 +55,19 @@ reentry: no_reentry
 segments:
   # (segments from Steps 1-2, omitted for brevity)
 
-# Activation definitions — referenced by key in steps (Step 4)
 activations:
-  # -- Stage 1: Welcome & Engagement --
+  # -- Example: SFMC email activation --
   welcome-email:
     name: Welcome Email Campaign
     connection: My SFMC Connection         # from `tdx connection list`
     all_columns: true
-    run_after_journey_refresh: true         # run after parent segment refresh
-    connector_config:                       # from `tdx connection schema "My SFMC Connection"`
+    run_after_journey_refresh: true
+    connector_config:                       # from `tdx connection schema`
       de_name: WelcomeEmails
       shared_data_extension: false
       data_operation: upsert
 
+  # -- Example: different connector (SMS) --
   sms-reminder:
     name: SMS Reminder
     connection: Twilio SMS Connection
@@ -77,57 +76,10 @@ activations:
     connector_config:
       message_template: welcome_reminder
 
-  # -- Stage 2: Product Activation --
-  upsell-email:
-    name: Upsell Offer Email
-    connection: My SFMC Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      de_name: UpsellOffers
-      shared_data_extension: false
-      data_operation: upsert
+  # Repeat same pattern for each stage activation:
+  # follow-up-email, upsell-email, feature-tips-email, nps-survey-email, etc.
 
-  feature-tips-email:
-    name: Feature Tips Email
-    connection: My SFMC Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      de_name: FeatureTips
-      shared_data_extension: false
-      data_operation: upsert
-
-  reengage-push:
-    name: Re-engagement Push Notification
-    connection: Braze Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      campaign_id: reengage_001
-
-  # -- Stage 3: Retention & Loyalty --
-  nps-survey-email:
-    name: NPS Survey Email
-    connection: My SFMC Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      de_name: NPSSurvey
-      shared_data_extension: false
-      data_operation: upsert
-
-  referral-invite-email:
-    name: Referral Invite Email
-    connection: My SFMC Connection
-    all_columns: true
-    run_after_journey_refresh: true
-    connector_config:
-      de_name: ReferralInvites
-      shared_data_extension: false
-      data_operation: upsert
-
-  # Example: fixed schedule instead of run_after_journey_refresh
+  # -- Example: fixed schedule instead of run_after_journey_refresh --
   # weekly-digest:
   #   name: Weekly Digest
   #   connection: My SFMC Connection

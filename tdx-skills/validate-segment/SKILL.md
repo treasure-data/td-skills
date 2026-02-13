@@ -67,7 +67,7 @@ Any operator supports `not: true` for negation. This is separate from `NotEqual`
 ```yaml
 - type: Behavior
   attribute: purchase_event        # Can be empty ("") for pure count
-  source: purchase_history         # Behavior table name (required)
+  source: behavior_purchase_history         # Behavior table name (required)
   aggregation:
     type: Count                    # Count | Sum | Average | Min | Max
   operator:

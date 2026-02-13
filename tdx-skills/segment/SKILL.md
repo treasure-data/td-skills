@@ -160,7 +160,7 @@ Query behavior table data with aggregations. Use `type: Behavior` (not `Value`).
 # Count purchases in last 30 days
 - type: Behavior
   attribute: purchase_event
-  source: purchase_history          # Behavior table name from parent segment
+  source: behavior_purchase_history  # behavior_<table_name> (prefix required)
   aggregation:
     type: Count
   operator:
@@ -207,7 +207,7 @@ For filtering behavior rows by column values before aggregation:
 # Sum order_total where category is "Electronics", in last 90 days
 - type: Behavior
   attribute: order_total
-  source: purchase_history
+  source: behavior_purchase_history
   aggregation:
     type: Sum
     column: order_total
