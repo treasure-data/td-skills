@@ -39,7 +39,7 @@ tdx journey push --dry-run                # Preview changes before push
 | `DUPLICATE_STEP_NAME` | error | Two steps share the same name |
 | `INVALID_NEXT_REFERENCE` | error | `next` points to non-existent step |
 | `MISSING_WAIT_PARAMS` | error | Wait step missing `duration`+`unit` or `condition` |
-| `MISSING_SEGMENT_REFERENCE` | error | Wait condition or branch missing `segment` |
+| `MISSING_SEGMENT_REFERENCE` | error | Condition wait or branch missing `segment` |
 | `MISSING_ACTIVATION_REF` | error | Activation step missing `with.activation` |
 | `MISSING_CONDITIONS` | error | Decision point or AB test missing branches/variants |
 | `INVALID_AB_TEST_PERCENTAGES` | error | AB test variant percentages don't sum to 100 |
@@ -54,13 +54,13 @@ tdx journey push --dry-run                # Preview changes before push
 | `CONVERGENCE_WITHOUT_MERGE` | error | Multiple paths converge on a non-merge step |
 | `SINGLE_INPUT_MERGE` | warning | Merge step has only one input path |
 | `MERGE_TO_MERGE_CHAIN` | error | Merge step's `next` is another merge step |
-| `BRANCH_DIRECTLY_TO_MERGE` | error | Decision/AB test/wait condition branch goes directly to merge (no action) |
+| `BRANCH_DIRECTLY_TO_MERGE` | error | Decision/AB test/condition wait branch goes directly to merge (no action) |
 
 ### API Constraints (not checked by `tdx journey validate`, but rejected by the API)
 
 | Constraint | Description |
 |-----------|-------------|
-| Branch must have activation | Every decision_point/ab_test/wait condition branch MUST have an activation step before merge |
+| Branch must have activation | Every decision_point/ab_test/condition wait branch MUST have an activation step before merge |
 | Wait after activation | A wait step must follow every activation step. If activation → merge, place wait after merge |
 
 ### Reference Validation
@@ -78,19 +78,19 @@ name: Journey Name
 
 goal:                      # Required
   name: Goal Name
-  segment: ref:Goal Segment
+  segment: goal-segment    # Embedded segment (defined in segments: section)
 
 stages:
   - name: Stage Name
     entry_criteria:        # Required
       name: Entry Name
-      segment: ref:Entry Segment
+      segment: entry-segment
     exit_criteria:         # Recommended (warning if missing)
       - name: Exit Name
-        segment: ref:Exit Segment
+        segment: exit-segment
     milestone:             # Required for non-last stages
       name: Milestone Name
-      segment: ref:Milestone Segment
+      segment: milestone-segment
     steps:                 # At least 2 steps required (4+ recommended)
       - type: activation
         name: Send Email
@@ -120,7 +120,7 @@ stages:
 ## Flow Control Rules
 
 ```yaml
-# Branching pattern: decision → actions → merge → end
+# Branching pattern: decision → actions → merge → wait → end
 - type: decision_point
   name: Check Status
   with:
@@ -144,13 +144,20 @@ stages:
 
 - type: merge
   name: Rejoin                    # Required: multiple paths need merge
-  next: end                       # Must NOT point to another merge
+  next: Wait After Rejoin         # Must NOT point to another merge
+
+- type: wait
+  name: Wait After Rejoin         # Wait required after activation (via merge)
+  next: end
+  with:
+    duration: 1
+    unit: day
 
 - type: end
   name: end                       # Required: every stage needs an end step
 ```
 
-## Wait Condition Format
+## Condition Wait Format
 
 ```yaml
 - type: wait
@@ -158,7 +165,7 @@ stages:
   with:
     condition:
       segment: made-purchase    # Wait until segment match
-      next: follow-up           # Optional: defaults to next sequential step
+      next: follow-up           # Where to go when condition is matched
       timeout:                  # Max wait duration
         duration: 14
         unit: day
@@ -167,8 +174,10 @@ stages:
 
 ## Segment References
 
-- Embedded: `segment: my-segment` (defined in `segments:` section)
-- External: `segment: ref:Existing Segment` (use `ref:` prefix)
+- **Embedded** (recommended): `segment: my-segment` (defined in `segments:` section)
+- **External ref**: `segment: ref:Segment Name` (references a journey-type segment from another journey)
+
+**`ref:` limitation**: `ref:` can ONLY reference journey-type segments (kind=3) created by another journey's push. It does NOT work with regular child segments from `tdx sg list`. When in doubt, use embedded segments.
 
 ## Related Skills
 

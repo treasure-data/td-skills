@@ -18,6 +18,10 @@
 # Do NOT invent journey structure. Use segments from Steps 1-2 and
 # activations from Step 3 — only reference keys that already exist.
 #
+# Segments and activations: ONLY reference keys defined in YOUR segments:
+# and activations: sections, or use ref: for journey-type segments from
+# other journeys (see SKILL.md for ref: limitations).
+#
 # --- Build steps ONE STAGE AT A TIME ---
 # Do not write all stages at once.
 #
@@ -35,7 +39,7 @@
 # Rule 1: Every branch MUST perform a different action. A branch that merges
 #   without doing anything is pointless — if branches do the same thing,
 #   there is no reason to branch.
-#   This applies to ALL branching types: decision_point, wait condition, ab_test.
+#   This applies to ALL branching types: decision_point, condition wait, ab_test.
 #
 #   decision_point / ab_test:
 #     GOOD: Branch A → Activation X → Merge
@@ -44,7 +48,7 @@
 #     BAD:  Branch A → Activation X → Merge
 #           Branch B → Activation X → Merge   ← Same action, no point branching
 #
-#   wait condition:
+#   condition wait:
 #     GOOD: Matched → Activation X → Merge    ← Different actions per path
 #           Timeout → Activation Y → Merge
 #     BAD:  Matched → Merge                   ← Both paths do nothing different
@@ -62,6 +66,12 @@
 #   GOOD: Merge → Wait → End
 #   BAD:  Merge → Merge → End              ← Invalid chain
 #
+# Rule 3b: Nested branching (branch inside a branch):
+#   Inner branches MUST merge before joining the outer branch.
+#   GOOD: Decision A → [Branch A1 → inner Decision → inner Merge → Merge A]
+#   BAD:  Decision A → [Branch A1 → inner Decision → Merge A]  ← inner paths not merged
+#   Note: Nested branching increases complexity. Prefer flat patterns when possible.
+#
 # Rule 4: Always insert a wait step after an activation step.
 #   GOOD: Activation → Wait → next step
 #   GOOD: Activation → Merge → Wait → End   (wait after merge is OK)
@@ -78,12 +88,13 @@
 #
 # After sketching the flow, verify ALL of the following:
 #
-# [ ] Every branch (decision_point, ab_test, wait condition) performs a different action
+# [ ] Every branch (decision_point, ab_test, condition wait) performs a different action
 # [ ] No branch goes directly to merge without an activation
-# [ ] Wait condition paths lead to different actions (otherwise use duration wait)
+# [ ] Condition wait paths lead to different actions (otherwise use duration wait)
 # [ ] All branching paths converge through a Merge step (not directly to End)
 # [ ] No Merge → Merge chains exist
 # [ ] Every activation is followed by a wait (or merge then wait)
+# [ ] Every non-branching, non-end step has an explicit next: field
 # [ ] Every next: reference points to a valid step name in THIS stage
 # [ ] Stage has exactly one End step with no next/with
 # [ ] No orphaned steps (every step is reachable from the first step)
@@ -104,7 +115,7 @@
 #
 #   | Type           | with Parameters                          |
 #   |----------------|------------------------------------------|
-#   | wait           | duration + unit (day/week) or condition   |
+#   | wait           | duration + unit, or condition, or wait_until |
 #   | activation     | activation (key from activations section) |
 #   | decision_point | branches[] with segment, next             |
 #   | ab_test        | variants[] with percentage, next          |
@@ -121,7 +132,23 @@
 #       duration: 3
 #       unit: day
 #
+#   Additional duration options:
+#   - type: wait
+#     name: Wait Until Launch
+#     next: Next Step
+#     with:
+#       wait_until: "2025-04-01"       # Wait until specific date
+#
+#   - type: wait
+#     name: Wait for Weekday
+#     next: Next Step
+#     with:
+#       duration: 7
+#       unit: day
+#       days_of_week: ["monday", "wednesday", "friday"]
+#
 #   Condition (wait for user action):
+#   NOTE: Condition wait has NO top-level next: (paths are inside condition)
 #   - type: wait
 #     name: Wait for Purchase
 #     with:
@@ -132,6 +159,21 @@
 #           duration: 14
 #           unit: day
 #           next: timeout-path       # Path when timed out
+#
+# --- Jump Step ---
+#   Jump routes users to another journey/stage. It has NO next: field.
+#   - type: jump
+#     name: Jump to Nurture
+#     with:
+#       target:
+#         journey: Nurture Journey
+#         stage: Follow Up
+#
+#   Flow rules for jump:
+#   - Jump has no next: (users leave this journey)
+#   - If one branch jumps and another continues, the continuing branch
+#     still needs Merge → Wait → End as usual
+#   - Jump does NOT need a wait before it
 #
 # --- After updating the YAML ---
 #   1. Write full journey structure with first stage's steps
@@ -151,7 +193,9 @@
 # Pattern B: 3-way branch (decision_point)
 # Pattern C: Linear flow with decision
 # A/B Test Pattern (commented)
-# Wait Condition Pattern (commented) — MUST have different actions per path
+# Condition Wait Pattern (commented) — MUST have different actions per path
+# Linear Pattern (commented) — no branching, simple sequential flow
+# Escalation Pattern (commented) — chained condition waits for progressive messaging
 
 # =============================================================================
 # Pattern A: Simple branch with Merge
@@ -186,7 +230,7 @@ journeys:
       # ================================================================
       # Pattern A: Simple branch with Merge
       # Flow: Email → Wait → Decision(Opened/Not Opened)
-      #       Opened → Follow Up → Merge → End
+      #       Opened → Follow Up Email → Merge → Wait 1 Day → End
       #       Not Opened → SMS → Merge
       # ================================================================
       - name: "Stage 1: Welcome & Engagement"
@@ -198,7 +242,7 @@ journeys:
           segment: email_engaged
         exit_criteria:
           - name: Churned Users
-            segment: ref:Churned Users
+            segment: churned_users
         steps:
           - type: activation
             name: Send Welcome Email
@@ -228,7 +272,7 @@ journeys:
             name: Send Follow Up
             next: Merge Welcome
             with:
-              activation: welcome-email
+              activation: follow-up-email
 
           - type: activation
             name: Send SMS Reminder
@@ -238,7 +282,14 @@ journeys:
 
           - type: merge
             name: Merge Welcome
+            next: Wait After Welcome
+
+          - type: wait
+            name: Wait After Welcome
             next: End Stage 1
+            with:
+              duration: 1
+              unit: day
 
           - type: end
             name: End Stage 1
@@ -246,7 +297,7 @@ journeys:
       # ================================================================
       # Pattern B: 3-way branch with longer path on one branch
       # Flow: Wait → Decision(Power User/Active/Inactive)
-      #       Power User → Upsell → Merge → End
+      #       Power User → Upsell → Merge → Wait 1 Day → End
       #       Active → Tips → Merge
       #       Inactive → Push → Wait → Tips → Merge
       # ================================================================
@@ -254,9 +305,12 @@ journeys:
         entry_criteria:
           name: Engaged Users
           segment: email_engaged
+        milestone:
+          name: Active Users
+          segment: active_users
         exit_criteria:
           - name: Churned Users
-            segment: ref:Churned Users
+            segment: churned_users
         steps:
           - type: wait
             name: Wait 1 Day
@@ -312,7 +366,14 @@ journeys:
 
           - type: merge
             name: Merge Activation
+            next: Wait After Activation
+
+          - type: wait
+            name: Wait After Activation
             next: End Stage 2
+            with:
+              duration: 1
+              unit: day
 
           - type: end
             name: End Stage 2
@@ -320,7 +381,7 @@ journeys:
       # ================================================================
       # Pattern C: Linear flow with decision (no branching merge needed)
       # Flow: Wait → Survey → Wait → Decision(Promoter/Detractor/Passive)
-      #       Promoter → Referral → Merge → End
+      #       Promoter → Referral → Merge → Wait 1 Day → End
       #       Detractor → Support Call → Merge
       #       Passive → Thank You → Merge
       # ================================================================
@@ -330,7 +391,7 @@ journeys:
           segment: active_users
         exit_criteria:
           - name: Churned Users
-            segment: ref:Churned Users
+            segment: churned_users
         steps:
           - type: wait
             name: Wait 7 Days
@@ -386,7 +447,14 @@ journeys:
 
           - type: merge
             name: Merge Retention
+            next: Wait After Retention
+
+          - type: wait
+            name: Wait After Retention
             next: End Stage 3
+            with:
+              duration: 1
+              unit: day
 
           - type: end
             name: End Stage 3
@@ -449,7 +517,7 @@ journeys:
 #     name: End Stage
 
 # =============================================================================
-# Wait Condition Pattern (use when waiting for a user action with timeout)
+# Condition Wait Pattern (use when waiting for a user action with timeout)
 # =============================================================================
 #
 # IMPORTANT: Each path (met / timeout) MUST lead to a DIFFERENT action.
@@ -457,7 +525,7 @@ journeys:
 # the condition wait is pointless — use a simple duration wait instead.
 #
 # Flow: Offer Email → Wait for Purchase(Met/Timeout)
-#       Met → Thank You Email → Merge → End
+#       Met → Thank You Email → Merge → Wait 1 Day → End
 #       Timeout → Discount Coupon → Merge
 #
 # steps:
@@ -492,7 +560,63 @@ journeys:
 #
 #   - type: merge
 #     name: Merge Purchase
+#     next: Wait After Purchase
+#
+#   - type: wait
+#     name: Wait After Purchase
 #     next: End Stage
+#     with:
+#       duration: 1
+#       unit: day
 #
 #   - type: end
 #     name: End Stage
+
+# =============================================================================
+# Linear Pattern (no branching — use for simple sequential stages)
+# =============================================================================
+#
+# Flow: Activation → Wait → Activation → Wait → End
+#
+# steps:
+#   - type: activation
+#     name: Send Recommendation
+#     next: Wait 3 Days
+#     with:
+#       activation: recommendation-email
+#
+#   - type: wait
+#     name: Wait 3 Days
+#     next: Send Follow Up
+#     with:
+#       duration: 3
+#       unit: day
+#
+#   - type: activation
+#     name: Send Follow Up
+#     next: Wait 1 Day
+#     with:
+#       activation: follow-up-email
+#
+#   - type: wait
+#     name: Wait 1 Day
+#     next: End Stage
+#     with:
+#       duration: 1
+#       unit: day
+#
+#   - type: end
+#     name: End Stage
+
+# =============================================================================
+# Escalation Pattern (chained condition waits for progressive messaging)
+# =============================================================================
+#
+# For "reminder → stronger reminder → final offer" flows, chain
+# condition waits sequentially:
+#
+# Flow: Offer Email → Wait for Purchase(Met/Timeout)
+#       Met → Thank You → Merge → Wait → End
+#       Timeout → Discount 10% → Wait for Purchase 2(Met/Timeout)
+#                 Met → Thank You → Merge
+#                 Timeout → Discount 20% → Merge

@@ -8,7 +8,7 @@
 #   - Stage milestones
 #   - Stage exit_criteria
 #
-# Decision point branches and wait conditions come in Step 2.
+# Decision point branches and condition waits come in Step 2.
 #
 # =============================================================================
 # *** STOP — Discovery & Data Analysis FIRST (do NOT skip) ***
@@ -36,17 +36,16 @@
 # and confirmed real attribute names and threshold values with actual data.
 #
 # --- Segment Strategy ---
-# Ask the client which approach to use:
 #
-# Option A: Create new embedded segments (recommended)
-#   - Use `tdx sg fields` output to build rules
-#   - Define segments inline in the segments: section
+# Always create embedded segments for journey criteria.
+# Use `tdx sg fields` output to build rules.
+# Define segments inline in the segments: section.
 #
-# Option B: Reuse existing segments
-#   - Run `tdx sg list` to discover existing child segments
-#   - Run `tdx sg sql "Segment Name"` to inspect segment rules
-#   - Reference with ref: prefix: segment: ref:Existing Segment
-#   - Even with this approach, some segments will likely need to be embedded
+# NOTE on ref: — ref: can ONLY reference journey-type segments (kind=3)
+# created by other journeys. It does NOT work with regular child segments
+# from `tdx sg list`. When reusing logic from existing segments, pull the
+# other journey (`tdx journey pull`) and copy the segment rules into your
+# new journey's embedded segments.
 #
 # =============================================================================
 # CRITERIA RULES (CRITICAL — understand before writing segments)
@@ -54,16 +53,18 @@
 #
 # 1. Goal: Journey-level success condition. One segment required.
 #
-# 2. entry_criteria: ONLY for Stage 1.
-#    Stage 2+ entry is automatically set by the PREVIOUS stage's milestone.
-#    Do NOT define entry_criteria segments for Stage 2, 3, etc.
+# 2. entry_criteria: Stage 1 requires a NEW segment for entry_criteria.
+#    Stage 2+ entry_criteria in the YAML references the PREVIOUS stage's
+#    milestone segment. Do NOT create new segments for Stage 2+ entry.
+#    (The YAML field is still written, but it reuses the milestone segment.)
 #
-# 3. milestone: Defines WHO ENTERS THE NEXT STAGE (not this stage).
-#    - Stage 1 milestone = Stage 2 entry criteria
-#    - Stage 2 milestone = Stage 3 entry criteria
-#    - Last stage: NO milestone needed (no next stage)
-#    Common mistake: creating a milestone segment for the current stage's users
-#    instead of for users ready to move to the next stage.
+# 3. milestone: Defines WHO MOVES TO THE NEXT STAGE (not this stage's goal).
+#    Think of it as the "graduation criteria" for entering the next stage.
+#    - Stage 1 milestone → used as Stage 2 entry_criteria
+#    - Stage 2 milestone → used as Stage 3 entry_criteria
+#    - Last stage: NO milestone (no next stage)
+#    TIP: Include "— ready for Stage N" in the segment description
+#    to clarify the purpose (e.g., "Users who opened email — ready for Stage 2")
 #
 # 4. exit_criteria: Users removed from the stage (e.g., churned, unsubscribed).
 #    At least one per stage recommended. Can reuse the same segment across stages.
@@ -76,8 +77,8 @@
 # [ ] Stage 1 has entry_criteria segment
 # [ ] Every non-last stage has a milestone segment (for next stage entry)
 # [ ] Last stage has NO milestone
-# [ ] Stage 2+ do NOT have explicit entry_criteria (uses previous milestone)
-# [ ] Every stage has at least one exit_criteria (or ref: to shared one)
+# [ ] Stage 2+ entry_criteria reuses previous stage's milestone (no new segment needed)
+# [ ] Every stage has at least one exit_criteria (can reuse same embedded segment name)
 #
 # --- Segment Rule Reference ---
 # Use `tdx sg fields` output to build rules. Common operators:
@@ -109,12 +110,10 @@
 # Load the **segment** skill for full operator reference, Behavior conditions,
 # filter/timeWindow syntax, and nested condition groups.
 #
-# --- After updating the YAML ---
-#   1. Write ONLY the segments: section with criteria segments
-#   2. Write the updated YAML to the journey file
-#   3. Show the segment design to the client and get confirmation.
-#      Once confirmed, write the YAML and immediately move to Step 2.
-#      Do NOT ask "shall we proceed?" after writing — confirmation was already given.
+# --- After designing the segments ---
+#   1. Show the segment design to the client and get confirmation
+#   2. Once confirmed, write the segments: section to the journey file
+#   3. Immediately move to Step 2 — do NOT ask "shall we proceed?"
 #
 # =============================================================================
 #
@@ -168,10 +167,20 @@ segments:
           operator:
             type: Equal
             value: "true"
-  # exit_criteria (ref:Churned Users — existing segment, no definition needed)
+  # exit_criteria
+  churned_users:
+    description: Users who churned (shared across all stages)
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: status
+          operator:
+            type: Equal
+            value: "churned"
 
   # -- Stage 2: Product Activation --
-  # entry_criteria: automatic (= Stage 1 milestone: email_engaged)
+  # entry_criteria: automatic (→ Stage 1 milestone: email_engaged)
   # milestone (defines who enters Stage 3)
   active_users:
     description: Users with 3+ logins in 7 days — ready for Stage 3
@@ -183,9 +192,9 @@ segments:
           operator:
             type: GreaterEqual
             value: 3
-  # exit_criteria (ref:Churned Users)
+  # exit_criteria: reuse churned_users (same embedded segment name in multiple stages)
 
   # -- Stage 3: Retention & Loyalty (last stage) --
-  # entry_criteria: automatic (= Stage 2 milestone: active_users)
+  # entry_criteria: automatic (→ Stage 2 milestone: active_users)
   # milestone: NONE (last stage — no next stage to enter)
-  # exit_criteria (ref:Churned Users)
+  # exit_criteria: reuse churned_users

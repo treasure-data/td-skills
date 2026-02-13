@@ -1,9 +1,25 @@
 # =============================================================================
-# Step 2: Decision Point & Wait Condition Segments
+# Step 2: Decision Point & Condition Wait Segments
 # =============================================================================
 #
-# Build segments for decision point branches and wait conditions.
+# Build segments for decision point branches and condition waits.
 # Criteria segments (goal, entry, exit, milestone) are already done in Step 1.
+#
+# --- Choosing between decision_point and condition wait ---
+#
+#   Use duration wait + decision_point when:
+#     "Wait 5 days, THEN check if the user logged in"
+#     → Fixed delay, then segment-based branching
+#
+#   Use condition wait (with timeout) when:
+#     "Wait UP TO 5 days for the user to log in, react immediately if they do"
+#     → Respond as soon as the condition is met, with a timeout fallback
+#
+#   If unsure, ask the client: "Should we react immediately when the user
+#   takes the action, or wait a fixed period and then check?"
+#
+# NOTE: Only use segments defined in YOUR segments: section.
+# ref: only works with journey-type segments from other journeys.
 #
 # --- REQUIRED: Plan the stage flows first (do NOT skip) ---
 # Before writing segments, you must understand what decisions and waits
@@ -106,7 +122,7 @@ segments:
   #
   # wait steps: duration only (no segments needed)
 
-  # --- Example: Wait condition segment ---
+  # --- Example: Condition wait segment ---
   # If a stage needs a condition-based wait (e.g., "wait until purchase"):
   #
   # made_purchase:                                             # NEW (wait_condition)

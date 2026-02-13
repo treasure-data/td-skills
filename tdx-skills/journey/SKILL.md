@@ -1,6 +1,6 @@
 ---
 name: journey
-description: Load when the client wants to create, edit, or manage a CDP customer journey. Use for building journey YAML with segments, activations, and stage steps, modifying journey stages or flow logic (decision points, wait conditions, A/B tests), or pushing journey changes to Treasure Data.
+description: Load when the client wants to create, edit, or manage a CDP customer journey. Use for building journey YAML with segments, activations, and stage steps, modifying journey stages or flow logic (decision points, condition waits, A/B tests), or pushing journey changes to Treasure Data.
 ---
 
 # tdx Journey - CDP Journey Orchestration
@@ -49,7 +49,7 @@ tdx journey view "Journey Name" --include-stats
 | Step | What to do | Template |
 |------|-----------|----------|
 | 1 | Criteria segments (goal, entry/exit, milestone) | `templates/step1-criteria.yml` |
-| 2 | Decision point branches + wait condition segments | `templates/step2-decisions.yml` |
+| 2 | Decision point branches + condition wait segments | `templates/step2-decisions.yml` |
 | 3 | Activations | `templates/step3-activations.yml` |
 | 4 | Journey structure + stage steps (one stage at a time) | `templates/step4-journey.yml` |
 | 5 | Validate and push | (see below) |
@@ -75,8 +75,34 @@ Use TD Console "Simulation Mode" to validate before launching.
 
 ## Segment References
 
-- **Embedded**: `segment: my-segment` (defined in `segments:` section)
-- **External**: `segment: ref:Existing Segment` (references existing child segment by name)
+- **Embedded** (recommended): `segment: my-segment` (defined in `segments:` section — always create new segments this way)
+- **External ref**: `segment: ref:Segment Name` (references a journey-type segment from another journey)
+
+### `ref:` limitations
+
+`ref:` can ONLY reference **journey-type segments (kind=3)** — segments that were created by another journey's push. It does NOT work with regular child segments created via `tdx sg push`.
+
+**Valid workflow for `ref:`:**
+1. `tdx journey pull "Existing Journey"` → segments appear as `ref:SegmentName`
+2. Create a new journey YAML referencing those same segments via `ref:`
+3. `tdx journey push` → works because the referenced segments are already journey-type
+
+**Do NOT** search for existing batch segments with `tdx sg list` and reference them with `ref:`. This will resolve the ID but the journey API will reject it.
+
+**When in doubt, use embedded segments.** They are always safe and give you full control over the rule definition.
+
+## Goal Target (Optional)
+
+When the journey goal is met, optionally route users to another journey:
+
+```yaml
+goal:
+  name: Made Purchase
+  segment: purchasers
+  target:                    # Optional: jump when goal met
+    journey: Post-Purchase Journey
+    stage: Thank You
+```
 
 ## Wait Step Options
 
@@ -84,19 +110,34 @@ Use TD Console "Simulation Mode" to validate before launching.
 # Simple wait (duration)
 - type: wait
   name: Wait 7 Days
+  next: Next Step
   with:
     duration: 7
     unit: day                          # day | week
 
+# Condition wait (react immediately when condition is met)
+- type: wait
+  name: Wait for Purchase
+  with:                                # No top-level next: (paths inside condition)
+    condition:
+      segment: made-purchase           # Wait until segment match
+      next: Thank You Path             # Path when matched
+      timeout:
+        duration: 14
+        unit: day
+        next: Timeout Path             # Path when max wait exceeded
+
 # Wait until specific date
 - type: wait
   name: Wait Until Launch
+  next: Next Step
   with:
     wait_until: "2025-04-01"
 
 # Wait for specific days of week
 - type: wait
   name: Wait for Weekday
+  next: Next Step
   with:
     duration: 7
     unit: day
@@ -109,6 +150,13 @@ Use TD Console "Simulation Mode" to validate before launching.
 - Max 120 events per journey (API constraint)
 - Max 70 events per stage (API constraint)
 - Max 30 versions per journey (API constraint)
+
+## Best Practices
+
+- **Frequency capping**: Use wait steps between activations to control message frequency. Avoid sending more than 1 message per day per channel.
+- **Consent management**: Include opt-in/subscription status in entry_criteria or exit_criteria segments (e.g., `email_opt_in = true`).
+- **Suppression**: Use exit_criteria to remove users who should stop receiving messages (e.g., recent purchasers, open support tickets).
+- **Reentry mode**: Use `no_reentry` for one-time campaigns, `reentry_unless_goal_achieved` for ongoing programs, `reentry_always` for recurring triggers.
 
 ## Related Skills
 
