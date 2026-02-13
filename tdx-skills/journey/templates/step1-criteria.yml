@@ -11,6 +11,44 @@
 # Decision point branches and wait conditions come in Step 2.
 #
 # =============================================================================
+# *** STOP — Discovery & Data Analysis FIRST (do NOT skip) ***
+# =============================================================================
+#
+# You MUST run these commands and analyze real data BEFORE writing any segments.
+# Do NOT propose segment rules based on guesses or assumptions.
+#
+# 1. Get the output table name:
+#      tdx ps desc -o
+#
+# 2. Discover available attributes and behaviors:
+#      tdx sg fields
+#
+# 3. Analyze actual data values to determine rule thresholds:
+#      tdx query "SELECT column, COUNT(*) FROM table GROUP BY 1 ORDER BY 2 DESC LIMIT 20"
+#
+#    Column names alone are NOT enough to write rules.
+#    You MUST query actual data to understand:
+#      - What values exist (e.g., status column: "active", "churned", "pending"?)
+#      - Value distributions (e.g., avg purchase amount, login count ranges)
+#      - Behavior table names and their row counts
+#
+# Do NOT proceed to writing segments until you have run discovery commands
+# and confirmed real attribute names and threshold values with actual data.
+#
+# --- Segment Strategy ---
+# Ask the client which approach to use:
+#
+# Option A: Create new embedded segments (recommended)
+#   - Use `tdx sg fields` output to build rules
+#   - Define segments inline in the segments: section
+#
+# Option B: Reuse existing segments
+#   - Run `tdx sg list` to discover existing child segments
+#   - Run `tdx sg sql "Segment Name"` to inspect segment rules
+#   - Reference with ref: prefix: segment: ref:Existing Segment
+#   - Even with this approach, some segments will likely need to be embedded
+#
+# =============================================================================
 # CRITERIA RULES (CRITICAL — understand before writing segments)
 # =============================================================================
 #
@@ -40,41 +78,6 @@
 # [ ] Last stage has NO milestone
 # [ ] Stage 2+ do NOT have explicit entry_criteria (uses previous milestone)
 # [ ] Every stage has at least one exit_criteria (or ref: to shared one)
-#
-# =============================================================================
-#
-# --- REQUIRED: Discovery & Data Analysis First (do NOT skip) ---
-# Before writing ANY segment rules, you MUST:
-#
-# 1. Discover available attributes and behaviors:
-#      tdx sg fields
-#
-# 2. Analyze actual data values to determine rule thresholds:
-#      tdx query "SELECT column, COUNT(*) FROM table GROUP BY 1 ORDER BY 2 DESC LIMIT 20"
-#
-#    Column names alone are NOT enough to write rules.
-#    You MUST query actual data to understand:
-#      - What values exist (e.g., status column: "active", "churned", "pending"?)
-#      - Value distributions (e.g., avg purchase amount, login count ranges)
-#      - Behavior table names and their row counts
-#
-#    Use `tdx ps desc -o` to get the output database/table name for queries.
-#
-# Do NOT guess attribute names or threshold values.
-# Always verify with real data before writing segment rules.
-#
-# --- Segment Strategy ---
-# Ask the client which approach to use:
-#
-# Option A: Create new embedded segments (recommended)
-#   - Use `tdx sg fields` output to build rules
-#   - Define segments inline in the segments: section
-#
-# Option B: Reuse existing segments
-#   - Run `tdx sg list` to discover existing child segments
-#   - Run `tdx sg sql "Segment Name"` to inspect segment rules
-#   - Reference with ref: prefix: segment: ref:Existing Segment
-#   - Even with this approach, some segments will likely need to be embedded
 #
 # --- Segment Rule Reference ---
 # Use `tdx sg fields` output to build rules. Common operators:
