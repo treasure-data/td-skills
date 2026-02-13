@@ -1,0 +1,83 @@
+# Simple Data Transformation Activation Action
+# Use case: Format phone numbers and clean email addresses before export
+
+timezone: UTC
+
+_export:
+  # Activation parameters (automatically provided)
+  segment_id: ${segment_id}
+  activation_id: ${activation_id}
+  activation_output_database: ${activation_output_database}
+  activation_output_table: ${activation_output_table}
+  profile_count: ${profile_count}
+
+  # Configuration
+  td:
+    database: ${activation_output_database}
+
++start:
+  echo>: "Starting data transformation for activation ${activation_id}"
+
++transform_data:
+  td>: |
+    SELECT
+      customer_id,
+
+      -- Clean and standardize email
+      LOWER(TRIM(email)) AS email,
+
+      -- Standardize name capitalization
+      INITCAP(TRIM(first_name)) AS first_name,
+      INITCAP(TRIM(last_name)) AS last_name,
+
+      -- Format phone: remove non-digits and format as +1-XXX-XXX-XXXX
+      CONCAT(
+        '+1-',
+        SUBSTRING(REGEXP_REPLACE(phone, '[^0-9]', ''), 1, 3),
+        '-',
+        SUBSTRING(REGEXP_REPLACE(phone, '[^0-9]', ''), 4, 3),
+        '-',
+        SUBSTRING(REGEXP_REPLACE(phone, '[^0-9]', ''), 7, 4)
+      ) AS phone_formatted,
+
+      -- Keep original for reference
+      phone AS phone_original,
+
+      -- Other attributes
+      country,
+      city,
+      postal_code
+
+    FROM ${activation_output_database}.${activation_output_table}
+    WHERE email IS NOT NULL
+      AND phone IS NOT NULL
+      AND LENGTH(REGEXP_REPLACE(phone, '[^0-9]', '')) = 10  -- Valid US phone
+  database: ${activation_output_database}
+  create_table: transformed_profiles_${activation_id}
+
++validate_transformation:
+  td>: |
+    SELECT
+      COUNT(*) AS total_profiles,
+      COUNT(CASE WHEN email LIKE '%@%.%' THEN 1 END) AS valid_emails,
+      COUNT(CASE WHEN phone_formatted LIKE '+1-___-___-____' THEN 1 END) AS valid_phones
+    FROM ${activation_output_database}.transformed_profiles_${activation_id}
+  database: ${activation_output_database}
+
++export_to_destination:
+  td_result_export>:
+    database: ${activation_output_database}
+    table: transformed_profiles_${activation_id}
+    result_url: "twilio://your-twilio-authentication"
+    # Replace with your actual authentication
+
++cleanup:
+  td_ddl>:
+  drop_tables:
+    - ${activation_output_database}.transformed_profiles_${activation_id}
+
++finish:
+  echo>: "Transformation completed. Exported ${profile_count} profiles for activation ${activation_id}"
+
+_error:
+  echo>: "Transformation failed for activation ${activation_id}. Check logs for details."

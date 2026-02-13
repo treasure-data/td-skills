@@ -1,0 +1,170 @@
+# Multi-Platform Export Activation Action
+# Use case: Export the same segment to multiple marketing platforms simultaneously
+
+timezone: UTC
+
+_export:
+  # Activation parameters (automatically provided)
+  segment_id: ${segment_id}
+  activation_id: ${activation_id}
+  activation_output_database: ${activation_output_database}
+  activation_output_table: ${activation_output_table}
+  profile_count: ${profile_count}
+
+  td:
+    database: ${activation_output_database}
+
++start:
+  echo>: "Starting multi-platform export for activation ${activation_id}"
+
++prepare_base_data:
+  td>: |
+    SELECT
+      customer_id,
+      email,
+      first_name,
+      last_name,
+      phone,
+      country,
+      city,
+      customer_tier,
+      total_lifetime_value
+    FROM ${activation_output_database}.${activation_output_table}
+    WHERE email IS NOT NULL
+  database: ${activation_output_database}
+  create_table: base_export_${activation_id}
+
++prepare_platform_specific_data:
+  _parallel: true
+
+  # Prepare data for Braze (no hashing required)
+  +prepare_braze_data:
+    td>: |
+      SELECT
+        email AS external_id,
+        first_name,
+        last_name,
+        phone,
+        country,
+        customer_tier,
+        total_lifetime_value
+      FROM ${activation_output_database}.base_export_${activation_id}
+    database: ${activation_output_database}
+    create_table: braze_export_${activation_id}
+
+  # Prepare data for Google Ads (hash emails)
+  +prepare_google_ads_data:
+    td>: |
+      SELECT
+        SHA256(LOWER(TRIM(email))) AS hashed_email,
+        SHA256(REGEXP_REPLACE(LOWER(phone), '[^0-9]', '')) AS hashed_phone,
+        country
+      FROM ${activation_output_database}.base_export_${activation_id}
+    database: ${activation_output_database}
+    create_table: google_ads_export_${activation_id}
+
+  # Prepare data for Meta/Facebook (hash PII)
+  +prepare_meta_data:
+    td>: |
+      SELECT
+        SHA256(LOWER(TRIM(email))) AS email_hash,
+        SHA256(LOWER(TRIM(first_name))) AS fn_hash,
+        SHA256(LOWER(TRIM(last_name))) AS ln_hash,
+        SHA256(REGEXP_REPLACE(phone, '[^0-9]', '')) AS ph_hash,
+        LOWER(country) AS country
+      FROM ${activation_output_database}.base_export_${activation_id}
+    database: ${activation_output_database}
+    create_table: meta_export_${activation_id}
+
+  # Prepare data for Salesforce Marketing Cloud
+  +prepare_sfmc_data:
+    td>: |
+      SELECT
+        email AS SubscriberKey,
+        email AS EmailAddress,
+        first_name AS FirstName,
+        last_name AS LastName,
+        phone AS Phone,
+        country AS Country,
+        city AS City,
+        customer_tier AS CustomerTier,
+        total_lifetime_value AS LifetimeValue
+      FROM ${activation_output_database}.base_export_${activation_id}
+    database: ${activation_output_database}
+    create_table: sfmc_export_${activation_id}
+
++export_to_platforms:
+  _parallel: true
+
+  +export_to_braze:
+    td_result_export>:
+      database: ${activation_output_database}
+      table: braze_export_${activation_id}
+      result_url: "braze://braze-authentication"
+      # Configure Braze-specific settings
+
+  +export_to_google_ads:
+    td_result_export>:
+      database: ${activation_output_database}
+      table: google_ads_export_${activation_id}
+      result_url: "google_ads://google-ads-authentication"
+      # Configure Google Ads-specific settings
+
+  +export_to_meta:
+    td_result_export>:
+      database: ${activation_output_database}
+      table: meta_export_${activation_id}
+      result_url: "facebook_custom_audiences://meta-authentication"
+      # Configure Meta-specific settings
+
+  +export_to_sfmc:
+    td_result_export>:
+      database: ${activation_output_database}
+      table: sfmc_export_${activation_id}
+      result_url: "salesforce_marketing_cloud://sfmc-authentication"
+      # Configure SFMC-specific settings
+
++log_exports:
+  td>: |
+    SELECT
+      '${activation_id}' AS activation_id,
+      '${segment_id}' AS segment_id,
+      platform,
+      profile_count,
+      CURRENT_TIMESTAMP AS exported_at
+    FROM (
+      SELECT 'Braze' AS platform, COUNT(*) AS profile_count
+      FROM ${activation_output_database}.braze_export_${activation_id}
+
+      UNION ALL
+
+      SELECT 'Google Ads' AS platform, COUNT(*) AS profile_count
+      FROM ${activation_output_database}.google_ads_export_${activation_id}
+
+      UNION ALL
+
+      SELECT 'Meta' AS platform, COUNT(*) AS profile_count
+      FROM ${activation_output_database}.meta_export_${activation_id}
+
+      UNION ALL
+
+      SELECT 'Salesforce Marketing Cloud' AS platform, COUNT(*) AS profile_count
+      FROM ${activation_output_database}.sfmc_export_${activation_id}
+    )
+  database: analytics
+  insert_into: multi_platform_export_log
+
++cleanup:
+  td_ddl>:
+  drop_tables:
+    - ${activation_output_database}.base_export_${activation_id}
+    - ${activation_output_database}.braze_export_${activation_id}
+    - ${activation_output_database}.google_ads_export_${activation_id}
+    - ${activation_output_database}.meta_export_${activation_id}
+    - ${activation_output_database}.sfmc_export_${activation_id}
+
++finish:
+  echo>: "Multi-platform export completed for activation ${activation_id}. Exported to 4 platforms."
+
+_error:
+  echo>: "Multi-platform export failed for activation ${activation_id}. Check logs for platform-specific errors."
