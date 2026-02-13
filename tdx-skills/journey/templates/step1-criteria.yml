@@ -97,6 +97,10 @@
 #       type: Count                # Count | Sum | Avg | Min | Max
 #     source: behavior_purchases   # behavior_<table_name>
 #
+# --- If segment rules aren't working ---
+# Load the **segment** skill for full operator reference, Behavior conditions,
+# filter/timeWindow syntax, and nested condition groups.
+#
 # --- After updating the YAML ---
 #   1. Write ONLY the segments: section with criteria segments
 #   2. Write the updated YAML to the journey file

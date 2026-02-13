@@ -16,7 +16,10 @@
 # Do NOT guess connection names or connector_config fields.
 # Always use actual values from these commands.
 #
-# See connector-config skill for connector-specific fields.
+# --- If activation config isn't working ---
+# Load the **activation** skill for full schedule options (weekly/monthly/cron),
+# column masking, behavior data export, and advanced schedule fields.
+# Load the **connector-config** skill for connector-specific fields.
 #
 # --- Schedule Strategy ---
 # Ask the client which timing to use:

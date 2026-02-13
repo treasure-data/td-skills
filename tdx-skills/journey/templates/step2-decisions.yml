@@ -29,6 +29,10 @@
 # For EVERY condition wait, ensure the trigger condition has a segment.
 # Missing even one segment will cause errors in later steps.
 #
+# --- If segment rules aren't working ---
+# Load the **segment** skill for full operator reference, Behavior conditions,
+# filter/timeWindow syntax, and nested condition groups.
+#
 # --- After updating the YAML ---
 #   1. Add the new segments to the segments: section with "# NEW" comments
 #   2. Add a structure summary at the bottom as comments
