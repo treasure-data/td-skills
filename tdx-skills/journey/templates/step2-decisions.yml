@@ -114,8 +114,8 @@ segments:
   #   rule:
   #     type: And
   #     conditions:
-  #       - type: Value
-  #         attribute: ""
+  #       - type: Behavior
+  #         attribute: purchase_event
   #         operator:
   #           type: GreaterEqual
   #           value: 1

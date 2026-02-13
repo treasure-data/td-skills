@@ -80,22 +80,27 @@
 # Use `tdx sg fields` output to build rules. Common operators:
 #
 #   Equal             Exact match:     value: "true"
+#   NotEqual          Not equal:       value: "inactive"
 #   In                Multiple values: value: ["a", "b"]
 #   GreaterEqual      Numeric:         value: 1000
 #   LessEqual         Numeric:         value: 7
+#   Between           Range:           min: 18, max: 65
 #   TimeWithinPast    Recency:         value: 7, unit: day
-#   TimeBeforePast    Inactivity:      value: 30, unit: day
-#   Contain           String contains: value: "@gmail.com"
+#   IsNull            Null check:      (no value, use not: true for "is not null")
+#   Contain           String contains: value: ["@gmail.com"]
 #
-# Behavior aggregation (requires source: behavior_<table_name>):
-#   - type: Value
-#     attribute: ""                # Empty for behavior count
+# Behavior condition (requires source: behavior_<table_name>):
+#   - type: Behavior
+#     attribute: purchase_event
 #     operator:
 #       type: GreaterEqual
 #       value: 1
 #     aggregation:
-#       type: Count                # Count | Sum | Avg | Min | Max
+#       type: Count                # Count | Sum | Average | Min | Max
 #     source: behavior_purchases   # behavior_<table_name>
+#     timeWindow:                  # Optional time restriction
+#       duration: 30
+#       unit: day
 #
 # --- If segment rules aren't working ---
 # Load the **segment** skill for full operator reference, Behavior conditions,
