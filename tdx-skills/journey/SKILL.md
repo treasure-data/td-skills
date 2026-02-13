@@ -78,12 +78,37 @@ Use TD Console "Simulation Mode" to validate before launching.
 - **Embedded**: `segment: my-segment` (defined in `segments:` section)
 - **External**: `segment: ref:Existing Segment` (references existing child segment by name)
 
+## Wait Step Options
+
+```yaml
+# Simple wait (duration)
+- type: wait
+  name: Wait 7 Days
+  with:
+    duration: 7
+    unit: day                          # day | week
+
+# Wait until specific date
+- type: wait
+  name: Wait Until Launch
+  with:
+    wait_until: "2025-04-01"
+
+# Wait for specific days of week
+- type: wait
+  name: Wait for Weekday
+  with:
+    duration: 7
+    unit: day
+    days_of_week: ["monday", "wednesday", "friday"]
+```
+
 ## Limits
 
-- Max 8 stages per journey
-- Max 120 events per journey
-- Max 70 events per stage
-- Max 30 versions per journey
+- Max 8 stages per journey (validated locally)
+- Max 120 events per journey (API constraint)
+- Max 70 events per stage (API constraint)
+- Max 30 versions per journey (API constraint)
 
 ## Related Skills
 

@@ -107,5 +107,6 @@ Only include `unique` when `mode` is `update`.
 
 ## Related Skills
 
-- **segment** - Child segment activations
-- **journey** - Journey activations
+- **activation** - Activation structure (connection, schedule, columns, notifications)
+- **segment** - Segment rule syntax
+- **journey** - Journey structure and activation steps

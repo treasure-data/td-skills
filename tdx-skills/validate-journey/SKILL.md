@@ -1,6 +1,6 @@
 ---
 name: validate-journey
-description: Validates CDP journey YAML configurations against tdx schema requirements. Use when reviewing journey structure, checking step types and parameters, verifying segment references, or troubleshooting journey configuration errors before pushing to Treasure Data.
+description: Validation reference for CDP journey YAML. Lists all error codes, step type requirements, and flow control rules. Use alongside the **journey** skill when troubleshooting validation errors from `tdx journey validate` or `tdx journey push --dry-run`, checking step parameters, or understanding flow control constraints (merge, branching, convergence).
 ---
 
 # Journey YAML Validation
@@ -101,13 +101,13 @@ stages:
         name: end
 ```
 
-**Limits**: Max 8 stages, 120 events/journey, 70 events/stage, 30 versions
+**Limits**: Max 8 stages (validated locally). API constraints: 120 events/journey, 70 events/stage, 30 versions
 
 ## Step Types Quick Reference
 
 | Type | Required `with` | Notes |
 |------|-----------------|-------|
-| `wait` | `duration` + `unit` OR `condition` | condition has `segment`, optional `next`, `timeout` |
+| `wait` | `duration` + `unit`, OR `condition`, OR `wait_until` | Optional: `days_of_week`, `condition` with `segment`/`timeout` |
 | `activation` | `activation` | key from activations section |
 | `decision_point` | `branches[]` | each needs segment, next |
 | `ab_test` | `variants[]` | percentages must sum to 100 |
