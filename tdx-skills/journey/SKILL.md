@@ -65,7 +65,9 @@ tdx journey validate path/to/journey.yml   # Local validation
 tdx journey push --dry-run                 # API validation
 ```
 
-Fix errors, then push as draft first:
+Preview the journey with the YAML file path. Ask the client to verify the visual flow structure (branches, merge points, step connections) before pushing.
+
+Fix errors, then push:
 
 ```bash
 tdx journey push path/to/journey.yml --yes
