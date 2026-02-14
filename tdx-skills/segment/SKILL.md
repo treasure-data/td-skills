@@ -61,168 +61,57 @@ Four condition types can be used inside `conditions:`:
 
 ## Operators
 
-### Comparison
+| Category | Types | Required Fields | Example |
+|----------|-------|----------------|---------|
+| Comparison | `Equal`, `NotEqual`, `Greater`, `GreaterEqual`, `Less`, `LessEqual` | `value` (string/number) | `type: Equal, value: "active"` |
+| Range | `Between` | `min` and/or `max` | `min: 18, max: 65` |
+| Set | `In`, `NotIn` | `value` (array) | `value: ["US", "CA"]` |
+| Text | `Contain`, `StartWith`, `EndWith` | `value` (string array) | `value: ["@gmail.com"]` |
+| Pattern | `Regexp` | `value` (string) | `value: "^[A-Z]{2}[0-9]{4}$"` |
+| Null | `IsNull` | (none) | `type: IsNull` (use `not: true` for "is not null") |
+| Time | `TimeWithinPast`, `TimeWithinNext` | `value` + `unit` | `value: 30, unit: day` (Past=recency, Next=future window) |
+| Time | `TimeRange` | `duration` + `from` | See example below |
+| Time | `TimeToday` | (none) | Matches today's date only |
 
-```yaml
-operator:
-  type: Equal              # Equal | NotEqual | Greater | GreaterEqual | Less | LessEqual
-  value: "active"          # string or number
-```
+**Negation**: Any operator supports `not: true` (e.g., `type: Contain, value: ["test"], not: true`)
 
-### Range
+**Units**: `year | quarter | month | week | day | hour | minute | second` (singular only)
 
-```yaml
-operator:
-  type: Between            # Between only
-  min: 18                  # lower bound
-  max: 65                  # upper bound
-```
+### TimeRange Example
 
-### Set
-
-```yaml
-operator:
-  type: In                 # In | NotIn
-  value: ["US", "CA"]     # array of strings or numbers
-```
-
-### Text Match
-
-```yaml
-operator:
-  type: Contain            # Contain | StartWith | EndWith
-  value: ["@gmail.com"]   # array of strings
-```
-
-### Pattern
-
-```yaml
-operator:
-  type: Regexp
-  value: "^[A-Z]{2}[0-9]{4}$"
-```
-
-### Null Check
-
-```yaml
-operator:
-  type: IsNull             # no value needed
-# Negate with not:
-operator:
-  type: IsNull
-  not: true                # "is not null"
-```
-
-### Time
-
-```yaml
-operator:
-  type: TimeWithinPast     # TimeWithinPast | TimeWithinNext
-  value: 30
-  unit: day                # year | quarter | month | week | day | hour | minute | second
-```
-
-### Time Range
+"7-day window starting from 1 month ago":
 
 ```yaml
 operator:
   type: TimeRange
   duration:
-    day: 7
+    day: 7                       # Window length
   from:
-    last: 1
+    last: 1                      # Starting point offset
     unit: month
-```
-
-### Time Today
-
-```yaml
-operator:
-  type: TimeToday          # Matches today's date only
-```
-
-### Operator Negation
-
-Any operator can be negated with `not: true`:
-
-```yaml
-operator:
-  type: Contain
-  value: ["test"]
-  not: true                # "does not contain"
 ```
 
 ## Behavior Conditions
 
-Query behavior table data with aggregations. Use `type: Behavior` (not `Value`).
+Query behavior table data with aggregations. Use `type: Behavior` (not `Value`). `attribute` can be empty (`""`) for pure Count aggregation.
 
 ```yaml
-# Count purchases in last 30 days
+# Sum order_total for Electronics purchases in last 90 days
 - type: Behavior
-  attribute: purchase_event
+  attribute: order_total             # Use "" for pure count (no specific column)
   source: behavior_purchase_history  # behavior_<table_name> (prefix required)
   aggregation:
-    type: Count
-  operator:
-    type: GreaterEqual
-    value: 3
-  timeWindow:
-    duration: 30
-    unit: day
-```
-
-### Aggregation Types
-
-| Type | Required Fields | Description |
-|------|----------------|-------------|
-| `Count` | (none) | Count rows |
-| `Sum` | `column: col_name` | Sum column values |
-| `Average` | `column: col_name` | Average column values |
-| `Min` | `column: col_name` | Minimum value |
-| `Max` | `column: col_name` | Maximum value |
-
-### timeWindow — Simple Time Filter
-
-Restricts behavior data to a recent time window:
-
-```yaml
-- type: Behavior
-  attribute: login_event
-  source: login_history
-  aggregation:
-    type: Count
-  operator:
-    type: GreaterEqual
-    value: 1
-  timeWindow:                        # Only count within this window
-    duration: 7
-    unit: day                        # year | month | week | day | hour | minute | second
-```
-
-### filter — Advanced Behavior Filter
-
-For filtering behavior rows by column values before aggregation:
-
-```yaml
-# Sum order_total where category is "Electronics", in last 90 days
-- type: Behavior
-  attribute: order_total
-  source: behavior_purchase_history
-  aggregation:
-    type: Sum
-    column: order_total
+    type: Sum                        # Count | Sum | Average | Min | Max
+    column: order_total              # Required for Sum/Average/Min/Max (not Count)
   operator:
     type: Greater
     value: 500
-  filter:
+  timeWindow:                        # Optional: restrict to recent window
+    duration: 90
+    unit: day
+  filter:                            # Optional: filter rows before aggregation
     type: And
     conditions:
-      - type: Value
-        attribute: timestamp
-        operator:
-          type: TimeWithinPast
-          value: 90
-          unit: day
       - type: Value
         attribute: category
         operator:
@@ -230,24 +119,7 @@ For filtering behavior rows by column values before aggregation:
           value: "Electronics"
 ```
 
-Filter conditions support the same operators as top-level Value conditions. Common patterns:
-
-```yaml
-# Time filter on behavior rows
-- type: Value
-  attribute: timestamp
-  operator:
-    type: TimeWithinPast
-    value: 30
-    unit: day
-
-# Value filter on behavior column
-- type: Value
-  attribute: brand
-  operator:
-    type: In
-    value: ["Nike", "Adidas"]
-```
+`filter` supports the same operators as top-level Value conditions.
 
 ## Segment References (Include/Exclude)
 
@@ -271,38 +143,22 @@ Combine And/Or logic with nesting:
 rule:
   type: And
   conditions:
-    - type: Or                   # Nested group
-      description: "US or Canada customers"
+    - type: Or
       conditions:
         - type: Value
           attribute: country
-          operator:
-            type: Equal
-            value: "US"
+          operator: { type: Equal, value: "US" }
         - type: Value
           attribute: country
-          operator:
-            type: Equal
-            value: "CA"
-    - type: Value                # Combined with And
+          operator: { type: Equal, value: "CA" }
+    - type: Value
       attribute: ltv
-      operator:
-        type: Greater
-        value: 1000
+      operator: { type: Greater, value: 1000 }
 ```
 
 ## Array Matching
 
-For attributes that contain arrays:
-
-```yaml
-- type: Value
-  attribute: tags
-  operator:
-    type: Equal
-    value: "vip"
-  arrayMatching: any             # any | all | { atLeast: N } | { atMost: N } | { exactly: N }
-```
+Add `arrayMatching` to Value/Behavior conditions: `any | all | { atLeast: N } | { atMost: N } | { exactly: N }`
 
 ## Folder Structure
 
@@ -319,7 +175,7 @@ segments/customer-360/
 |-------|----------|
 | Context not set | `tdx sg use "Customer 360"` |
 | Field not available | `tdx sg fields` or run parent workflow |
-| Between missing bounds | Both `min` and `max` required |
+| Between missing bounds | At least one of `min` or `max` required |
 | Behavior source unknown | Check parent segment behavior table names |
 
 ## Related Skills

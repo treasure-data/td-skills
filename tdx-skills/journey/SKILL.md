@@ -25,13 +25,11 @@ Build journey YAML **incrementally** through 5 steps.
 
 **File location**: `./segments/(parent-segment-name)/journey-name.yml`
 
-## Prerequisites (MUST run before starting)
+## Prerequisites
 
 ```bash
 tdx sg pull "Parent Segment Name"   # Pull parent segment data (sets context)
 ```
-
-Each step has its own required discovery commands. Do NOT skip them — they provide real attribute names, connection names, and config fields needed to write accurate YAML.
 
 ## Commands
 
@@ -109,7 +107,7 @@ goal:
 ## Wait Step Options
 
 ```yaml
-# Simple wait (duration)
+# Duration wait
 - type: wait
   name: Wait 7 Days
   next: Next Step
@@ -117,41 +115,24 @@ goal:
     duration: 7
     unit: day                          # day | week
 
-# Condition wait (react immediately when condition is met)
+# Condition wait (NO top-level next: — paths inside condition)
 - type: wait
   name: Wait for Purchase
-  with:                                # No top-level next: (paths inside condition)
+  with:
     condition:
-      segment: made-purchase           # Wait until segment match
-      next: Thank You Path             # Path when matched
+      segment: made-purchase
+      next: Thank You Path
       timeout:
         duration: 14
         unit: day
-        next: Timeout Path             # Path when max wait exceeded
-
-# Wait until specific date
-- type: wait
-  name: Wait Until Launch
-  next: Next Step
-  with:
-    wait_until: "2025-04-01"
-
-# Wait for specific days of week
-- type: wait
-  name: Wait for Weekday
-  next: Next Step
-  with:
-    duration: 7
-    unit: day
-    days_of_week: ["monday", "wednesday", "friday"]
+        next: Timeout Path
 ```
 
-## Limits
+Other wait options: `wait_until: "2025-04-01"` | `days_of_week: ["monday", "wednesday", "friday"]`
 
-- Max 8 stages per journey (validated locally)
-- Max 120 events per journey (API constraint)
-- Max 70 events per stage (API constraint)
-- Max 30 versions per journey (API constraint)
+**API constraint**: A wait step must follow every activation step (place after merge if activation → merge).
+
+**Limits**: Max 8 stages (local), 120 events/journey, 70 events/stage, 30 versions (API)
 
 ## Best Practices
 

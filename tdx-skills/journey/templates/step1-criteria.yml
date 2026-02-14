@@ -4,109 +4,38 @@
 #
 # Build segments for journey criteria ONLY:
 #   - Goal segment
-#   - Stage entry_criteria
-#   - Stage milestones
-#   - Stage exit_criteria
+#   - Stage entry_criteria, milestones, exit_criteria
 #
 # Decision point branches and condition waits come in Step 2.
 #
-# ---
-# *** STOP — Discovery & Data Analysis FIRST (do NOT skip) ***
-# ---
+# --- Discovery FIRST (do NOT skip) ---
 #
-# You MUST run these commands and analyze real data BEFORE writing any segments.
-# Do NOT propose segment rules based on guesses or assumptions.
+# Run these commands and analyze real data BEFORE writing segments:
+#   tdx ps desc -o                    # Get output table name
+#   tdx sg fields                     # Discover attributes and behaviors
+#   tdx query "SELECT col, COUNT(*) FROM table GROUP BY 1 ORDER BY 2 DESC LIMIT 20"
 #
-# 1. Get the output table name:
-#      tdx ps desc -o
-#
-# 2. Discover available attributes and behaviors:
-#      tdx sg fields
-#
-# 3. Analyze actual data values to determine rule thresholds:
-#      tdx query "SELECT column, COUNT(*) FROM table GROUP BY 1 ORDER BY 2 DESC LIMIT 20"
-#
-#    Column names alone are NOT enough to write rules.
-#    You MUST query actual data to understand:
-#      - What values exist (e.g., status column: "active", "churned", "pending"?)
-#      - Value distributions (e.g., avg purchase amount, login count ranges)
-#      - Behavior table names and their row counts
-#
-# Do NOT proceed to writing segments until you have run discovery commands
-# and confirmed real attribute names and threshold values with actual data.
+# Query actual data to understand values, distributions, and thresholds.
 #
 # --- Segment Strategy ---
 #
-# Always create embedded segments for journey criteria.
-# Use `tdx sg fields` output to build rules.
-# Define segments inline in the segments: section.
+# Always create embedded segments. Use `tdx sg fields` output to build rules.
+# ref: only works with journey-type segments (kind=3) from other journeys.
+# To reuse logic, pull the other journey and copy segment rules.
 #
-# NOTE on ref: — ref: can ONLY reference journey-type segments (kind=3)
-# created by other journeys. It does NOT work with regular child segments
-# from `tdx sg list`. When reusing logic from existing segments, pull the
-# other journey (`tdx journey pull`) and copy the segment rules into your
-# new journey's embedded segments.
+# --- CRITERIA RULES ---
 #
-# ---
-# CRITERIA RULES (CRITICAL — understand before writing segments)
-# ---
+# 1. Goal: Journey-level success. One segment required.
+# 2. entry_criteria: Stage 1 needs a NEW segment. Stage 2+ reuses
+#    previous stage's milestone segment (no new segment needed).
+# 3. milestone: "Graduation criteria" — defines who enters the NEXT stage.
+#    Stage 1 milestone → Stage 2 entry. Last stage: NO milestone.
+#    TIP: Add "— ready for Stage N" in description.
+# 4. exit_criteria: Users removed (churned, unsubscribed). Reusable across stages.
 #
-# 1. Goal: Journey-level success condition. One segment required.
+# Checklist: goal defined, Stage 1 entry exists, non-last stages have milestone,
+# last stage has NO milestone, exit_criteria on every stage.
 #
-# 2. entry_criteria: Stage 1 requires a NEW segment for entry_criteria.
-#    Stage 2+ entry_criteria in the YAML references the PREVIOUS stage's
-#    milestone segment. Do NOT create new segments for Stage 2+ entry.
-#    (The YAML field is still written, but it reuses the milestone segment.)
-#
-# 3. milestone: Defines WHO MOVES TO THE NEXT STAGE (not this stage's goal).
-#    Think of it as the "graduation criteria" for entering the next stage.
-#    - Stage 1 milestone → used as Stage 2 entry_criteria
-#    - Stage 2 milestone → used as Stage 3 entry_criteria
-#    - Last stage: NO milestone (no next stage)
-#    TIP: Include "— ready for Stage N" in the segment description
-#    to clarify the purpose (e.g., "Users who opened email — ready for Stage 2")
-#
-# 4. exit_criteria: Users removed from the stage (e.g., churned, unsubscribed).
-#    At least one per stage recommended. Can reuse the same segment across stages.
-#
-# ---
-# CRITERIA CHECKLIST (verify before showing to client)
-# ---
-#
-# [ ] Goal segment defined
-# [ ] Stage 1 has entry_criteria segment
-# [ ] Every non-last stage has a milestone segment (for next stage entry)
-# [ ] Last stage has NO milestone
-# [ ] Stage 2+ entry_criteria reuses previous stage's milestone (no new segment needed)
-# [ ] Every stage has at least one exit_criteria (can reuse same embedded segment name)
-#
-# --- Segment Rule Reference ---
-# Use `tdx sg fields` output to build rules. Common operators:
-#
-#   Equal             Exact match:     value: "true"
-#   NotEqual          Not equal:       value: "inactive"
-#   In                Multiple values: value: ["a", "b"]
-#   GreaterEqual      Numeric:         value: 1000
-#   LessEqual         Numeric:         value: 7
-#   Between           Range:           min: 18, max: 65
-#   TimeWithinPast    Recency:         value: 7, unit: day
-#   IsNull            Null check:      (no value, use not: true for "is not null")
-#   Contain           String contains: value: ["@gmail.com"]
-#
-# Behavior condition (requires source: behavior_<table_name>):
-#   - type: Behavior
-#     attribute: purchase_event
-#     operator:
-#       type: GreaterEqual
-#       value: 1
-#     aggregation:
-#       type: Count                # Count | Sum | Average | Min | Max
-#     source: behavior_purchases   # behavior_<table_name>
-#     timeWindow:                  # Optional time restriction
-#       duration: 30
-#       unit: day
-#
-# --- If segment rules aren't working ---
 # Load the **segment** skill for full operator reference, Behavior conditions,
 # filter/timeWindow syntax, and nested condition groups.
 #

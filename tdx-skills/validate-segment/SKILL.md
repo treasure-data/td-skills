@@ -67,27 +67,22 @@ Any operator supports `not: true` for negation. This is separate from `NotEqual`
 ```yaml
 - type: Behavior
   attribute: purchase_event        # Can be empty ("") for pure count
-  source: behavior_purchase_history         # Behavior table name (required)
+  source: behavior_purchase_history
   aggregation:
     type: Count                    # Count | Sum | Average | Min | Max
   operator:
     type: GreaterEqual
     value: 1
-  timeWindow:                      # Optional — simple time restriction
+  timeWindow:                      # Optional
     duration: 30
     unit: day
-  filter:                          # Optional — advanced row-level filter
+  filter:                          # Optional (same rules as top-level rule)
     type: And
     conditions:
       - type: Value
         attribute: timestamp
-        operator:
-          type: TimeWithinPast
-          value: 90
-          unit: day
+        operator: { type: TimeWithinPast, value: 90, unit: day }
 ```
-
-`filter` is recursively validated with the same rules as top-level `rule`.
 
 ## Array Matching
 

@@ -110,7 +110,7 @@ journeys:
 
 | Type | Required `with` | Notes |
 |------|-----------------|-------|
-| `wait` | `duration` + `unit`, OR `condition`, OR `wait_until` | Optional: `days_of_week`, `condition` with `segment`/`timeout` |
+| `wait` | `duration` + `unit`, OR `condition`, OR `wait_until` | Condition wait: NO top-level `next:` (paths inside `condition`). Optional: `days_of_week` |
 | `activation` | `activation` | key from activations section |
 | `decision_point` | `branches[]` | each needs segment, next |
 | `ab_test` | `variants[]` | percentages must sum to 100 |
@@ -120,10 +120,19 @@ journeys:
 
 **Important**: `next:` is a direct field on step, not inside `with:`
 
+## Design Rules (not caught by validator)
+
+- Condition wait paths MUST lead to **different actions** — if both paths do the same thing, use duration wait instead
+- Every branch (decision_point, ab_test, condition wait) should perform a **meaningful, distinct action**
+- Prefer flat branching over nested branching — inner branches must merge before joining outer branch
+- A wait step must follow every activation step (place after merge if activation → merge)
+- **Frequency capping**: wait between activations; avoid >1 message/day/channel
+- **Consent/Suppression**: use entry_criteria/exit_criteria segments for opt-in and removal
+
 ## Flow Control Rules
 
 ```yaml
-# Branching pattern: decision → actions → merge → wait → end
+# Pattern: decision → actions → merge → wait → end
 - type: decision_point
   name: Check Status
   with:
@@ -137,12 +146,12 @@ journeys:
 
 - type: activation
   name: Send Offer
-  next: Rejoin                    # Both paths converge on merge
+  next: Rejoin
   with: { activation: offer }
 
 - type: activation
   name: Send Reminder
-  next: Rejoin                    # Both paths converge on merge
+  next: Rejoin
   with: { activation: reminder }
 
 - type: merge
@@ -150,37 +159,35 @@ journeys:
   next: Wait After Rejoin         # Must NOT point to another merge
 
 - type: wait
-  name: Wait After Rejoin         # Wait required after activation (via merge)
+  name: Wait After Rejoin
   next: end
-  with:
-    duration: 1
-    unit: day
+  with: { duration: 1, unit: day }
 
 - type: end
-  name: End Stage                 # Required: every stage needs an end step
+  name: End Stage
 ```
 
 ## Condition Wait Format
 
+Condition wait has NO top-level `next:` — paths are inside `condition`:
+
 ```yaml
-- type: wait
-  name: Wait for Purchase
-  with:
-    condition:
-      segment: made-purchase    # Wait until segment match
-      next: follow-up           # Where to go when condition is matched
-      timeout:                  # Max wait duration
-        duration: 14
-        unit: day
-        next: timeout-path      # Required when using different paths
+with:
+  condition:
+    segment: made-purchase
+    next: matched-path          # Path when condition met
+    timeout:
+      duration: 14
+      unit: day
+      next: timeout-path        # Path when max wait exceeded
 ```
+
+See **journey** skill for all wait step options (duration, wait_until, days_of_week).
 
 ## Segment References
 
 - **Embedded** (recommended): `segment: my-segment` (defined in `segments:` section)
-- **External ref**: `segment: ref:Segment Name` (references a journey-type segment from another journey)
-
-**`ref:` limitation**: `ref:` can ONLY reference journey-type segments (kind=3) created by another journey's push. It does NOT work with regular child segments from `tdx sg list`. When in doubt, use embedded segments.
+- **External ref**: `segment: ref:Segment Name` — see **journey** skill for `ref:` limitations
 
 ## Related Skills
 

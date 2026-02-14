@@ -5,56 +5,24 @@
 # Build segments for decision point branches and condition waits.
 # Criteria segments (goal, entry, exit, milestone) are already done in Step 1.
 #
-# --- Choosing between decision_point and condition wait ---
+# --- decision_point vs condition wait ---
 #
-#   Use duration wait + decision_point when:
-#     "Wait 5 days, THEN check if the user logged in"
-#     → Fixed delay, then segment-based branching
+#   decision_point: "Wait 5 days, THEN check" → fixed delay, then branch
+#   condition wait: "Wait UP TO 5 days, react immediately" → responsive + timeout
+#   If unsure, ask: "React immediately, or wait then check?"
 #
-#   Use condition wait (with timeout) when:
-#     "Wait UP TO 5 days for the user to log in, react immediately if they do"
-#     → Respond as soon as the condition is met, with a timeout fallback
+# --- Plan stage flows first ---
+# For each stage, determine: what decision points, what branches (new segment
+# vs reuse from Step 1 vs excluded catch-all), and any condition waits.
+# Duration waits do NOT need segments.
 #
-#   If unsure, ask the client: "Should we react immediately when the user
-#   takes the action, or wait a fixed period and then check?"
+# Discovery: same as Step 1 (`tdx sg fields`, query actual data).
+# Checklist: every non-excluded branch has a segment, every condition wait
+# has a trigger segment. Load **segment** skill for operator reference.
 #
-# NOTE: Only use segments defined in YOUR segments: section.
-# ref: only works with journey-type segments from other journeys.
-#
-# --- REQUIRED: Plan the stage flows first (do NOT skip) ---
-# Before writing segments, you must understand what decisions and waits
-# each stage needs. For each stage, ask the client:
-#
-#   1. What decision points exist? (e.g., "Did user open email?",
-#      "What is the user's engagement level?")
-#   2. For each decision point, what are the branches?
-#      - Which branches need a NEW segment?
-#      - Which branches reuse an existing segment from Step 1?
-#      - Which branch is the "excluded" catch-all (no segment needed)?
-#   3. Are there any condition-based waits?
-#      (e.g., "Wait until user makes a purchase, up to 7 days")
-#      Duration waits (e.g., "Wait 3 days") do NOT need segments.
-#
-# --- Discovery (if not already done in Step 1) ---
-# Use the same discovery commands as Step 1 to verify attribute names:
-#      tdx sg fields
-#      tdx query "SELECT column, COUNT(*) FROM table GROUP BY 1 ORDER BY 2 DESC LIMIT 20"
-#
-# --- Checklist ---
-# For EVERY decision point, ensure ALL non-excluded branches have a segment.
-# For EVERY condition wait, ensure the trigger condition has a segment.
-# Missing even one segment will cause errors in later steps.
-#
-# --- If segment rules aren't working ---
-# Load the **segment** skill for full operator reference, Behavior conditions,
-# filter/timeWindow syntax, and nested condition groups.
-#
-# --- After designing the segments ---
-#   1. Add the new segments to the segments: section with "# NEW" comments
-#   2. Add a structure summary at the bottom as comments
-#   3. Show the segment design to the client and get confirmation
-#   4. Once confirmed, write the updated YAML and immediately move to Step 3.
-#      Do NOT ask "shall we proceed?" — confirmation was already given.
+# --- After designing ---
+#   1. Add new segments with "# NEW" comments + structure summary
+#   2. Show to client, get confirmation, then move to Step 3
 #
 # ---
 
@@ -121,21 +89,10 @@ segments:
   #
   # wait steps: duration only (no segments needed)
 
-  # --- Example: Condition wait segment ---
-  # If a stage needs a condition-based wait (e.g., "wait until purchase"):
-  #
-  # made_purchase:                                             # NEW (wait_condition)
-  #   description: User completed a purchase
-  #   rule:
-  #     type: And
-  #     conditions:
-  #       - type: Behavior
-  #         attribute: purchase_event
-  #         operator:
-  #           type: GreaterEqual
-  #           value: 1
-  #         aggregation:
-  #           type: Count
-  #         source: behavior_purchases
+  # --- Condition wait segment example ---
+  # made_purchase:                          # NEW (for condition wait)
+  #   rule: { type: And, conditions: [{ type: Behavior, attribute: purchase_event,
+  #     operator: { type: GreaterEqual, value: 1 }, aggregation: { type: Count },
+  #     source: behavior_purchases }] }
 
 # Stage flows: S1=EmailOpen(Opened/NotOpened) S2=Usage(Power/Active/Inactive) S3=NPS(Promoter/Detractor/Passive)

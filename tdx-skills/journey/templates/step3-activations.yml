@@ -4,46 +4,22 @@
 #
 # Define activation destinations for each stage's outbound actions.
 #
-# --- REQUIRED: Discovery First (do NOT skip) ---
-# Before writing ANY activation definitions, you MUST run:
-#
+# --- Discovery First (do NOT skip) ---
 #   tdx connection list                       # List available connections
-#
-# Then for each connection the client wants to use:
-#
 #   tdx connection schema "Connection Name"   # Get connector_config fields
 #
 # Do NOT guess connection names or connector_config fields.
-# Always use actual values from these commands.
 #
-# --- If activation config isn't working ---
-# Load the **activation** skill for full schedule options (weekly/monthly/cron),
-# column masking, behavior data export, and advanced schedule fields.
-# Load the **connector-config** skill for connector-specific fields.
+# Load **activation** skill for schedule options, column masking, behavior export.
+# Load **connector-config** skill for connector-specific fields.
 #
-# --- Schedule Strategy ---
-# Ask the client which timing to use:
+# --- Schedule: ask the client ---
+#   run_after_journey_refresh: true       — most common for journeys
+#   schedule: { type: daily, ... }        — fixed schedule (see activation skill)
 #
-#   run_after_journey_refresh: true   — run after parent segment refresh (most common)
-#   schedule:                         — fixed schedule
-#     type: daily | none
-#     timezone: America/Los_Angeles
-#
-# --- Activation Structure ---
-#   activations:
-#     activation-key:                     # key — referenced in step's with.activation
-#       name: Display Name                # display name
-#       connection: Connection Name       # from tdx connection list
-#       all_columns: true
-#       run_after_journey_refresh: true    # or use schedule: { type: daily, ... }
-#       connector_config:                  # from tdx connection schema
-#         field_name: value
-#
-# --- After designing the activations ---
-#   1. Add activations: section organized by stage with comments
-#   2. Show the activation design to the client and get confirmation
-#   3. Once confirmed, write the updated YAML and immediately move to Step 4.
-#      Do NOT ask "shall we proceed?" — confirmation was already given.
+# --- After designing ---
+#   1. Add activations: section organized by stage
+#   2. Show to client, get confirmation, then move to Step 4
 #
 # ---
 
@@ -76,17 +52,5 @@ activations:
     connector_config:
       message_template: welcome_reminder
 
-  # Repeat same pattern for each stage activation:
-  # follow-up-email, upsell-email, feature-tips-email, nps-survey-email, etc.
-
-  # -- Example: fixed schedule instead of run_after_journey_refresh --
-  # weekly-digest:
-  #   name: Weekly Digest
-  #   connection: My SFMC Connection
-  #   all_columns: true
-  #   schedule:
-  #     type: daily
-  #     timezone: America/Los_Angeles
-  #   connector_config:
-  #     de_name: WeeklyDigest
-  #     data_operation: upsert
+  # Repeat same pattern for each stage activation.
+  # For fixed schedule instead of run_after_journey_refresh, see activation skill.

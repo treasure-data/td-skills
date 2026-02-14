@@ -19,7 +19,7 @@ tdx connection types                   # List all connector types
 
 ## Segment Activations
 
-Activations are defined as a list under `activations:` in segment YAML.
+Activations are a **list** under `activations:` in segment YAML (vs. journey activations which use a **key map**).
 
 ```yaml
 activations:
@@ -42,7 +42,7 @@ activations:
 
 ## Journey Activations
 
-Activations are defined as a top-level map with keys. Steps reference these keys via `with.activation`.
+Activations are a **key map** (not a list). Steps reference keys via `with.activation`.
 
 ```yaml
 activations:
@@ -77,43 +77,31 @@ steps:
 ## Column Selection
 
 ```yaml
-# Export all columns from the segment
-all_columns: true
-
-# Export specific columns only
+all_columns: true                # Export all columns
+# OR specific columns:
 columns:
   - email
   - first_name
-  - last_name
-  - ltv
-
-# Column with visibility control (sensitive data masking)
-columns:
-  - name: email
-    visibility: clear            # clear | masked
-  - name: ssn
-    visibility: masked
+  - name: ssn                    # With visibility control
+    visibility: masked           # clear | masked
 ```
 
 ## Schedule Options
 
+Use **either** `schedule` or `run_after_journey_refresh` (mutually exclusive).
+
 ```yaml
-# Basic schedule
 schedule:
   type: daily                    # none | hourly | daily | weekly | monthly | cron
-  timezone: America/Los_Angeles
-
-# Advanced schedule with repeat control
-schedule:
-  type: weekly
+  timezone: America/Los_Angeles  # none = manual trigger only
+  # Advanced (optional):
   repeat_unit: week              # minute | hour | day | week | month | once | none
   repeat_frequency: 2            # Every 2 weeks
   repeat_sub_frequency: [1, 3]   # Monday and Wednesday (0=Sun, 1=Mon, ...)
-  start_at: "2025-04-01T09:00:00Z"  # Start time (ISO format)
-  end_on: "2025-12-31"          # End date (YYYY-MM-DD)
-  timezone: America/Los_Angeles
+  start_at: "2025-04-01T09:00:00Z"
+  end_on: "2025-12-31"
 
-# Run after parent segment refresh (journey only)
+# Journey alternative (instead of schedule):
 run_after_journey_refresh: true
 ```
 
@@ -127,14 +115,12 @@ notification:
 
 ## Behavior Data Export
 
-Include behavior (event) data alongside attribute columns:
-
 ```yaml
 behavior:
-  behavior_table: purchase_history   # Behavior table name
-  join_strategy: Last                # All | First | Last | Top-N
-  join_row: 10                       # Number of rows (for Top-N)
-  formatting: rows                   # rows | cols
+  behavior_table: purchase_history
+  join_strategy: Last              # All | First | Last | Top-N
+  join_row: 10                     # Rows for Top-N
+  formatting: rows                 # rows | cols
   order_by:
     - key: timestamp
       order: desc

@@ -14,7 +14,7 @@ Configure `connector_config` for activations by discovering fields with `tdx con
 tdx connection list
 
 # Discover connector_config fields (ALWAYS run this first)
-tdx connection schema <connector_type>
+tdx connection schema <connector_type>   # Pass the TYPE (not connection name)
 
 # List all connector types
 tdx connection types
@@ -25,15 +25,9 @@ tdx connection types
 ## Workflow
 
 ```bash
-# 1. Find connection type
-tdx connection list
-#   salesforce_marketing_cloud_v2  salesforce-marketing - Jane Smith
-
-# 2. Get schema
-tdx connection schema salesforce_marketing_cloud_v2
-
-# 3. Write connector_config using discovered fields
-# 4. Validate: tdx sg push --dry-run
+tdx connection list                                    # 1. Find connection type
+tdx connection schema salesforce_marketing_cloud_v2    # 2. Get schema fields
+# 3. Write connector_config → 4. tdx sg push --dry-run
 ```
 
 ## Common Connector Types
