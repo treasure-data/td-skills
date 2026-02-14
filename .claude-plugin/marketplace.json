@@ -54,7 +54,8 @@
       "skills": [
         "./field-agent-skills/deployment",
         "./field-agent-skills/documentation",
-        "./field-agent-skills/visualization"
+        "./field-agent-skills/visualization",
+        "./field-agent-skills/td-semantic-layer/data-dictionary-helper"
       ]
     },
     {
