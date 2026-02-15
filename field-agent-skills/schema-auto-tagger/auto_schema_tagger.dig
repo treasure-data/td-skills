@@ -1,0 +1,109 @@
+# Auto Schema Tagging Scheduled Workflow
+# Treasure Workflow (digdag) for automated schema detection and tagging
+# Place this in your TD workflow project as auto_schema_tagger.dig
+
+_export:
+  td:
+    database: analytics  # Change to your target database
+    engine: presto
+
+# Workflow configuration
+timezone: UTC
+
+# Schedule the workflow to run daily at 2 AM UTC
+schedule:
+  daily>: 02:00:00
+
+# Session variables
+session_date: ${moment(session_time).format('YYYY-MM-DD')}
+session_time_unix: ${moment(session_time).unix()}
+
+# Workflow tasks
++setup:
+  echo>: "Starting schema auto-tagging workflow for ${td.database} at ${session_date}"
+
++scan_schema:
+  py>: scripts/scan_schema.py
+  docker:
+    image: python:3.11
+  requires:
+    - tdx>=1.8.0
+    - pyyaml>=5.4
+    - requests>=2.28
+  _env:
+    DATABASE: ${td.database}
+    SESSION_DATE: ${session_date}
+    SCAN_OUTPUT: /tmp/schema_scan_${session_time_unix}.json
+    RULES_FILE: rules/schema_tagger_rules.yaml
+
++generate_suggestions:
+  py>: scripts/generate_suggestions.py
+  docker:
+    image: python:3.11
+  requires:
+    - schema-auto-tagger>=1.0
+  _env:
+    INPUT_SCAN: /tmp/schema_scan_${session_time_unix}.json
+    OUTPUT_SUGGESTIONS: /tmp/suggestions_${session_time_unix}.json
+    DATABASE: ${td.database}
+    RULES_FILE: rules/schema_tagger_rules.yaml
+
++validate_suggestions:
+  py>: scripts/validate_suggestions.py
+  docker:
+    image: python:3.11
+  _env:
+    SUGGESTIONS_FILE: /tmp/suggestions_${session_time_unix}.json
+    OUTPUT_REPORT: /tmp/validation_report_${session_time_unix}.json
+
++approve_high_confidence:
+  py>: scripts/auto_approve_high_confidence.py
+  docker:
+    image: python:3.11
+  _env:
+    SUGGESTIONS_FILE: /tmp/suggestions_${session_time_unix}.json
+    MIN_CONFIDENCE: "HIGH"
+    APPROVED_TAGS: /tmp/approved_tags_${session_time_unix}.json
+
++apply_tags:
+  py>: scripts/apply_approved_tags.py
+  docker:
+    image: python:3.11
+  requires:
+    - schema-auto-tagger>=1.0
+  _env:
+    APPROVED_TAGS: /tmp/approved_tags_${session_time_unix}.json
+    DATABASE: ${td.database}
+    LOG_FILE: /tmp/apply_tags_log_${session_time_unix}.json
+
++send_notification:
+  py>: scripts/send_notification.py
+  docker:
+    image: python:3.11
+  requires:
+    - slack-sdk>=3.19
+  _env:
+    SLACK_WEBHOOK: ${secret:slack_webhook_url}
+    LOG_FILE: /tmp/apply_tags_log_${session_time_unix}.json
+    SUGGESTIONS_FILE: /tmp/suggestions_${session_time_unix}.json
+    SESSION_DATE: ${session_date}
+
++store_audit_log:
+  td>: queries/store_audit_log.sql
+  create_table: audit_logs.schema_tagger_${session_date?replace('-','_')}
+  priority: VERY_LOW
+
++cleanup:
+  sh>: rm -f /tmp/schema_scan_* /tmp/suggestions_* /tmp/approved_tags_* /tmp/*.json
+  echo>: "Schema auto-tagging workflow completed successfully"
+
+# Error handling
+_error:
+  mail>: error_notification.html
+  host: ${secret:smtp_host}
+  port: ${secret:smtp_port}
+  username: ${secret:smtp_user}
+  password: ${secret:smtp_password}
+  from: workflow@company.com
+  to: data-governance@company.com
+  subject: Schema Auto-Tagging Workflow Failed - ${session_date}
