@@ -1,0 +1,4 @@
+# Core dependencies for semantic-layer-sync
+pyyaml>=6.0
+pytd>=1.5.0
+requests>=2.28.0  # Used for Treasure Data API calls (annotation, schema detection)
