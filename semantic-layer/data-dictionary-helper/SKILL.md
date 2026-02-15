@@ -1,14 +1,14 @@
 ---
 name: data-dictionary
-description: Create complete data dictionary for TD Parent Segment - orchestrates schema extraction, description generation, review, and write-back as single workflow. Use when user asks to create data dictionary, document schema, or generate column descriptions for Treasure Data segments.
+description: Automate update and maintenance of data dictionaries in Treasure Data - generates 80-90% of column descriptions automatically, allowing users to review results, make changes, and fill in gaps. Orchestrates schema extraction, AI-powered description generation, human review, and write-back as single workflow.
 disable-model-invocation: true
 allowed-tools: Bash(node src/index.js *), Read, Write, Glob
 argument-hint: [segment-name]
 ---
 
-# Data Dictionary: Complete Workflow Orchestrator
+# Data Dictionary: Automated Maintenance & Enhancement
 
-Generate and publish complete data dictionary for Treasure Data Parent Segments - from schema extraction through TD write-back.
+Automate the update and maintenance of data dictionaries in Treasure Data - with 80-90% automated column descriptions that you can review, edit, and enhance. From schema extraction through TD write-back, this skill handles the heavy lifting while keeping you in control.
 
 ## Usage
 
