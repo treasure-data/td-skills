@@ -48,14 +48,15 @@
     },
     {
       "name": "field-agent-skills",
-      "description": "Field Agent development and production best practices including deployment workflows, documentation standards, and professional Plotly visualization guidelines for creating executive-ready agents",
+      "description": "Field Agent development and production best practices including deployment workflows, documentation standards, and professional Plotly visualization guidelines for creating executive-ready agents. Includes schema auto-tagging for automated data governance.",
       "source": "./",
       "strict": false,
       "skills": [
         "./field-agent-skills/deployment",
         "./field-agent-skills/documentation",
         "./field-agent-skills/visualization",
-        "./field-agent-skills/td-semantic-layer/data-dictionary-helper"
+        "./field-agent-skills/td-semantic-layer/data-dictionary-helper",
+        "./field-agent-skills/schema-auto-tagger"
       ]
     },
     {
