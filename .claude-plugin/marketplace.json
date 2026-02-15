@@ -58,6 +58,16 @@
       ]
     },
     {
+      "name": "semantic-layer",
+      "description": "Semantic layer skills for data governance and catalog management including data dictionary helper for asset documentation and schema auto-tagger for automated policy-based tagging with intelligent pattern detection and compliance support",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./semantic-layer/data-dictionary-helper",
+        "./semantic-layer/schema-auto-tagger"
+      ]
+    },
+    {
       "name": "workflow-skills",
       "description": "Treasure Workflow orchestration and data transformation skills including workflow creation, management, debugging, optimization, and dbt (data build tool) for Treasure Data Trino",
       "source": "./",
