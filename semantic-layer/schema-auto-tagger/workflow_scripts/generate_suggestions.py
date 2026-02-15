@@ -11,7 +11,8 @@ import logging
 from datetime import datetime
 
 # Add parent directory to path to import schema_auto_tagger
-sys.path.insert(0, '/path/to/scripts')
+scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, scripts_dir)
 
 from schema_auto_tagger import SchemaTagger, ColumnMetadata
 

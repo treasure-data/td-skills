@@ -10,8 +10,9 @@ import json
 import logging
 from datetime import datetime
 
-# Add path to import TD API module
-sys.path.insert(0, '/path/to/scripts')
+# Add path to import TD API module from parent directory
+scripts_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, scripts_dir)
 
 from schema_tagger_td_api import TreasureDataTagAPI
 

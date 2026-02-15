@@ -4,8 +4,9 @@
 
 All files have been successfully uploaded to:
 ```
-/Users/amit.erande/Documents/GitHub/td-skills/field-agent-skills/schema-auto-tagger/
+semantic-layer/schema-auto-tagger/
 ```
+(In the td-skills repository)
 
 ## 📦 What Was Uploaded
 
@@ -62,8 +63,8 @@ All files have been successfully uploaded to:
 
 ### Step 1: Add to Git Repository
 ```bash
-cd /Users/amit.erande/Documents/GitHub/td-skills
-git add field-agent-skills/schema-auto-tagger/
+cd <your-td-skills-fork>/td-skills
+git add semantic-layer/schema-auto-tagger/
 git commit -m "Add Schema Auto-Tagger skill for automated data tagging"
 git push
 ```
@@ -83,15 +84,12 @@ tdx --help | grep schema-auto-tagger
 ```
 
 ### Step 4: Document in Repository README
-Add to `/Users/amit.erande/Documents/GitHub/td-skills/README.md`:
+Add to `README.md` at the repository root:
 ```markdown
-## field-agent-skills
+## semantic-layer
 
-- **deployment** - Field Agent deployment best practices
-- **documentation** - Field Agent documentation standards
-- **visualization** - Plotly visualization guidelines
-- **td-semantic-layer** - Semantic layer development
-- **schema-auto-tagger** - Automated schema tagging (NEW!)
+- **data-dictionary-helper** - Data dictionary and asset documentation
+- **schema-auto-tagger** - Automated schema tagging and resource classification
 ```
 
 ## 💡 Skill Highlights
@@ -142,7 +140,7 @@ Before full deployment:
 
 1. **Local Testing**
    ```bash
-   cd /Users/amit.erande/Documents/GitHub/td-skills/field-agent-skills/schema-auto-tagger
+   cd semantic-layer/schema-auto-tagger
    bash setup_project.sh ~/test-project
    bash ~/test-project/test_local.sh
    ```
@@ -241,7 +239,7 @@ See troubleshooting in:
 ---
 
 **Status:** ✅ COMPLETE & READY FOR DEPLOYMENT
-**Location:** `/Users/amit.erande/Documents/GitHub/td-skills/field-agent-skills/schema-auto-tagger/`
+**Location:** `semantic-layer/schema-auto-tagger/` (in td-skills repository)
 **Files:** 18 total (7 Python, 5 Docs, 3 Config, 1 Workflow, 2 Setup)
 **Total Code:** 2,000+ lines
 **Documentation:** 60+ KB across 5 guides
