@@ -48,15 +48,23 @@
     },
     {
       "name": "field-agent-skills",
-      "description": "Field Agent development and production best practices including deployment workflows, documentation standards, and professional Plotly visualization guidelines for creating executive-ready agents. Includes schema auto-tagging for automated data governance.",
+      "description": "Field Agent development and production best practices including deployment workflows, documentation standards, and professional Plotly visualization guidelines for creating executive-ready agents",
       "source": "./",
       "strict": false,
       "skills": [
         "./field-agent-skills/deployment",
         "./field-agent-skills/documentation",
-        "./field-agent-skills/visualization",
-        "./field-agent-skills/td-semantic-layer/data-dictionary-helper",
-        "./field-agent-skills/schema-auto-tagger"
+        "./field-agent-skills/visualization"
+      ]
+    },
+    {
+      "name": "semantic-layer",
+      "description": "Semantic layer skills for data governance and catalog management including data dictionary helper for asset documentation and schema auto-tagger for automated policy-based tagging with intelligent pattern detection and compliance support",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./semantic-layer/data-dictionary-helper",
+        "./semantic-layer/schema-auto-tagger"
       ]
     },
     {
