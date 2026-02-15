@@ -31,7 +31,7 @@ rule:
 | Type | Required Fields | Error Codes |
 |------|----------------|-------------|
 | `Value` | `attribute`, `operator` | `EMPTY_ATTRIBUTE`, `INVALID_OPERATOR_TYPE` |
-| `Behavior` | `attribute`, `operator`, `source`, `aggregation` | `EMPTY_ATTRIBUTE` (allowed empty with aggregation) |
+| `Behavior` | `attribute`, `operator`, `source`, `aggregation` | `EMPTY_ATTRIBUTE` |
 | `include` / `exclude` | `segment` | `MISSING_SEGMENT_REFERENCE` |
 | `And` / `Or` | `conditions` | `MISSING_CONDITIONS`, `INVALID_RULE_TYPE` |
 
@@ -66,7 +66,7 @@ Any operator supports `not: true` for negation. This is separate from `NotEqual`
 
 ```yaml
 - type: Behavior
-  attribute: purchase_event        # Can be empty ("") for pure count
+  attribute: purchase_event        # Event or column name (required by CDP API)
   source: behavior_purchase_history
   aggregation:
     type: Count                    # Count | Sum | Average | Min | Max
@@ -101,7 +101,7 @@ Invalid keys trigger `INVALID_ARRAY_MATCHING`.
 | `MISSING_NAME` | Segment name is empty or missing |
 | `INVALID_RULE_TYPE` | Rule type is not `And` or `Or` |
 | `MISSING_CONDITIONS` | Rule or group has no `conditions` array |
-| `EMPTY_ATTRIBUTE` | Attribute is empty (unless behavior count pattern) |
+| `EMPTY_ATTRIBUTE` | Attribute is empty |
 | `INVALID_OPERATOR_TYPE` | Operator type not in the 18 valid types |
 | `MISSING_OPERATOR_VALUE` | Operator requires `value` but it is missing |
 | `MISSING_BETWEEN_BOUNDS` | `Between` has neither `min` nor `max` |

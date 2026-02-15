@@ -93,12 +93,12 @@ operator:
 
 ## Behavior Conditions
 
-Query behavior table data with aggregations. Use `type: Behavior` (not `Value`). `attribute` can be empty (`""`) for pure Count aggregation.
+Query behavior table data with aggregations. Use `type: Behavior` (not `Value`). `attribute` should be the event/column name from the behavior table (run `tdx sg fields` to list). Always provide a concrete name — the CDP API rejects empty attribute.
 
 ```yaml
 # Sum order_total for Electronics purchases in last 90 days
 - type: Behavior
-  attribute: order_total             # Use "" for pure count (no specific column)
+  attribute: order_total             # Event or column name from behavior table
   source: behavior_purchase_history  # behavior_<table_name> (prefix required)
   aggregation:
     type: Sum                        # Count | Sum | Average | Min | Max
