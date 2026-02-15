@@ -1,0 +1,346 @@
+# semantic/relationships.yaml
+# Field Lineage, Relationships, and Mapping Definitions
+
+version: "1.0"
+
+# ============================================================================
+# FIELD LINEAGE: Source → Staging → Golden Transformations
+# ============================================================================
+field_lineage:
+
+  analytics.dim_customers.predicted_clv:
+    lineage_type: "ml_model"
+    description: "CLV prediction derived from ML model"
+
+    sources:
+      - source_table: staging.customer_ml_scores
+        source_field: clv_prediction_v2_3
+        description: "Raw CLV predictions from ML training pipeline"
+
+      - source_table: staging.customer_features
+        source_field: customer_id
+        description: "Customer identifier used for joining features"
+
+    transformation:
+      type: "ML model"
+      model_name: "clv_prediction_v2.3"
+      model_version: "2.3.1"
+      logic: |
+        Ensemble model: 60% Gradient Boosting + 40% Neural Network.
+        Input features: purchase history (24mo), RFM metrics,
+        seasonality patterns, product affinity scores.
+        Output range: 0-100000 (USD).
+      refresh_cadence: "monthly"
+      refresh_day_of_month: 1
+      last_retrained: "2026-01-15"
+      model_owner: data-science-team
+      retraining_frequency: "quarterly"
+
+    dbt_model: "models/golden/customers.sql"
+    dbt_depends_on:
+      - "stg_customer_ml_scores"
+      - "stg_customer_features"
+
+    workflow: "workflows/ml_pipeline/generate_ml_scores.dig"
+    workflow_schedule: "daily>: {start: 00:00}"
+
+    lineage_confidence: 0.95  # High confidence (from dbt manifest)
+    last_verified: "2026-02-10"
+
+  analytics.dim_customers.churn_risk_score:
+    lineage_type: "ml_model"
+    description: "Churn risk probability derived from classification model"
+
+    sources:
+      - source_table: staging.customer_behavioral_features
+        source_field: churn_probability
+
+    transformation:
+      type: "ML model"
+      model_name: "churn_classifier_v1"
+      logic: |
+        Logistic regression trained on binary churn labels.
+        Predicts 90-day churn probability.
+        Features: days_since_purchase, purchase_frequency,
+        seasonal_purchase_pattern, payment_failure_count.
+      refresh_cadence: "weekly"
+      last_retrained: "2026-02-01"
+
+    dbt_model: "models/golden/customers.sql"
+    lineage_confidence: 0.88
+
+  analytics.dim_customers.total_lifetime_revenue:
+    lineage_type: "sql"
+    description: "Aggregated sum of customer's historical revenue"
+
+    sources:
+      - source_table: analytics.fact_orders
+        source_field: order_amount
+        join_key: customer_id
+
+    transformation:
+      type: "SQL aggregation"
+      logic: |
+        SELECT customer_id, SUM(order_amount) as total_lifetime_revenue
+        FROM fact_orders
+        WHERE order_status NOT IN ('cancelled', 'refunded')
+        GROUP BY customer_id
+
+    dbt_model: "models/golden/customers.sql"
+    lineage_confidence: 1.0
+
+  analytics.fact_orders.order_amount:
+    lineage_type: "sql"
+    description: "Order total derived from Stripe transactions"
+
+    sources:
+      - source_table: raw.stripe_transactions
+        source_field: amount_cents
+        description: "Raw transaction amount from Stripe API (in cents)"
+
+    transformation:
+      type: "SQL calculation"
+      logic: "amount_cents / 100.0 (convert cents to dollars)"
+      connector: "Stripe API"
+      connector_version: "2023-10-16"
+
+    dbt_model: "models/staging/stg_orders.sql"
+    lineage_confidence: 1.0
+
+  analytics.dim_customers.customer_id:
+    lineage_type: "identity"
+    description: "Direct mapping from staging with normalization"
+
+    sources:
+      - source_table: raw.crm_contacts
+        source_field: contact_id
+
+    transformation:
+      type: "ID normalization"
+      logic: |
+        CAST to string, remove leading zeros,
+        deduplicate across CRM and internal IDs,
+        map legacy IDs to current ID space
+      idempotent: true
+
+    dbt_model: "models/staging/stg_customers.sql"
+    lineage_confidence: 1.0
+
+# ============================================================================
+# FIELD RELATIONSHIPS: Foreign Keys, Joins, Dependencies
+# ============================================================================
+field_relationships:
+
+  - name: "orders_to_customers_fk"
+    from_field: analytics.fact_orders.customer_id
+    to_field: analytics.dim_customers.customer_id
+    relationship_type: "foreign_key"
+    cardinality: "many_to_one"
+    join_logic: "orders.customer_id = customers.customer_id"
+    description: "Each order belongs to exactly one customer"
+    criticality: "high"
+    is_active: true
+
+  - name: "order_items_to_orders_fk"
+    from_field: analytics.fact_order_items.order_id
+    to_field: analytics.fact_orders.order_id
+    relationship_type: "foreign_key"
+    cardinality: "many_to_one"
+    join_logic: "order_items.order_id = orders.order_id"
+    description: "Each order item belongs to exactly one order"
+    criticality: "high"
+    is_active: true
+
+  - name: "customers_updated_from_orders"
+    from_field: analytics.dim_customers.total_lifetime_revenue
+    to_field: analytics.fact_orders.order_amount
+    relationship_type: "aggregation"
+    cardinality: "one_to_many"
+    description: |
+      Customer's lifetime revenue is computed by aggregating all order amounts.
+      Updated after each order is loaded.
+    criticality: "high"
+    is_active: true
+
+# ============================================================================
+# TABLE DEPENDENCIES: What feeds into/uses each table
+# ============================================================================
+table_dependencies:
+
+  analytics.dim_customers:
+    description: "Master customer table"
+
+    depends_on:
+      - staging.customer_features
+      - staging.customer_ml_scores
+      - analytics.fact_orders  # For computing revenue metrics
+
+    depends_on_schedule:
+      - table: staging.customer_features
+        frequency: daily
+        lag_hours: 2
+        refresh_time: "02:00 UTC"
+
+      - table: staging.customer_ml_scores
+        frequency: monthly
+        lag_hours: 24
+        refresh_time: "00:00 UTC on 1st of month"
+
+    downstream_tables:
+      - analytics.fact_orders  # Uses customer_id for joins
+      - analytics.fact_customer_interactions
+      - marketing_mart.customer_segments
+      - marketing_mart.customer_dashboard
+      - product_mart.product_recommendations
+
+    materialization: "table"
+    replication_factor: 2
+
+  analytics.fact_orders:
+    description: "Transaction fact table"
+
+    depends_on:
+      - analytics.dim_customers
+      - raw.stripe_transactions
+      - analytics.dim_products
+
+    depends_on_schedule:
+      - table: raw.stripe_transactions
+        frequency: hourly
+        lag_hours: 1
+
+    downstream_tables:
+      - analytics.dim_customers  # For revenue aggregation
+      - finance_mart.revenue_recognition
+      - analytics.fact_order_metrics
+
+    materialization: "table"
+    partitioning: "order_date"  # Partitioned by order_date for performance
+
+# ============================================================================
+# CROSS-TABLE DEPENDENCY MAP (for impact analysis)
+# ============================================================================
+dependency_graph:
+  # If raw.stripe_transactions has issues, what breaks downstream?
+  raw.stripe_transactions:
+    impacts:
+      - analytics.fact_orders  # (1-2 hour lag)
+      - analytics.dim_customers  # (indirect, via fact_orders)
+      - finance_mart.revenue_recognition
+
+  # If ML model retraining fails, what needs attention?
+  staging.customer_ml_scores:
+    impacts:
+      - analytics.dim_customers  # (churn & CLV)
+      - marketing_mart.customer_segments
+
+  # If customer dimensions change, what updates?
+  analytics.dim_customers:
+    impacts:
+      - analytics.fact_orders  # (references via FK)
+      - all marketing channels  # (personalization, segmentation)
+      - all dashboards  # (KPIs, reporting)
+
+# ============================================================================
+# FIELD-TO-BUSINESS-TERM MAPPINGS
+# ============================================================================
+field_to_term_mappings:
+
+  analytics.dim_customers.predicted_clv:
+    business_term: Customer Lifetime Value
+    mapping_confidence: 0.99  # Manually verified
+    verified_by: analytics-team
+    verified_date: "2026-01-30"
+
+  analytics.dim_customers.total_lifetime_revenue:
+    business_term: Customer Lifetime Value
+    mapping_confidence: 0.85  # Similar but not identical
+    note: "Actual historical revenue (vs predicted CLV)"
+
+  analytics.dim_customers.churn_risk_score:
+    business_term: Churn Risk
+    mapping_confidence: 1.0
+    verified_by: data-science-team
+    verified_date: "2026-02-01"
+
+  analytics.dim_customers.customer_segment:
+    business_term: Customer Segment
+    mapping_confidence: 1.0
+    verified_by: analytics-team
+
+  analytics.dim_customers.customer_id:
+    business_term: Customer Identifier
+    mapping_confidence: 1.0
+
+  analytics.fact_orders.customer_id:
+    business_term: Customer Identifier
+    mapping_confidence: 1.0
+
+  analytics.fact_orders.order_id:
+    business_term: Order Identifier
+    mapping_confidence: 1.0
+
+# ============================================================================
+# FIELD ALIASES & SYNONYMS (for discovery)
+# ============================================================================
+field_aliases:
+
+  analytics.dim_customers.customer_id:
+    synonyms:
+      - cust_id
+      - customer_pk
+      - customer_key
+      - customer_uid
+    context: "Used interchangeably in legacy systems"
+
+  analytics.dim_customers.predicted_clv:
+    synonyms:
+      - clv_prediction
+      - customer_value_prediction
+      - lifetime_value
+    context: "Different naming across teams"
+
+  analytics.fact_orders.order_amount:
+    synonyms:
+      - order_total
+      - transaction_amount
+      - sale_amount
+      - revenue
+    context: "Finance uses different terminology"
+
+# ============================================================================
+# MANUAL LINEAGE NOTES
+# ============================================================================
+# Use this section for complex lineage that can't be auto-detected
+manual_lineage_notes:
+  - field: analytics.dim_customers.predicted_clv
+    note: |
+      This field is computed by a proprietary ML pipeline (ml_pipeline.dig).
+      The pipeline reads customer features from multiple staging tables,
+      runs ensemble models in Python, and writes scores back to TD.
+      Because the ML logic is in Python (not SQL/dbt), we manually document it.
+
+      See: workflows/ml_pipeline/generate_ml_scores.dig
+    last_updated: "2026-02-01"
+    updated_by: data-science-team
+
+  - field: analytics.dim_customers.customer_segment
+    note: |
+      Computed via RFM (Recency, Frequency, Monetary) analysis.
+      Uses rolling 12-month windows to compute R, F, M scores.
+      Quartile-based bucketing determines segment (premium/active/at-risk/inactive).
+
+      See: workflows/segmentation/compute_rfm.dig
+    last_updated: "2026-01-15"
+    updated_by: analytics-team
+
+# ============================================================================
+# DEPRECATED LINEAGE (Historical reference)
+# ============================================================================
+deprecated_lineage:
+  - field: analytics.dim_customers.predicted_clv
+    old_source: staging.customer_ml_scores_v1
+    new_source: staging.customer_ml_scores_v2_3
+    deprecation_date: "2025-10-01"
+    reason: "Upgraded to ML model v2.3 with better features"
+    note: "Old model v1 is still available in prod for fallback"
