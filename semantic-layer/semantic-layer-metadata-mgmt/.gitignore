@@ -1,0 +1,74 @@
+# Dependencies
+node_modules/
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Secrets & Environment
+.env
+.env.local
+.env.production
+.env.production.local
+.env.development
+*.env
+*.key
+*.pem
+*.p12
+credentials.json
+service-account*.json
+*-credentials.json
+*-api-key*.json
+secrets.yaml
+secrets.yml
+.secrets/
+**/apikeys/
+**/api-keys/
+*.apikey
+*.token
+auth-token*.txt
+td_api_key.txt
+*_api_key.txt
+
+# Build
+dist/
+build/
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# Testing
+coverage/
+.nyc_output/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary
+*.tmp
+*.temp
+.cache/
+.mypy_cache/

@@ -1,0 +1,240 @@
+/* ============================================================================
+   SEMANTIC LAYER METADATA MANAGEMENT - BASE STYLES
+   ============================================================================ */
+
+/* CSS Variables - Treasure Data Brand Colors */
+:root {
+  /* Treasure Data Brand Colors */
+  --color-primary: #1A57DB;
+  --color-primary-hover: #252D6E;
+  --color-primary-light: #C7D4F3;
+  --color-secondary: #A37AFC;
+  --color-secondary-light: #E6DEFB;
+  --color-success: #28a745;
+  --color-success-bg: #d4edda;
+  --color-warning: #ffc107;
+  --color-error: #dc3545;
+  --color-error-bg: #f8d7da;
+  --color-info: #5A81DD;
+
+  /* Background & Text */
+  --color-bg: #FFFFFF;
+  --color-bg-light: #F7F7F7;
+  --color-text: #131023;
+  --color-text-secondary: #898790;
+  --color-border: #C4C3C8;
+
+  /* Layout */
+  --header-height: 70px;
+  --footer-height: 40px;
+  --radius: 4px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+
+  /* Typography */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 24px;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Transitions */
+  --transition: all 0.2s ease;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #141024;
+    --color-bg-light: #231670;
+    --color-text: #F7F7F7;
+    --color-text-secondary: #C4C3C8;
+    --color-border: #44474A;
+    --color-success-bg: #1e4d2b;
+    --color-error-bg: #4d1e1e;
+  }
+}
+
+/* ============================================================================
+   RESET & GLOBALS
+   ============================================================================ */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--color-text);
+  background: var(--color-bg-light);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#root {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================================
+   TYPOGRAPHY
+   ============================================================================ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+h1 { font-size: var(--font-size-2xl); }
+h2 { font-size: var(--font-size-xl); }
+h3 { font-size: var(--font-size-lg); }
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius);
+  transition: var(--transition);
+  font-weight: 500;
+}
+
+.btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  outline: none;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background: var(--color-bg-light);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-secondary-light);
+  border-color: var(--color-secondary);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   FORMS
+   ============================================================================ */
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--spacing-sm) var(--spacing-md);
+  transition: var(--transition);
+  width: 100%;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(26, 87, 219, 0.1);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background: var(--color-bg-light);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+input[readonly] {
+  background: var(--color-bg-light);
+  cursor: default;
+}
+
+/* ============================================================================
+   UTILITIES
+   ============================================================================ */
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-md);
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-sm {
+  gap: var(--spacing-sm);
+}
+
+.gap-md {
+  gap: var(--spacing-md);
+}
+
+.gap-lg {
+  gap: var(--spacing-lg);
+}
+
+.shadow {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-md {
+  box-shadow: var(--shadow-md);
+}
