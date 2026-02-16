@@ -4,25 +4,27 @@
 
 /* CSS Variables */
 :root {
-  /* Colors */
-  --color-primary: #0066cc;
-  --color-primary-hover: #0052a3;
-  --color-secondary: #e1e8ed;
+  /* Treasure Data Brand Colors */
+  --color-primary: #1A57DB;
+  --color-primary-hover: #252D6E;
+  --color-primary-light: #C7D4F3;
+  --color-secondary: #A37AFC;
+  --color-secondary-light: #E6DEFB;
   --color-success: #28a745;
   --color-warning: #ffc107;
   --color-error: #dc3545;
-  --color-info: #17a2b8;
+  --color-info: #5A81DD;
 
   /* Background & Text */
-  --color-bg: #ffffff;
-  --color-bg-light: #f5f7fa;
-  --color-text: #2c3e50;
-  --color-text-secondary: #7f8c8d;
-  --color-border: #e1e8ed;
+  --color-bg: #FFFFFF;
+  --color-bg-light: #F7F7F7;
+  --color-text: #131023;
+  --color-text-secondary: #898790;
+  --color-border: #C4C3C8;
 
   /* Layout */
-  --sidebar-width: 250px;
   --header-height: 60px;
+  --tab-nav-height: 48px;
   --footer-height: 40px;
   --radius: 4px;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -45,6 +47,13 @@
   --spacing-lg: 24px;
   --spacing-xl: 32px;
 
+  /* Badge & UI Elements */
+  --badge-padding-y: 4px;
+  --badge-padding-x: 12px;
+  --badge-radius: 12px;
+  --scrollbar-height: 4px;
+  --scrollbar-radius: 2px;
+
   /* Transitions */
   --transition: all 0.2s ease;
 }
@@ -52,11 +61,11 @@
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #1e1e1e;
-    --color-bg-light: #2d2d2d;
-    --color-text: #e0e0e0;
-    --color-text-secondary: #a0a0a0;
-    --color-border: #404040;
+    --color-bg: #141024;
+    --color-bg-light: #231670;
+    --color-text: #F7F7F7;
+    --color-text-secondary: #C4C3C8;
+    --color-border: #44474A;
   }
 }
 
@@ -152,12 +161,14 @@ button {
 }
 
 .btn-secondary {
-  background: var(--color-secondary);
+  background: var(--color-bg-light);
   color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--color-border);
+  background: var(--color-secondary-light);
+  border-color: var(--color-secondary);
 }
 
 .btn:disabled {
@@ -195,7 +206,7 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+  box-shadow: 0 0 0 3px rgba(26, 87, 219, 0.1);
 }
 
 input:disabled,
@@ -268,7 +279,7 @@ textarea {
 
 @media (max-width: 1024px) {
   :root {
-    --sidebar-width: 200px;
+    --font-size-base: 14px;
   }
 }
 
@@ -276,10 +287,6 @@ textarea {
   :root {
     --font-size-base: 13px;
     --spacing-md: 12px;
-  }
-
-  .sidebar-navigation {
-    width: 100% !important;
   }
 }
 

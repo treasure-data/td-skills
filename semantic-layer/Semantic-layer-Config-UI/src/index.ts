@@ -102,7 +102,7 @@ export {
 // LAYOUT COMPONENTS
 // ============================================================================
 export {
-  SidebarNavigation,
+  TopTabNavigation,
   Header,
   Footer,
   MainLayout,
@@ -110,7 +110,7 @@ export {
   ValidationSummary,
   KeyboardShortcutsModal,
   AdvancedTabs,
-  type SidebarNavigationProps,
+  type TopTabNavigationProps,
   type HeaderProps,
   type FooterProps,
   type MainLayoutProps,

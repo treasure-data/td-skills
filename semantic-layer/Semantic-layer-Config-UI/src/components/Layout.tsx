@@ -2,9 +2,7 @@
  * Layout and Navigation Components
  */
 
-import React, { useState } from "react";
-import { useConfigContext } from "../context/ConfigContext";
-import { ConfigUIState } from "../types/config";
+import React from "react";
 
 // ============================================================================
 // NAVIGATION ITEMS
@@ -61,63 +59,58 @@ const navigationItems = [
 ];
 
 // ============================================================================
-// SIDEBAR NAVIGATION
+// TOP TAB NAVIGATION
 // ============================================================================
-export interface SidebarNavigationProps {
+export interface TopTabNavigationProps {
   currentSection: string;
   onSectionChange: (section: string) => void;
   validationErrors: number;
   isDirty: boolean;
 }
 
-export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
-  currentSection,
-  onSectionChange,
-  validationErrors,
-  isDirty,
-}) => {
-  return (
-    <aside className="sidebar-navigation">
-      <div className="nav-header">
-        <h1 className="nav-title">Semantic Layer</h1>
-        <span className="nav-subtitle">Configuration Manager</span>
-      </div>
+export const TopTabNavigation = React.memo<TopTabNavigationProps>(
+  ({ currentSection, onSectionChange, validationErrors, isDirty }) => {
+    return (
+      <nav className="top-tab-navigation" role="tablist" aria-label="Configuration sections">
+        <div className="tabs-container">
+          {navigationItems.map((item) => {
+            const isActive = currentSection === item.id;
+            const hasErrors = validationErrors > 0;
 
-      <nav className="nav-items">
-        {navigationItems.map((item) => {
-          const isActive = currentSection === item.id;
-          const hasErrors = validationErrors > 0;
-
-          return (
-            <button
-              key={item.id}
-              onClick={() => onSectionChange(item.id)}
-              className={`nav-item ${isActive ? "active" : ""} ${
-                hasErrors ? "has-errors" : ""
-              }`}
-              title={item.description}
-              type="button"
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-              {isDirty && isActive && (
-                <span className="nav-indicator dirty">●</span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
-      <div className="nav-footer">
-        <div className="nav-info">
-          <p className="nav-info-text">
-            Version <strong>1.0</strong>
-          </p>
+            return (
+              <button
+                key={item.id}
+                onClick={() => onSectionChange(item.id)}
+                className={`tab-item ${isActive ? "active" : ""} ${
+                  hasErrors ? "has-errors" : ""
+                }`}
+                title={item.description}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`panel-${item.id}`}
+                id={`tab-${item.id}`}
+              >
+                <span className="tab-icon">{item.icon}</span>
+                <span className="tab-label">{item.label}</span>
+                {isDirty && isActive && (
+                  <span className="tab-indicator dirty">●</span>
+                )}
+              </button>
+            );
+          })}
         </div>
-      </div>
-    </aside>
-  );
-};
+      </nav>
+    );
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.currentSection === nextProps.currentSection &&
+      prevProps.validationErrors === nextProps.validationErrors &&
+      prevProps.isDirty === nextProps.isDirty
+    );
+  }
+);
 
 // ============================================================================
 // HEADER
@@ -152,7 +145,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="app-header">
       <div className="header-left">
-        <h1 className="app-title">Semantic Layer Config Manager</h1>
+        <h1 className="app-title">Configuration</h1>
         <div className="status-indicator">
           {isDirty && <span className="status-badge unsaved">Unsaved Changes</span>}
           {!isDirty && lastSavedAt && (
@@ -292,27 +285,11 @@ export const Footer: React.FC<FooterProps> = ({
 // ============================================================================
 export interface MainLayoutProps {
   children: React.ReactNode;
-  sidebarOpen?: boolean;
-  onSidebarToggle?: () => void;
 }
 
-export const MainLayout: React.FC<MainLayoutProps> = ({
-  children,
-  sidebarOpen = true,
-  onSidebarToggle,
-}) => {
+export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
-    <div className={`app-layout ${sidebarOpen ? "" : "sidebar-closed"}`}>
-      <div className="layout-sidebar">
-        <button
-          onClick={onSidebarToggle}
-          className="sidebar-toggle"
-          type="button"
-          aria-label="Toggle sidebar"
-        >
-          ≡
-        </button>
-      </div>
+    <div className="app-layout">
       <div className="layout-main">{children}</div>
     </div>
   );

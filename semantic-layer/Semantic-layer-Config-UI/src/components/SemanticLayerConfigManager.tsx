@@ -19,7 +19,7 @@ import {
   TestingSection,
 } from "./SectionComponents";
 import {
-  SidebarNavigation,
+  TopTabNavigation,
   Header,
   Footer,
   MainLayout,
@@ -35,7 +35,6 @@ import { Alert } from "./FormComponents";
 export const SemanticLayerConfigManager: React.FC = () => {
   const { state, updateSection, setCurrentSection, saveConfig, resetConfig } =
     useConfigContext();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [showValidationSummary, setShowValidationSummary] = useState(false);
   const [advancedTab, setAdvancedTab] = useState("notifications");
@@ -214,19 +213,14 @@ export const SemanticLayerConfigManager: React.FC = () => {
         onReset={resetConfig}
       />
 
-      <MainLayout
-        sidebarOpen={sidebarOpen}
-        onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-      >
-        {sidebarOpen && (
-          <SidebarNavigation
-            currentSection={currentSection}
-            onSectionChange={setCurrentSection}
-            validationErrors={validationErrors.length}
-            isDirty={isDirty}
-          />
-        )}
+      <TopTabNavigation
+        currentSection={currentSection}
+        onSectionChange={setCurrentSection}
+        validationErrors={validationErrors.length}
+        isDirty={isDirty}
+      />
 
+      <MainLayout>
         <main className="main-content">
           {/* Alerts */}
           {state.error && (
