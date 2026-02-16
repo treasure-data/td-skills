@@ -80,10 +80,15 @@
     },
     {
       "name": "engage-skills",
-      "description": "Customer engagement and journey orchestration skills including email workflow automation for Customer Journey Orchestration",
+      "description": "Customer engagement skills using tdx engage commands for email template creation, campaign management, journey building, testing, and basic template organization",
       "source": "./",
       "strict": false,
       "skills": [
+        "./engage-skills/email-template-creator",
+        "./engage-skills/email-campaign-creator",
+        "./engage-skills/email-template-manager",
+        "./engage-skills/email-testing-validator",
+        "./engage-skills/email-journey-builder",
         "./engage-skills/email"
       ]
     },
