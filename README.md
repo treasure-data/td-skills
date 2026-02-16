@@ -47,6 +47,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[workflow-skills/digdag](./workflow-skills/digdag)** - Design and implement Treasure Workflow with proper error handling
 - **[workflow-skills/workflow-management](./workflow-skills/workflow-management)** - Manage, debug, and optimize existing Treasure Workflows
 - **[workflow-skills/dbt](./workflow-skills/dbt)** - Use dbt (data build tool) with TD Trino, includes setup, TD-specific macros, and incremental models
+- **[workflow-skills/email](./workflow-skills/email)** - End-to-end email workflow automation combining segment data, journey context, template creation via tdx engage, and Customer Journey Orchestration integration
 
 ### SDK Skills
 
@@ -132,6 +133,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the digdag skill to create a workflow that runs every morning"
 "Use the workflow-management skill to debug this failing workflow"
 "Use the dbt skill to create an incremental model for user events"
+"Use the email skill to create welcome email campaigns with journey integration"
 "Use the JavaScript SDK skill to implement event tracking on my website"
 "Use the pytd skill to query TD from Python and load results into pandas"
 "Use the tdx-basic skill to list all databases in the Tokyo region"
@@ -151,7 +153,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-pz-service, rt-pz-sections, rt-pz-api, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-pz-service, rt-pz-sections, rt-pz-api, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, email, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
