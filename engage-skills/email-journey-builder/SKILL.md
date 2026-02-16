@@ -639,7 +639,8 @@ analyze_journey_performance() {
 - **tdx-skills:connector-config** - Configure advanced activation connectors
 
 **Integration:**
-- **email-campaign-orchestration** - Connect journeys with campaigns
+- **email-campaign-creator** - Create campaigns for journey activations
+- **email-template-creator** → **email-campaign-creator** - Complete workflow setup
 - **tdx-skills:segment** - Create segments for journey decision points
 
 **Monitoring:**

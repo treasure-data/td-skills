@@ -369,9 +369,9 @@ tdx journey list | grep "Journey Name"
 
 **Integration:**
 - **email-testing-validator** - Test campaigns before launch
-- **email-campaign-orchestration** - Integrate with journeys
 - **email-journey-builder** - Create simple email sequences using campaigns
 - **tdx-skills:journey** - Advanced journey orchestration with campaign activations
+- **Complete workflow**: email-template-creator → email-campaign-creator → email-journey-builder
 
 **Management:**
 - **email-template-manager** - Manage templates used in campaigns

@@ -7,7 +7,6 @@
 3. **email-template-manager** - Uses `tdx engage template list/show/update/delete`
 4. **email-testing-validator** - Uses `tdx engage campaign test` + basic validation
 5. **email-journey-builder** - Uses `tdx journey validate/push/pull` with email YAML
-6. **email-campaign-orchestration** - Uses combination of above + `tdx journey` commands
 
 ## Realistic Composable Workflows
 
@@ -31,9 +30,9 @@ Organize existing templates, create new ones, test campaigns.
 
 ### Journey Orchestration (3 skills)
 ```
-email-journey-builder → email-campaign-creator → email-campaign-orchestration
+email-journey-builder → email-campaign-creator → email-testing-validator
 ```
-Create journey YAML, set up campaigns, orchestrate delivery.
+Create journey YAML, set up campaigns, test delivery.
 
 ## What We DIDN'T Build (Over-Engineering Avoided)
 

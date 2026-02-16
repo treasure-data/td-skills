@@ -88,8 +88,7 @@
         "./engage-skills/email-campaign-creator",
         "./engage-skills/email-template-manager",
         "./engage-skills/email-testing-validator",
-        "./engage-skills/email-journey-builder",
-        "./engage-skills/email"
+        "./engage-skills/email-journey-builder"
       ]
     },
     {

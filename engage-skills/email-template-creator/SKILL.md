@@ -357,7 +357,7 @@ check_template_permissions() {
 - **tdx-skills:journey** - Use templates in advanced multi-channel journeys
   - Templates created here can be referenced in journey activation steps
   - Configure template_id in journey YAML activation config
-- **email-campaign-orchestration** - Coordinate templates with campaigns and journeys
+- **Complete workflow**: email-template-creator → email-campaign-creator → email-journey-builder
 
 **Advanced Configuration:**
 - **tdx-skills:connector-config** - Configure advanced email connectors for template delivery
