@@ -1,0 +1,380 @@
+# semantic/config.yaml
+# Semantic Layer Configuration Template
+# Customers customize this to match their golden layer setup
+
+version: "1.0"
+description: "Semantic layer configuration for organization's data"
+
+# ============================================================================
+# SCOPE: Define which databases/tables to manage semantics for
+# ============================================================================
+scope:
+  # Include patterns - supports wildcards
+  # Examples: "analytics.*", "dwh.fact_*", "prod_data.mart_*"
+  databases:
+    - "analytics.*"        # All tables in analytics db
+    - "dwh.fact_*"         # Only fact tables in dwh
+    - "dwh.dim_*"          # Only dimension tables in dwh
+    - "gld_cstore_prod.loyalty_profile"  # Loyalty profile for testing
+
+  # Exclude patterns - tables to skip
+  exclude_patterns:
+    - "*.temp_*"           # Skip temp tables
+    - "*.audit_*"          # Skip audit tables
+    - "*._*"               # Skip private/internal tables
+
+# ============================================================================
+# DEFINITIONS: Paths to semantic definition files
+# ============================================================================
+definitions:
+  # Path to data dictionary (required)
+  data_dictionary_path: "data_dictionary.yaml"
+
+  # Path to business glossary (optional)
+  glossary_path: "glossary.md"
+
+  # Path to field relationships and lineage (optional)
+  relationships_path: "relationships.yaml"
+
+  # Path to governance rules (optional)
+  governance_path: "governance.yaml"
+
+  # Support multiple files (comma-separated or list)
+  # data_dictionary_path:
+  #   - "semantic/dictionaries/core.yaml"
+  #   - "semantic/dictionaries/activations.yaml"
+  #   - "semantic/dictionaries/ml_features.yaml"
+
+# ============================================================================
+# TREASURE DATA SEMANTIC LAYER
+# ============================================================================
+semantic_database:
+  # Name of database to store semantic metadata
+  name: "semantic_layer_v1"
+
+  # Auto-create if missing
+  create_if_missing: true
+
+  # Table naming convention (can be customized)
+  tables:
+    field_metadata: "field_metadata"      # Tags, business terms, PII flags
+    glossary: "glossary"                   # Business glossary terms
+    field_lineage: "field_lineage"         # Source → golden transformations
+    field_relationships: "field_relationships"  # Foreign keys, joins
+    field_usage: "field_usage"             # Query statistics
+    governance: "governance"               # Ownership, SLAs, classification
+    sync_history: "sync_history"           # Audit log of all syncs
+    impact_analysis: "impact_analysis"     # Downstream impact map
+
+# ============================================================================
+# LINEAGE DETECTION
+# ============================================================================
+lineage:
+  # Auto-detection sources (priority order)
+  auto_detect:
+    - type: "dbt"
+      enabled: true
+      paths: ["dbt/", "analytics/dbt/"]  # Where to find dbt_project.yml
+      include_column_level: true  # Requires dbt 1.5+ with --store-failures
+
+    - type: "workflow"
+      enabled: true
+      paths: ["workflows/", "digdag/", "treasure_workflow/"]
+      include_transformations: true
+
+    - type: "schema_comments"
+      enabled: true
+      pattern: "Lineage: .*"  # Look for this in table/column comments
+
+  # Manual definitions
+  manual:
+    relationships_path: "semantic/relationships.yaml"
+
+  # Confidence thresholds
+  confidence_thresholds:
+    auto_detected_min: 0.7  # Only store if >= 70% confident
+    manual: 1.0
+
+  # Generate derived metadata
+  generate_impact_analysis: true
+  track_downstream_tables: true
+
+# ============================================================================
+# CONFLICT HANDLING
+# ============================================================================
+conflict_handling:
+  # Strategy: fail | warn | auto_generate
+  # - fail: Stop if any conflicts
+  # - warn: Proceed but flag issues in report
+  # - auto_generate: Auto-create descriptions for missing fields
+  mode: "warn"
+
+  # Auto-generate descriptions for fields missing from YAML
+  auto_generate_for_missing: false
+
+  # Overwrite existing descriptions with new YAML values
+  overwrite_existing_descriptions: false
+
+  # Handle schema changes (new/removed fields)
+  on_schema_changes:
+    new_fields: "warn"        # Warn if new fields in schema not in YAML
+    removed_fields: "warn"    # Warn if fields in YAML don't exist in schema
+    type_changes: "error"     # Error if field type changed
+
+# ============================================================================
+# VALIDATION RULES
+# ============================================================================
+validation:
+  # Basic requirements
+  require_table_description: true
+  require_field_description: true
+  require_owner_for_tables: true
+  require_owner_for_pii_fields: true
+  require_business_term_for_metrics: false  # Stricter governance option
+
+  # PII validation
+  pii_validation:
+    require_pii_category: true  # Must specify: email, phone, ssn, name, etc.
+    require_owner: true         # PII fields must have owner
+    require_data_classification: true  # PII must be classified: restricted, confidential
+
+  # Custom regex-based validation rules
+  custom_rules:
+    - field_pattern: "_id$"
+      should_have_tag: "ID"
+      hint: "Fields ending in _id should be tagged as ID"
+
+    - field_pattern: "^is_"
+      should_have_tag: "flag"
+      hint: "Boolean fields starting with is_ should be tagged as flag"
+
+    - field_pattern: "^created_at|^updated_at|^deleted_at"
+      should_have_tag: "timestamp"
+      hint: "Temporal fields should be tagged as timestamp"
+
+    - field_pattern: "^_"
+      hint: "Fields starting with _ are private (underscore convention)"
+
+# ============================================================================
+# AUTO-GENERATION SETTINGS (Heuristic-based, zero-cost)
+# ============================================================================
+auto_generation:
+  enabled: true  # Enable heuristic-based auto-generation (no LLM calls)
+
+  # ============================================================================
+  # CONTENT RULES
+  # ============================================================================
+  content_rules:
+    # Mark auto-generated content with prefix
+    prefix_auto_generated: "[AUTO]"
+
+    # Control overwriting behavior
+    overwrite_existing: false  # DEFAULT: Never overwrite existing manual descriptions
+    overwrite_auto_generated: false  # Can we overwrite previous [AUTO] descriptions?
+
+    # Skip generation for fields with these patterns (already well-documented)
+    skip_fields_matching:
+      - "time"  # Standard time field
+      - "td_*"  # TD system fields
+
+  # ============================================================================
+  # WHAT TO GENERATE
+  # ============================================================================
+  generate:
+    field_descriptions: true   # Generate field-level descriptions from naming patterns
+    tags: true                 # Auto-suggest tags based on naming patterns and data types
+    pii_detection: true        # Detect PII categories based on field names/types
+    business_terms: false      # Link to glossary terms (Phase 2)
+    data_classification: false # Auto-classify as public/internal/restricted (Phase 2)
+
+  # ============================================================================
+  # HEURISTIC PATTERNS FOR GENERATION
+  # ============================================================================
+  patterns:
+    # ID fields
+    - name: "identifiers"
+      match:
+        - pattern: "^.*_id$"
+        - pattern: "^id$"
+      tag: "ID"
+      description_template: "Identifier for {entity}"
+      pii_category: null
+
+    # Boolean/Flag fields
+    - name: "flags"
+      match:
+        - pattern: "^is_.*"
+        - pattern: "^has_.*"
+        - pattern: "^can_.*"
+      tag: "flag"
+      description_template: "Boolean indicator for {entity}"
+      pii_category: null
+
+    # Timestamp fields
+    - name: "timestamps"
+      match:
+        - pattern: "^(created|updated|deleted|modified|last)_at$"
+        - pattern: "^(created|updated|deleted|modified|last)_date$"
+      tag: "timestamp"
+      description_template: "Timestamp indicating when {entity} was {action}"
+      pii_category: null
+
+    # Financial/Metric fields
+    - name: "metrics"
+      match:
+        - pattern: ".*_(balance|amount|count|sum|total|value|cost|revenue|price)$"
+      tag: "metric"
+      description_template: "Numeric metric for {entity}"
+      pii_category: null
+
+    # Email fields
+    - name: "email"
+      match:
+        - pattern: "^email$"
+        - pattern: ".*_email$"
+      tag: "contact_info"
+      description_template: "Email address for communication"
+      pii_category: "email"
+
+    # Phone fields
+    - name: "phone"
+      match:
+        - pattern: "^phone$"
+        - pattern: ".*_phone$"
+        - pattern: ".*_number$"
+      tag: "contact_info"
+      description_template: "Phone number for contact"
+      pii_category: "phone"
+
+    # Name fields
+    - name: "names"
+      match:
+        - pattern: "^(first_name|last_name|full_name)$"
+        - pattern: "^(firstname|lastname|fullname)$"
+      tag: "personal_info"
+      description_template: "Personal name field"
+      pii_category: "name"
+
+    # Address fields
+    - name: "address"
+      match:
+        - pattern: "^(street_address|address|city|state|zip|postal_code|country)$"
+      tag: "location"
+      description_template: "Address or location field"
+      pii_category: "address"
+
+    # Date of birth
+    - name: "dob"
+      match:
+        - pattern: "^(date_of_birth|dob|birthdate)$"
+      tag: "personal_info"
+      description_template: "Date of birth"
+      pii_category: "dob"
+
+    # Status fields
+    - name: "status"
+      match:
+        - pattern: ".*_status$"
+        - pattern: "^status$"
+      tag: "dimension"
+      description_template: "Status indicator for {entity}"
+      pii_category: null
+
+    # Dimension/Category fields
+    - name: "dimensions"
+      match:
+        - pattern: ".*_(tier|level|type|category|segment|class)$"
+      tag: "dimension"
+      description_template: "Categorical dimension for {entity}"
+      pii_category: null
+
+# ============================================================================
+# CHANGE NOTIFICATIONS
+# ============================================================================
+notifications:
+  # Send notification when sync completes successfully
+  on_sync_complete:
+    enabled: false
+    channels:
+      - type: "slack"
+        channel: "#data-engineering"
+        message_template: "Semantic layer synced: {{tables_updated}} tables, {{fields_updated}} fields updated"
+
+  # Send notification on errors
+  on_error:
+    enabled: false
+    channels:
+      - type: "email"
+        recipients: ["data-team@company.com"]
+        subject: "Semantic Layer Sync Error"
+      - type: "slack"
+        channel: "#data-alerts"
+
+# ============================================================================
+# APPROVAL WORKFLOW
+# ============================================================================
+approval:
+  # Always require dry-run before applying changes
+  require_dry_run: true
+
+  # Require explicit approval for:
+  require_approval_for:
+    - field_removals: true     # If field removed from YAML
+    - type_changes: true       # If field type changed
+    - owner_changes: true      # If ownership changed
+    - pii_reclassification: true  # If PII status changed
+
+  # Auto-approve low-risk changes
+  auto_approve_for:
+    - description_updates: true  # Just updating descriptions
+    - tag_additions: true        # Just adding tags
+    - comment_updates: true      # Just updating comments
+
+# ============================================================================
+# SYNC BEHAVIOR
+# ============================================================================
+sync:
+  # How to handle existing descriptions in schema
+  merge_strategy: "manual_wins"  # manual_wins | auto_overwrites | merge_both
+
+  # Backup before modifying schema
+  create_backup: true
+
+  # Dry run by default
+  dry_run_by_default: true
+
+  # Log all changes
+  audit_logging: true
+
+  # Batch size for large syncs
+  batch_size: 100  # Process N tables at a time
+
+# ============================================================================
+# TESTING & DEVELOPMENT
+# ============================================================================
+testing:
+  # Test mode: don't actually modify TD
+  enabled: false
+
+  # Dry run example data
+  sample_database: null  # Use test database instead of production
+
+  # Report level: quiet | normal | verbose | debug
+  report_level: "normal"
+
+# ============================================================================
+# ENVIRONMENTS (Optional)
+# ============================================================================
+# If using multiple environments, override settings per environment
+# environments:
+#   dev:
+#     scope:
+#       databases: ["dev_analytics.*"]
+#     semantic_database:
+#       name: "semantic_layer_dev"
+#
+#   prod:
+#     scope:
+#       databases: ["analytics.*", "dwh.*"]
+#     semantic_database:
+#       name: "semantic_layer"

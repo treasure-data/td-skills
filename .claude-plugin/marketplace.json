@@ -64,7 +64,8 @@
       "strict": false,
       "skills": [
         "./semantic-layer/data-dictionary-helper",
-        "./semantic-layer/schema-auto-tagger"
+        "./semantic-layer/schema-auto-tagger",
+        "./semantic-layer/semantic-layer-sync"
       ]
     },
     {
