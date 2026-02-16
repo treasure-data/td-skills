@@ -326,10 +326,31 @@ ORDER BY journey_step
 - **email-campaign-creator** - Set up campaigns for email delivery
 - **tdx-skills:parent-segment** - Configure parent segments
 
+**Advanced Journey Orchestration:**
+- **tdx-skills:journey** - Comprehensive CDP journey orchestration
+  - **Use when you need:** Decision points, A/B testing, multi-stage journeys, behavior segmentation
+  - **Upgrade path:** Start with email-journey-builder, migrate to tdx-skills:journey for complex workflows
+  - **Key differences:** Full YAML structure vs simplified email patterns
+- **tdx-skills:validate-journey** - Validate complex journey YAML structures
+- **tdx-skills:connector-config** - Configure advanced activation connectors
+
 **Integration:**
-- **tdx-skills:journey** - General journey management
 - **email-campaign-orchestration** - Connect journeys with campaigns
+- **tdx-skills:segment** - Create segments for journey decision points
 
 **Monitoring:**
 - **email-testing-validator** - Test journey components
+- SQL skills for email delivery analysis
+
+**Skill Selection Guide:**
+
+| Use Case | Recommended Skill |
+|----------|-------------------|
+| Simple email sequence (welcome, newsletter) | **email-journey-builder** (this skill) |
+| Multi-channel journeys with SMS/push | **tdx-skills:journey** |
+| A/B testing email content | **tdx-skills:journey** |
+| Decision points based on behavior | **tdx-skills:journey** |
+| Cross-journey navigation (jumps) | **tdx-skills:journey** |
+| Basic wait → email → wait patterns | **email-journey-builder** (this skill) |
+| Rapid prototyping email flows | **email-journey-builder** (this skill) |
 - SQL skills for email delivery analysis

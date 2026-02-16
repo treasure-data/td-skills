@@ -126,6 +126,66 @@ activations:
 
 See **connector-config** skill for `connector_config` details.
 
+## Email Activation Patterns
+
+For email-specific journeys, consider these common patterns:
+
+### Simple Email Series (Use engage-skills:email-journey-builder)
+```yaml
+# Simplified email-only pattern
+steps:
+  - type: activation
+    name: Send Welcome Email
+    with:
+      activation: welcome-email
+    next: wait-2-days
+
+  - type: wait
+    name: Wait 2 Days
+    with:
+      duration: 2
+      unit: day
+    next: send-tips
+```
+
+### Complex Email Orchestration (Use this skill)
+```yaml
+# Advanced patterns with decision points
+steps:
+  - type: activation
+    name: Send Welcome Email
+    with:
+      activation: welcome-email
+    next: wait-engagement
+
+  - type: wait
+    name: Wait for Engagement
+    with:
+      condition:
+        segment: email-engaged      # Custom segment for email opens/clicks
+        timeout:
+          duration: 3
+          unit: day
+          next: send-reminder       # Re-engagement path
+    next: send-followup            # Engaged path
+
+  - type: decision_point
+    name: Check Engagement Level
+    with:
+      branches:
+        - name: High Engagement
+          segment: high-email-engagement
+          next: vip-sequence
+        - name: Low Engagement
+          excluded: true
+          next: nurture-sequence
+```
+
+**Email Journey Complexity Guide:**
+- **Basic email sequences** → Use **engage-skills:email-journey-builder**
+- **Email with behavior tracking** → Use this skill (**tdx-skills:journey**)
+- **Cross-channel orchestration** → Use this skill with multiple activation types
+
 ## Segment References
 
 - **Embedded**: `segment: my-segment` (defined in `segments:` section)
@@ -178,7 +238,31 @@ Push as `draft` first, then use TD Console → "Simulation Mode" to validate bef
 
 ## Related Skills
 
-- **connector-config**, **validate-journey**, **segment**, **validate-segment**, **parent-segment**
+### Core Journey Skills
+- **connector-config** - Configure activation connectors for journey steps
+- **validate-journey** - Validate journey YAML before deployment
+- **segment**, **validate-segment** - Create and validate segments used in journeys
+- **parent-segment** - Configure parent segments for journey targeting
+
+### Email-Specific Journey Workflows
+For simplified email marketing journeys, consider these specialized engage-skills:
+
+- **engage-skills:email-journey-builder** - Email-focused journey patterns with simpler YAML structure
+- **engage-skills:email-campaign-creator** - Create always-on campaigns for journey email activations
+- **engage-skills:email-template-creator** - Create email templates referenced in journey activations
+- **engage-skills:email-campaign-orchestration** - End-to-end email journey orchestration workflows
+
+**When to use each:**
+- **Use this skill (tdx-skills:journey)** for:
+  - Complex multi-channel journeys with decision points, A/B tests, jumps
+  - Advanced CDP orchestration with 8+ step types
+  - Enterprise-grade journey architecture with multiple stages
+  - Behavior-driven segmentation within journeys
+- **Use engage-skills:email-journey-builder** for:
+  - Simple email sequences (welcome series, newsletters)
+  - Email-only workflows with basic wait/activation patterns
+  - Rapid email journey prototyping
+  - Marketing team self-service journey creation
 
 ## Resources
 

@@ -206,6 +206,12 @@ tdx engage template list | grep "Template Name"
 - **email-campaign-creator** - Create campaigns using these templates
 - **email-testing-validator** - Test template rendering and delivery
 
-**Integration:**
-- **email-journey-builder** - Use templates in customer journey flows
+**Journey Integration:**
+- **email-journey-builder** - Use templates in simple email sequences
+- **tdx-skills:journey** - Use templates in advanced multi-channel journeys
+  - Templates created here can be referenced in journey activation steps
+  - Configure template_id in journey YAML activation config
 - **email-campaign-orchestration** - Coordinate templates with campaigns and journeys
+
+**Advanced Configuration:**
+- **tdx-skills:connector-config** - Configure advanced email connectors for template delivery

@@ -193,9 +193,15 @@ validate_campaign() {
 **Prerequisites:**
 - **email-template-creator** - Create templates for campaigns
 
+**Audience & Targeting:**
+- **tdx-skills:segment** - Create audience segments for campaign targeting
+- **tdx-skills:parent-segment** - Configure parent segments for journey integration
+
 **Integration:**
 - **email-testing-validator** - Test campaigns before launch
 - **email-campaign-orchestration** - Integrate with journeys
+- **email-journey-builder** - Create simple email sequences using campaigns
+- **tdx-skills:journey** - Advanced journey orchestration with campaign activations
 
 **Management:**
 - **email-template-manager** - Manage templates used in campaigns

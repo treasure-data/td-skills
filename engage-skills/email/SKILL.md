@@ -281,10 +281,31 @@ tdx journey push --file abandoned-cart-recovery-journey.yml
 - **tdx-skills:parent-segment** - Manage parent segment configurations
 
 **Journey & Automation:**
-- **tdx-skills:journey** - Create and manage customer journeys
-- **email-journey-builder** - Design email-specific journey flows
-- **tdx-skills:connector-config** - Configure email sender settings
+- **email-journey-builder** - Design email-specific journey flows (simple patterns)
+- **tdx-skills:journey** - Comprehensive CDP journey orchestration (advanced patterns)
+  - **Use tdx-skills:journey when you need:**
+    - Multi-channel journeys (email + SMS + push)
+    - A/B testing different email content
+    - Decision points based on customer behavior
+    - Complex multi-stage journey architecture
+    - Cross-journey navigation and jumps
+  - **Use email-journey-builder for:**
+    - Simple email sequences (welcome series, newsletters)
+    - Rapid email workflow prototyping
+    - Basic wait → email → wait patterns
+- **tdx-skills:connector-config** - Configure email sender settings and advanced connectors
+- **tdx-skills:validate-journey** - Validate complex journey YAML structures
 
 **Testing & Optimization:**
 - **email-testing-validator** - Test and validate email campaigns
+- **email-performance-monitor** - Monitor email performance metrics
+
+**Workflow Selection Guide:**
+
+| Complexity Level | Recommended Skills Combination |
+|-----------------|-------------------------------|
+| **Basic Email Campaign** | email-template-creator → email-campaign-creator |
+| **Simple Email Series** | email-template-creator → email-journey-builder → email-campaign-creator |
+| **Complete Email Orchestration** | All engage-skills together (this skill) |
+| **Advanced Multi-Channel** | engage-skills + **tdx-skills:journey** + **tdx-skills:connector-config** |
 - **email-performance-monitor** - Monitor email performance metrics
