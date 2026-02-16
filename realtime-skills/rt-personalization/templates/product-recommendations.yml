@@ -1,0 +1,88 @@
+# Product Recommendations Personalization Service
+# Returns personalized product recommendations based on browsing history and customer tier
+#
+# Use this template for:
+# - E-commerce product recommendations
+# - Personalized homepage content
+# - Category-specific suggestions
+#
+# IMPORTANT: Replace <parent_segment_id> with actual ID from `tdx ps rt list --json`
+# IMPORTANT: Verify attributes exist using `tdx ps fields <parent_segment_name> --json`
+
+parent_segment_id: "<parent_segment_id>"  # REPLACE: Get from tdx ps rt list
+service_name: "product_recommendations"
+description: "Personalized product recommendations based on browsing history and customer tier"
+
+# Input parameters from API request
+input_params:
+  - name: "user_id"
+    type: "string"
+    required: true
+  - name: "page_url"              # Optional: current page context
+    type: "string"
+    required: false
+  - name: "category"              # Optional: product category filter
+    type: "string"
+    required: false
+
+# Targeting sections (evaluated in order)
+sections:
+  # Section 1: Users with recent browsing history
+  - name: "recent_browsers"
+    criteria:
+      operator: "AND"
+      conditions:
+        - attribute: "viewed_products_30d"
+          operator: "exists"
+        - attribute: "viewed_products_30d"
+          operator: "list_size_greater_than"
+          value: 3
+    outputs:
+      - attribute: "viewed_products_30d"       # Recently viewed products
+      - attribute: "last_product_viewed"       # Most recent product
+      - attribute: "favorite_category"         # Top browsed category
+      - attribute: "recommended_products"      # ML-based recommendations
+
+  # Section 2: VIP customers (high tier or high LTV)
+  - name: "vip_customers"
+    criteria:
+      operator: "OR"
+      conditions:
+        - attribute: "customer_tier"
+          operator: "equals"
+          value: "platinum"
+        - attribute: "total_lifetime_value"
+          operator: "greater_than"
+          value: 5000
+    outputs:
+      - attribute: "customer_tier"
+      - attribute: "total_lifetime_value"
+      - attribute: "exclusive_offers"          # VIP-only offers
+      - attribute: "vip_products"              # Premium product recommendations
+      - attribute: "early_access_items"        # New releases
+
+  # Section 3: Active shoppers (recent purchases)
+  - name: "active_shoppers"
+    criteria:
+      operator: "AND"
+      conditions:
+        - attribute: "purchase_count_30d"
+          operator: "greater_than"
+          value: 0
+        - attribute: "last_purchase_date"
+          operator: "within_days"
+          value: 30
+    outputs:
+      - attribute: "purchase_count_30d"
+      - attribute: "last_purchased_category"
+      - attribute: "repurchase_recommendations"  # Complementary products
+      - attribute: "loyalty_rewards"             # Rewards program status
+
+  # Section 4: Default fallback (all other users)
+  - name: "default"
+    criteria:
+      operator: "ALWAYS"
+    outputs:
+      - attribute: "popular_products"           # Trending products
+      - attribute: "trending_categories"        # Popular categories
+      - attribute: "new_arrivals"               # Recently added products
