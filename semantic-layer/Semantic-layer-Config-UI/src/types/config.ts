@@ -45,12 +45,16 @@ export interface SemanticDatabaseConfig {
 // LINEAGE DETECTION
 // ============================================================================
 export interface LineageAutoDetectItem {
-  type: "dbt" | "workflow" | "schema_comments";
+  type: "dbt" | "workflow" | "schema_comments" | "schema_changes";
   enabled: boolean;
   paths?: string[];
   include_column_level?: boolean;
   include_transformations?: boolean;
   pattern?: string;
+  track_new_tables?: boolean;
+  track_new_columns?: boolean;
+  track_removed_columns?: boolean;
+  track_type_changes?: boolean;
 }
 
 export interface LineageConfidenceThresholds {
@@ -184,12 +188,22 @@ export interface ApprovalConfig {
 // ============================================================================
 // SYNC BEHAVIOR
 // ============================================================================
+export interface ScheduleConfig {
+  enabled: boolean;
+  frequency: "manual" | "hourly" | "daily" | "weekly" | "custom";
+  time?: string; // HH:MM:SS format for daily/weekly
+  day_of_week?: string; // For weekly (Monday, Tuesday, etc.)
+  cron_expression?: string; // For custom cron
+}
+
 export interface SyncConfig {
   merge_strategy: "manual_wins" | "auto_overwrites" | "merge_both";
   create_backup: boolean;
   dry_run_by_default: boolean;
   audit_logging: boolean;
   batch_size: number;
+  sync_mode: "full" | "delta"; // Full scan vs incremental
+  schedule: ScheduleConfig;
 }
 
 // ============================================================================

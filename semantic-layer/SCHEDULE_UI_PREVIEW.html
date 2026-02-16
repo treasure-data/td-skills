@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Layer Config UI - Schedule Features Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* HEADER */
+        .app-header {
+            background: white;
+            border-bottom: 1px solid #e1e8ed;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .header-left {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #0066cc;
+            border: 1px solid #0066cc;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f7ff;
+        }
+
+        /* MAIN LAYOUT */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-right: 1px solid #e1e8ed;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: #f0f7ff;
+        }
+
+        .nav-item.active {
+            background: #f0f7ff;
+            border-left-color: #0066cc;
+            color: #0066cc;
+            font-weight: 500;
+        }
+
+        /* CONTENT */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .section-description {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 24px;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .form-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .form-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .collapse-icon {
+            color: #6c757d;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .form-description {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 3px rgba(0,102,204,0.1);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 16px;
+        }
+
+        .radio-option {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .radio-option:hover {
+            border-color: #0066cc;
+            background: #f0f7ff;
+        }
+
+        .radio-option.selected {
+            border-color: #0066cc;
+            background: #f0f7ff;
+        }
+
+        .radio-option input[type="radio"] {
+            margin-right: 8px;
+        }
+
+        .radio-label {
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .radio-description {
+            font-size: 12px;
+            color: #6c757d;
+            margin-left: 24px;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #0066cc;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 26px;
+        }
+
+        .select-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .nested-section {
+            margin-top: 16px;
+            padding-left: 16px;
+            border-left: 3px solid #e1e8ed;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 24px;
+        }
+
+        .success-message strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .collapsible-header:hover {
+            background: #e9ecef;
+        }
+
+        .badge {
+            background: #0066cc;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .highlight {
+            background: #fff9db;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1 class="app-title">Semantic Layer Configuration</h1>
+                <span class="status-badge">● Unsaved Changes</span>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary">Revert Changes</button>
+                <button class="btn btn-primary">💾 Save Configuration</button>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <div class="main-layout">
+            <!-- SIDEBAR NAVIGATION -->
+            <nav class="sidebar">
+                <div class="nav-item">Scope</div>
+                <div class="nav-item">Definitions</div>
+                <div class="nav-item">Semantic Database</div>
+                <div class="nav-item">Lineage Detection</div>
+                <div class="nav-item">Conflict Handling</div>
+                <div class="nav-item">Validation</div>
+                <div class="nav-item">Auto-Generation</div>
+                <div class="nav-item active">Advanced Settings <span class="badge">NEW</span></div>
+                <div class="nav-item">Environments</div>
+            </nav>
+
+            <!-- CONTENT AREA -->
+            <main class="content-area">
+                <h2 class="section-title">Advanced Settings</h2>
+                <p class="section-description">Configure sync behavior, notifications, approvals, and scheduling</p>
+
+                <!-- SUCCESS MESSAGE (shown after save) -->
+                <div class="success-message" style="display: none;" id="successMessage">
+                    <strong>✅ Success!</strong>
+                    Configuration saved and workflow deployed to Treasure Data.
+                    <br><br>
+                    <strong>Schedule:</strong> Daily at 03:00:00
+                </div>
+
+                <!-- SYNC BEHAVIOR SECTION -->
+                <div class="form-section">
+                    <div class="form-section-header">
+                        <h3 class="form-section-title">Sync Behavior</h3>
+                    </div>
+
+                    <!-- SYNC MODE (NEW) -->
+                    <div class="form-group">
+                        <label class="form-label">Sync Mode <span class="badge">NEW</span></label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <div class="radio-label">
+                                    <input type="radio" name="syncMode" value="full"> Full Sync
+                                </div>
+                                <div class="radio-description">Scan all tables and fields every time</div>
+                            </label>
+                            <label class="radio-option selected">
+                                <div class="radio-label">
+                                    <input type="radio" name="syncMode" value="delta" checked> Delta Sync
+                                </div>
+                                <div class="radio-description">Only sync new tables and columns since last run</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- MERGE STRATEGY -->
+                    <div class="form-group">
+                        <label class="form-label">Merge Strategy</label>
+                        <div class="radio-group">
+                            <label class="radio-option selected">
+                                <div class="radio-label">
+                                    <input type="radio" name="mergeStrategy" value="manual_wins" checked> Manual Wins
+                                </div>
+                                <div class="radio-description">Manually set values take precedence</div>
+                            </label>
+                            <label class="radio-option">
+                                <div class="radio-label">
+                                    <input type="radio" name="mergeStrategy" value="auto_overwrites"> Auto Overwrites
+                                </div>
+                                <div class="radio-description">Auto-generated values overwrite manual</div>
+                            </label>
+                            <label class="radio-option">
+                                <div class="radio-label">
+                                    <input type="radio" name="mergeStrategy" value="merge_both"> Merge Both
+                                </div>
+                                <div class="radio-description">Combine manual and auto-generated</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- SCHEDULE CONFIGURATION (NEW FEATURE) -->
+                    <div class="form-group">
+                        <div class="collapsible-header">
+                            <div>
+                                <strong>Schedule Configuration <span class="badge">NEW</span></strong>
+                                <span class="form-description">Automatically sync metadata on a schedule</span>
+                            </div>
+                            <span class="collapse-icon">▼</span>
+                        </div>
+
+                        <div class="nested-section">
+                            <!-- ENABLE TOGGLE -->
+                            <div class="form-group">
+                                <div class="toggle-container">
+                                    <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                                    <label class="form-label" style="margin: 0;">
+                                        <span class="highlight">Enable Scheduled Sync</span>
+                                    </label>
+                                </div>
+                                <p class="form-description">Automatically sync metadata on a schedule</p>
+                            </div>
+
+                            <!-- FREQUENCY SELECTOR -->
+                            <div class="form-group">
+                                <label class="form-label">Frequency</label>
+                                <select class="select-control">
+                                    <option value="manual">Manual Only</option>
+                                    <option value="hourly">Hourly</option>
+                                    <option value="daily" selected>Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="custom">Custom (Cron)</option>
+                                </select>
+                            </div>
+
+                            <!-- TIME PICKER (for daily/weekly) -->
+                            <div class="form-group">
+                                <label class="form-label">Time (HH:MM:SS)</label>
+                                <input type="text" class="form-control" value="03:00:00" placeholder="02:00:00">
+                                <p class="form-description">Time of day to run the sync (24-hour format)</p>
+                            </div>
+
+                            <!-- DAY OF WEEK (shown when weekly is selected) -->
+                            <div class="form-group" style="display: none;">
+                                <label class="form-label">Day of Week</label>
+                                <select class="select-control">
+                                    <option value="Monday" selected>Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                    <option value="Sunday">Sunday</option>
+                                </select>
+                            </div>
+
+                            <!-- CRON EXPRESSION (shown when custom is selected) -->
+                            <div class="form-group" style="display: none;">
+                                <label class="form-label">Cron Expression</label>
+                                <input type="text" class="form-control" value="0 */6 * * *" placeholder="0 */6 * * *">
+                                <p class="form-description">Custom cron expression (e.g., '0 */6 * * *' for every 6 hours)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OTHER SETTINGS -->
+                    <div class="form-group">
+                        <div class="toggle-container">
+                            <div class="toggle-switch active"></div>
+                            <label class="form-label" style="margin: 0;">Create Backup Before Modifying Schema</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-container">
+                            <div class="toggle-switch"></div>
+                            <label class="form-label" style="margin: 0;">Dry Run By Default</label>
+                        </div>
+                        <p class="form-description">Start with dry run enabled</p>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-container">
+                            <div class="toggle-switch active"></div>
+                            <label class="form-label" style="margin: 0;">Audit Logging</label>
+                        </div>
+                        <p class="form-description">Log all changes</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Batch Size</label>
+                        <input type="number" class="form-control" value="100" placeholder="100">
+                        <p class="form-description">Process N tables at a time</p>
+                    </div>
+                </div>
+
+                <!-- WHAT HAPPENS WHEN YOU SAVE -->
+                <div class="form-section" style="background: #f8f9fa; border: 2px dashed #0066cc;">
+                    <div class="form-section-header">
+                        <h3 class="form-section-title">🚀 What Happens When You Click Save?</h3>
+                    </div>
+
+                    <div style="font-size: 14px; line-height: 1.8;">
+                        <strong>With Schedule Enabled:</strong>
+                        <ol style="margin-left: 20px; margin-top: 8px;">
+                            <li>Configuration saved to <code>config.yaml</code></li>
+                            <li>Backend automatically runs <code>workflow_generator.py</code></li>
+                            <li>Workflow file (<code>semantic_layer_sync.dig</code>) generated with your schedule</li>
+                            <li>Workflow pushed to Treasure Data via <code>tdx wf push</code></li>
+                            <li>TD Workflow updated with new schedule ✅</li>
+                        </ol>
+
+                        <div style="margin-top: 16px; padding: 12px; background: white; border-radius: 4px; border-left: 3px solid #0066cc;">
+                            <strong>Generated Workflow Schedule:</strong>
+                            <pre style="margin-top: 8px; font-family: monospace; font-size: 12px;">schedule:
+  daily>: 03:00:00</pre>
+                        </div>
+
+                        <div style="margin-top: 16px; color: #155724;">
+                            <strong>✅ Success Message You'll See:</strong>
+                            <div style="margin-top: 8px; padding: 12px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
+                                Configuration saved and workflow deployed to Treasure Data.<br>
+                                Schedule: daily at 03:00:00
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Simple interactivity for demo
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
+        });
+
+        document.querySelectorAll('.radio-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const name = this.querySelector('input').name;
+                document.querySelectorAll(`input[name="${name}"]`).forEach(radio => {
+                    radio.closest('.radio-option').classList.remove('selected');
+                });
+                this.classList.add('selected');
+                this.querySelector('input').checked = true;
+            });
+        });
+
+        document.querySelector('.btn-primary').addEventListener('click', function() {
+            document.getElementById('successMessage').style.display = 'block';
+            document.querySelector('.status-badge').textContent = '✓ Saved';
+            document.querySelector('.status-badge').style.background = '#d4edda';
+            document.querySelector('.status-badge').style.color = '#155724';
+
+            setTimeout(() => {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 5000);
+        });
+
+        // Frequency-dependent field visibility
+        document.querySelector('.select-control').addEventListener('change', function() {
+            const frequency = this.value;
+            const timeField = document.querySelectorAll('.form-group')[5];
+            const dayField = document.querySelectorAll('.form-group')[6];
+            const cronField = document.querySelectorAll('.form-group')[7];
+
+            timeField.style.display = (frequency === 'daily' || frequency === 'weekly') ? 'block' : 'none';
+            dayField.style.display = (frequency === 'weekly') ? 'block' : 'none';
+            cronField.style.display = (frequency === 'custom') ? 'block' : 'none';
+        });
+    </script>
+</body>
+</html>

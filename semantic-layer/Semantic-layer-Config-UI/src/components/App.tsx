@@ -51,18 +51,32 @@ const fetchConfig = async (): Promise<SemanticLayerConfig> => {
 
 /**
  * Save configuration to API
+ * @returns Response with workflow deployment status
  * @throws Error if save fails
  */
-const saveConfig = async (config: SemanticLayerConfig): Promise<void> => {
+const saveConfig = async (config: SemanticLayerConfig): Promise<{
+  success: boolean;
+  message: string;
+  config_saved: boolean;
+  workflow_deployed: boolean;
+  workflow_deployment_details?: any;
+}> => {
   try {
     const apiUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+
+    // Include deploy_workflow flag if schedule is enabled
+    const scheduleEnabled = config.sync?.schedule?.enabled || false;
+
     const response = await fetch(`${apiUrl}/semantic-layer/config`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(config),
-      signal: AbortSignal.timeout(import.meta.env.VITE_API_TIMEOUT || 30000),
+      body: JSON.stringify({
+        config,
+        deploy_workflow: scheduleEnabled  // Auto-deploy if schedule is enabled
+      }),
+      signal: AbortSignal.timeout(import.meta.env.VITE_API_TIMEOUT || 120000), // 2min timeout for workflow deployment
     });
 
     if (!response.ok) {
@@ -74,17 +88,23 @@ const saveConfig = async (config: SemanticLayerConfig): Promise<void> => {
       throw new Error(`Failed to save configuration: ${errorMessage}`);
     }
 
-    // Verify response contains expected data
+    // Parse and return the response
     const responseData = await response.json();
-    if (!responseData.success && !responseData.data) {
-      console.warn("Save response missing expected fields", responseData);
-    }
+
+    return {
+      success: responseData.success || false,
+      message: responseData.message || "Configuration saved",
+      config_saved: responseData.config_saved || false,
+      workflow_deployed: responseData.workflow_deployed || false,
+      workflow_deployment_details: responseData.workflow_deployment_details
+    };
+
   } catch (error) {
     if (error instanceof TypeError && error.message.includes("fetch failed")) {
       throw new Error("Network error: Unable to reach API server. Check your connection and API_BASE_URL.");
     }
     if (error instanceof DOMException && error.name === "AbortError") {
-      throw new Error("Request timeout: API server took too long to respond.");
+      throw new Error("Request timeout: API server took too long to respond. Workflow deployment may take longer.");
     }
     throw error;
   }
@@ -144,9 +164,24 @@ export const App: React.FC = () => {
       initialConfig={initialConfig}
       onSave={async (config) => {
         try {
-          await saveConfig(config);
-          // On successful save, show success message via context
-          // (handled by ConfigContext with SET_LAST_SAVED action)
+          const result = await saveConfig(config);
+
+          // Show success message with workflow deployment status
+          if (result.success) {
+            if (result.workflow_deployed) {
+              console.log('✅ Configuration saved and workflow deployed successfully');
+              // You could show a toast notification here
+              alert(`✅ Success!\n\nConfiguration saved and workflow deployed to Treasure Data.\n\nSchedule: ${config.sync?.schedule?.frequency || 'manual'}`);
+            } else {
+              console.log('✅ Configuration saved successfully');
+              alert('✅ Configuration saved successfully');
+            }
+          } else {
+            // Partial success - config saved but workflow failed
+            console.warn('⚠️ Configuration saved but workflow deployment failed', result);
+            alert(`⚠️ Warning\n\nConfiguration saved but workflow deployment failed:\n${result.message}\n\nYou may need to deploy manually using: tdx wf push`);
+          }
+
         } catch (err) {
           const errorMessage =
             err instanceof Error

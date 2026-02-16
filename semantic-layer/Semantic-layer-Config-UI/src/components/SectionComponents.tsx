@@ -32,6 +32,7 @@ import {
   NotificationsConfig,
   ApprovalConfig,
   SyncConfig,
+  ScheduleConfig,
   TestingConfig,
 } from "../types/config";
 
@@ -907,6 +908,29 @@ export const SyncBehaviorSection: React.FC<SyncBehaviorSectionProps> = ({
       description="Configure how synchronization behaves"
     >
       <RadioGroup
+        label="Sync Mode"
+        value={sync.sync_mode || "full"}
+        onChange={(v) =>
+          onChange({
+            ...sync,
+            sync_mode: v as "full" | "delta",
+          })
+        }
+        options={[
+          {
+            label: "Full Sync",
+            value: "full",
+            description: "Scan all tables and fields every time",
+          },
+          {
+            label: "Delta Sync",
+            value: "delta",
+            description: "Only sync new tables and columns since last run",
+          },
+        ]}
+      />
+
+      <RadioGroup
         label="Merge Strategy"
         value={sync.merge_strategy}
         onChange={(v) =>
@@ -936,6 +960,127 @@ export const SyncBehaviorSection: React.FC<SyncBehaviorSectionProps> = ({
           },
         ]}
       />
+
+      <FormSection title="Schedule Configuration" collapsible defaultExpanded={sync.schedule?.enabled}>
+        <Toggle
+          label="Enable Scheduled Sync"
+          checked={sync.schedule?.enabled || false}
+          onChange={(v) =>
+            onChange({
+              ...sync,
+              schedule: {
+                ...sync.schedule,
+                enabled: v,
+                frequency: sync.schedule?.frequency || "manual",
+              } as ScheduleConfig,
+            })
+          }
+          description="Automatically sync metadata on a schedule"
+        />
+
+        {sync.schedule?.enabled && (
+          <>
+            <Select
+              label="Frequency"
+              value={sync.schedule.frequency}
+              onChange={(v) =>
+                onChange({
+                  ...sync,
+                  schedule: {
+                    ...sync.schedule,
+                    frequency: v as "manual" | "hourly" | "daily" | "weekly" | "custom",
+                  },
+                })
+              }
+              options={[
+                { label: "Manual Only", value: "manual" },
+                { label: "Hourly", value: "hourly" },
+                { label: "Daily", value: "daily" },
+                { label: "Weekly", value: "weekly" },
+                { label: "Custom (Cron)", value: "custom" },
+              ]}
+            />
+
+            {sync.schedule.frequency === "daily" && (
+              <TextInput
+                label="Time (HH:MM:SS)"
+                value={sync.schedule.time || "02:00:00"}
+                onChange={(v) =>
+                  onChange({
+                    ...sync,
+                    schedule: {
+                      ...sync.schedule,
+                      time: v,
+                    },
+                  })
+                }
+                placeholder="02:00:00"
+                description="Time of day to run the sync (24-hour format)"
+              />
+            )}
+
+            {sync.schedule.frequency === "weekly" && (
+              <>
+                <Select
+                  label="Day of Week"
+                  value={sync.schedule.day_of_week || "Monday"}
+                  onChange={(v) =>
+                    onChange({
+                      ...sync,
+                      schedule: {
+                        ...sync.schedule,
+                        day_of_week: v,
+                      },
+                    })
+                  }
+                  options={[
+                    { label: "Monday", value: "Monday" },
+                    { label: "Tuesday", value: "Tuesday" },
+                    { label: "Wednesday", value: "Wednesday" },
+                    { label: "Thursday", value: "Thursday" },
+                    { label: "Friday", value: "Friday" },
+                    { label: "Saturday", value: "Saturday" },
+                    { label: "Sunday", value: "Sunday" },
+                  ]}
+                />
+                <TextInput
+                  label="Time (HH:MM:SS)"
+                  value={sync.schedule.time || "02:00:00"}
+                  onChange={(v) =>
+                    onChange({
+                      ...sync,
+                      schedule: {
+                        ...sync.schedule,
+                        time: v,
+                      },
+                    })
+                  }
+                  placeholder="02:00:00"
+                  description="Time of day to run the sync (24-hour format)"
+                />
+              </>
+            )}
+
+            {sync.schedule.frequency === "custom" && (
+              <TextInput
+                label="Cron Expression"
+                value={sync.schedule.cron_expression || "0 2 * * *"}
+                onChange={(v) =>
+                  onChange({
+                    ...sync,
+                    schedule: {
+                      ...sync.schedule,
+                      cron_expression: v,
+                    },
+                  })
+                }
+                placeholder="0 */6 * * *"
+                description="Custom cron expression (e.g., '0 */6 * * *' for every 6 hours)"
+              />
+            )}
+          </>
+        )}
+      </FormSection>
 
       <Toggle
         label="Create Backup Before Modifying Schema"
