@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  semantic-layer-ui:
+    image: treasuredata/semantic-layer-ui:latest
+    container_name: semantic-layer-ui
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # Treasure Data Configuration
+      - VITE_TD_API_KEY=${TD_API_KEY}
+      - VITE_TD_ENDPOINT=${TD_ENDPOINT:-https://api.treasuredata.com}
+
+      # Application Configuration
+      - VITE_API_BASE_URL=${API_BASE_URL:-http://localhost:3000/api}
+      - VITE_API_TIMEOUT=${API_TIMEOUT:-30000}
+
+      # Feature Flags
+      - VITE_ENABLE_DEV_MODE=${ENABLE_DEV_MODE:-false}
+      - VITE_ENABLE_DARK_MODE=${ENABLE_DARK_MODE:-true}
+      - VITE_ENABLE_MULTI_ENV=${ENABLE_MULTI_ENV:-true}
+
+      # Multi-tenancy
+      - VITE_CUSTOMER_ID=${CUSTOMER_ID:-default}
+      - VITE_ENVIRONMENT=${ENVIRONMENT:-production}
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Security
+    security_opt:
+      - no-new-privileges:true
+    read_only_root_filesystem: false
+
+  # Optional: Nginx reverse proxy for better performance
+  nginx:
+    image: nginx:alpine
+    container_name: semantic-layer-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - semantic-layer-ui
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  semantic-layer-data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
