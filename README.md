@@ -73,6 +73,12 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[field-agent-skills/documentation](./field-agent-skills/documentation)** - Comprehensive templates and guidelines for documenting Field Agents with standardized structure, system prompts, and tool specifications
 - **[field-agent-skills/visualization](./field-agent-skills/visualization)** - Professional Plotly visualization best practices with TD color palette, chart specifications, and formatting standards for executive-ready visualizations
 
+### Semantic Layer Skills
+
+- **[semantic-layer/data-dictionary-helper](./semantic-layer/data-dictionary-helper)** - Automate data dictionary creation and maintenance for TD Parent Segments with AI-generated column descriptions, PII detection, and CSV review workflow
+- **[semantic-layer/schema-auto-tagger](./semantic-layer/schema-auto-tagger)** - Automated schema tagging and resource classification with intelligent pattern detection, 300+ pre-configured rules, and compliance support (GDPR, CCPA, HIPAA, SOX)
+- **[semantic-layer/semantic-layer-sync](./semantic-layer/semantic-layer-sync)** - Sync YAML schema definitions to TD metadata tables with heuristic-based auto-generation of descriptions, tags, and PII detection for 11 metadata tables
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
@@ -95,6 +101,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `tdx-skills` - tdx CLI for managing TD from command line
    - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
+   - `semantic-layer` - Data dictionary helper, schema auto-tagger, and semantic layer sync for data governance and catalog management
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -105,6 +112,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    /plugin install sdk-skills@td-skills
    /plugin install tdx-skills@td-skills
    /plugin install field-agent-skills@td-skills
+   /plugin install semantic-layer@td-skills
    ```
 
 ### Invoking Skills
@@ -148,10 +156,13 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the deployment skill to set up a production publishing workflow"
 "Use the documentation skill to create comprehensive Field Agent documentation"
 "Use the visualization skill to create a Plotly chart with TD colors"
+"Use the data-dictionary-helper skill to generate column descriptions for my parent segment"
+"Use the schema-auto-tagger skill to automatically tag new tables with PII and compliance labels"
+"Use the semantic-layer-sync skill to populate metadata tables from my YAML definitions"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-pz-service, rt-pz-sections, rt-pz-api, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-pz-service, rt-pz-sections, rt-pz-api, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization, data-dictionary-helper, schema-auto-tagger, semantic-layer-sync)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
