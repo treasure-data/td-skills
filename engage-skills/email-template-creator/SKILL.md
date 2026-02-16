@@ -180,24 +180,170 @@ tdx engage template create --name "Newsletter - Weekly" --subject "This Week's U
 tdx engage template create --name "Promotion - Flash Sale" --subject "Limited Time Offer"
 ```
 
-## Common Issues & Solutions
+## Common Errors & Troubleshooting
 
-### Template Not Displaying Correctly
-- Verify HTML syntax is valid
-- Check that CSS uses inline styles
-- Ensure template width is appropriate
-- Test in different email clients
+### Template Creation Errors
 
-### Template Creation Fails
+| Error | Solution |
+|-------|----------|
+| "Workspace context not set" | Run `tdx use engage_workspace "Marketing Team"` |
+| "Template name already exists" | Use unique template name or update existing template |
+| "Invalid HTML content" | Validate HTML syntax and structure |
+| "Subject line too long" | Keep subject under 50 characters for mobile compatibility |
+| "Permission denied" | Contact workspace administrator for template creation permissions |
+| "Workspace not found" | Verify workspace name: `tdx engage workspace list` |
+| "File not found" | Check file path exists: `ls -la template-file.html` |
+| "HTML content empty" | Ensure HTML file contains valid content |
+| "Character encoding issues" | Use UTF-8 encoding: `file -bi template.html` |
+
+### Template Content & Design Errors
+
+| Error | Solution |
+|-------|----------|
+| "Template not rendering properly" | Use inline CSS styles instead of external stylesheets |
+| "Images not loading" | Use absolute URLs or base64-encoded images |
+| "Layout broken in email clients" | Use table-based layouts for better compatibility |
+| "Text not displaying correctly" | Check character encoding and use web-safe fonts |
+| "Mobile display issues" | Set max-width: 600px and use responsive design |
+| "Missing unsubscribe link" | Always include unsubscribe functionality |
+| "CTA buttons not clickable" | Ensure proper anchor tag formatting with href |
+
+### Template Management Errors
+
+| Error | Solution |
+|-------|----------|
+| "Template update failed" | Check template exists: `tdx engage template show "Name"` |
+| "Cannot delete template" | Verify template not used in active campaigns |
+| "Template list empty" | Check workspace context and permissions |
+| "Template name change failed" | Ensure new name doesn't conflict with existing templates |
+| "HTML file too large" | Optimize images and reduce template size under 100KB |
+
+### HTML Content Validation Errors
+
+| Error | Solution |
+|-------|----------|
+| "Invalid HTML syntax" | Validate HTML structure and close all tags properly |
+| "CSS not applied" | Use inline styles: `style="color: red;"` not external CSS |
+| "Broken links" | Use absolute URLs: `https://company.com/page` |
+| "Image alt text missing" | Add alt attributes: `<img src="url" alt="description">` |
+| "Table rendering issues" | Use proper table structure with tbody, thead elements |
+| "Special characters broken" | Use HTML entities: `&amp;` for `&`, `&lt;` for `<` |
+
+### File Input & Content Errors
+
+| Error | Solution |
+|-------|----------|
+| "File reading permission denied" | Check file permissions: `chmod 644 template.html` |
+| "Binary content detected" | Ensure HTML file is text-based, not binary |
+| "Line ending issues" | Convert line endings: `dos2unix template.html` |
+| "Template variable syntax error" | Use proper Liquid syntax: `{{variable_name}}` |
+| "Merge tag not recognized" | Check supported merge tags in TD Engage documentation |
+
+## Advanced Troubleshooting
+
+### Template Validation Workflow
 ```bash
-# Check workspace context
-tdx use | grep engage_workspace
+# Comprehensive template validation
+validate_template() {
+  local template_name="$1"
 
-# Verify workspace access
-tdx engage workspace show "Marketing Team"
+  echo "Validating template: $template_name"
 
-# Check template name doesn't already exist
-tdx engage template list | grep "Template Name"
+  # Check template exists
+  if ! tdx engage template show "$template_name" >/dev/null 2>&1; then
+    echo "❌ Template not found: $template_name"
+    return 1
+  fi
+
+  # Check template content
+  template_info=$(tdx engage template show "$template_name" --full)
+
+  # Validate HTML content exists
+  html_content=$(echo "$template_info" | jq '.data.attributes.html_content' -r 2>/dev/null)
+  if [ "$html_content" = "null" ] || [ -z "$html_content" ]; then
+    echo "❌ No HTML content found"
+    return 1
+  fi
+
+  # Check subject line
+  subject=$(echo "$template_info" | jq '.data.attributes.subject' -r 2>/dev/null)
+  subject_length=${#subject}
+  if [ $subject_length -gt 50 ]; then
+    echo "⚠️  Subject line too long: $subject_length characters (recommended: ≤50)"
+  fi
+
+  echo "✅ Template validation completed"
+}
+
+# Usage: validate_template "Welcome Email"
+```
+
+### HTML Content Debugging
+```bash
+# Debug HTML content issues
+debug_html_template() {
+  local template_name="$1"
+
+  echo "Debugging HTML content for: $template_name"
+
+  # Extract HTML content to file for inspection
+  tdx engage template show "$template_name" --full | \
+    jq '.data.attributes.html_content' -r > temp_template.html
+
+  # Check HTML syntax
+  echo "HTML syntax check:"
+  if command -v tidy >/dev/null; then
+    tidy -e temp_template.html 2>&1 | head -10
+  else
+    echo "Install 'tidy' for HTML validation: brew install tidy-html5"
+  fi
+
+  # Check for common issues
+  echo -e "\nCommon issues check:"
+  grep -n "style=" temp_template.html >/dev/null && echo "✅ Inline styles found" || echo "⚠️  No inline styles detected"
+  grep -n "http://" temp_template.html && echo "⚠️  HTTP links found (use HTTPS)"
+  grep -n "alt=" temp_template.html >/dev/null && echo "✅ Alt tags found" || echo "⚠️  Missing alt tags for images"
+
+  rm -f temp_template.html
+}
+
+# Usage: debug_html_template "Newsletter Template"
+```
+
+### Workspace Permission Troubleshooting
+```bash
+# Check template permissions and workspace access
+check_template_permissions() {
+  local workspace_name="$1"
+
+  echo "Checking template permissions for workspace: $workspace_name"
+
+  # Verify workspace access
+  if ! tdx engage workspace show "$workspace_name" >/dev/null 2>&1; then
+    echo "❌ Cannot access workspace: $workspace_name"
+    echo "Available workspaces:"
+    tdx engage workspace list
+    return 1
+  fi
+
+  # Check current user permissions
+  echo "Current workspace context:"
+  tdx use | grep engage_workspace
+
+  # Test template creation permissions
+  test_template_name="permission_test_$(date +%s)"
+  if tdx engage template create --name "$test_template_name" --subject "Test" --html "<p>Test</p>" >/dev/null 2>&1; then
+    echo "✅ Template creation permissions verified"
+    # Clean up test template
+    tdx engage template delete "$test_template_name" --yes >/dev/null 2>&1
+  else
+    echo "❌ Template creation permissions denied"
+    echo "Contact workspace administrator for template management permissions"
+    return 1
+  fi
+}
+
+# Usage: check_template_permissions "Marketing Team"
 ```
 
 ## Related Skills
