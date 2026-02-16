@@ -1,3 +1,6 @@
-flask==3.0.0
-flask-cors==4.0.0
-pyyaml==6.0.1
+flask==3.1.0  # Updated from 3.0.0
+flask-cors==5.0.0  # Updated from 4.0.0
+flask-limiter==3.8.0  # Updated from 3.5.0
+pyjwt==2.9.0  # Updated from 2.8.0
+pyyaml==6.0.2  # Updated from 6.0.1 (security fixes)
+redis==5.2.0  # Updated from 5.0.1
