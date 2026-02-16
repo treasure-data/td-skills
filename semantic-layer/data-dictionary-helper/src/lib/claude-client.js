@@ -41,9 +41,36 @@ import Anthropic from '@anthropic-ai/sdk';
  * // Returns: { name: 'John', age: 30 }
  */
 export async function callClaudeWithStructuredOutput(systemPrompt, userPrompt, outputSchema) {
-  // Create Anthropic client (reads ANTHROPIC_API_KEY from env)
+  // SECURITY: Validate API key exists and is properly formatted
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!apiKey) {
+    throw new Error(
+      'Anthropic API authentication failed.\n' +
+      'ANTHROPIC_API_KEY environment variable is not set.\n' +
+      'Get your API key from: https://console.anthropic.com/settings/keys\n' +
+      'Then set it in your environment:\n' +
+      '  export ANTHROPIC_API_KEY=your-api-key-here'
+    );
+  }
+
+  // Validate API key format (basic check)
+  if (apiKey.length < 20) {
+    throw new Error(
+      'Anthropic API key appears to be invalid (too short).\n' +
+      'Please verify your ANTHROPIC_API_KEY is correct.\n' +
+      'Get your API key from: https://console.anthropic.com/settings/keys'
+    );
+  }
+
+  if (!apiKey.startsWith('sk-ant-')) {
+    console.warn('⚠️  Warning: ANTHROPIC_API_KEY does not start with expected prefix "sk-ant-"');
+    console.warn('   The key may be invalid or in an unexpected format.');
+  }
+
+  // Create Anthropic client
   const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY
+    apiKey: apiKey
   });
 
   try {

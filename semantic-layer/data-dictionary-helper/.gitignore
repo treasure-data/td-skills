@@ -1,5 +1,83 @@
+# Dependencies
 node_modules/
-/schemas/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Secrets & Environment
 .env
+.env.local
+.env.*.local
+.env.production
+.env.development
+*.key
+*.pem
+*.p12
+credentials.json
+service-account*.json
+*-credentials.json
+*-api-key*.json
+secrets.yaml
+secrets.yml
+.secrets/
+
+# API Keys and Tokens
+**/apikeys/
+**/api-keys/
+*.apikey
+*.token
+auth-token*.txt
+
+# Output directories
+/schemas/
 /snapshots/
 /reviews/
+/output/
+/exports/
+/reports/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.npm/
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Temporary & Cache
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+dist/
+build/
+
+# Test files
+coverage/
+.nyc_output/
+*.test.local.*

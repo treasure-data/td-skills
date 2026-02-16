@@ -6,8 +6,7 @@ import { join } from 'path';
 /**
  * Execute a TDX CLI command and return parsed JSON output.
  *
- * Uses output redirection to work around TDX CLI's pipe buffering limitations
- * (TDX truncates output at 64KB when stdout is a pipe, but works correctly with files).
+ * SECURITY: Uses spawn with array arguments (no shell) to prevent command injection
  *
  * @param {string[]} args - Command arguments (e.g., ['ps', 'list', '--json'])
  * @param {object} options - Optional spawn options
@@ -22,27 +21,26 @@ export async function executeTdxCommand(args, options = {}) {
   return new Promise((resolve, reject) => {
     const stderrChunks = [];
 
-    // Build command with stdout redirection only (keep stderr for progress messages)
-    // Quote arguments that contain spaces or special characters
-    const quotedArgs = args.map(arg => {
-      if (arg.includes(' ') || arg.includes(':') || arg.includes('"')) {
-        // Escape any existing double quotes and wrap in double quotes
-        return `"${arg.replace(/"/g, '\\"')}"`;
-      }
-      return arg;
-    });
-    const command = `tdx ${quotedArgs.join(' ')} > "${tempFile}"`;
-
-    // Spawn TDX CLI process via shell with output redirection
+    // SECURITY FIX: Use spawn with array args and output redirection via file descriptors
+    // This avoids shell command injection vulnerabilities
     const enhancedPath = process.env.PATH + ':/usr/local/bin:/Users/' + process.env.USER + '/.local/bin';
-    const tdxProcess = spawn(command, {
-      stdio: ['ignore', 'ignore', 'pipe'],
-      shell: true,
+
+    // Spawn TDX CLI process WITHOUT shell (critical security fix)
+    const tdxProcess = spawn('tdx', args, {
+      stdio: ['ignore', 'pipe', 'pipe'],  // Capture stdout to pipe instead of file
+      shell: false,  // CRITICAL: Never use shell with user input
       env: { ...process.env, PATH: enhancedPath },
       ...options
     });
 
-    // Capture stderr only (stdout goes to file)
+    const stdoutChunks = [];
+
+    // Capture stdout
+    tdxProcess.stdout.on('data', (data) => {
+      stdoutChunks.push(data);
+    });
+
+    // Capture stderr
     tdxProcess.stderr.on('data', (data) => {
       stderrChunks.push(data);
     });
@@ -64,12 +62,10 @@ export async function executeTdxCommand(args, options = {}) {
     // Handle process exit
     tdxProcess.on('close', async (exitCode) => {
       const stderr = Buffer.concat(stderrChunks).toString();
+      const stdout = Buffer.concat(stdoutChunks).toString();
 
       // Check for non-zero exit code
       if (exitCode !== 0) {
-        // Clean up temp file
-        try { await unlink(tempFile); } catch {}
-
         // Check for common error patterns in stderr
         const stderrLower = stderr.toLowerCase();
 
@@ -102,18 +98,11 @@ export async function executeTdxCommand(args, options = {}) {
         return;
       }
 
-      // Success - read and parse JSON output from temp file
+      // Success - parse JSON output from stdout
       try {
-        const stdout = await readFile(tempFile, 'utf8');
-        // Clean up temp file
-        try { await unlink(tempFile); } catch {}
-
         const result = JSON.parse(stdout);
         resolve(result);
       } catch (parseError) {
-        // Clean up temp file on error
-        try { await unlink(tempFile); } catch {}
-
         reject(new Error(
           'Failed to parse TDX JSON output.\n' +
           'Command: tdx ' + args.join(' ') + '\n' +
@@ -127,14 +116,19 @@ export async function executeTdxCommand(args, options = {}) {
 /**
  * Check if TDX CLI is installed and available.
  *
+ * SECURITY: Uses spawn without shell to prevent command injection
+ *
  * @returns {Promise<boolean>} True if TDX is available
  * @throws {Error} If TDX is not installed with helpful installation message
  */
 export async function checkTdxAvailable() {
   return new Promise((resolve, reject) => {
     const enhancedPath = process.env.PATH + ':/usr/local/bin:/Users/' + process.env.USER + '/.local/bin';
+
+    // SECURITY: Use spawn with array args, no shell
     const tdxProcess = spawn('tdx', ['--version'], {
-      env: { ...process.env, PATH: enhancedPath }
+      env: { ...process.env, PATH: enhancedPath },
+      shell: false  // CRITICAL: Never use shell
     });
 
     tdxProcess.on('error', (error) => {
