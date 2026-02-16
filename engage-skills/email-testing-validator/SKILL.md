@@ -1,467 +1,335 @@
 ---
 name: email-testing-validator
-description: Tests and validates email campaigns and templates using tdx engage test commands before launch.
+description: Validates email campaigns and templates using verified tdx engage commands before launch. Focuses on configuration validation and pre-launch checks.
 ---
 
 # Email Testing Validator
 
 ## Purpose
 
-Tests email campaigns and templates using `tdx engage campaign test` and basic validation checks. Ensures campaigns are ready for launch.
+Validates email campaigns and templates using **confirmed tdx engage commands only**. Provides pre-launch configuration checks and manual testing guidance to ensure campaigns are ready for launch.
 
 ## Prerequisites
 
 - `tdx` CLI authenticated (`tdx auth status`)
 - TD Engage workspace access
 - Email campaigns and templates created
-- Test email addresses available
 
-## Basic Testing Workflow
+## Campaign Configuration Validation
 
-### 1. Campaign Test Send
+### 1. Campaign Readiness Check
 ```bash
-# Send test email to verify campaign setup
-tdx engage campaign test "Welcome Campaign" --email "test@treasuredata.com"
+# Set workspace context
+tdx use engage_workspace "Marketing Team"
 
-# Test with multiple recipients
-tdx engage campaign test "Newsletter Campaign" --email "test1@example.com"
-tdx engage campaign test "Newsletter Campaign" --email "test2@example.com"
+# Check campaign exists and configuration
+tdx engage campaign show "Campaign Name"
 
-# Test campaign in specific workspace
-tdx engage campaign test "Campaign Name" --email "test@example.com" --workspace "Marketing"
-```
-
-### 2. Pre-Launch Campaign Validation
-```bash
-# Check campaign configuration
+# Get full campaign details
 tdx engage campaign show "Campaign Name" --full
 
 # Verify campaign status
-tdx engage campaign show "Campaign Name" | grep -i status
-
-# Check segment assignment
-tdx engage campaign show "Campaign Name" | grep -i segment
+campaign_status=$(tdx engage campaign show "Campaign Name" | grep -i status)
+echo "Campaign Status: $campaign_status"
 ```
 
-### 3. Template Content Review
+### 2. Template Content Validation
 ```bash
-# Review template content
-tdx engage template show "Template Name" --full
-
-# Check template subject line length
-tdx engage template show "Template Name" | grep -i subject
-
-# Verify template HTML structure
-tdx engage template show "Template Name" --full | grep -i html
-```
-
-## Testing Checklist
-
-### Campaign Readiness Check
-```bash
-# Essential pre-launch checks
-echo "Campaign Testing Checklist:"
-echo ""
-
-# 1. Campaign exists and accessible
-echo "1. Campaign Configuration:"
-tdx engage campaign show "Campaign Name"
-
-# 2. Template exists and looks correct
-echo "2. Template Content:"
+# Review template configuration
 tdx engage template show "Template Name"
 
-# 3. Workspace context is correct
-echo "3. Workspace Context:"
-tdx use | grep engage_workspace
+# Get complete template details including HTML
+tdx engage template show "Template Name" --full
 
-# 4. Send test email
-echo "4. Test Email Send:"
-tdx engage campaign test "Campaign Name" --email "your-test@email.com"
+# Check template subject line
+template_subject=$(tdx engage template show "Template Name" | grep -i subject)
+echo "Subject: $template_subject"
 ```
 
-### Template Quality Check
+### 3. Workspace Context Verification
 ```bash
-# Quick template validation
-check_template() {
-  local template_name="$1"
-  echo "Checking template: $template_name"
+# Verify current workspace context
+current_workspace=$(tdx use | grep engage_workspace)
+echo "Current workspace: $current_workspace"
 
-  # Get template info
-  template_info=$(tdx engage template show "$template_name")
+# List available workspaces
+tdx engage workspace list
 
-  # Check if template exists
-  if [ $? -eq 0 ]; then
-    echo "✅ Template exists and accessible"
-  else
-    echo "❌ Template not found or inaccessible"
-    return 1
-  fi
-
-  # Show basic info
-  echo "Template ready for use in campaigns"
-}
-
-# Usage: check_template "Welcome Email"
+# Show workspace details
+tdx engage workspace show "Marketing Team"
 ```
 
-### Campaign Status Verification
+## Pre-Launch Validation Workflows
+
+### Campaign Validation Checklist
 ```bash
-# Check if campaign is ready for launch
-check_campaign() {
+# Comprehensive campaign validation
+validate_campaign() {
   local campaign_name="$1"
-  echo "Checking campaign: $campaign_name"
 
-  # Get campaign status
-  status=$(tdx engage campaign show "$campaign_name" 2>/dev/null | grep -i status || echo "ERROR")
+  echo "Validating campaign: $campaign_name"
 
-  if [[ "$status" == *"ERROR"* ]]; then
-    echo "❌ Campaign not found"
-    return 1
-  elif [[ "$status" == *"DRAFT"* ]]; then
-    echo "✅ Campaign ready to launch (currently DRAFT)"
-  elif [[ "$status" == *"ACTIVE"* ]]; then
-    echo "✅ Campaign is ACTIVE and running"
-  else
-    echo "⚠️  Campaign status: $status"
-  fi
-}
-
-# Usage: check_campaign "Newsletter Campaign"
-```
-
-## Testing Best Practices
-
-### Test Email Setup
-- Use multiple test email addresses
-- Test with different email providers (Gmail, Outlook, etc.)
-- Use internal company email addresses for initial testing
-- Test both HTML and plaintext rendering
-
-### Pre-Launch Testing Steps
-1. **Template Review**: Verify content, links, and formatting
-2. **Campaign Configuration**: Check settings, segments, and sender info
-3. **Test Send**: Send to internal test addresses first
-4. **Cross-Client Testing**: Test in major email clients
-5. **Link Testing**: Verify all links work correctly
-
-## Common Errors & Troubleshooting
-
-### Test Send Failures
-
-| Error | Solution |
-|-------|----------|
-| "Campaign not found" | Verify campaign name: `tdx engage campaign list` |
-| "Test email delivery failed" | Check email address format and deliverability |
-| "Workspace context not set" | Run `tdx use engage_workspace "Marketing Team"` |
-| "Permission denied for test send" | Contact workspace admin for campaign testing permissions |
-| "Campaign not in testable state" | Ensure campaign is in DRAFT or PAUSED status |
-| "Invalid email address format" | Use valid email format: user@domain.com |
-| "Sender profile not configured" | Configure sender profile before testing |
-| "Template not associated with campaign" | Verify campaign has template assigned |
-
-### Campaign Validation Errors
-
-| Error | Solution |
-|-------|----------|
-| "Campaign status is FINISHED" | Cannot test finished campaigns - duplicate or create new |
-| "Campaign missing required fields" | Check campaign configuration: subject, template, sender |
-| "Parent segment not configured" | Set parent segment for always-on campaigns |
-| "No template assigned to campaign" | Assign template: `tdx engage campaign update "Name" --template "Template"` |
-| "Sender verification pending" | Complete sender profile verification process |
-| "Campaign audience is empty" | Verify segment has recipients or use test segment |
-
-### Template Testing Errors
-
-| Error | Solution |
-|-------|----------|
-| "Template not found" | Check template exists: `tdx engage template list` |
-| "Template HTML rendering issues" | Validate HTML syntax and inline CSS usage |
-| "Missing merge tags" | Ensure all {{variables}} have valid data sources |
-| "Image loading failures" | Use absolute URLs or verify image accessibility |
-| "Link validation failures" | Test all links manually and fix broken URLs |
-| "Unsubscribe link missing" | Add required unsubscribe functionality |
-
-### Email Delivery & Rendering Issues
-
-| Error | Solution |
-|-------|----------|
-| "Test email not received" | Check spam folder, email filters, and delivery logs |
-| "Email rendering broken" | Use email client testing tools and fix compatibility |
-| "Images not displaying" | Use absolute URLs and check image hosting |
-| "Links not clickable" | Verify proper anchor tag formatting |
-| "Mobile display issues" | Test responsive design and mobile compatibility |
-| "Plain text version missing" | Add plain text alternative for better deliverability |
-
-### Authentication & Deliverability Issues
-
-| Error | Solution |
-|-------|----------|
-| "SPF authentication failed" | Configure proper SPF records in DNS |
-| "DKIM signature invalid" | Verify DKIM setup with domain provider |
-| "Domain not verified" | Complete domain verification process |
-| "High spam score detected" | Review content and avoid spam trigger words |
-| "Bounce rate too high" | Clean email list and verify addresses |
-| "Reputation issues" | Monitor sender reputation and engagement metrics |
-
-## Advanced Testing & Validation
-
-### Comprehensive Campaign Testing
-```bash
-# Complete pre-launch testing workflow
-comprehensive_campaign_test() {
-  local campaign_name="$1"
-  local test_email="$2"
-
-  echo "Starting comprehensive testing for: $campaign_name"
-
-  # 1. Basic campaign validation
-  echo "1. Validating campaign configuration..."
+  # 1. Check campaign exists
   if ! tdx engage campaign show "$campaign_name" >/dev/null 2>&1; then
     echo "❌ Campaign not found: $campaign_name"
     return 1
   fi
 
-  # 2. Check campaign status
-  status=$(tdx engage campaign show "$campaign_name" | grep -i status | awk '{print $2}' 2>/dev/null)
-  if [[ "$status" != *"DRAFT"* && "$status" != *"PAUSED"* ]]; then
-    echo "⚠️  Campaign status: $status (may not be testable)"
-  else
-    echo "✅ Campaign status acceptable for testing: $status"
-  fi
+  echo "✅ Campaign exists and accessible"
 
-  # 3. Template validation
-  echo "2. Validating template..."
-  template_name=$(tdx engage campaign show "$campaign_name" --full | grep -i template | awk '{print $2}' 2>/dev/null)
-  if [ -n "$template_name" ] && [ "$template_name" != "null" ]; then
-    if tdx engage template show "$template_name" >/dev/null 2>&1; then
-      echo "✅ Template validated: $template_name"
-    else
-      echo "❌ Template not found: $template_name"
-      return 1
-    fi
-  else
-    echo "❌ No template assigned to campaign"
-    return 1
-  fi
+  # 2. Get campaign details
+  campaign_info=$(tdx engage campaign show "$campaign_name" --full)
 
-  # 4. Sender profile validation
-  echo "3. Validating sender configuration..."
-  sender_info=$(tdx engage campaign show "$campaign_name" --full | grep -i sender 2>/dev/null)
-  if [ -n "$sender_info" ]; then
-    echo "✅ Sender profile configured"
-  else
-    echo "⚠️  No sender profile configured"
-  fi
+  # 3. Check campaign status
+  status=$(echo "$campaign_info" | grep -i status || echo "Status not found")
+  echo "Campaign Status: $status"
 
-  # 5. Send test email
-  echo "4. Sending test email..."
-  if tdx engage campaign test "$campaign_name" --email "$test_email"; then
-    echo "✅ Test email sent successfully to: $test_email"
-    echo "Check your inbox and spam folder"
-  else
-    echo "❌ Test email send failed"
-    return 1
-  fi
+  # 4. Verify template association
+  template_info=$(echo "$campaign_info" | grep -i template || echo "No template info")
+  echo "Template Info: $template_info"
 
-  echo "✅ Comprehensive testing completed"
+  # 5. Check segment configuration
+  segment_info=$(echo "$campaign_info" | grep -i segment || echo "No segment info")
+  echo "Segment Info: $segment_info"
+
+  echo "✅ Campaign validation completed"
 }
 
-# Usage: comprehensive_campaign_test "Newsletter Campaign" "test@company.com"
+# Usage: validate_campaign "Newsletter Campaign"
 ```
 
-### Template Content Validation
+### Template Quality Assessment
 ```bash
-# Validate template content and structure
-validate_template_content() {
+# Validate template configuration and content
+validate_template() {
   local template_name="$1"
 
-  echo "Validating template content: $template_name"
+  echo "Validating template: $template_name"
 
-  # Get template information
-  template_info=$(tdx engage template show "$template_name" --full 2>/dev/null)
-  if [ $? -ne 0 ]; then
+  # Check template exists
+  if ! tdx engage template show "$template_name" >/dev/null 2>&1; then
     echo "❌ Template not found: $template_name"
     return 1
   fi
 
-  # Check subject line
-  subject=$(echo "$template_info" | jq '.data.attributes.subject' -r 2>/dev/null)
-  if [ -n "$subject" ] && [ "$subject" != "null" ]; then
-    subject_length=${#subject}
-    if [ $subject_length -gt 50 ]; then
-      echo "⚠️  Subject line long ($subject_length chars): $subject"
-    else
-      echo "✅ Subject line OK ($subject_length chars): $subject"
-    fi
+  echo "✅ Template exists and accessible"
+
+  # Get template details
+  template_info=$(tdx engage template show "$template_name" --full)
+
+  # Extract and validate subject
+  subject=$(echo "$template_info" | grep -i subject | head -1)
+  echo "Subject Line: $subject"
+
+  # Check for HTML content
+  if echo "$template_info" | grep -qi "html"; then
+    echo "✅ HTML content detected"
   else
-    echo "❌ No subject line configured"
+    echo "⚠️  No HTML content detected"
   fi
 
-  # Check HTML content
-  html_content=$(echo "$template_info" | jq '.data.attributes.html_content' -r 2>/dev/null)
-  if [ -n "$html_content" ] && [ "$html_content" != "null" ]; then
-    # Basic HTML validation checks
-    if echo "$html_content" | grep -q "<html\|<HTML"; then
-      echo "✅ HTML structure detected"
-    else
-      echo "⚠️  No HTML structure tags found"
-    fi
-
-    if echo "$html_content" | grep -q "style="; then
-      echo "✅ Inline CSS detected"
-    else
-      echo "⚠️  No inline CSS found (may cause rendering issues)"
-    fi
-
-    if echo "$html_content" | grep -q "unsubscribe\|UNSUBSCRIBE"; then
-      echo "✅ Unsubscribe link detected"
-    else
-      echo "⚠️  No unsubscribe link found"
-    fi
+  # Check for plaintext content
+  if echo "$template_info" | grep -qi "plaintext\|text"; then
+    echo "✅ Plaintext content detected"
   else
-    echo "❌ No HTML content found"
+    echo "⚠️  No plaintext content detected"
   fi
 
   echo "✅ Template validation completed"
 }
 
-# Usage: validate_template_content "Newsletter Template"
+# Usage: validate_template "Welcome Email"
 ```
 
-### Email Deliverability Pre-Check
+### Bulk Campaign Assessment
 ```bash
-# Check deliverability factors before testing
-check_deliverability_factors() {
-  local campaign_name="$1"
+# Validate multiple campaigns in workspace
+validate_all_campaigns() {
+  local workspace_name="$1"
 
-  echo "Checking deliverability factors for: $campaign_name"
+  echo "Validating all campaigns in: $workspace_name"
 
-  # Get campaign details
-  campaign_info=$(tdx engage campaign show "$campaign_name" --full 2>/dev/null)
-  workspace_id=$(echo "$campaign_info" | jq '.data.relationships.workspace.data.id' -r 2>/dev/null)
+  # Set workspace context
+  tdx use engage_workspace "$workspace_name"
 
-  # Check sender domain verification
-  echo "1. Checking sender authentication..."
-  if [ -n "$workspace_id" ]; then
-    # Check workspace domains
-    domains_status=$(tdx api "/workspaces/$workspace_id/domains" --type engage 2>/dev/null)
-    unverified=$(echo "$domains_status" | jq '.data[] | select(.attributes.verification_status != "verified")' 2>/dev/null)
+  # Get campaign list
+  campaigns=$(tdx engage campaign list --format tsv)
 
-    if [ -z "$unverified" ]; then
-      echo "✅ All domains verified"
-    else
-      echo "⚠️  Unverified domains detected - may impact deliverability"
-    fi
+  if [ -z "$campaigns" ]; then
+    echo "❌ No campaigns found in workspace"
+    return 1
   fi
 
-  # Check sender profile status
-  echo "2. Checking sender profile..."
-  sender_id=$(echo "$campaign_info" | jq '.data.attributes.email_sender_id' -r 2>/dev/null)
-  if [ -n "$sender_id" ] && [ "$sender_id" != "null" ]; then
-    echo "✅ Sender profile configured"
-  else
-    echo "⚠️  No sender profile configured"
-  fi
+  # Process each campaign
+  echo "$campaigns" | while IFS=$'\t' read -r uuid name status type; do
+    if [ -n "$name" ]; then
+      echo "Checking: $name (Status: $status, Type: $type)"
 
-  # Basic content spam check
-  echo "3. Basic content analysis..."
-  template_name=$(echo "$campaign_info" | jq '.data.relationships.template.data.attributes.name' -r 2>/dev/null)
-  if [ -n "$template_name" ]; then
-    template_content=$(tdx engage template show "$template_name" --full | jq '.data.attributes.html_content' -r 2>/dev/null)
-
-    # Check for common spam triggers
-    spam_triggers=("URGENT" "ACT NOW" "LIMITED TIME" "CLICK HERE" "FREE MONEY" "GUARANTEED")
-    found_triggers=0
-
-    for trigger in "${spam_triggers[@]}"; do
-      if echo "$template_content" | grep -qi "$trigger"; then
-        echo "⚠️  Potential spam trigger detected: $trigger"
-        ((found_triggers++))
+      # Quick validation
+      if tdx engage campaign show "$name" >/dev/null 2>&1; then
+        echo "  ✅ $name - Accessible"
+      else
+        echo "  ❌ $name - Not accessible"
       fi
-    done
-
-    if [ $found_triggers -eq 0 ]; then
-      echo "✅ No obvious spam triggers detected"
     fi
-  fi
-
-  echo "✅ Deliverability pre-check completed"
-}
-
-# Usage: check_deliverability_factors "Newsletter Campaign"
-```
-
-### Multi-Client Email Testing
-```bash
-# Test email across multiple test addresses/clients
-multi_client_test() {
-  local campaign_name="$1"
-
-  # Define test email addresses for different providers
-  test_emails=(
-    "test.gmail@company.com"
-    "test.outlook@company.com"
-    "test.yahoo@company.com"
-    "test.internal@treasuredata.com"
-  )
-
-  echo "Testing campaign across multiple email clients: $campaign_name"
-
-  for email in "${test_emails[@]}"; do
-    echo "Sending test to: $email"
-
-    if tdx engage campaign test "$campaign_name" --email "$email"; then
-      echo "✅ Test sent to $email"
-    else
-      echo "❌ Failed to send to $email"
-    fi
-
-    # Rate limiting
-    sleep 2
   done
 
-  echo ""
-  echo "✅ Multi-client testing completed"
-  echo "Check all test inboxes and verify:"
-  echo "  - Email delivery success"
-  echo "  - HTML rendering quality"
-  echo "  - Image display"
-  echo "  - Link functionality"
-  echo "  - Mobile responsiveness"
+  echo "✅ Bulk campaign validation completed"
 }
 
-# Usage: multi_client_test "Newsletter Campaign"
+# Usage: validate_all_campaigns "Marketing Team"
 ```
 
-## Post-Test Actions
+## Manual Testing Guidance
 
-### After Successful Testing
+### Pre-Launch Testing Steps
+
+**Since automated test sending is not available via CLI, follow this manual testing process:**
+
+1. **Configuration Validation** (Automated)
+   ```bash
+   validate_campaign "Campaign Name"
+   validate_template "Template Name"
+   ```
+
+2. **Manual Email Testing** (External Process)
+   - Use TD Engage web interface for test sends
+   - Send test emails to multiple email providers:
+     - Gmail: test.gmail@yourcompany.com
+     - Outlook: test.outlook@yourcompany.com
+     - Yahoo: test.yahoo@yourcompany.com
+
+3. **Cross-Client Verification Checklist**
+   - [ ] Email delivery successful
+   - [ ] HTML rendering correct
+   - [ ] Images display properly
+   - [ ] Links are clickable
+   - [ ] Mobile display responsive
+   - [ ] Unsubscribe link works
+
+4. **Content Quality Checks**
+   - [ ] Subject line under 50 characters
+   - [ ] No broken links
+   - [ ] Proper branding/styling
+   - [ ] Clear call-to-action
+   - [ ] Compliance with regulations
+
+### Campaign Readiness Report
 ```bash
-# If tests pass, campaign is ready for launch
-echo "Campaign tested successfully"
-echo "Next steps:"
-echo "1. Launch campaign: tdx engage campaign launch 'Campaign Name'"
-echo "2. Monitor delivery: Check email delivery logs"
-echo "3. Track performance: Monitor open rates and clicks"
+# Generate pre-launch readiness report
+generate_readiness_report() {
+  local campaign_name="$1"
+  local template_name="$2"
+
+  echo "Campaign Readiness Report"
+  echo "========================"
+  echo "Campaign: $campaign_name"
+  echo "Template: $template_name"
+  echo "Date: $(date)"
+  echo ""
+
+  echo "1. CAMPAIGN VALIDATION:"
+  validate_campaign "$campaign_name"
+
+  echo ""
+  echo "2. TEMPLATE VALIDATION:"
+  validate_template "$template_name"
+
+  echo ""
+  echo "3. MANUAL TESTING CHECKLIST:"
+  echo "   [ ] Test emails sent via web interface"
+  echo "   [ ] Cross-client rendering verified"
+  echo "   [ ] Links tested and working"
+  echo "   [ ] Mobile display confirmed"
+  echo "   [ ] Unsubscribe functionality tested"
+
+  echo ""
+  echo "4. NEXT STEPS:"
+  echo "   - Complete manual testing checklist"
+  echo "   - Launch campaign: tdx engage campaign launch '$campaign_name'"
+  echo "   - Monitor delivery in web interface"
+
+  echo ""
+  echo "✅ Readiness report completed"
+}
+
+# Usage: generate_readiness_report "Newsletter Campaign" "Newsletter Template"
 ```
 
-### If Testing Reveals Issues
-```bash
-# Fix issues before launching
-echo "Issues found during testing:"
-echo "1. Update template: tdx engage template update"
-echo "2. Modify campaign: tdx engage campaign update"
-echo "3. Test again: tdx engage campaign test"
-echo "4. Only launch when all tests pass"
-```
+## Common Errors & Troubleshooting
+
+### Campaign Validation Errors
+
+| Error | Solution |
+|-------|----------|
+| "Campaign not found" | Verify campaign name: `tdx engage campaign list` |
+| "Workspace context not set" | Run `tdx use engage_workspace "Marketing Team"` |
+| "Permission denied for campaign access" | Contact workspace admin for campaign view permissions |
+| "Campaign configuration incomplete" | Check campaign has required fields: name, template, workspace |
+| "Invalid campaign status" | Verify campaign status allows configuration changes |
+
+### Template Validation Errors
+
+| Error | Solution |
+|-------|----------|
+| "Template not found" | Check template exists: `tdx engage template list` |
+| "Template HTML rendering issues" | Validate HTML syntax and inline CSS usage |
+| "Missing template subject" | Ensure template has subject line configured |
+| "Template content empty" | Verify template has HTML or plaintext content |
+| "Template access denied" | Check workspace permissions for template access |
+
+### Workspace & Context Errors
+
+| Error | Solution |
+|-------|----------|
+| "Workspace not accessible" | Verify workspace access: `tdx engage workspace list` |
+| "Invalid workspace context" | Set workspace: `tdx use engage_workspace "Name"` |
+| "Context not set" | Check current context: `tdx use` |
+| "Multiple workspace conflict" | Explicitly specify workspace in commands |
+
+### Manual Testing Issues
+
+| Error | Solution |
+|-------|----------|
+| "Cannot access web interface" | Use TD Console web interface for test sends |
+| "Test email not received" | Check spam folder and email filters |
+| "HTML rendering broken" | Validate template HTML structure and CSS |
+| "Links not working" | Verify URLs are absolute and accessible |
+| "Mobile display issues" | Test responsive design in email clients |
+
+## Validation Best Practices
+
+### Configuration Validation
+- Always validate campaigns and templates before launch
+- Check workspace context before running validations
+- Verify all required fields are populated
+- Use full campaign and template details for thorough checks
+
+### Manual Testing Workflow
+- Use TD Engage web interface for actual test sends
+- Test across multiple email clients (Gmail, Outlook, Yahoo)
+- Verify both desktop and mobile rendering
+- Check all links and call-to-action buttons
+- Confirm unsubscribe functionality works
+
+### Pre-Launch Checklist
+- [ ] Campaign configuration validated via CLI
+- [ ] Template content reviewed via CLI
+- [ ] Test emails sent via web interface
+- [ ] Cross-client rendering verified
+- [ ] Links and functionality tested
+- [ ] Campaign ready for launch
 
 ## Related Skills
 
 **Prerequisites:**
-- **email-template-creator** - Create templates to test
-- **email-campaign-creator** - Create campaigns to test
+- **email-template-creator** - Create templates to validate
+- **email-campaign-creator** - Create campaigns to validate
 
-**Follow-up:**
-- **email-campaign-orchestration** - Launch tested campaigns
-- **email-performance-monitor** - Monitor campaign performance after launch
+**Integration:**
+- **email-template-manager** - Manage templates used in validation
+- **email-journey-builder** - Validate journey email components
+
+**Next Steps:**
+- Launch validated campaigns: `tdx engage campaign launch "Campaign Name"`
+- Monitor performance via TD Console web interface

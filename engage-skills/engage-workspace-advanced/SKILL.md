@@ -1,103 +1,614 @@
 ---
 name: engage-workspace-advanced
-description: Advanced TD Engage workspace management including permissions, policies, configuration settings, and multi-workspace operations using tdx engage workspace commands and API integration.
+description: Advanced TD Engage workspace management guidance using verified tdx engage workspace commands and web interface procedures for permissions, policies, and multi-workspace operations.
 ---
 
-# Engage Advanced Workspace Management
+# Engage Advanced Workspace Management Guide
 
 ## Purpose
 
-Advanced workspace management for TD Engage including permissions configuration, workspace policies, multi-workspace operations, and enterprise-grade workspace administration.
+Provides guidance for advanced TD Engage workspace management including **verified CLI operations**, **web interface procedures** for permissions configuration, and **multi-workspace management** using confirmed tools.
 
 ## Prerequisites
 
 - `tdx` CLI authenticated (`tdx auth status`)
 - TD Engage workspace administrator permissions
-- Understanding of TD user management and permissions model
-- Access to workspace configuration APIs
+- Access to TD Console web interface
+- Understanding of TD user management model
 
-## Advanced Workspace Operations
+## ⚠️ Important Note
 
-### Workspace Configuration Management
+**Advanced workspace operations (permissions, user management, policies) are primarily managed through the TD Console web interface**, not CLI. This skill provides verified CLI commands plus web interface guidance.
+
+## Verified Workspace Operations
+
+### Basic Workspace Management (Confirmed CLI Commands)
 ```bash
-# Get comprehensive workspace information
+# List all accessible workspaces
+tdx engage workspace list
+
+# Show workspace details
+tdx engage workspace show "Marketing Team"
+
+# Get full workspace information
 tdx engage workspace show "Marketing Team" --full
 
-# List workspaces with detailed configuration
-tdx api "/workspaces" --type engage | jq '.data[] | {
-  id: .id,
-  name: .attributes.name,
-  owner: .attributes.owner_user.name,
-  domain_count: .attributes.domain_count,
-  segment_count: .attributes.segment_count,
-  created_at: .attributes.created_at
-}'
+# Create new workspace
+tdx engage workspace create --name "New Workspace" --description "Workspace description"
 
-# View workspace configuration settings
-tdx api "/workspaces/{workspace-id}/settings" --type engage
+# Update workspace
+tdx engage workspace update "Marketing Team" --description "Updated description"
+
+# Delete workspace (use with caution)
+tdx engage workspace delete "Old Workspace"
+
+# Set workspace context
+tdx use engage_workspace "Marketing Team"
 ```
 
-### Multi-Workspace Operations
+### Workspace Information Gathering (Verified Commands)
 ```bash
-# List all accessible workspaces with metadata
-list_all_workspaces() {
-  echo "Workspace Inventory:"
-  tdx engage workspace list --format json | jq '.data[] | {
-    name: .attributes.name,
-    id: .id,
-    description: .attributes.description,
-    owner: .attributes.owner_name,
-    campaigns: .attributes.campaign_count,
-    templates: .attributes.template_count,
-    status: .attributes.status
-  }'
+# Comprehensive workspace inventory using verified commands
+workspace_inventory() {
+  echo "Workspace Inventory Report"
+  echo "========================="
+
+  # Get all workspaces
+  workspaces=$(tdx engage workspace list --format tsv)
+
+  if [ -z "$workspaces" ]; then
+    echo "No workspaces found or no access permissions"
+    return 1
+  fi
+
+  # Process each workspace
+  echo "$workspaces" | while IFS=$'\t' read -r uuid name description; do
+    if [ -n "$name" ]; then
+      echo ""
+      echo "Workspace: $name"
+      echo "Description: $description"
+      echo "UUID: $uuid"
+
+      # Set context and get additional info
+      if tdx use engage_workspace "$name" >/dev/null 2>&1; then
+        # Count campaigns
+        campaign_count=$(tdx engage campaign list --format tsv 2>/dev/null | wc -l)
+        echo "Campaigns: $campaign_count"
+
+        # Count templates
+        template_count=$(tdx engage template list --format tsv 2>/dev/null | wc -l)
+        echo "Templates: $template_count"
+      else
+        echo "Status: Limited access"
+      fi
+    fi
+  done
+
+  echo ""
+  echo "✅ Inventory completed using verified CLI commands"
 }
 
-# Clone workspace configuration
-clone_workspace_config() {
-  local source_workspace="$1"
-  local target_workspace="$2"
-
-  echo "Cloning configuration from $source_workspace to $target_workspace"
-
-  # Get source workspace configuration
-  source_id=$(tdx engage workspace show "$source_workspace" --json | jq '.data.id' -r)
-  target_id=$(tdx engage workspace show "$target_workspace" --json | jq '.data.id' -r)
-
-  # Copy workspace settings
-  source_settings=$(tdx api "/workspaces/$source_id/settings" --type engage)
-
-  echo "Applying configuration to target workspace..."
-  echo "$source_settings" | jq '.data.attributes' | tdx api "/workspaces/$target_id/settings" --type engage --method PUT --data @-
-}
-
-# Usage: clone_workspace_config "Marketing Team" "Marketing Staging"
+# Usage: workspace_inventory
 ```
 
-## Workspace Permissions & User Management
-
-### User Access Management
+### Multi-Workspace Operations (Verified Commands Only)
 ```bash
-# List workspace users and their roles
-list_workspace_users() {
-  local workspace_name="$1"
-  workspace_id=$(tdx engage workspace show "$workspace_name" --json | jq '.data.id' -r)
+# Compare workspace contents using verified commands
+compare_workspaces() {
+  local workspace1="$1"
+  local workspace2="$2"
 
-  echo "Users in workspace: $workspace_name"
-  tdx api "/workspaces/$workspace_id/users" --type engage | jq '.data[] | {
-    name: .attributes.name,
-    email: .attributes.email,
-    role: .attributes.role,
-    permissions: .attributes.permissions,
-    last_active: .attributes.last_active_at
-  }'
+  echo "Workspace Comparison: $workspace1 vs $workspace2"
+  echo "==============================================="
+
+  # Workspace 1 analysis
+  echo "Workspace 1: $workspace1"
+  if tdx use engage_workspace "$workspace1" >/dev/null 2>&1; then
+    campaigns1=$(tdx engage campaign list --format tsv 2>/dev/null | wc -l)
+    templates1=$(tdx engage template list --format tsv 2>/dev/null | wc -l)
+    echo "  Campaigns: $campaigns1"
+    echo "  Templates: $templates1"
+  else
+    echo "  Status: No access"
+  fi
+
+  # Workspace 2 analysis
+  echo ""
+  echo "Workspace 2: $workspace2"
+  if tdx use engage_workspace "$workspace2" >/dev/null 2>&1; then
+    campaigns2=$(tdx engage campaign list --format tsv 2>/dev/null | wc -l)
+    templates2=$(tdx engage template list --format tsv 2>/dev/null | wc -l)
+    echo "  Campaigns: $campaigns2"
+    echo "  Templates: $templates2"
+  else
+    echo "  Status: No access"
+  fi
+
+  echo ""
+  echo "✅ Comparison completed using verified commands only"
 }
 
-# Add user to workspace with specific permissions
-add_workspace_user() {
+# Usage: compare_workspaces "Marketing Team" "Sales Team"
+```
+
+## Web Interface Guidance for Advanced Features
+
+### User Management (Web Interface Required)
+```bash
+# Set workspace context, then use web interface for user management
+manage_workspace_users() {
   local workspace_name="$1"
-  local user_email="$2"
-  local role="$3"  # admin, editor, viewer
+
+  echo "User Management for Workspace: $workspace_name"
+  echo "============================================="
+
+  # Verify workspace access via CLI
+  if ! tdx engage workspace show "$workspace_name" >/dev/null 2>&1; then
+    echo "❌ Workspace not accessible via CLI: $workspace_name"
+    return 1
+  fi
+
+  echo "✅ Workspace accessible via CLI"
+  echo ""
+  echo "For user management, use TD Console web interface:"
+  echo "1. Open TD Console: https://console.treasuredata.com"
+  echo "2. Navigate to: Engage > Workspace Settings"
+  echo "3. Select workspace: $workspace_name"
+  echo "4. Go to: Users & Permissions"
+  echo ""
+  echo "Available user management operations in web interface:"
+  echo "- Add users to workspace"
+  echo "- Assign roles (Admin, Editor, Viewer)"
+  echo "- Configure permissions per user"
+  echo "- Remove users from workspace"
+  echo "- View user activity logs"
+}
+
+# Usage: manage_workspace_users "Marketing Team"
+```
+
+### Workspace Policies (Web Interface Required)
+```bash
+# Guide for configuring workspace policies via web interface
+configure_workspace_policies() {
+  local workspace_name="$1"
+
+  echo "Workspace Policy Configuration Guide"
+  echo "Workspace: $workspace_name"
+  echo "===================================="
+
+  # Verify workspace via CLI
+  tdx use engage_workspace "$workspace_name"
+
+  echo "Workspace context set. For policy configuration:"
+  echo ""
+  echo "TD Console Path: Engage > Workspace Settings > Policies"
+  echo ""
+  echo "Available Policy Configurations:"
+  echo "- Campaign creation permissions"
+  echo "- Template management permissions"
+  echo "- Sender profile management"
+  echo "- Data retention policies"
+  echo "- Approval workflows"
+  echo "- API access controls"
+  echo ""
+  echo "Policy Types to Configure:"
+  echo "1. User Role Permissions"
+  echo "2. Content Approval Workflows"
+  echo "3. Data Governance Settings"
+  echo "4. Security & Compliance Policies"
+}
+
+# Usage: configure_workspace_policies "Marketing Team"
+```
+
+## Workspace Backup & Migration (Verified Commands)
+
+### Workspace Content Backup
+```bash
+# Backup workspace content using verified CLI commands
+backup_workspace_content() {
+  local workspace_name="$1"
+  local backup_dir="$2"
+
+  timestamp=$(date +%Y%m%d_%H%M%S)
+  backup_path="$backup_dir/workspace_backup_${workspace_name//[^a-zA-Z0-9]/_}_$timestamp"
+
+  echo "Backing up workspace content: $workspace_name"
+  echo "Backup location: $backup_path"
+  mkdir -p "$backup_path"
+
+  # Set workspace context
+  if ! tdx use engage_workspace "$workspace_name"; then
+    echo "❌ Cannot access workspace: $workspace_name"
+    return 1
+  fi
+
+  # Backup workspace configuration
+  echo "1. Backing up workspace configuration..."
+  tdx engage workspace show "$workspace_name" --full > "$backup_path/workspace_config.json"
+
+  # Backup campaigns
+  echo "2. Backing up campaigns..."
+  tdx engage campaign list --format json > "$backup_path/campaigns.json"
+
+  # Save individual campaign details
+  campaigns_dir="$backup_path/campaigns"
+  mkdir -p "$campaigns_dir"
+
+  tdx engage campaign list --format tsv | while IFS=$'\t' read -r uuid name status; do
+    if [ -n "$name" ]; then
+      safe_name=$(echo "$name" | tr ' /' '_')
+      tdx engage campaign show "$name" --full > "$campaigns_dir/${safe_name}.json"
+    fi
+  done
+
+  # Backup templates
+  echo "3. Backing up templates..."
+  tdx engage template list --format json > "$backup_path/templates.json"
+
+  # Save individual template details
+  templates_dir="$backup_path/templates"
+  mkdir -p "$templates_dir"
+
+  tdx engage template list --format tsv | while IFS=$'\t' read -r uuid name; do
+    if [ -n "$name" ]; then
+      safe_name=$(echo "$name" | tr ' /' '_')
+      tdx engage template show "$name" --full > "$templates_dir/${safe_name}.json"
+    fi
+  done
+
+  echo "✅ Workspace backup completed: $backup_path"
+  echo ""
+  echo "Backup Contents:"
+  ls -la "$backup_path"
+}
+
+# Usage: backup_workspace_content "Marketing Team" "/backups/engage"
+```
+
+### Workspace Content Analysis
+```bash
+# Analyze workspace content and health using verified commands
+analyze_workspace_health() {
+  local workspace_name="$1"
+
+  echo "Workspace Health Analysis: $workspace_name"
+  echo "========================================"
+
+  # Set workspace context
+  if ! tdx use engage_workspace "$workspace_name"; then
+    echo "❌ Cannot access workspace"
+    return 1
+  fi
+
+  # Campaign analysis
+  echo "1. Campaign Analysis:"
+  campaigns=$(tdx engage campaign list --format tsv)
+
+  if [ -n "$campaigns" ]; then
+    total_campaigns=$(echo "$campaigns" | wc -l)
+    echo "   Total campaigns: $total_campaigns"
+
+    # Count by status
+    echo "   Campaign Status Breakdown:"
+    echo "$campaigns" | awk '{print $3}' | sort | uniq -c | while read count status; do
+      echo "     $status: $count"
+    done
+  else
+    echo "   No campaigns found"
+  fi
+
+  # Template analysis
+  echo ""
+  echo "2. Template Analysis:"
+  templates=$(tdx engage template list --format tsv)
+
+  if [ -n "$templates" ]; then
+    total_templates=$(echo "$templates" | wc -l)
+    echo "   Total templates: $total_templates"
+  else
+    echo "   No templates found"
+  fi
+
+  # Workspace configuration
+  echo ""
+  echo "3. Workspace Configuration:"
+  workspace_info=$(tdx engage workspace show "$workspace_name")
+  echo "   Workspace accessible: ✅"
+
+  echo ""
+## Common Errors & Troubleshooting
+
+### Workspace Access Errors
+
+| Error | Solution |
+|-------|----------|
+| "Workspace not found" | Verify workspace name: `tdx engage workspace list` |
+| "Permission denied" | Contact workspace admin for access permissions |
+| "Workspace context not set" | Run `tdx use engage_workspace "Workspace Name"` |
+| "Cannot access workspace via CLI" | Check authentication: `tdx auth status` |
+
+### Workspace Management Errors
+
+| Error | Solution |
+|-------|----------|
+| "Workspace creation failed" | Check unique name and valid description |
+| "Workspace deletion failed" | Ensure workspace is empty or force deletion permissions |
+| "Workspace update permission denied" | Contact workspace administrator |
+| "Context switching failed" | Verify workspace exists and is accessible |
+
+### Backup & Migration Errors
+
+| Error | Solution |
+|-------|----------|
+| "Backup directory not writable" | Check file permissions: `chmod 755 backup_dir` |
+| "Campaign export failed" | Verify campaigns exist: `tdx engage campaign list` |
+| "Template export failed" | Verify templates exist: `tdx engage template list` |
+| "Workspace backup incomplete" | Check disk space and permissions |
+
+### Multi-Workspace Operation Errors
+
+| Error | Solution |
+|-------|----------|
+| "Cross-workspace access denied" | Verify access to all target workspaces |
+| "Workspace comparison failed" | Ensure both workspaces are accessible |
+| "Inventory generation timeout" | Process workspaces individually for large accounts |
+
+## Advanced Workspace Strategies
+
+### Workspace Organization Best Practices
+```bash
+# Workspace naming and organization strategy
+organize_workspace_structure() {
+  echo "Workspace Organization Strategy"
+  echo "=============================="
+  echo ""
+  echo "Recommended Workspace Structure:"
+  echo "1. Production Workspaces:"
+  echo "   - Marketing Production"
+  echo "   - Sales Production"
+  echo "   - Customer Success Production"
+  echo ""
+  echo "2. Development Workspaces:"
+  echo "   - Marketing Development"
+  echo "   - Marketing Staging"
+  echo "   - Marketing Testing"
+  echo ""
+  echo "3. Regional Workspaces:"
+  echo "   - Marketing US"
+  echo "   - Marketing EU"
+  echo "   - Marketing APAC"
+  echo ""
+  echo "Workspace Management Guidelines:"
+  echo "- Use consistent naming conventions"
+  echo "- Separate production and development environments"
+  echo "- Implement proper access controls via web interface"
+  echo "- Regular backup and monitoring"
+  echo "- Document workspace purposes and ownership"
+}
+
+# Usage: organize_workspace_structure
+```
+
+### Workspace Maintenance Automation
+```bash
+# Automated workspace maintenance using verified commands
+workspace_maintenance() {
+  local workspace_name="$1"
+
+  echo "Performing maintenance for workspace: $workspace_name"
+  echo "=================================================="
+
+  # Set workspace context
+  if ! tdx use engage_workspace "$workspace_name"; then
+    echo "❌ Cannot access workspace for maintenance"
+    return 1
+  fi
+
+  # Check workspace health
+  echo "1. Workspace Health Check:"
+  if tdx engage workspace show "$workspace_name" >/dev/null 2>&1; then
+    echo "   ✅ Workspace accessible"
+  else
+    echo "   ❌ Workspace access issues"
+  fi
+
+  # Campaign maintenance
+  echo ""
+  echo "2. Campaign Analysis:"
+  campaigns=$(tdx engage campaign list --format tsv 2>/dev/null)
+
+  if [ -n "$campaigns" ]; then
+    finished_count=$(echo "$campaigns" | awk '$3=="FINISHED"' | wc -l)
+    active_count=$(echo "$campaigns" | awk '$3=="ACTIVE" || $3=="LIVE"' | wc -l)
+    draft_count=$(echo "$campaigns" | awk '$3=="DRAFT"' | wc -l)
+
+    echo "   Active/Live campaigns: $active_count"
+    echo "   Draft campaigns: $draft_count"
+    echo "   Finished campaigns: $finished_count"
+
+    if [ $finished_count -gt 10 ]; then
+      echo "   ⚠️  Consider archiving old finished campaigns"
+    fi
+  else
+    echo "   No campaigns found"
+  fi
+
+  # Template maintenance
+  echo ""
+  echo "3. Template Analysis:"
+  templates=$(tdx engage template list --format tsv 2>/dev/null)
+
+  if [ -n "$templates" ]; then
+    template_count=$(echo "$templates" | wc -l)
+    echo "   Total templates: $template_count"
+
+    if [ $template_count -gt 20 ]; then
+      echo "   ⚠️  Consider organizing templates or removing unused ones"
+    fi
+  else
+    echo "   No templates found"
+  fi
+
+  echo ""
+  echo "✅ Maintenance check completed"
+  echo ""
+  echo "For advanced maintenance (user cleanup, permission audit):"
+  echo "Use TD Console: Engage > Workspace Settings > Maintenance"
+}
+
+# Usage: workspace_maintenance "Marketing Team"
+```
+
+## Workspace Security & Compliance (Web Interface Guidance)
+
+### Security Configuration Guide
+```bash
+# Security configuration guidance for workspace administrators
+configure_workspace_security() {
+  local workspace_name="$1"
+
+  echo "Workspace Security Configuration Guide"
+  echo "Workspace: $workspace_name"
+  echo "====================================="
+
+  # Verify workspace access
+  tdx use engage_workspace "$workspace_name"
+
+  echo "CLI-Based Security Checks:"
+  echo "1. Verify workspace accessibility: ✅"
+  echo ""
+
+  echo "Web Interface Security Configuration:"
+  echo "TD Console Path: Engage > Workspace Settings > Security"
+  echo ""
+  echo "Security Settings to Configure:"
+  echo "- Two-factor authentication requirements"
+  echo "- IP address restrictions"
+  echo "- API access controls"
+  echo "- Session timeout settings"
+  echo "- Audit log retention"
+  echo ""
+  echo "User Permission Management:"
+  echo "- Regular user access reviews"
+  echo "- Role-based permission assignment"
+  echo "- Inactive user cleanup"
+  echo "- Guest access policies"
+  echo ""
+  echo "Compliance Configuration:"
+  echo "- Data retention policies"
+  echo "- GDPR compliance settings"
+  echo "- Audit trail configuration"
+  echo "- Data export controls"
+}
+
+# Usage: configure_workspace_security "Marketing Team"
+```
+
+## Best Practices
+
+### Workspace Management
+- **Use verified CLI commands** for basic workspace operations
+- **Leverage TD Console web interface** for advanced user and permission management
+- Implement consistent naming conventions across workspaces
+- Regular backup of workspace content using CLI tools
+- Monitor workspace health and performance regularly
+
+### Multi-Workspace Strategy
+- Separate production and development environments
+- Use regional workspaces for global organizations
+- Implement proper access controls and permission management
+- Regular cross-workspace audits and cleanup
+- Document workspace purposes and ownership
+
+### Security & Compliance
+- Configure security policies via TD Console web interface
+- Regular user access reviews and permission audits
+- Implement two-factor authentication requirements
+- Monitor and audit workspace activity logs
+- Maintain compliance with data protection regulations
+
+## Validation & Health Monitoring
+
+### Comprehensive Workspace Validation
+```bash
+# Complete workspace validation using verified commands
+validate_workspace_configuration() {
+  local workspace_name="$1"
+
+  echo "Comprehensive Workspace Validation"
+  echo "Workspace: $workspace_name"
+  echo "=================================="
+
+  # Basic access validation
+  if ! tdx engage workspace show "$workspace_name" >/dev/null 2>&1; then
+    echo "❌ Workspace not accessible: $workspace_name"
+    return 1
+  fi
+
+  echo "✅ Workspace accessible via CLI"
+
+  # Set workspace context
+  tdx use engage_workspace "$workspace_name"
+
+  # Content validation
+  echo ""
+  echo "Content Validation:"
+
+  # Check campaigns
+  campaign_count=$(tdx engage campaign list --format tsv 2>/dev/null | wc -l)
+  echo "  Campaigns: $campaign_count"
+
+  # Check templates
+  template_count=$(tdx engage template list --format tsv 2>/dev/null | wc -l)
+  echo "  Templates: $template_count"
+
+  # Configuration validation
+  echo ""
+  echo "Configuration Validation:"
+  workspace_details=$(tdx engage workspace show "$workspace_name" --full)
+
+  if echo "$workspace_details" | grep -q "description"; then
+    echo "  ✅ Workspace has description"
+  else
+    echo "  ⚠️  No workspace description set"
+  fi
+
+  echo ""
+  echo "Manual Validation Required (TD Console):"
+  echo "  - User permissions and roles"
+  echo "  - Security policy configuration"
+  echo "  - Domain and sender verification"
+  echo "  - Data retention settings"
+
+  echo ""
+  echo "✅ Automated validation completed"
+}
+
+# Usage: validate_workspace_configuration "Marketing Team"
+```
+
+## Related Skills
+
+**Basic Operations:**
+- **email-template-creator** - Create templates within workspace context
+- **email-campaign-creator** - Create campaigns within workspace context
+
+**Security & Compliance:**
+- **engage-sender** - Manage sender profiles within workspace security context
+- **engage-deliverability** - Configure workspace deliverability policies
+
+**Content Management:**
+- **email-template-manager** - Organize templates across workspaces
+- **email-testing-validator** - Validate campaigns within workspace context
+
+**Integration:**
+- **email-journey-builder** - Configure journeys within workspace context
+- **engage-utm** - Implement UTM tracking across workspace campaigns
+
+**Data & Analytics:**
+- **sql-skills:trino** - Query workspace performance and usage data
 
   workspace_id=$(tdx engage workspace show "$workspace_name" --json | jq '.data.id' -r)
 
