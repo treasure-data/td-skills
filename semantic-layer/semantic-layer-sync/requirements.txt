@@ -1,4 +1,5 @@
 # Core dependencies for semantic-layer-sync
-pyyaml>=6.0
+# Updated: 2026-02-16 - Security hardening (LOW priority)
+pyyaml>=6.0.2  # CVE fixes in 6.0.2
 pytd>=1.5.0
-requests>=2.28.0  # Used for Treasure Data API calls (annotation, schema detection)
+requests>=2.32.3  # Security fixes in 2.32+

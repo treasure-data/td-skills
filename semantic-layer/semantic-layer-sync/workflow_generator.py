@@ -2,6 +2,8 @@
 """
 Workflow Generator for Semantic Layer Sync
 Generates TD Workflow .dig file from config.yaml and deploys to Treasure Data
+
+SECURITY: Input validation added to prevent command injection attacks
 """
 
 import yaml
@@ -9,8 +11,85 @@ import subprocess
 import os
 import sys
 import json
+import re
 from typing import Dict, Any, Optional
 from pathlib import Path
+
+
+# ============================================================================
+# INPUT VALIDATION & SECURITY
+# ============================================================================
+class InputValidator:
+    """Validate user inputs to prevent command injection"""
+
+    @staticmethod
+    def validate_project_name(name: str) -> str:
+        """Validate project name for shell safety.
+
+        Args:
+            name: Project name to validate
+
+        Returns:
+            Validated project name
+
+        Raises:
+            ValueError: If project name is invalid
+        """
+        if not isinstance(name, str):
+            raise ValueError(f"Project name must be string, got {type(name).__name__}")
+
+        if not name:
+            raise ValueError("Project name cannot be empty")
+
+        if len(name) > 100:
+            raise ValueError(f"Project name too long (max 100 chars): {len(name)}")
+
+        # Only allow alphanumeric, underscore, and hyphen
+        if not re.match(r'^[a-zA-Z0-9_-]+$', name):
+            raise ValueError(
+                f"Invalid project name '{name}'. "
+                "Only alphanumeric characters, underscores, and hyphens are allowed."
+            )
+
+        return name
+
+    @staticmethod
+    def validate_file_path(path: str, must_exist: bool = False) -> Path:
+        """Validate file path for security.
+
+        Args:
+            path: File path to validate
+            must_exist: If True, verify file exists
+
+        Returns:
+            Validated Path object
+
+        Raises:
+            ValueError: If path is invalid
+        """
+        if not isinstance(path, str):
+            raise ValueError(f"Path must be string, got {type(path).__name__}")
+
+        if not path:
+            raise ValueError("Path cannot be empty")
+
+        # Convert to Path object and resolve
+        try:
+            path_obj = Path(path).resolve()
+        except Exception as e:
+            raise ValueError(f"Invalid path '{path}': {e}")
+
+        # Check if path contains suspicious patterns
+        path_str = str(path_obj)
+        suspicious_patterns = ['..', '~', '$', '`', ';', '|', '&', '\n', '\r']
+        for pattern in suspicious_patterns:
+            if pattern in path_str:
+                raise ValueError(f"Path contains suspicious pattern '{pattern}': {path}")
+
+        if must_exist and not path_obj.exists():
+            raise ValueError(f"Path does not exist: {path}")
+
+        return path_obj
 
 
 class WorkflowGenerator:
@@ -129,7 +208,13 @@ Auto-Generated: ${sync_metadata.auto_gen_count}""")
         return '\n'.join(indent + line for line in text.split('\n'))
 
     def generate_workflow_file(self, output_path: str = "semantic_layer_sync.dig") -> str:
-        """Generate complete .dig workflow file"""
+        """Generate complete .dig workflow file with path validation"""
+
+        # SECURITY: Validate output path
+        try:
+            output_path_obj = InputValidator.validate_file_path(output_path, must_exist=False)
+        except ValueError as e:
+            raise ValueError(f"Invalid output path: {e}")
 
         sync_config = self.config.get('sync', {})
         scope_config = self.config.get('scope', {})
@@ -202,15 +287,15 @@ _export:
 """
 
         # Write to file
-        output_dir = os.path.dirname(output_path)
-        if output_dir and not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        output_dir = output_path_obj.parent
+        if not output_dir.exists():
+            output_dir.mkdir(parents=True, exist_ok=True)
 
-        with open(output_path, 'w') as f:
+        with open(output_path_obj, 'w') as f:
             f.write(dig_content)
 
-        print(f"✅ Generated workflow file: {output_path}")
-        return output_path
+        print(f"✅ Generated workflow file: {output_path_obj}")
+        return str(output_path_obj)
 
     def validate_tdx_installed(self) -> bool:
         """Check if tdx CLI is installed"""
@@ -223,7 +308,11 @@ _export:
         project_name: str = "semantic_layer_sync"
     ) -> Dict[str, Any]:
         """
-        Push generated workflow to Treasure Data
+        Push generated workflow to Treasure Data with input validation
+
+        Args:
+            workflow_path: Path to workflow file
+            project_name: TD workflow project name
 
         Returns: {
             "success": bool,
@@ -233,13 +322,27 @@ _export:
         }
         """
 
-        # Validate inputs
-        if not os.path.exists(workflow_path):
+        # SECURITY: Validate all inputs before passing to subprocess
+        try:
+            # Validate project name (prevent command injection)
+            project_name = InputValidator.validate_project_name(project_name)
+        except ValueError as e:
             return {
                 "success": False,
-                "message": f"Workflow file not found: {workflow_path}",
+                "message": f"Invalid project name: {e}",
                 "stdout": "",
-                "stderr": ""
+                "stderr": str(e)
+            }
+
+        try:
+            # Validate workflow path
+            workflow_path_obj = InputValidator.validate_file_path(workflow_path, must_exist=True)
+        except ValueError as e:
+            return {
+                "success": False,
+                "message": f"Invalid workflow path: {e}",
+                "stdout": "",
+                "stderr": str(e)
             }
 
         if not self.validate_tdx_installed():
@@ -253,33 +356,52 @@ _export:
         # Push workflow
         print(f"📤 Pushing workflow to TD project: {project_name}")
 
-        workflow_dir = os.path.dirname(workflow_path) or '.'
+        workflow_dir = workflow_path_obj.parent
 
-        result = subprocess.run(
-            ['tdx', 'wf', 'push', project_name],
-            cwd=workflow_dir,
-            capture_output=True,
-            text=True,
-            timeout=60
-        )
+        try:
+            # SECURITY: Use array form (no shell interpretation)
+            # Pass arguments as list, not string - prevents injection
+            result = subprocess.run(
+                ['tdx', 'wf', 'push', project_name],
+                cwd=str(workflow_dir),
+                capture_output=True,
+                text=True,
+                timeout=60,
+                shell=False  # CRITICAL: Never use shell=True with user input
+            )
 
-        if result.returncode == 0:
-            print(f"✅ Workflow pushed successfully")
-            print(result.stdout)
-            return {
-                "success": True,
-                "message": "Workflow deployed successfully",
-                "stdout": result.stdout,
-                "stderr": result.stderr
-            }
-        else:
-            print(f"❌ Failed to push workflow")
-            print(result.stderr)
+            if result.returncode == 0:
+                print(f"✅ Workflow pushed successfully")
+                print(result.stdout)
+                return {
+                    "success": True,
+                    "message": "Workflow deployed successfully",
+                    "stdout": result.stdout,
+                    "stderr": result.stderr
+                }
+            else:
+                print(f"❌ Failed to push workflow")
+                print(result.stderr)
+                return {
+                    "success": False,
+                    "message": "Failed to deploy workflow",
+                    "stdout": result.stdout,
+                    "stderr": result.stderr
+                }
+
+        except subprocess.TimeoutExpired:
             return {
                 "success": False,
-                "message": "Failed to deploy workflow",
-                "stdout": result.stdout,
-                "stderr": result.stderr
+                "message": "Workflow push timed out (60s)",
+                "stdout": "",
+                "stderr": "Command timed out"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Unexpected error during workflow push: {str(e)}",
+                "stdout": "",
+                "stderr": str(e)
             }
 
 

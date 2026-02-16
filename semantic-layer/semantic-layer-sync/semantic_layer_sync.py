@@ -80,9 +80,10 @@ class InputValidator:
         if value.upper() in InputValidator.RESERVED_KEYWORDS:
             raise ValueError(f"{context}: Invalid - reserved keyword '{value}'")
 
-        # Only allow alphanumeric, underscore, dot (for database.table format)
-        if not all(c.isalnum() or c in '_.@-' for c in value):
-            raise ValueError(f"{context}: Contains invalid characters")
+        # Only allow alphanumeric, underscore, and dot (for database.table format)
+        # SECURITY: Strict validation - no special characters except _ and .
+        if not re.match(r'^[a-zA-Z0-9_.]+$', value):
+            raise ValueError(f"{context}: Contains invalid characters (only alphanumeric, underscore, and dot allowed)")
 
         return value
 

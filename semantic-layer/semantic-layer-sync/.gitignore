@@ -26,11 +26,35 @@ venv/
 ENV/
 env/
 .venv
+.virtualenv/
 
-# Environment files
+# Secrets & Environment
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
+*.key
+*.pem
+*.p12
+credentials.json
+service-account*.json
+*-credentials.json
+*-api-key*.json
+secrets.yaml
+secrets.yml
+.secrets/
+
+# API Keys and Configuration
+**/apikeys/
+**/api-keys/
+*.apikey
+*.token
+auth-token*.txt
+td_api_key.txt
+*_api_key.txt
+config.production.yaml
+config.*.secret.yaml
 
 # IDE
 .vscode/
@@ -38,6 +62,10 @@ env/
 *.swp
 *.swo
 *~
+.project
+.classpath
+.settings/
+.python-version
 
 # OS
 .DS_Store
@@ -47,6 +75,7 @@ env/
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
 # Test files
 test_*.yaml
@@ -54,8 +83,21 @@ config.test*.yaml
 data_dictionary.test*.yaml
 *.backup
 *.log
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
 
 # Temporary
 *.tmp
+*.temp
 .cache/
-.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Database dumps
+*.sql
+*.sqlite
+*.db
