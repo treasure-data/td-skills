@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Layer Config Manager - UI Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* HEADER */
+        .app-header {
+            background: white;
+            border-bottom: 1px solid #e1e8ed;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .header-left {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 8px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.unsaved {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-badge.saved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052a3;
+        }
+
+        .btn-secondary {
+            background: #e1e8ed;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        /* MAIN LAYOUT */
+        .layout-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar-navigation {
+            width: 250px;
+            background: white;
+            border-right: 1px solid #e1e8ed;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-header {
+            padding: 24px 16px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .nav-subtitle {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+
+        .nav-items {
+            flex: 1;
+            padding: 12px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #7f8c8d;
+            width: 100%;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        .nav-item.active {
+            background: #f0f4ff;
+            color: #0066cc;
+            border-left-color: #0066cc;
+            font-weight: 500;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+        }
+
+        .nav-label {
+            flex: 1;
+            text-align: left;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            background: #f5f7fa;
+            padding: 24px;
+        }
+
+        .config-form {
+            max-width: 900px;
+        }
+
+        /* FORM SECTIONS */
+        .form-section {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f4ff;
+        }
+
+        .section-icon {
+            font-size: 24px;
+            margin-top: 2px;
+        }
+
+        .section-header-text {
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .section-description {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin: 4px 0 0 0;
+        }
+
+        /* FORM GROUPS */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .required {
+            color: #e74c3c;
+            margin-left: 4px;
+        }
+
+        .form-description {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        .form-input.error {
+            border-color: #e74c3c;
+        }
+
+        .error-message {
+            display: block;
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        /* TOGGLE */
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-header {
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .toggle-label {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* DYNAMIC LIST */
+        .dynamic-list-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .dynamic-list-input input {
+            flex: 1;
+        }
+
+        .dynamic-list-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .dynamic-list-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0f4ff;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        .item-value {
+            flex: 1;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .btn-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-danger:hover {
+            background: #f5c6cb;
+        }
+
+        /* COLLAPSIBLE */
+        .collapsible {
+            margin-bottom: 16px;
+        }
+
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #0066cc;
+            width: 100%;
+            padding: 8px 0;
+        }
+
+        .collapsible-icon {
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        .collapsible-icon.open {
+            transform: rotate(90deg);
+        }
+
+        .collapsible-content {
+            margin-top: 12px;
+            padding-left: 8px;
+            border-left: 2px solid #e1e8ed;
+            padding-left: 12px;
+        }
+
+        /* ALERT */
+        .alert {
+            display: flex;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* FOOTER */
+        .app-footer {
+            background: white;
+            border-top: 1px solid #e1e8ed;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .sidebar-navigation {
+                width: 200px;
+            }
+
+            .main-content {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .layout-wrapper {
+                flex-direction: column;
+            }
+
+            .sidebar-navigation {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+                border-right: none;
+                border-bottom: 1px solid #e1e8ed;
+                flex-direction: row;
+                overflow-x: auto;
+            }
+
+            .nav-items {
+                display: flex;
+                flex-direction: row;
+            }
+
+            .nav-item {
+                border-left: none;
+                border-bottom: 3px solid transparent;
+                padding: 12px 16px;
+            }
+
+            .nav-item.active {
+                border-left: none;
+                border-bottom-color: #0066cc;
+            }
+        }
+
+        .hint-text {
+            background: #f0f4ff;
+            border-left: 3px solid #0066cc;
+            padding: 8px 12px;
+            border-radius: 2px;
+            font-size: 12px;
+            color: #0066cc;
+            margin-top: 8px;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: #7f8c8d;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-input {
+            margin-top: 2px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            font-weight: 500;
+        }
+
+        .checkbox-description {
+            display: block;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="header-left">
+                <!-- Treasure Data Diamond Logo -->
+                <img src="https://www.treasuredata.com/hubfs/assets/images/logos/logo-symbol-only.svg" alt="Treasure Data" width="32" height="32" style="flex-shrink: 0;">
+                <h1 class="app-title">Semantic Layer Config Manager</h1>
+                <div class="status-indicators">
+                    <span class="status-badge unsaved">Unsaved Changes</span>
+                    <span class="status-badge error">2 Validation Issues</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary">Preview</button>
+                <button class="btn btn-secondary">Revert</button>
+                <button class="btn btn-primary">Save</button>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT -->
+        <div class="layout-wrapper">
+            <!-- SIDEBAR -->
+            <aside class="sidebar-navigation">
+                <div class="nav-header">
+                    <h2 class="nav-title">Semantic Layer</h2>
+                    <p class="nav-subtitle">Configuration Manager</p>
+                </div>
+
+                <nav class="nav-items">
+                    <button class="nav-item active">
+                        <span class="nav-icon">🎯</span>
+                        <span class="nav-label">Scope</span>
+                    </button>
+                    <button class="nav-item">
+                        <span class="nav-icon">📋</span>
+                        <span class="nav-label">Definitions</span>
+                    </button>
+                    <button class="nav-item">
+                        <span class="nav-icon">🗄️</span>
+                        <span class="nav-label">Semantic DB</span>
+                    </button>
+                    <button class="nav-item">
+                        <span class="nav-icon">🔗</span>
+                        <span class="nav-label">Lineage</span>
+                    </button>
+                    <button class="nav-item">
+                        <span class="nav-icon">✓</span>
+                        <span class="nav-label">Validation</span>
+                    </button>
+                    <button class="nav-item">
+                        <span class="nav-icon">⚙️</span>
+                        <span class="nav-label">Auto-Generation</span>
+                    </button>
+                    <button class="nav-item">
+                        <span class="nav-icon">⚡</span>
+                        <span class="nav-label">Advanced</span>
+                    </button>
+                    <button class="nav-item">
+                        <span class="nav-icon">🌍</span>
+                        <span class="nav-label">Environments</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- MAIN CONTENT -->
+            <main class="main-content">
+                <div class="config-form">
+                    <!-- ALERT -->
+                    <div class="alert alert-warning">
+                        ⚠️ <strong>Validation Warning:</strong> Field 'databases' in Scope section is empty. At least one database pattern is required.
+                    </div>
+
+                    <!-- SCOPE SECTION -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <span class="section-icon">🎯</span>
+                            <div class="section-header-text">
+                                <h2 class="section-title">Scope Configuration</h2>
+                                <p class="section-description">Define which databases and tables to manage semantics for</p>
+                            </div>
+                        </div>
+
+                        <!-- Databases Include -->
+                        <div class="form-group">
+                            <label class="form-label">Databases to Include <span class="required">*</span></label>
+                            <p class="form-description">Database patterns supporting wildcards (e.g., analytics.*, dwh.fact_*)</p>
+
+                            <div class="dynamic-list-input">
+                                <input type="text" class="form-input" placeholder="e.g., analytics.*">
+                                <button class="btn btn-secondary">Add</button>
+                            </div>
+
+                            <div class="dynamic-list-items">
+                                <div class="dynamic-list-item">
+                                    <span class="item-value">analytics.*</span>
+                                    <button class="btn btn-sm btn-danger">Remove</button>
+                                </div>
+                                <div class="dynamic-list-item">
+                                    <span class="item-value">dwh.fact_*</span>
+                                    <button class="btn btn-sm btn-danger">Remove</button>
+                                </div>
+                            </div>
+
+                            <div class="form-hint">
+                                <strong>Examples:</strong> analytics.*, dwh.fact_*, dwh.dim_*
+                            </div>
+                        </div>
+
+                        <!-- Exclude Patterns -->
+                        <div class="form-group">
+                            <label class="form-label">Exclude Patterns</label>
+                            <p class="form-description">Tables matching these patterns will be skipped</p>
+
+                            <div class="dynamic-list-input">
+                                <input type="text" class="form-input" placeholder="e.g., *.temp_*">
+                                <button class="btn btn-secondary">Add</button>
+                            </div>
+
+                            <div class="dynamic-list-items">
+                                <div class="dynamic-list-item">
+                                    <span class="item-value">*.temp_*</span>
+                                    <button class="btn btn-sm btn-danger">Remove</button>
+                                </div>
+                                <div class="dynamic-list-item">
+                                    <span class="item-value">*.audit_*</span>
+                                    <button class="btn btn-sm btn-danger">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEMANTIC DATABASE SECTION -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <span class="section-icon">🗄️</span>
+                            <div class="section-header-text">
+                                <h2 class="section-title">Semantic Database</h2>
+                                <p class="section-description">Configure metadata storage database</p>
+                            </div>
+                        </div>
+
+                        <!-- Database Name -->
+                        <div class="form-group">
+                            <label class="form-label">Database Name <span class="required">*</span></label>
+                            <input type="text" class="form-input" value="semantic_layer_v1" placeholder="semantic_layer_v1">
+                        </div>
+
+                        <!-- Auto-create Toggle -->
+                        <div class="form-group toggle-group">
+                            <label class="toggle-header">
+                                <input type="checkbox" class="toggle-input" checked>
+                                <span class="toggle-label form-label">Auto-create if Missing</span>
+                            </label>
+                            <p class="form-description">Automatically create the database if it doesn't exist</p>
+                        </div>
+
+                        <!-- Table Names -->
+                        <div class="form-group">
+                            <label class="form-label">Semantic Database Tables</label>
+                            <p class="form-description">Customize table names for each metadata type</p>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div>
+                                    <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 4px;">Field Metadata</p>
+                                    <input type="text" class="form-input" value="field_metadata">
+                                </div>
+                                <div>
+                                    <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 4px;">Glossary</p>
+                                    <input type="text" class="form-input" value="glossary">
+                                </div>
+                                <div>
+                                    <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 4px;">Field Lineage</p>
+                                    <input type="text" class="form-input" value="field_lineage">
+                                </div>
+                                <div>
+                                    <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 4px;">Field Relationships</p>
+                                    <input type="text" class="form-input" value="field_relationships">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VALIDATION SECTION (Preview) -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <span class="section-icon">✓</span>
+                            <div class="section-header-text">
+                                <h2 class="section-title">Validation Rules</h2>
+                                <p class="section-description">Define validation requirements for semantic metadata</p>
+                            </div>
+                        </div>
+
+                        <!-- Basic Requirements -->
+                        <div class="form-group">
+                            <label class="form-label">Basic Validation Requirements</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-option">
+                                    <input type="checkbox" class="checkbox-input" checked>
+                                    <div>
+                                        <span class="checkbox-label">Require Table Description</span>
+                                        <span class="checkbox-description">Table must have a description</span>
+                                    </div>
+                                </label>
+                                <label class="checkbox-option">
+                                    <input type="checkbox" class="checkbox-input" checked>
+                                    <div>
+                                        <span class="checkbox-label">Require Field Description</span>
+                                        <span class="checkbox-description">Field must have a description</span>
+                                    </div>
+                                </label>
+                                <label class="checkbox-option">
+                                    <input type="checkbox" class="checkbox-input" checked>
+                                    <div>
+                                        <span class="checkbox-label">Require Owner for Tables</span>
+                                        <span class="checkbox-description">Table must have an assigned owner</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Collapsible Section -->
+                        <div class="collapsible">
+                            <button class="collapsible-header">
+                                <span class="collapsible-icon">▶</span>
+                                PII Validation Requirements
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="app-footer">
+            <div>Last saved: Dec 15, 2024 2:30 PM</div>
+            <div>
+                <a href="#" style="color: #0066cc; text-decoration: none;">Help & Shortcuts</a>
+                <span style="margin: 0 8px;">|</span>
+                <a href="#" style="color: #0066cc; text-decoration: none;">Documentation</a>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
