@@ -19,6 +19,10 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ### Realtime Skills
 
+#### End-to-End Orchestrators (Recommended for New Setups)
+- **[realtime-skills/rt-setup-personalization](./realtime-skills/rt-setup-personalization)** - Complete personalization setup workflow: validates parent segment RT status, discovers events/attributes, configures RT infrastructure (events, attributes, ID stitching), creates personalization service AND entity with payload. Implements full 9-step workflow from discovery to deployment.
+- **[realtime-skills/rt-setup-triggers](./realtime-skills/rt-setup-triggers)** - Complete RT triggers/journey setup workflow: same RT configuration as personalization, then creates RT journey with activations (webhook, Salesforce, email) and launches for event processing.
+
 #### RT 2.0 Setup & Configuration
 - **[realtime-skills/rt-config](./realtime-skills/rt-config)** - RT 2.0 configuration overview (entry point)
 - **[realtime-skills/rt-config-setup](./realtime-skills/rt-config-setup)** - Initial RT setup: check enablement, initialize configuration, verify prerequisites
@@ -27,7 +31,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[realtime-skills/rt-config-id-stitching](./realtime-skills/rt-config-id-stitching)** - Configure ID stitching and profile merging
 
 #### RT Personalization
-- **[realtime-skills/rt-personalization](./realtime-skills/rt-personalization)** - Comprehensive personalization service creation with automated discovery, section configuration, API integration, and complete use case templates (product recommendations, cart recovery, content personalization, user profile APIs)
+- **[realtime-skills/rt-personalization](./realtime-skills/rt-personalization)** - Create RT personalization service AND entity (both required). Creates service configuration via YAML and Personalization entity via API with payload definition, making it visible in Console UI. Handles proper subAttributeIdentifier for list attributes.
 
 #### RT Journeys (Triggers)
 - **[realtime-skills/rt-triggers](./realtime-skills/rt-triggers)** - RT journeys overview (entry point)
@@ -87,7 +91,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
    Select "Browse and install plugins" from the menu, then choose from:
    - `sql-skills` - Trino and Hive query assistance, Trino CLI, and TD MCP server
-   - `realtime-skills` - RT 2.0 configuration, personalization services, real-time journeys, and activation/identity log monitoring
+   - `realtime-skills` - RT 2.0 end-to-end orchestrators, configuration, personalization services, real-time journeys, and activation/identity log monitoring
    - `workflow-skills` - Treasure Workflow creation, management, and dbt transformations
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `tdx-skills` - tdx CLI for managing TD from command line
@@ -114,6 +118,8 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the time-filtering skill to add partition pruning to my query"
 "Use the Trino CLI skill to help me connect to TD from the terminal"
 "Use the TD MCP skill to set up Claude Code to access my TD databases"
+"Use the rt-setup-personalization skill to create realtime personalization for product recommendations"
+"Use the rt-setup-triggers skill to set up a welcome email trigger when users sign up"
 "Use the rt-config-setup skill to check RT enablement status"
 "Use the rt-config-events skill to configure event tables for parent segment 394649"
 "Use the rt-config-attributes skill to add RT attributes"
@@ -148,7 +154,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
