@@ -253,7 +253,7 @@ validate_complete_sender_setup() {
 
   # 3. Workspace Context
   echo -e "\n3. Workspace Context:"
-  tdx use | grep engage_workspace || echo "⚠️  No workspace context set"
+  tdx context | grep engage_workspace || echo "⚠️  No workspace context set"
 
   # 4. Manual verification steps
   echo -e "\n4. Manual Verification Required:"

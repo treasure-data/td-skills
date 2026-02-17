@@ -108,7 +108,7 @@ check_template() {
 | Error | Solution |
 |-------|----------|
 | "Template not found" | Verify template name: `tdx engage template list` |
-| "Workspace context not set" | Run `tdx use engage_workspace "Marketing Team"` |
+| "Workspace context not set" | Run `tdx engage workspace use "Marketing Team"` |
 | "Permission denied" | Contact workspace admin for template management permissions |
 | "Template access restricted" | Verify user has access to template's workspace |
 | "Workspace not found" | Check available workspaces: `tdx engage workspace list` |
@@ -153,7 +153,7 @@ validate_all_templates() {
   echo "Validating all templates in: $workspace_name"
 
   # Set workspace context
-  tdx use engage_workspace "$workspace_name"
+  tdx engage workspace use "$workspace_name"
 
   # Get template list
   templates=$(tdx engage template list --format tsv 2>/dev/null)
@@ -174,7 +174,7 @@ validate_all_templates() {
 
         # Check for basic content
         template_info=$(tdx engage template show "$name" --full)
-        subject=$(echo "$template_info" | jq '.data.attributes.subject' -r 2>/dev/null)
+        subject=$(echo "$template_info" | jq -r '.data.attributes.subjectTemplate' 2>/dev/null)
 
         if [ -n "$subject" ] && [ "$subject" != "null" ]; then
           echo "  ✅ $name - Has subject: $subject"
@@ -248,7 +248,7 @@ cleanup_unused_templates() {
   echo "Finding unused templates in: $workspace_name"
 
   # Set workspace context
-  tdx use engage_workspace "$workspace_name"
+  tdx engage workspace use "$workspace_name"
 
   # Get all templates
   templates=$(tdx engage template list --format tsv 2>/dev/null)
@@ -323,7 +323,7 @@ standardize_template_names() {
   echo "Analyzing template naming in: $workspace_name"
 
   # Set workspace context
-  tdx use engage_workspace "$workspace_name"
+  tdx engage workspace use "$workspace_name"
 
   # Get templates and analyze naming patterns
   templates=$(tdx engage template list --format tsv 2>/dev/null)

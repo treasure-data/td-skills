@@ -34,7 +34,7 @@ TD Engage supports two distinct campaign types with different use cases and beha
 ### Batch Campaign Setup
 ```bash
 # Set workspace context
-tdx use engage_workspace "Marketing Team"
+tdx engage workspace use "Marketing Team"
 
 # Create batch email campaign (default behavior)
 tdx engage campaign create --name "Newsletter Campaign" --type email
@@ -263,7 +263,7 @@ validate_campaign() {
 
 | Error | Solution |
 |-------|----------|
-| "Workspace context not set" | Run `tdx use engage_workspace "Marketing Team"` |
+| "Workspace context not set" | Run `tdx engage workspace use "Marketing Team"` |
 | "Parent segment not found" | Verify parent segment exists: `tdx ps list` |
 | "Sender ID not found" | Check sender ID exists in workspace |
 | "Invalid email address" | Verify email format in sender configuration |
@@ -294,7 +294,7 @@ validate_campaign() {
 | Error | Solution |
 |-------|----------|
 | "Workspace not accessible" | Verify workspace access: `tdx engage workspace list` |
-| "Invalid workspace context" | Set workspace: `tdx use engage_workspace "Name"` |
+| "Invalid workspace context" | Set workspace: `tdx engage workspace use "Name"` |
 | "API key permissions insufficient" | Contact admin - need campaign create/manage permissions |
 
 ## Campaign Type Selection Guide
@@ -331,7 +331,7 @@ validate_campaign() {
 ### Before Launching Any Campaign:
 ```bash
 # 1. Verify workspace context
-tdx use | grep engage_workspace
+tdx context | grep engage_workspace
 
 # 2. Check campaign configuration
 tdx engage campaign show "Campaign Name" --full

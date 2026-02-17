@@ -34,7 +34,7 @@ Before creating templates:
 ### 1. Set Workspace Context
 ```bash
 # Set workspace for template creation
-tdx use engage_workspace "Marketing Team"
+tdx engage workspace use "Marketing Team"
 
 # Verify workspace access
 tdx engage workspace show "Marketing Team"
@@ -186,7 +186,7 @@ tdx engage template create --name "Promotion - Flash Sale" --subject "Limited Ti
 
 | Error | Solution |
 |-------|----------|
-| "Workspace context not set" | Run `tdx use engage_workspace "Marketing Team"` |
+| "Workspace context not set" | Run `tdx engage workspace use "Marketing Team"` |
 | "Template name already exists" | Use unique template name or update existing template |
 | "Invalid HTML content" | Validate HTML syntax and structure |
 | "Subject line too long" | Keep subject under 50 characters for mobile compatibility |
@@ -259,14 +259,14 @@ validate_template() {
   template_info=$(tdx engage template show "$template_name" --full)
 
   # Validate HTML content exists
-  html_content=$(echo "$template_info" | jq '.data.attributes.html_content' -r 2>/dev/null)
+  html_content=$(echo "$template_info" | jq -r '.data.attributes.htmlTemplate' 2>/dev/null)
   if [ "$html_content" = "null" ] || [ -z "$html_content" ]; then
     echo "❌ No HTML content found"
     return 1
   fi
 
   # Check subject line
-  subject=$(echo "$template_info" | jq '.data.attributes.subject' -r 2>/dev/null)
+  subject=$(echo "$template_info" | jq -r '.data.attributes.subjectTemplate' 2>/dev/null)
   subject_length=${#subject}
   if [ $subject_length -gt 50 ]; then
     echo "⚠️  Subject line too long: $subject_length characters (recommended: ≤50)"
@@ -288,7 +288,7 @@ debug_html_template() {
 
   # Extract HTML content to file for inspection
   tdx engage template show "$template_name" --full | \
-    jq '.data.attributes.html_content' -r > temp_template.html
+    jq -r '.data.attributes.htmlTemplate' > temp_template.html
 
   # Check HTML syntax
   echo "HTML syntax check:"
@@ -326,9 +326,12 @@ check_template_permissions() {
     return 1
   fi
 
-  # Check current user permissions
+  # Check current workspace context
   echo "Current workspace context:"
-  tdx use | grep engage_workspace
+  tdx context | grep engage_workspace || echo "⚠️ No engage workspace context set"
+
+  # Set workspace context for testing
+  tdx engage workspace use "$workspace_name"
 
   # Test template creation permissions
   test_template_name="permission_test_$(date +%s)"

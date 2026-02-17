@@ -20,7 +20,7 @@ Validates email campaigns and templates using **confirmed tdx engage commands on
 ### 1. Campaign Readiness Check
 ```bash
 # Set workspace context
-tdx use engage_workspace "Marketing Team"
+tdx engage workspace use "Marketing Team"
 
 # Check campaign exists and configuration
 tdx engage campaign show "Campaign Name"
@@ -49,7 +49,7 @@ echo "Subject: $template_subject"
 ### 3. Workspace Context Verification
 ```bash
 # Verify current workspace context
-current_workspace=$(tdx use | grep engage_workspace)
+current_workspace=$(tdx context | grep engage_workspace || echo "No engage workspace set")
 echo "Current workspace: $current_workspace"
 
 # List available workspaces
@@ -150,7 +150,7 @@ validate_all_campaigns() {
   echo "Validating all campaigns in: $workspace_name"
 
   # Set workspace context
-  tdx use engage_workspace "$workspace_name"
+  tdx engage workspace use "$workspace_name"
 
   # Get campaign list
   campaigns=$(tdx engage campaign list --format tsv)
@@ -263,7 +263,7 @@ generate_readiness_report() {
 | Error | Solution |
 |-------|----------|
 | "Campaign not found" | Verify campaign name: `tdx engage campaign list` |
-| "Workspace context not set" | Run `tdx use engage_workspace "Marketing Team"` |
+| "Workspace context not set" | Run `tdx engage workspace use "Marketing Team"` |
 | "Permission denied for campaign access" | Contact workspace admin for campaign view permissions |
 | "Campaign configuration incomplete" | Check campaign has required fields: name, template, workspace |
 | "Invalid campaign status" | Verify campaign status allows configuration changes |
@@ -283,7 +283,7 @@ generate_readiness_report() {
 | Error | Solution |
 |-------|----------|
 | "Workspace not accessible" | Verify workspace access: `tdx engage workspace list` |
-| "Invalid workspace context" | Set workspace: `tdx use engage_workspace "Name"` |
+| "Invalid workspace context" | Set workspace: `tdx engage workspace use "Name"` |
 | "Context not set" | Check current context: `tdx use` |
 | "Multiple workspace conflict" | Explicitly specify workspace in commands |
 
