@@ -9,9 +9,14 @@ Produce content briefs optimized for both traditional search ranking and AI engi
 
 ## Prerequisites
 
-- Google Search Console connected (for keyword data)
+- Google Search Console connected (for keyword data via **gsc-analytics** skill)
 - `playwright-cli` skill loaded (for competitor analysis). If not installed: `npm install -g @playwright/cli@latest`
-- Optionally: `site-audit` and `competitor-analysis` skills for deeper input
+- Python 3 available (for HTML signal extraction)
+- Optionally: **site-audit** and **competitor-analysis** skills for deeper input
+
+## Glossary
+
+Technical terms should be annotated on first use in the brief. For the full glossary, see [../references/glossary.md](../references/glossary.md).
 
 ## Brief Generation Workflow
 
@@ -22,30 +27,41 @@ Ask the user for:
 2. **Target page** (new or existing URL to optimize)
 3. **Goal**: New content, rewrite, or optimization of existing page
 
-If no keyword specified, pull GSC quick wins (position 8-20, high impressions):
+If no keyword specified, use the **gsc-analytics** skill (Steps 1-3) to identify Quick Win keywords (position 8-20, impressions > 100). Present top candidates for the user to choose from.
 
-```
-google_search_console_query_analytics
-  site_url: "sc-domain:example.com"
-  start_date: <28 days ago>
-  end_date: <3 days ago>
-  dimensions: ["query", "page"]
-  row_limit: 1000
-```
-
-Filter for: position 8-20 AND impressions > 100. Present top candidates.
+See [../gsc-analytics/references/gsc-query-patterns.md](../gsc-analytics/references/gsc-query-patterns.md) for GSC query patterns.
 
 ### Step 2: Analyze top-ranking competitors
 
-Use `playwright-cli` to extract structure from top 3 competitors (user provides URLs or finds them manually):
+Use the **competitor-analysis** skill workflow to extract structure from top 3 competitors (user provides URLs):
 
-For each competitor URL, extract headings, word count, JSON-LD types, and BLUF patterns using the `playwright-cli eval` extraction from the `competitor-analysis` skill.
+For each competitor URL, extract SEO/AEO signals using playwright-cli + Python:
+
+```bash
+playwright-cli open <url>
+playwright-cli snapshot
+playwright-cli run-code "async page => { return await page.content(); }" > /tmp/page.html
+python3 seo-aeo-skills/scripts/extract_seo_signals.py /tmp/page.html
+```
+
+For subsequent URLs, use `goto` instead of `open`:
+
+```bash
+playwright-cli goto <next_url>
+```
 
 Summarize:
 - Average word count of top results
 - Common H2 topics across competitors
-- Which schemas competitors use
+- Which schemas competitors use (JSON-LD types)
+- BLUF (Bottom Line Up Front) adoption rate
 - Content gaps (topics competitors miss)
+
+Close the browser when done:
+
+```bash
+playwright-cli close
+```
 
 ### Step 3: Generate the brief
 
@@ -125,3 +141,9 @@ Present the brief to the user. Offer to:
 ## BLUF Writing Patterns
 
 See [references/bluf-patterns.md](references/bluf-patterns.md) for examples of effective BLUF rewrites.
+
+## Related Skills
+
+- **gsc-analytics**: Keyword performance data and opportunity discovery
+- **site-audit**: AEO readiness scoring for existing pages
+- **competitor-analysis**: Detailed competitor structure comparison

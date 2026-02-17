@@ -1,16 +1,21 @@
 ---
 name: competitor-analysis
-description: Analyze competitor web pages for SEO/AEO structure using Playwright browser automation. Extracts heading hierarchy, structured data (JSON-LD), meta tags, content metrics, and BLUF patterns. Use when users want to compare their page against competitors, find content gaps, understand why a competitor ranks higher, or reverse-engineer a competitor's AEO strategy.
+description: Analyze competitor web pages for SEO/AEO structure using Playwright browser automation and Python-based HTML extraction. Extracts heading hierarchy, structured data (JSON-LD), meta tags, content metrics, and BLUF patterns. Use when users want to compare their page against competitors, find content gaps, understand why a competitor ranks higher, or reverse-engineer a competitor's AEO strategy.
 ---
 
 # Competitor Page Analysis
 
-Use playwright-cli to extract and analyze the AEO-relevant structure of competitor pages, then compare against the user's own page.
+Use playwright-cli and Python-based HTML extraction to analyze the AEO-relevant structure of competitor pages, then compare against the user's own page.
 
 ## Prerequisites
 
 - `playwright-cli` skill loaded (provides `playwright-cli` CLI commands). If not installed: `npm install -g @playwright/cli@latest`
+- Python 3 available (for HTML signal extraction script)
 - Optionally: Google Search Console connected for the user's own site data
+
+## Glossary
+
+Technical terms should be annotated on first use in the output report. For the full glossary, see [../references/glossary.md](../references/glossary.md).
 
 ## Analysis Workflow
 
@@ -20,79 +25,40 @@ Ask the user for:
 1. **Their page URL** (the page to improve)
 2. **1-3 competitor URLs** (pages ranking above them for the target keyword)
 
-If the user only has a keyword, use GSC to find their ranking page, then suggest they provide competitor URLs manually.
+If the user only has a keyword, use GSC to find their ranking page (see [../gsc-analytics/SKILL.md](../gsc-analytics/SKILL.md)), then ask them to provide competitor URLs.
 
-### Step 2: Extract page data
+### Step 2: Extract page data (per URL)
 
-For each URL (user's page + competitors), open and navigate:
+For the first URL, open the browser:
 
 ```bash
-playwright-cli open <url>
+playwright-cli open <first_url>
+```
+
+Capture the page structure and visual layout:
+
+```bash
 playwright-cli snapshot
+playwright-cli screenshot
 ```
 
-Then extract AEO signals:
+Extract all SEO/AEO signals using the shared Python script:
 
 ```bash
-playwright-cli eval "JSON.stringify((() => {
-  const h = (sel) => Array.from(document.querySelectorAll(sel));
-
-  const headings = h('h1,h2,h3,h4').map(el => ({
-    tag: el.tagName,
-    text: el.textContent.trim().substring(0, 120),
-    isQuestion: /\\?$|^(what|how|why|when|where|who|which|can|do|does|is|are|should)/i.test(el.textContent.trim()),
-  }));
-
-  const jsonLd = h('script[type=\"application/ld+json\"]')
-    .map(s => { try { return JSON.parse(s.textContent); } catch { return null; } })
-    .filter(Boolean);
-  const schemaTypes = jsonLd.map(j => j['@type'] || 'Unknown');
-
-  const meta = (name) => document.querySelector('meta[name=\"' + name + '\"]')?.content || '';
-  const og = (prop) => document.querySelector('meta[property=\"og:' + prop + '\"]')?.content || '';
-
-  const bodyText = document.body.innerText;
-  const words = bodyText.split(/\\s+/).length;
-
-  const bluf = h('h2').slice(0, 8).map(el => {
-    let next = el.nextElementSibling;
-    while (next && !['P','UL','OL','TABLE'].includes(next.tagName) && next.tagName !== 'H2') {
-      next = next.nextElementSibling;
-    }
-    const text = (next && next.tagName !== 'H2') ? next.textContent.trim().substring(0, 250) : '';
-    return {
-      heading: el.textContent.trim(),
-      firstContent: text,
-      wordCount: text.split(/\\s+/).length,
-      startsWithAnswer: /^[A-Z].*\\b(is|are|means|refers|provides|includes|offers)\\b/i.test(text),
-    };
-  });
-
-  const links = h('a[href]');
-  const internal = links.filter(a => a.hostname === location.hostname).length;
-  const external = links.filter(a => a.hostname !== location.hostname && a.href.startsWith('http')).length;
-
-  return {
-    url: location.href, title: document.title,
-    metaDesc: meta('description'), ogTitle: og('title'),
-    wordCount: words, headings, schemaTypes,
-    hasFAQ: schemaTypes.some(t => t === 'FAQPage'),
-    hasHowTo: schemaTypes.some(t => t === 'HowTo'),
-    hasArticle: schemaTypes.some(t => t === 'Article' || t === 'BlogPosting'),
-    bluf,
-    lists: h('ul,ol').length, tables: h('table').length,
-    images: h('img').length,
-    internalLinks: internal, externalLinks: external,
-  };
-})(), null, 2)"
+playwright-cli run-code "async page => { return await page.content(); }" > /tmp/page.html
+python3 seo-aeo-skills/scripts/extract_seo_signals.py /tmp/page.html
 ```
 
-For subsequent URLs, use `goto` instead of opening a new browser:
+The script outputs JSON containing: title, meta description, headings (with question detection), JSON-LD (structured data), schema types, BLUF analysis, word count, lists, tables, images, and link counts.
+
+For subsequent URLs, navigate without reopening:
 
 ```bash
 playwright-cli goto <next_url>
 playwright-cli snapshot
-playwright-cli eval "..."  # same extraction script
+playwright-cli screenshot
+playwright-cli run-code "async page => { return await page.content(); }" > /tmp/page.html
+python3 seo-aeo-skills/scripts/extract_seo_signals.py /tmp/page.html
 ```
 
 Close the browser when done:
@@ -101,9 +67,11 @@ Close the browser when done:
 playwright-cli close
 ```
 
+> **Note on playwright-cli eval**: Use `eval` only for simple single-value extraction. For multi-signal extraction, always use the Python script to avoid shell escaping issues.
+
 ### Step 3: Compare and identify gaps
 
-Build a comparison table:
+Build a side-by-side comparison table from the extracted JSON:
 
 ```
 ## Structure Comparison
@@ -118,12 +86,14 @@ Build a comparison table:
 | BLUF Sections       | 1/4           | 6/8           | 4/6           |
 | Lists               | 2             | 8             | 5             |
 | Tables              | 0             | 2             | 1             |
+| Images              | 3             | 10            | 7             |
+| Internal Links      | 5             | 15            | 10            |
 | External Citations  | 1             | 7             | 4             |
 ```
 
 ### Step 4: Heading gap analysis
 
-Compare heading topics:
+Compare heading topics across all pages:
 
 ```
 ## Content Gap Analysis
@@ -150,10 +120,10 @@ Provide prioritized recommendations:
 ## Priority Actions
 
 ### High Impact (do first)
-1. **Add FAQ schema** — Competitor A has it, you don't. Most impactful for AI citation.
+1. **Add FAQ schema** — Competitor A has it, you don't. FAQ schema (structured data enabling FAQ-style rich results) is most impactful for AI citation.
 2. **Rewrite section intros with BLUF** — 3/4 of your sections lack direct answers.
-  Before: "In today's digital landscape, many businesses struggle with..."
-  After: "SEO costs $500-5,000/month for most businesses. The exact price depends on..."
+   Before: "In today's digital landscape, many businesses struggle with..."
+   After: "SEO costs $500-5,000/month for most businesses. The exact price depends on..."
 
 ### Medium Impact
 3. **Add comparison table** — Both competitors use tables. AI engines extract tabular data easily.
@@ -165,4 +135,10 @@ Provide prioritized recommendations:
 
 ## Platform-Specific Insights
 
-When relevant, note platform-specific optimization. See [references/platform-citations.md](references/platform-citations.md) for AI platform citation patterns.
+When relevant, note platform-specific optimization. See [references/platform-citations.md](references/platform-citations.md) for AI platform citation patterns and strategies for Google AI Overview, Perplexity, ChatGPT Search, and Claude Search.
+
+## Related Skills
+
+- **gsc-analytics**: Get keyword performance data to inform competitor URL selection
+- **site-audit**: Deep AEO audit of your own pages with scoring
+- **content-brief**: Generate actionable content plans based on gap analysis

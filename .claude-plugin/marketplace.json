@@ -116,10 +116,11 @@
     },
     {
       "name": "seo-aeo-skills",
-      "description": "SEO and AEO (Answer Engine Optimization) skills for auditing websites, analyzing competitors, and generating content briefs optimized for AI search engines (Google AI Overview, Perplexity, ChatGPT Search). Uses Google Search Console data and Playwright browser automation.",
+      "description": "SEO and AEO (Answer Engine Optimization) skills for auditing websites, analyzing competitors, and generating content briefs optimized for AI search engines (Google AI Overview, Perplexity, ChatGPT Search). Includes GSC analytics for keyword research and performance monitoring, Playwright browser automation, and Python-based HTML signal extraction.",
       "source": "./",
       "strict": false,
       "skills": [
+        "./seo-aeo-skills/gsc-analytics",
         "./seo-aeo-skills/site-audit",
         "./seo-aeo-skills/competitor-analysis",
         "./seo-aeo-skills/content-brief"
