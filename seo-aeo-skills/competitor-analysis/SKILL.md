@@ -5,11 +5,11 @@ description: Analyze competitor web pages for SEO/AEO structure using Playwright
 
 # Competitor Page Analysis
 
-Use Playwright MCP tools to extract and analyze the AEO-relevant structure of competitor pages, then compare against the user's own page.
+Use playwright-cli to extract and analyze the AEO-relevant structure of competitor pages, then compare against the user's own page.
 
 ## Prerequisites
 
-- Playwright MCP available (provides `browser_*` tools)
+- `playwright-cli` skill loaded (provides `playwright-cli` CLI commands)
 - Optionally: Google Search Console connected for the user's own site data
 
 ## Analysis Workflow
@@ -24,77 +24,81 @@ If the user only has a keyword, use GSC to find their ranking page, then suggest
 
 ### Step 2: Extract page data
 
-For each URL (user's page + competitors), navigate and extract:
+For each URL (user's page + competitors), open and navigate:
 
+```bash
+playwright-cli open <url>
+playwright-cli snapshot
 ```
-browser_navigate  url: "<url>"
-```
 
-```
-browser_evaluate  expression: |
-  (() => {
-    const h = (sel) => Array.from(document.querySelectorAll(sel));
+Then extract AEO signals:
 
-    // Heading structure
-    const headings = h('h1,h2,h3,h4').map(el => ({
-      tag: el.tagName,
-      text: el.textContent.trim().substring(0, 120),
-      isQuestion: /\?$|^(what|how|why|when|where|who|which|can|do|does|is|are|should)/i.test(el.textContent.trim()),
-    }));
+```bash
+playwright-cli eval "JSON.stringify((() => {
+  const h = (sel) => Array.from(document.querySelectorAll(sel));
 
-    // JSON-LD schemas
-    const jsonLd = h('script[type="application/ld+json"]')
-      .map(s => { try { return JSON.parse(s.textContent); } catch { return null; } })
-      .filter(Boolean);
-    const schemaTypes = jsonLd.map(j => j['@type'] || 'Unknown');
+  const headings = h('h1,h2,h3,h4').map(el => ({
+    tag: el.tagName,
+    text: el.textContent.trim().substring(0, 120),
+    isQuestion: /\\?$|^(what|how|why|when|where|who|which|can|do|does|is|are|should)/i.test(el.textContent.trim()),
+  }));
 
-    // Meta tags
-    const meta = (name) => document.querySelector(`meta[name="${name}"]`)?.content || '';
-    const og = (prop) => document.querySelector(`meta[property="og:${prop}"]`)?.content || '';
+  const jsonLd = h('script[type=\"application/ld+json\"]')
+    .map(s => { try { return JSON.parse(s.textContent); } catch { return null; } })
+    .filter(Boolean);
+  const schemaTypes = jsonLd.map(j => j['@type'] || 'Unknown');
 
-    // Content metrics
-    const bodyText = document.body.innerText;
-    const words = bodyText.split(/\s+/).length;
+  const meta = (name) => document.querySelector('meta[name=\"' + name + '\"]')?.content || '';
+  const og = (prop) => document.querySelector('meta[property=\"og:' + prop + '\"]')?.content || '';
 
-    // BLUF analysis: first paragraph after each H2
-    const bluf = h('h2').slice(0, 8).map(el => {
-      let next = el.nextElementSibling;
-      while (next && !['P','UL','OL','TABLE'].includes(next.tagName) && next.tagName !== 'H2') {
-        next = next.nextElementSibling;
-      }
-      const text = (next && next.tagName !== 'H2') ? next.textContent.trim().substring(0, 250) : '';
-      return {
-        heading: el.textContent.trim(),
-        firstContent: text,
-        wordCount: text.split(/\s+/).length,
-        startsWithAnswer: /^[A-Z].*\b(is|are|means|refers|provides|includes|offers)\b/i.test(text),
-      };
-    });
+  const bodyText = document.body.innerText;
+  const words = bodyText.split(/\\s+/).length;
 
-    // Internal/external link counts
-    const links = h('a[href]');
-    const internal = links.filter(a => a.hostname === location.hostname).length;
-    const external = links.filter(a => a.hostname !== location.hostname && a.href.startsWith('http')).length;
-
+  const bluf = h('h2').slice(0, 8).map(el => {
+    let next = el.nextElementSibling;
+    while (next && !['P','UL','OL','TABLE'].includes(next.tagName) && next.tagName !== 'H2') {
+      next = next.nextElementSibling;
+    }
+    const text = (next && next.tagName !== 'H2') ? next.textContent.trim().substring(0, 250) : '';
     return {
-      url: location.href,
-      title: document.title,
-      metaDesc: meta('description'),
-      ogTitle: og('title'),
-      wordCount: words,
-      headings,
-      schemaTypes,
-      hasFAQ: schemaTypes.some(t => t === 'FAQPage'),
-      hasHowTo: schemaTypes.some(t => t === 'HowTo'),
-      hasArticle: schemaTypes.some(t => t === 'Article' || t === 'BlogPosting'),
-      bluf,
-      lists: h('ul,ol').length,
-      tables: h('table').length,
-      images: h('img').length,
-      internalLinks: internal,
-      externalLinks: external,
+      heading: el.textContent.trim(),
+      firstContent: text,
+      wordCount: text.split(/\\s+/).length,
+      startsWithAnswer: /^[A-Z].*\\b(is|are|means|refers|provides|includes|offers)\\b/i.test(text),
     };
-  })()
+  });
+
+  const links = h('a[href]');
+  const internal = links.filter(a => a.hostname === location.hostname).length;
+  const external = links.filter(a => a.hostname !== location.hostname && a.href.startsWith('http')).length;
+
+  return {
+    url: location.href, title: document.title,
+    metaDesc: meta('description'), ogTitle: og('title'),
+    wordCount: words, headings, schemaTypes,
+    hasFAQ: schemaTypes.some(t => t === 'FAQPage'),
+    hasHowTo: schemaTypes.some(t => t === 'HowTo'),
+    hasArticle: schemaTypes.some(t => t === 'Article' || t === 'BlogPosting'),
+    bluf,
+    lists: h('ul,ol').length, tables: h('table').length,
+    images: h('img').length,
+    internalLinks: internal, externalLinks: external,
+  };
+})(), null, 2)"
+```
+
+For subsequent URLs, use `goto` instead of opening a new browser:
+
+```bash
+playwright-cli goto <next_url>
+playwright-cli snapshot
+playwright-cli eval "..."  # same extraction script
+```
+
+Close the browser when done:
+
+```bash
+playwright-cli close
 ```
 
 ### Step 3: Compare and identify gaps

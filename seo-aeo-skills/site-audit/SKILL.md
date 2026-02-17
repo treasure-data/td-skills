@@ -5,12 +5,12 @@ description: Audit a website for SEO and AEO (Answer Engine Optimization) readin
 
 # SEO/AEO Site Audit
 
-Combine Google Search Console analytics with Playwright page analysis to produce an actionable AEO readiness report.
+Combine Google Search Console analytics with playwright-cli browser analysis to produce an actionable AEO readiness report.
 
 ## Prerequisites
 
 - Google Search Console connected (provides `google_search_console_*` MCP tools)
-- Playwright MCP available (provides `browser_*` tools)
+- `playwright-cli` skill loaded (provides `playwright-cli` CLI commands)
 
 ## Audit Workflow
 
@@ -46,68 +46,71 @@ From the results, extract:
 
 Pick 3-5 pages from Step 2 (prioritize Quick Wins and CTR Opportunities). For each page, run Playwright analysis.
 
-### Step 4: Playwright page analysis
+### Step 4: playwright-cli page analysis
 
-For each selected page, navigate and extract structured data:
+For each selected page, open the browser and navigate:
 
+```bash
+playwright-cli open <page_url>
 ```
-browser_navigate  url: "<page_url>"
+
+Take a snapshot to see the page structure:
+
+```bash
+playwright-cli snapshot
 ```
 
-Then execute JavaScript to extract SEO/AEO signals:
+Then extract SEO/AEO signals using `eval`:
 
-```
-browser_evaluate  expression: |
-  (() => {
-    const headings = Array.from(document.querySelectorAll('h1,h2,h3,h4'))
-      .map(h => ({ tag: h.tagName, text: h.textContent.trim().substring(0, 120) }));
+```bash
+playwright-cli eval "JSON.stringify((() => {
+  const headings = Array.from(document.querySelectorAll('h1,h2,h3,h4'))
+    .map(h => ({ tag: h.tagName, text: h.textContent.trim().substring(0, 120) }));
 
-    const jsonLd = Array.from(document.querySelectorAll('script[type="application/ld+json"]'))
-      .map(s => { try { return JSON.parse(s.textContent); } catch { return null; } })
-      .filter(Boolean);
+  const jsonLd = Array.from(document.querySelectorAll('script[type=\"application/ld+json\"]'))
+    .map(s => { try { return JSON.parse(s.textContent); } catch { return null; } })
+    .filter(Boolean);
 
-    const metaDesc = document.querySelector('meta[name="description"]')?.content || '';
-    const ogTitle = document.querySelector('meta[property="og:title"]')?.content || '';
-    const canonical = document.querySelector('link[rel="canonical"]')?.href || '';
+  const metaDesc = document.querySelector('meta[name=\"description\"]')?.content || '';
+  const ogTitle = document.querySelector('meta[property=\"og:title\"]')?.content || '';
+  const canonical = document.querySelector('link[rel=\"canonical\"]')?.href || '';
 
-    // BLUF check: first <p> after each H2
-    const h2s = Array.from(document.querySelectorAll('h2'));
-    const blufAnalysis = h2s.slice(0, 5).map(h2 => {
-      let next = h2.nextElementSibling;
-      while (next && next.tagName !== 'P' && next.tagName !== 'H2') next = next.nextElementSibling;
-      const firstPara = (next?.tagName === 'P') ? next.textContent.trim().substring(0, 200) : '';
-      return { heading: h2.textContent.trim(), firstPara, wordCount: firstPara.split(/\s+/).length };
-    });
+  const h2s = Array.from(document.querySelectorAll('h2'));
+  const blufAnalysis = h2s.slice(0, 5).map(h2 => {
+    let next = h2.nextElementSibling;
+    while (next && next.tagName !== 'P' && next.tagName !== 'H2') next = next.nextElementSibling;
+    const firstPara = (next?.tagName === 'P') ? next.textContent.trim().substring(0, 200) : '';
+    return { heading: h2.textContent.trim(), firstPara, wordCount: firstPara.split(/\\s+/).length };
+  });
 
-    const bodyText = document.body.innerText;
-    const wordCount = bodyText.split(/\s+/).length;
-    const lists = document.querySelectorAll('ul, ol').length;
-    const tables = document.querySelectorAll('table').length;
-
-    return {
-      title: document.title,
-      metaDesc,
-      ogTitle,
-      canonical,
-      wordCount,
-      headings,
-      jsonLd: jsonLd.map(j => j['@type'] || 'Unknown'),
-      hasFAQ: jsonLd.some(j => JSON.stringify(j).includes('FAQPage')),
-      hasHowTo: jsonLd.some(j => JSON.stringify(j).includes('HowTo')),
-      hasArticle: jsonLd.some(j => JSON.stringify(j).includes('Article')),
-      hasSpeakable: jsonLd.some(j => JSON.stringify(j).includes('Speakable')),
-      hasBreadcrumb: jsonLd.some(j => JSON.stringify(j).includes('BreadcrumbList')),
-      blufAnalysis,
-      lists,
-      tables,
-    };
-  })()
+  const bodyText = document.body.innerText;
+  return {
+    title: document.title, metaDesc, ogTitle, canonical,
+    wordCount: bodyText.split(/\\s+/).length,
+    headings,
+    jsonLd: jsonLd.map(j => j['@type'] || 'Unknown'),
+    hasFAQ: jsonLd.some(j => JSON.stringify(j).includes('FAQPage')),
+    hasHowTo: jsonLd.some(j => JSON.stringify(j).includes('HowTo')),
+    hasArticle: jsonLd.some(j => JSON.stringify(j).includes('Article')),
+    hasSpeakable: jsonLd.some(j => JSON.stringify(j).includes('Speakable')),
+    hasBreadcrumb: jsonLd.some(j => JSON.stringify(j).includes('BreadcrumbList')),
+    blufAnalysis,
+    lists: document.querySelectorAll('ul, ol').length,
+    tables: document.querySelectorAll('table').length,
+  };
+})(), null, 2)"
 ```
 
 Optionally, take a screenshot for visual reference:
 
+```bash
+playwright-cli screenshot
 ```
-browser_take_screenshot
+
+Close the browser when done with all pages:
+
+```bash
+playwright-cli close
 ```
 
 ### Step 5: Score and report

@@ -10,7 +10,7 @@ Produce content briefs optimized for both traditional search ranking and AI engi
 ## Prerequisites
 
 - Google Search Console connected (for keyword data)
-- Playwright MCP available (for competitor analysis)
+- `playwright-cli` skill loaded (for competitor analysis)
 - Optionally: `site-audit` and `competitor-analysis` skills for deeper input
 
 ## Brief Generation Workflow
@@ -37,9 +37,9 @@ Filter for: position 8-20 AND impressions > 100. Present top candidates.
 
 ### Step 2: Analyze top-ranking competitors
 
-Use Playwright to extract structure from top 3 competitors (user provides URLs or finds them manually):
+Use `playwright-cli` to extract structure from top 3 competitors (user provides URLs or finds them manually):
 
-For each competitor URL, extract headings, word count, JSON-LD types, and BLUF patterns using the extraction from the `competitor-analysis` skill.
+For each competitor URL, extract headings, word count, JSON-LD types, and BLUF patterns using the `playwright-cli eval` extraction from the `competitor-analysis` skill.
 
 Summarize:
 - Average word count of top results
