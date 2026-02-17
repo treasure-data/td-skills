@@ -2,11 +2,11 @@
 """Extract SEO/AEO signals from HTML.
 
 Usage:
-    python3 extract_seo_signals.py page.html --url https://example.com/page
-    python3 extract_seo_signals.py page.html                    # url defaults to file path
-    cat page.html | python3 extract_seo_signals.py --url https://example.com/page
-    python3 extract_seo_signals.py page.html --compact           # minified JSON
-    python3 extract_seo_signals.py page.html --fields title,word_count,schema_types
+    python3 extract_page_signals.py page.html --url https://example.com/page
+    python3 extract_page_signals.py page.html                    # url defaults to file path
+    cat page.html | python3 extract_page_signals.py --url https://example.com/page
+    python3 extract_page_signals.py page.html --compact           # minified JSON
+    python3 extract_page_signals.py page.html --fields title,word_count,schema_types
 
 Output: JSON to stdout with SEO/AEO signals.
 Dependencies: Python 3 stdlib only (no pip install required).

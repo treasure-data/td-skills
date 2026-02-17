@@ -2,6 +2,17 @@
 
 Practical reference for Google Search Console MCP tool query patterns.
 
+## Table of Contents
+
+- [Date Range Calculation](#date-range-calculation)
+- [Dimension Combinations](#dimension-combinations)
+- [Filtering Patterns](#filtering-patterns)
+- [jq Extraction Examples](#jq-extraction-examples)
+- [Pagination](#pagination)
+- [Cannibalization Detection Algorithm](#cannibalization-detection-algorithm)
+- [Trend Calculation](#trend-calculation)
+- [Common Pitfalls](#common-pitfalls)
+
 ## Date Range Calculation
 
 GSC data has a ~3 day processing delay. Always adjust dates:
@@ -111,6 +122,24 @@ Classification:
 - **Rising**: position_delta < -3 (lower position number = better ranking)
 - **Falling**: position_delta > 3
 - **Stable**: abs(position_delta) <= 3
+
+## jq Extraction Examples
+
+GSC responses with 5,000 rows often exceed 256KB. Use `jq` to filter directly:
+
+```bash
+# Top 10 by impressions
+cat <result_file> | jq '[.rows | sort_by(-.impressions) | limit(10; .[])] | .[] | {query: .keys[0], page: .keys[1], position: .position, impressions: .impressions, clicks: .clicks, ctr: .ctr}'
+
+# Quick Wins: position 8-20, impressions > 100
+cat <result_file> | jq '[.rows[] | select(.position >= 8 and .position <= 20 and .impressions > 100)] | sort_by(-.impressions) | limit(20; .[])'
+
+# Zero-click: impressions > 200, clicks = 0
+cat <result_file> | jq '[.rows[] | select(.impressions > 200 and .clicks == 0)] | sort_by(-.impressions) | limit(10; .[])'
+
+# Cannibalization: queries with 2+ pages
+cat <result_file> | jq '[.rows | group_by(.keys[0]) | .[] | select(length > 1) | {query: .[0].keys[0], pages: [.[].keys[1]], count: length}] | sort_by(-.count) | limit(10; .[])'
+```
 
 ## Common Pitfalls
 

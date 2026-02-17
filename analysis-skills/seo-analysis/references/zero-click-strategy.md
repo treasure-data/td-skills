@@ -15,7 +15,7 @@ Zero-click queries are keywords where a site has impressions but receives zero c
 
 ### Type A: AI Overview / Answer Box Absorption
 
-1. **Capture the Answer Box**: Restructure the page's primary section using BLUF format (30-60 words) matching the Answer Box type (see `content-brief/references/bluf-patterns.md` for AB→BLUF mapping)
+1. **Capture the Answer Box**: Restructure the page's primary section using BLUF format (30-60 words) matching the Answer Box type (see `aeo-analysis/references/bluf-patterns.md` for AB→BLUF mapping)
 2. **Add differentiated value**: Include data, tools, or interactive content that cannot be replicated in an AI Overview — give users a reason to click through
 3. **Target the AI Overview references**: Ensure the page is cited as a source in the AI Overview by adding structured data and authoritative content
 4. **Accept and redirect**: If the query is truly zero-click, redirect optimization effort to related keywords that still drive clicks
@@ -25,7 +25,7 @@ Zero-click queries are keywords where a site has impressions but receives zero c
 1. **Align content format to intent**: If the query is informational, ensure the ranking page is a guide/article, not a product page
 2. **Create a dedicated page**: If no page matches the intent, create new content targeting the query
 3. **Improve title and meta description**: Rewrite to clearly signal the content matches the searcher's intent
-4. **Check cannibalization**: Ensure a better-matched page isn't being suppressed by an intent-mismatched page (see gsc-analytics Step 6)
+4. **Check cannibalization**: Ensure a better-matched page isn't being suppressed by an intent-mismatched page (see gsc-analysis Step 6)
 
 ### Type C: Brand Answer Box Owned
 

@@ -54,7 +54,7 @@ Use this table to select the correct BLUF pattern based on the SERP's Answer Box
 | calculator / instant | `answerBox.type: "calculator"` or numeric answer | Pattern 2: Number-first | Lead with the number/price/quantity |
 | absent (no Answer Box) | No `answerBox` in SerpAPI response | Analyze competitors | Check top 3 organic results' BLUF patterns and match the dominant format |
 
-When the Answer Box is absent, analyze the top 3 competitors' `bluf_pattern_type` (from `extract_seo_signals.py`) and adopt the most common pattern among ranking pages.
+When the Answer Box is absent, analyze the top 3 competitors' `bluf_pattern_type` (from `extract_page_signals.py`) and adopt the most common pattern among ranking pages.
 
 ## Anti-patterns to avoid
 

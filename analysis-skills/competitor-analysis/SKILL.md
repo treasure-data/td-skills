@@ -1,11 +1,11 @@
 ---
 name: competitor-analysis
-description: Analyze competitor web pages for SEO/AEO structure using Playwright browser automation and Python-based HTML extraction. Extracts heading hierarchy, structured data (JSON-LD), meta tags, content metrics, and BLUF patterns. Use when users want to compare their page against competitors, find content gaps, understand why a competitor ranks higher, or reverse-engineer a competitor's AEO strategy.
+description: Analyze competitor web pages for SEO and AEO structure using SerpAPI for SERP-based competitor discovery and Playwright browser automation with Python-based HTML extraction for structural comparison. Extracts heading hierarchy, structured data (JSON-LD), meta tags, content metrics, and BLUF patterns. Use when users want to compare their page against competitors, find content gaps, understand why a competitor ranks higher, reverse-engineer Answer Box winners, or benchmark page structure.
 ---
 
-# Competitor Page Analysis
+# Competitor Analysis
 
-Use playwright-cli and Python-based HTML extraction to analyze the AEO-relevant structure of competitor pages, then compare against the user's own page.
+Discover competitors via SerpAPI and compare page structures using Playwright and Python-based HTML extraction.
 
 ## Tool Availability Check
 
@@ -51,7 +51,7 @@ Present the discovered competitors to the user for confirmation before proceedin
 
 #### Manual fallback
 
-If SerpAPI is not connected, ask the user for **1-3 competitor URLs** (pages ranking above them for the target keyword). If the user only has a keyword, use GSC to find their ranking page (see [../gsc-analytics/SKILL.md](../gsc-analytics/SKILL.md)), then ask them to provide competitor URLs.
+If SerpAPI is not connected, ask the user for **1-3 competitor URLs** (pages ranking above them for the target keyword). If the user only has a keyword, use GSC to find their ranking page (see [../gsc-analysis/SKILL.md](../gsc-analysis/SKILL.md)), then ask them to provide competitor URLs.
 
 ### Step 2: Extract page data (per URL)
 
@@ -68,14 +68,14 @@ playwright-cli snapshot
 playwright-cli screenshot
 ```
 
-Extract all SEO/AEO signals using the shared Python script:
+Extract all signals using the shared Python script:
 
 ```bash
 playwright-cli run-code "async page => { return await page.content(); }" > /tmp/page.html
-python3 seo-aeo-skills/scripts/extract_seo_signals.py /tmp/page.html --url <first_url>
+python3 analysis-skills/scripts/extract_page_signals.py /tmp/page.html --url <first_url>
 ```
 
-The script outputs JSON containing all SEO/AEO signals (run with `--help` for full field list): title, meta description, OG/Twitter metadata, headings (with question detection), JSON-LD (structured data), schema types, entity properties, BLUF analysis with pattern classification, word count, lists, tables, images (with alt analysis), and link counts with anchor texts.
+The script outputs JSON containing all SEO/AEO signals: title, meta description, OG/Twitter metadata, headings (with question detection), JSON-LD (structured data), schema types, entity properties, BLUF analysis with pattern classification, word count, lists, tables, images (with alt analysis), and link counts with anchor texts.
 
 For subsequent URLs, navigate without reopening:
 
@@ -84,7 +84,7 @@ playwright-cli goto <next_url>
 playwright-cli snapshot
 playwright-cli screenshot
 playwright-cli run-code "async page => { return await page.content(); }" > /tmp/page.html
-python3 seo-aeo-skills/scripts/extract_seo_signals.py /tmp/page.html --url <next_url>
+python3 analysis-skills/scripts/extract_page_signals.py /tmp/page.html --url <next_url>
 ```
 
 Close the browser when done:
@@ -93,7 +93,7 @@ Close the browser when done:
 playwright-cli close
 ```
 
-> **Note on playwright-cli eval**: Use `eval` only for simple single-value extraction. For multi-signal extraction, always use the Python script to avoid shell escaping issues.
+See [../references/playwright-workflow.md](../references/playwright-workflow.md) for the full workflow reference.
 
 ### Step 3: SERP feature context (if SerpAPI available)
 
@@ -125,7 +125,7 @@ If the SerpAPI results from Step 1 include an `answerBox`, reverse-engineer why 
 ```bash
 playwright-cli open <answer_box_url>
 playwright-cli run-code "async page => { return await page.content(); }" > /tmp/ab_source.html
-python3 seo-aeo-skills/scripts/extract_seo_signals.py /tmp/ab_source.html --url <answer_box_url>
+python3 analysis-skills/scripts/extract_page_signals.py /tmp/ab_source.html --url <answer_box_url>
 ```
 
 3. **Match AB snippet to page content**: Compare the `answerBox.snippet` text from SerpAPI against the extracted `bluf_analysis` sections. Find which H2 section's `first_content` most closely matches the AB snippet.
@@ -158,7 +158,7 @@ python3 seo-aeo-skills/scripts/extract_seo_signals.py /tmp/ab_source.html --url 
 5. Use the same sentence structure: [Definition]. [Expansion]. [Key detail].
 ```
 
-See [../content-brief/references/bluf-patterns.md](../content-brief/references/bluf-patterns.md) for the AB→BLUF pattern mapping table.
+See [../aeo-analysis/references/bluf-patterns.md](../aeo-analysis/references/bluf-patterns.md) for the AB→BLUF pattern mapping table.
 
 > If no Answer Box is present in the SERP, skip this step and proceed to Step 5.
 
@@ -205,7 +205,7 @@ Compare heading topics across all pages:
 3. Convert "Our Services" → "What [services] do we offer?" — question format for AEO
 ```
 
-### Step 7: AEO-specific recommendations
+### Step 7: Recommendations
 
 Provide prioritized recommendations:
 
@@ -213,14 +213,12 @@ Provide prioritized recommendations:
 ## Priority Actions
 
 ### High Impact (do first)
-1. **Add FAQ schema** — Competitor A has it, you don't. FAQ schema (structured data enabling FAQ-style rich results) is most impactful for AI citation.
+1. **Add FAQ schema** — Competitor A has it, you don't. FAQ schema is most impactful for AI citation.
 2. **Rewrite section intros with BLUF** — 3/4 of your sections lack direct answers.
-   Before: "In today's digital landscape, many businesses struggle with..."
-   After: "SEO costs $500-5,000/month for most businesses. The exact price depends on..."
 
 ### Medium Impact
 3. **Add comparison table** — Both competitors use tables. AI engines extract tabular data easily.
-4. **Increase external citations** — You have 1 source, competitors average 5.5. Cite authoritative data.
+4. **Increase external citations** — You have 1 source, competitors average 5.5.
 
 ### Low Impact
 5. **Add more list formatting** — Convert paragraphs to bullet points where listing items.
@@ -228,10 +226,11 @@ Provide prioritized recommendations:
 
 ## Platform-Specific Insights
 
-When relevant, note platform-specific optimization. See [references/platform-citations.md](references/platform-citations.md) for AI platform citation patterns and strategies for Google AI Overview, Perplexity, ChatGPT Search, and Claude Search.
+When relevant, note platform-specific optimization. See [../aeo-analysis/references/platform-citations.md](../aeo-analysis/references/platform-citations.md) for AI platform citation patterns and strategies for Google AI Overview, Perplexity, ChatGPT Search, and Claude Search.
 
 ## Related Skills
 
-- **gsc-analytics**: Get keyword performance data to inform competitor URL selection
-- **site-audit**: Deep AEO audit of your own pages with scoring
+- **gsc-analysis**: Get keyword performance data to inform competitor URL selection
+- **aeo-analysis**: Deep AEO audit of your own pages with scoring (no GSC/SerpAPI needed)
+- **seo-analysis**: SEO audit with live SERP context and position drift detection
 - **content-brief**: Generate actionable content plans based on gap analysis
