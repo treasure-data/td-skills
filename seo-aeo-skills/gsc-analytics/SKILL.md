@@ -7,6 +7,10 @@ description: Deep analysis of Google Search Console data for keyword research, p
 
 Comprehensive Google Search Console data analysis to discover SEO opportunities and monitor search performance.
 
+## Tool Availability Check
+
+Before starting, verify SerpAPI is available: `ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }`. If available, use it for all SerpAPI steps below. If not, skip SerpAPI-dependent steps.
+
 ## Prerequisites
 
 - Google Search Console connected (provides `google_search_console_*` MCP tools)

@@ -7,6 +7,10 @@ description: Analyze competitor web pages for SEO/AEO structure using Playwright
 
 Use playwright-cli and Python-based HTML extraction to analyze the AEO-relevant structure of competitor pages, then compare against the user's own page.
 
+## Tool Availability Check
+
+Before starting, verify SerpAPI is available: `ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }`. If available, use it for all SerpAPI steps below. If not, skip SerpAPI-dependent steps.
+
 ## Prerequisites
 
 - `playwright-cli` skill loaded (provides `playwright-cli` CLI commands). If not installed: `npm install -g @playwright/cli@latest`

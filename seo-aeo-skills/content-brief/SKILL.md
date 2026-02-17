@@ -7,6 +7,10 @@ description: Generate AEO-optimized content briefs using Google Search Console k
 
 Produce content briefs optimized for both traditional search ranking and AI engine citation.
 
+## Tool Availability Check
+
+Before starting, verify SerpAPI is available: `ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }`. If available, use it for all SerpAPI steps below. If not, skip SerpAPI-dependent steps.
+
 ## Prerequisites
 
 - Google Search Console connected (for keyword data via **gsc-analytics** skill)

@@ -7,6 +7,10 @@ description: Audit a website for SEO and AEO (Answer Engine Optimization) readin
 
 Combine Google Search Console analytics with playwright-cli browser analysis and Python-based HTML extraction to produce an actionable AEO readiness report.
 
+## Tool Availability Check
+
+Before starting, verify SerpAPI is available: `ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }`. If available, use it for all SerpAPI steps below. If not, skip SerpAPI-dependent steps.
+
 ## Prerequisites
 
 - Google Search Console connected (provides `google_search_console_*` MCP tools)
