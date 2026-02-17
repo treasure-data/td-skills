@@ -35,6 +35,8 @@ Run the **gsc-analytics** skill's Steps 1-4 to collect keyword and page performa
 
 See [../gsc-analytics/references/gsc-query-patterns.md](../gsc-analytics/references/gsc-query-patterns.md) for query patterns and filtering details.
 
+> **Large result handling**: GSC responses (5,000 rows) exceed 256KB. Never read the entire file at once. Use `jq` filters or `Read` with `offset/limit` to extract data. See gsc-analytics Step 2 for `jq` examples.
+
 ### Step 2: Select pages for deep analysis
 
 From Step 1, pick 3-5 pages prioritizing:

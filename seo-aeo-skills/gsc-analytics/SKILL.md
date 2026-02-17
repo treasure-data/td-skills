@@ -47,6 +47,30 @@ google_search_console_query_analytics
 
 > Note: GSC data has a ~3 day delay. Always set `end_date` to 3 days before today.
 
+#### Handling large result sets
+
+GSC responses with 5,000 rows often exceed 256KB and **cannot be read in a single Read call**. Never attempt to read the entire result file at once. Instead:
+
+1. **Use Grep** to extract specific data points (e.g., `Grep` for a keyword or URL pattern)
+2. **Use Read with offset/limit** to read in chunks (e.g., `offset: 0, limit: 100` then `offset: 100, limit: 100`)
+3. **Use Bash with `jq`** to filter and aggregate directly:
+
+```bash
+# Top 10 by impressions
+cat <result_file> | jq '[.rows | sort_by(-.impressions) | limit(10; .[])] | .[] | {query: .keys[0], page: .keys[1], position: .position, impressions: .impressions, clicks: .clicks, ctr: .ctr}'
+
+# Quick Wins: position 8-20, impressions > 100
+cat <result_file> | jq '[.rows[] | select(.position >= 8 and .position <= 20 and .impressions > 100)] | sort_by(-.impressions) | limit(20; .[])'
+
+# Zero-click: impressions > 200, clicks = 0
+cat <result_file> | jq '[.rows[] | select(.impressions > 200 and .clicks == 0)] | sort_by(-.impressions) | limit(10; .[])'
+
+# Cannibalization: queries with 2+ pages
+cat <result_file> | jq '[.rows | group_by(.keys[0]) | .[] | select(length > 1) | {query: .[0].keys[0], pages: [.[].keys[1]], count: length}] | sort_by(-.count) | limit(10; .[])'
+```
+
+Apply the same approach to all subsequent steps that filter the Step 2 dataset.
+
 Summarize the top-level metrics:
 - Total queries
 - Total pages receiving traffic
