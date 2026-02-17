@@ -28,7 +28,7 @@ Technical terms should be annotated on first use in the output report with a par
 
 Run the **gsc-analytics** skill's Steps 1-4 to collect keyword and page performance data:
 
-1. Identify the target site (`google_search_console_list_sites`)
+1. List available GSC properties (`google_search_console_list_sites`) and let the user select
 2. Pull performance data for the last 28 days with dimensions `["query", "page"]` and `row_limit: 5000`
 3. Extract **Quick Wins** — Position 8-20 (striking distance keywords close to page 1), impressions > 100
 4. Extract **CTR Opportunities** — Impressions > 500 but CTR (click-through rate) < 2%

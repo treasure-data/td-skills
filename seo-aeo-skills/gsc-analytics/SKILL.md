@@ -24,13 +24,13 @@ Technical terms are annotated on first use. For the full glossary, see [../refer
 
 ### Step 1: Identify the target site
 
-Ask the user for the site URL. If unknown, list available properties:
+First, retrieve available GSC properties and present them to the user:
 
 ```
 google_search_console_list_sites
 ```
 
-Use the `sc-domain:` format (e.g., `sc-domain:example.com`) when available, as it covers all subdomains.
+Present the list and let the user select the target site. Use the `sc-domain:` format (e.g., `sc-domain:example.com`) when available, as it covers all subdomains. Do not ask the user for a URL before checking GSC — the available properties may differ from what the user expects.
 
 ### Step 2: Performance overview (last 28 days)
 
