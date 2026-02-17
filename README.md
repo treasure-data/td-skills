@@ -27,10 +27,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[realtime-skills/rt-config-id-stitching](./realtime-skills/rt-config-id-stitching)** - Configure ID stitching and profile merging
 
 #### RT Personalization
-- **[realtime-skills/rt-personalization](./realtime-skills/rt-personalization)** - RT personalization overview (entry point)
-- **[realtime-skills/rt-pz-service](./realtime-skills/rt-pz-service)** - Create and manage personalization services
-- **[realtime-skills/rt-pz-sections](./realtime-skills/rt-pz-sections)** - Configure section criteria with operators and targeting logic
-- **[realtime-skills/rt-pz-api](./realtime-skills/rt-pz-api)** - Integrate personalization APIs with web/mobile apps
+- **[realtime-skills/rt-personalization](./realtime-skills/rt-personalization)** - Comprehensive personalization service creation with automated discovery, section configuration, API integration, and complete use case templates (product recommendations, cart recovery, content personalization, user profile APIs)
 
 #### RT Journeys (Triggers)
 - **[realtime-skills/rt-triggers](./realtime-skills/rt-triggers)** - RT journeys overview (entry point)
@@ -121,9 +118,9 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the rt-config-events skill to configure event tables for parent segment 394649"
 "Use the rt-config-attributes skill to add RT attributes"
 "Use the rt-config-id-stitching skill to configure profile merging"
-"Use the rt-pz-service skill to create a product recommendation service"
-"Use the rt-pz-sections skill to configure targeting criteria"
-"Use the rt-pz-api skill to integrate personalization with my web app"
+"Use the rt-personalization skill to create a product recommendation service"
+"Use the rt-personalization skill to build a cart recovery service"
+"Use the rt-personalization skill to integrate personalization API with my web app"
 "Use the rt-journey-create skill to create a welcome email journey"
 "Use the rt-journey-activations skill to configure webhook activations"
 "Use the rt-journey-monitor skill to debug activation failures"
@@ -151,7 +148,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-pz-service, rt-pz-sections, rt-pz-api, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
