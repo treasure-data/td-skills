@@ -115,6 +115,17 @@
       ]
     },
     {
+      "name": "seo-aeo-skills",
+      "description": "SEO and AEO (Answer Engine Optimization) skills for auditing websites, analyzing competitors, and generating content briefs optimized for AI search engines (Google AI Overview, Perplexity, ChatGPT Search). Uses Google Search Console data and Playwright browser automation.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./seo-aeo-skills/site-audit",
+        "./seo-aeo-skills/competitor-analysis",
+        "./seo-aeo-skills/content-brief"
+      ]
+    },
+    {
       "name": "aps-doc-skills",
       "description": "Modular technical documentation generation for Treasure Data pipeline layers and CDP. Layer-specific expert skills for core patterns, ingestion, staging, hist-union, ID unification, golden layers, and CDP master segment configurations with intelligent auto-detection and comprehensive documentation.",
       "source": "./",
