@@ -128,6 +128,15 @@
         "./aps-doc-skills/golden",
         "./aps-doc-skills/master-segment"
       ]
+    },
+    {
+      "name": "document-skills",
+      "description": "Document creation skills for Treasure Data including TD-branded PowerPoint presentations with 2026 brand identity, typography, and slide patterns for client pitches, internal updates, quarterly reviews, and product demos",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./document-skills/td-branded-pptx"
+      ]
     }
   ]
 }
