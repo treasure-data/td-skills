@@ -1,6 +1,6 @@
 ---
 name: site-audit
-description: Audit a website for SEO and AEO (Answer Engine Optimization) readiness using Google Search Console data, Playwright browser analysis, and Python-based HTML signal extraction. Produces an AEO score (0-100) across 6 dimensions including SERP Alignment. Use when users want to analyze their site's visibility in AI search engines (Google AI Overview, Perplexity, ChatGPT Search), find quick-win keywords from GSC, check structured data and content structure, or get actionable optimization recommendations.
+description: Audit a website for SEO and AEO (Answer Engine Optimization) readiness using Google Search Console data, Playwright browser analysis, Python-based HTML signal extraction, and SerpAPI live SERP data. Produces an AEO score (0-100) across 6 dimensions including SERP Alignment. Use when users want to evaluate page structure for AI citation readiness, find quick-win keywords from GSC, check structured data and content structure, or get actionable optimization recommendations.
 ---
 
 # SEO/AEO Site Audit

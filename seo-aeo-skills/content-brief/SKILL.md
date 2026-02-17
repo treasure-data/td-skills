@@ -1,6 +1,6 @@
 ---
 name: content-brief
-description: Generate AEO-optimized content briefs that target AI citation by Google AI Overview, Perplexity, and ChatGPT Search. Combines Google Search Console keyword data with competitor page analysis to produce structured outlines with BLUF patterns, FAQ schema suggestions, and platform-specific optimization tips. Use when users want to create new content, rewrite existing pages for better AI visibility, or plan content strategy based on GSC data.
+description: Generate AEO-optimized content briefs using Google Search Console keyword data, SerpAPI live SERP analysis, and competitor page extraction. Produces structured outlines with PAA-driven headings, BLUF patterns, FAQ schema suggestions, and SERP-aligned priority scoring. Use when users want to create new content, rewrite existing pages for better search visibility, or plan content strategy based on GSC quick-win keywords.
 ---
 
 # AEO Content Brief Generator
