@@ -22,17 +22,18 @@ Use this skill when setting up RT 2.0 infrastructure, configuring event processi
 **Commands**: `tdx ps rt init`, `tdx ps rt validate`, `tdx ps push`
 
 #### [rt-personalization](./rt-personalization)
-**Create personalization services for real-time API responses**
+**Create personalization services for real-time API responses** (Comprehensive)
 
 Build personalization services that return real-time personalized data via API:
-- Define input parameters and output fields
-- Configure real-time logic and transformations
-- Test with the test harness
-- Deploy and monitor via API
+- Automatically discovers RT-enabled parent segments from your account
+- Configure sections with targeting criteria and operators
+- Define input parameters and output attributes
+- Integrate with web/mobile applications via REST API
+- Complete templates for common use cases (product recommendations, cart recovery, content personalization, user profile APIs)
 
-Use this skill when building real-time recommendation engines, dynamic content APIs, or personalized response services.
+Use this skill when building real-time recommendation engines, dynamic content APIs, cart recovery systems, or personalized response services. The skill handles discovery, configuration, deployment, and API integration.
 
-**Commands**: `tdx ps pz init`, `tdx ps pz list`, `tdx ps push`
+**Commands**: `tdx ps rt list`, `tdx ps fields`, `tdx ps pz list`, `tdx ps push`
 
 #### [rt-triggers](./rt-triggers)
 **Create RT journeys with event-triggered activations**
