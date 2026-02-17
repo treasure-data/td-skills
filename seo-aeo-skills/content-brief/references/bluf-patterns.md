@@ -42,6 +42,20 @@ BLUF is a military-origin writing principle: place the most important conclusion
 **Good:**
 > Yes, AEO is worth investing in for 2026. AI search engines now drive 4.4x higher conversion rates than organic search, and Gartner projects traditional search volume will drop 25% by end of 2026. Focus on structured data and BLUF content patterns.
 
+## Answer Box to BLUF Pattern Mapping
+
+Use this table to select the correct BLUF pattern based on the SERP's Answer Box type (from `serpapi_google_search` results):
+
+| Answer Box Type | SERP Signal | Recommended BLUF Pattern | Notes |
+|----------------|-------------|--------------------------|-------|
+| organic (definition) | `answerBox.type: "organic"`, snippet is a definition | Pattern 1: Definition-first | Lead with "[Term] is..." — most common AB format |
+| featured_snippet (list) | `answerBox.type: "featured_snippet"`, content is ordered/unordered list | Pattern 4: Step-first | Use numbered steps or bullet list in first paragraph |
+| featured_snippet (table) | `answerBox.type: "featured_snippet"`, content is tabular | Pattern 3: Verdict-first | Include comparison table immediately after H2 |
+| calculator / instant | `answerBox.type: "calculator"` or numeric answer | Pattern 2: Number-first | Lead with the number/price/quantity |
+| absent (no Answer Box) | No `answerBox` in SerpAPI response | Analyze competitors | Check top 3 organic results' BLUF patterns and match the dominant format |
+
+When the Answer Box is absent, analyze the top 3 competitors' `bluf_pattern_type` (from `extract_seo_signals.py`) and adopt the most common pattern among ranking pages.
+
 ## Anti-patterns to avoid
 
 - "In today's digital landscape..." — empty filler

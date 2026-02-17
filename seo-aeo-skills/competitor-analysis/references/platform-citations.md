@@ -58,3 +58,15 @@ Allow: /
 ```
 
 ~21% of top-1000 sites have GPTBot-specific rules in robots.txt.
+
+## Technical Requirements by Platform
+
+| Requirement | Google AI Overview | Perplexity | ChatGPT Search | Claude |
+|-------------|-------------------|------------|----------------|--------|
+| robots.txt User-Agent | Googlebot (standard) | PerplexityBot | GPTBot, ChatGPT-User | ClaudeBot |
+| SSR required? | Yes (Googlebot renders JS but prefers SSR) | Yes (limited JS rendering) | Yes (limited JS rendering) | Yes (limited JS rendering) |
+| TTFB target | < 800ms | < 1s | < 1s | < 1s |
+| Preferred schema | FAQ, HowTo, Article, Speakable | Article, FAQ | Article, FAQ | Article |
+| Content characteristics | BLUF format, concise answers (30-60 words), tables, lists | Data-dense, factual, numbered references, technical depth | Quotable statements, clear definitions, authoritative tone | Well-structured sections, factual claims with sources |
+| Crawl frequency | Continuous (part of Google index) | Real-time (fresh content prioritized) | Periodic (Bing index dependent) | Periodic |
+| AI Overview/citation format | Source cards with title + URL | Numbered inline references [1][2] | Hyperlinked inline citations | Numbered references |

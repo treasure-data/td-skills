@@ -2,13 +2,26 @@
 """Extract SEO/AEO signals from HTML.
 
 Usage:
-    python3 extract_seo_signals.py <file.html>
-    cat page.html | python3 extract_seo_signals.py
+    python3 extract_seo_signals.py page.html --url https://example.com/page
+    python3 extract_seo_signals.py page.html                    # url defaults to file path
+    cat page.html | python3 extract_seo_signals.py --url https://example.com/page
+    python3 extract_seo_signals.py page.html --compact           # minified JSON
+    python3 extract_seo_signals.py page.html --fields title,word_count,schema_types
 
 Output: JSON to stdout with SEO/AEO signals.
 Dependencies: Python 3 stdlib only (no pip install required).
+
+Output fields:
+    url, title, meta_description, og_title, og_description, og_image,
+    twitter_card, canonical, word_count, headings, json_ld, schema_types,
+    has_faq_schema, has_howto_schema, has_article_schema, has_breadcrumb_schema,
+    has_video_object_schema, has_local_business_schema, has_speakable_schema,
+    entity_properties, bluf_analysis (with bluf_pattern_type), lists_count,
+    tables_count, images_count, total_images, images_with_alt, images_missing_alt,
+    alt_texts, internal_links, external_links, internal_link_anchors
 """
 
+import argparse
 import json
 import re
 import sys
@@ -33,6 +46,9 @@ class SEOSignalExtractor(HTMLParser):
         self.title = ""
         self.meta_description = ""
         self.og_title = ""
+        self.og_description = ""
+        self.og_image = ""
+        self.twitter_card = ""
         self.canonical = ""
         self.headings = []
         self.json_ld_raw = []
@@ -40,7 +56,11 @@ class SEOSignalExtractor(HTMLParser):
         self.lists_count = 0
         self.tables_count = 0
         self.images_count = 0
+        self.images_with_alt = 0
+        self.images_missing_alt = 0
+        self.alt_texts = []
         self.links = []
+        self.internal_link_anchors = []
         self.h2_sections = []
 
         # State for BLUF analysis
@@ -48,6 +68,11 @@ class SEOSignalExtractor(HTMLParser):
         self._after_heading_content = []
         self._collecting_after_heading = False
         self._after_heading_tags_seen = 0
+
+        # State for anchor text tracking
+        self._in_anchor = False
+        self._anchor_href = ""
+        self._anchor_text_parts = []
 
     def handle_starttag(self, tag, attrs):
         tag = tag.lower()
@@ -71,8 +96,14 @@ class SEOSignalExtractor(HTMLParser):
             content = attrs_dict.get("content", "")
             if name == "description":
                 self.meta_description = content
+            elif name == "twitter:card":
+                self.twitter_card = content
             elif prop == "og:title":
                 self.og_title = content
+            elif prop == "og:description":
+                self.og_description = content
+            elif prop == "og:image":
+                self.og_image = content
 
         # Canonical
         if tag == "link":
@@ -106,12 +137,22 @@ class SEOSignalExtractor(HTMLParser):
             self.tables_count += 1
         elif tag == "img" and self._in_body:
             self.images_count += 1
+            alt = attrs_dict.get("alt")
+            if alt is not None and alt.strip():
+                self.images_with_alt += 1
+                self.alt_texts.append(alt.strip()[:100])
+            else:
+                self.images_missing_alt += 1
 
         # Links
         if tag == "a" and self._in_body:
             href = attrs_dict.get("href", "")
             if href and href.startswith("http"):
                 self.links.append(href)
+            # Track anchor text for internal links
+            self._in_anchor = True
+            self._anchor_href = href
+            self._anchor_text_parts = []
 
     def handle_endtag(self, tag):
         tag = tag.lower()
@@ -164,6 +205,17 @@ class SEOSignalExtractor(HTMLParser):
                 self._after_heading_content.append(content)
             self._current_text = []
 
+        # Finalize anchor text for internal link tracking
+        if tag == "a" and self._in_anchor:
+            anchor_text = " ".join(self._anchor_text_parts).strip()
+            if anchor_text and self._anchor_href:
+                self.internal_link_anchors.append(
+                    {"text": anchor_text[:100], "href": self._anchor_href}
+                )
+            self._in_anchor = False
+            self._anchor_href = ""
+            self._anchor_text_parts = []
+
         if tag == "body":
             if self._collecting_after_heading and self._current_heading:
                 self._finalize_bluf_section()
@@ -202,9 +254,41 @@ class SEOSignalExtractor(HTMLParser):
         ):
             self._current_text.append(stripped)
 
+        # Anchor text for internal link tracking
+        if self._in_anchor:
+            self._anchor_text_parts.append(stripped)
+
         # Body text for word count
         if self._in_body:
             self.body_text_parts.append(stripped)
+
+    def _classify_bluf_pattern(self, text):
+        """Classify the BLUF pattern type of a text block.
+
+        Returns one of: definition, number, verdict, step, yesno, none
+        """
+        if not text:
+            return "none"
+        text_lower = text.lower().strip()
+        # Yes/No pattern: starts with Yes/No
+        if re.match(r"^(yes|no)\b", text_lower):
+            return "yesno"
+        # Number pattern: starts with a number, currency, or contains cost/price early
+        if re.match(r"^[\$€£¥]?\d|^\d", text_lower):
+            return "number"
+        # Step pattern: starts with step indicators or imperative verbs
+        if re.match(
+            r"^(step\s+\d|first,?\s|to\s+\w+,?\s|set\s+up|install|create|open|go\s+to|navigate|click|run|start)",
+            text_lower,
+        ):
+            return "step"
+        # Verdict pattern: contains comparison words early
+        if re.search(r"^.{0,60}\b(better|best|worse|winner|recommend|choose|prefer|excels|superior)\b", text_lower):
+            return "verdict"
+        # Definition pattern: contains "is a/an/the" or "refers to" or "means" early
+        if re.search(r"^.{0,80}\b(is\s+(a|an|the)\b|refers?\s+to|means|defined\s+as)", text_lower):
+            return "definition"
+        return "none"
 
     def _finalize_bluf_section(self):
         """Save the current BLUF section data."""
@@ -228,6 +312,7 @@ class SEOSignalExtractor(HTMLParser):
                 "first_content": first_content,
                 "word_count": word_count,
                 "starts_with_answer": starts_with_answer,
+                "bluf_pattern_type": self._classify_bluf_pattern(first_content),
             }
         )
         self._current_heading = None
@@ -280,12 +365,35 @@ class SEOSignalExtractor(HTMLParser):
             for t in types_lower
         )
         has_breadcrumb = any("breadcrumblist" in t for t in types_lower)
+        has_video_object_schema = any("videoobject" in t for t in types_lower)
+        has_local_business_schema = any("localbusiness" in t or t.endswith("business") for t in types_lower)
+        has_speakable_schema = any("speakable" in t for t in types_lower)
+
+        # Entity properties from JSON-LD
+        entity_props = self._extract_entity_properties()
+
+        # Filter internal link anchors (keep only same-host links)
+        filtered_anchors = []
+        for anchor in self.internal_link_anchors:
+            href = anchor.get("href", "")
+            if not href.startswith("http"):
+                # Relative links are internal
+                filtered_anchors.append(anchor)
+            elif page_host:
+                try:
+                    if urlparse(href).hostname == page_host:
+                        filtered_anchors.append(anchor)
+                except Exception:
+                    pass
 
         return {
             "url": url,
             "title": self.title,
             "meta_description": self.meta_description,
             "og_title": self.og_title,
+            "og_description": self.og_description,
+            "og_image": self.og_image,
+            "twitter_card": self.twitter_card,
             "canonical": self.canonical,
             "word_count": word_count,
             "headings": self.headings,
@@ -295,13 +403,75 @@ class SEOSignalExtractor(HTMLParser):
             "has_howto_schema": has_howto,
             "has_article_schema": has_article,
             "has_breadcrumb_schema": has_breadcrumb,
+            "has_video_object_schema": has_video_object_schema,
+            "has_local_business_schema": has_local_business_schema,
+            "has_speakable_schema": has_speakable_schema,
+            "entity_properties": entity_props,
             "bluf_analysis": self.h2_sections,
             "lists_count": self.lists_count,
             "tables_count": self.tables_count,
             "images_count": self.images_count,
+            "total_images": self.images_count,
+            "images_with_alt": self.images_with_alt,
+            "images_missing_alt": self.images_missing_alt,
+            "alt_texts": self.alt_texts,
             "internal_links": internal_links,
             "external_links": external_links,
+            "internal_link_anchors": filtered_anchors,
         }
+
+    def _extract_entity_properties(self):
+        """Extract entity-related properties from JSON-LD data."""
+        result = {
+            "has_same_as": False,
+            "same_as_urls": [],
+            "has_about": False,
+            "has_main_entity": False,
+            "author_details": None,
+        }
+        for item in self.json_ld_raw:
+            self._walk_entity_properties(item, result)
+        return result
+
+    def _walk_entity_properties(self, obj, result):
+        """Recursively walk JSON-LD to find entity properties."""
+        if not isinstance(obj, dict):
+            if isinstance(obj, list):
+                for item in obj:
+                    self._walk_entity_properties(item, result)
+            return
+
+        if "sameAs" in obj:
+            result["has_same_as"] = True
+            same_as = obj["sameAs"]
+            if isinstance(same_as, list):
+                result["same_as_urls"].extend(str(u) for u in same_as)
+            elif isinstance(same_as, str):
+                result["same_as_urls"].append(same_as)
+
+        if "about" in obj:
+            result["has_about"] = True
+        if "mainEntity" in obj or "mainEntityOfPage" in obj:
+            result["has_main_entity"] = True
+
+        if "author" in obj and result["author_details"] is None:
+            author = obj["author"]
+            if isinstance(author, dict):
+                result["author_details"] = {
+                    "type": author.get("@type", ""),
+                    "name": author.get("name", ""),
+                    "url": author.get("url", ""),
+                }
+            elif isinstance(author, str):
+                result["author_details"] = {"name": author}
+
+        if "@graph" in obj and isinstance(obj["@graph"], list):
+            for item in obj["@graph"]:
+                self._walk_entity_properties(item, result)
+
+        for key, val in obj.items():
+            if key not in ("@graph", "sameAs") and isinstance(val, (dict, list)):
+                self._walk_entity_properties(val, result)
 
     def _get_type(self, obj):
         """Extract @type from a JSON-LD object."""
@@ -331,27 +501,63 @@ class SEOSignalExtractor(HTMLParser):
 
 
 def main():
-    # Read HTML from file argument or stdin
-    if len(sys.argv) > 1:
-        filepath = sys.argv[1]
+    parser = argparse.ArgumentParser(
+        description="Extract SEO/AEO signals from HTML. Outputs JSON to stdout.",
+        epilog=(
+            "Examples:\n"
+            "  %(prog)s page.html --url https://example.com/page\n"
+            "  %(prog)s page.html --compact\n"
+            "  %(prog)s page.html --fields title,word_count,schema_types\n"
+            "  cat page.html | %(prog)s --url https://example.com/page\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "file", nargs="?", default=None,
+        help="HTML file to analyze. Reads from stdin if omitted.",
+    )
+    parser.add_argument(
+        "--url", default=None,
+        help="Page URL for internal/external link classification. "
+             "Defaults to file path if not specified.",
+    )
+    parser.add_argument(
+        "--compact", action="store_true",
+        help="Output minified JSON (no indentation).",
+    )
+    parser.add_argument(
+        "--fields", default=None,
+        help="Comma-separated list of fields to include in output. "
+             "Example: --fields title,word_count,schema_types,bluf_analysis",
+    )
+    args = parser.parse_args()
+
+    # Read HTML
+    if args.file:
         try:
-            with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+            with open(args.file, "r", encoding="utf-8", errors="replace") as f:
                 html_content = f.read()
         except FileNotFoundError:
-            print(json.dumps({"error": f"File not found: {filepath}"}), file=sys.stderr)
+            print(json.dumps({"error": f"File not found: {args.file}"}), file=sys.stderr)
             sys.exit(1)
-        url = filepath
+        url = args.url if args.url else args.file
     else:
         html_content = sys.stdin.read()
-        url = ""
+        url = args.url or ""
 
     # Parse and extract
     extractor = SEOSignalExtractor()
     extractor.feed(html_content)
     results = extractor.get_results(url=url)
 
+    # Filter fields if requested
+    if args.fields:
+        requested = [f.strip() for f in args.fields.split(",")]
+        results = {k: v for k, v in results.items() if k in requested}
+
     # Output JSON
-    print(json.dumps(results, indent=2, ensure_ascii=False))
+    indent = None if args.compact else 2
+    print(json.dumps(results, indent=indent, ensure_ascii=False))
 
 
 if __name__ == "__main__":
