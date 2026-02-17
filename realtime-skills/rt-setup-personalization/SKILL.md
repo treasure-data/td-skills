@@ -59,6 +59,16 @@ tdx ps list --json | jq '[.[] | select(.realtime_config != null) | {
 - Present list of RT-enabled segments
 - If none found: "No RT-enabled parent segments. Contact CSM to enable RT."
 
+## Region Detection
+
+```bash
+# Detect user's region from tdx config
+REGION=$(tdx config get endpoint 2>/dev/null | grep -o '[a-z][a-z][0-9][0-9]' | head -1)
+REGION="${REGION:-us01}"
+echo "Using region: $REGION"
+```
+
+
 ## Step 2: Use Case Discovery
 
 **Ask user:** "What's your RT personalization use case?"
@@ -187,6 +197,18 @@ attributes:
 - Allow customization: add/remove attributes
 
 ## Step 7: Create RT Configuration
+
+### Validate API Key
+
+```bash
+# Validate API key is set
+if [ -z "$TD_API_KEY" ]; then
+  echo "❌ TD_API_KEY environment variable not set"
+  echo "Set it with: export TD_API_KEY=your_master_api_key"
+  exit 1
+fi
+```
+
 
 **Call rt-config sub-skills** to configure RT:
 
@@ -409,7 +431,7 @@ PERSONALIZATION_ID=$(echo "$PERSONALIZATION_RESPONSE" | jq -r '.data.id')
 
 **Console URL:**
 ```
-https://console-next.us01.treasuredata.com/app/ps/<ps_id>/e/<personalization_id>/p/de
+https://console-next.${REGION}.treasuredata.com/app/ps/<ps_id>/e/<personalization_id>/p/de
 ```
 
 ## Step 10: Verify & Test
@@ -428,6 +450,36 @@ curl -X GET \
   "https://<region>.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<personalization_id>?td_client_id=test_user" \
   -H "Authorization: TD1 ${TD_API_KEY}"
 ```
+
+## Verification Checklist
+
+After setup completes, verify:
+
+```bash
+# 1. RT status is "ok"
+tdx ps view <ps_id> --json | jq -r '.realtime_config.status'
+# Expected: "ok"
+
+# 2. Key events exist
+tdx api "/audiences/<ps_id>/realtime_key_events" --type cdp | jq '.data | length'
+# Expected: > 0
+
+# 3. RT attributes exist
+tdx api "/audiences/<ps_id>/realtime_attributes?page[size]=100" --type cdp | jq '.data | length'
+# Expected: > 0
+
+# 4. Configuration deployed
+curl -s "https://api-cdp.treasuredata.com/entities/parent_segments/<ps_id>/realtime_personalizations" \
+  -H "Authorization: TD1 ${TD_API_KEY}" | jq '.data | length'
+# Expected: > 0
+
+# 5. API endpoint responds
+curl -X GET "https://${REGION}.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<pz_id>?td_client_id=test_user" \
+  -H "Authorization: TD1 ${TD_API_KEY}"
+# Expected: JSON with attributes (not 404)
+```
+
+If any check fails, review the corresponding setup step.
 
 ## Summary Output
 

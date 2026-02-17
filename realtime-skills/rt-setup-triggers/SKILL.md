@@ -42,6 +42,18 @@ Follow steps 1-7 from `rt-setup-personalization` skill:
 
 ## Step 8: Create RT Journey
 
+### Validate API Key
+
+```bash
+# Validate API key is set
+if [ -z "$TD_API_KEY" ]; then
+  echo "❌ TD_API_KEY environment variable not set"
+  echo "Set it with: export TD_API_KEY=your_master_api_key"
+  exit 1
+fi
+```
+
+
 ### Journey Use Cases
 
 **Ask user:** "What should trigger this journey?"
@@ -374,6 +386,36 @@ VALUES (
 - Navigate to Console URL
 - View activation logs
 - Check webhook endpoint received data
+
+## Verification Checklist
+
+After setup completes, verify:
+
+```bash
+# 1. RT status is "ok"
+tdx ps view <ps_id> --json | jq -r '.realtime_config.status'
+# Expected: "ok"
+
+# 2. Key events exist
+tdx api "/audiences/<ps_id>/realtime_key_events" --type cdp | jq '.data | length'
+# Expected: > 0
+
+# 3. RT attributes exist
+tdx api "/audiences/<ps_id>/realtime_attributes?page[size]=100" --type cdp | jq '.data | length'
+# Expected: > 0
+
+# 4. Configuration deployed
+curl -s "https://api-cdp.treasuredata.com/entities/parent_segments/<ps_id>/realtime_personalizations" \
+  -H "Authorization: TD1 ${TD_API_KEY}" | jq '.data | length'
+# Expected: > 0
+
+# 5. API endpoint responds
+curl -X GET "https://${REGION}.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<pz_id>?td_client_id=test_user" \
+  -H "Authorization: TD1 ${TD_API_KEY}"
+# Expected: JSON with attributes (not 404)
+```
+
+If any check fails, review the corresponding setup step.
 
 ## Summary Output
 

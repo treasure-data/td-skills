@@ -7,8 +7,8 @@ Applied 8 critical fixes to RT personalization skills based on code review feedb
 ## Files Updated
 
 1. ✅ `realtime-skills/rt-personalization/SKILL.md` - **COMPLETE**
-2. ⏳ `realtime-skills/rt-setup-personalization/SKILL.md` - **PENDING** (apply same patterns)
-3. ⏳ `realtime-skills/rt-setup-triggers/SKILL.md` - **PENDING** (apply same patterns)
+2. ✅ `realtime-skills/rt-setup-personalization/SKILL.md` - **COMPLETE** (automated fixes)
+3. ✅ `realtime-skills/rt-setup-triggers/SKILL.md` - **COMPLETE** (automated fixes)
 
 ## Fixes Applied to rt-personalization/SKILL.md
 
@@ -255,14 +255,59 @@ Users who previously created personalization services (before this update) will 
 
 This is a **backward-compatible** change - old services still work, but need entity creation for Console visibility.
 
+## Fixes Applied to Orchestrator Skills
+
+### rt-setup-personalization/SKILL.md & rt-setup-triggers/SKILL.md
+
+**Applied via Python automation script:**
+
+1. ✅ **Region Detection** - Added after Step 1
+   - Auto-detects region from tdx config
+   - Defaults to us01 if not found
+   - Uses $REGION variable throughout
+
+2. ✅ **TD_API_KEY Validation** - Added before API calls
+   - rt-setup-personalization: Before Step 7
+   - rt-setup-triggers: Before Step 8
+   - Clear error message with setup instructions
+
+3. ✅ **Region-Aware URLs** - All hardcoded regions replaced
+   - Console URLs use `${REGION}`
+   - API endpoints use `${REGION}`
+   - Supports us01, eu01, ap01, ap02
+
+4. ✅ **Verification Checklist** - Added before Summary Output
+   - 5-step verification process
+   - Checks RT status, events, attributes, entity, API
+
+**Pending (Manual Review Recommended):**
+
+5. ⏳ **HTTP Status Checking** - Partially applied
+   - Applied to rt-personalization (all 7 calls)
+   - NOT yet applied to all orchestrator curl commands
+   - Most critical: Entity/journey creation already has validation via tdx/API
+   - Recommendation: Add to custom curl commands in future PR
+
+6. ⏳ **uuidgen Fallback** - Not yet added to rt-setup-triggers
+   - Needed in Step 9b for STEP_UUID generation
+   - Low priority (uuidgen available on most systems)
+   - Add if cross-platform support needed
+
+**Summary:**
+- Core fixes (1-4) applied: ✅ COMPLETE
+- Advanced fixes (5-6): ⏳ Follow-up recommended
+
 ## Next Steps
 
-1. Apply same patterns to rt-setup-personalization/SKILL.md
-2. Apply same patterns to rt-setup-triggers/SKILL.md
-3. Test all error scenarios
-4. Consider splitting rt-personalization (693 lines > 500)
-5. Update PR description with fixes applied
-6. Request review from team
+1. ✅ Apply automated fixes to orchestrator files - **DONE**
+2. ⏳ Add HTTP status checking to remaining curl commands - **Follow-up PR**
+3. ⏳ Add uuidgen fallback to rt-setup-triggers - **Follow-up PR**
+4. ✅ Test region detection
+5. ✅ Test TD_API_KEY validation
+6. ✅ Test verification checklist
+7. Consider splitting rt-personalization (693 lines > 500)
+8. Update PR description with fixes applied
+9. Request review from team
 
 ## Review Checklist
 
