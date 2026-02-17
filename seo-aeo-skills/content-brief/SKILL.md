@@ -10,7 +10,7 @@ Produce content briefs optimized for both traditional search ranking and AI engi
 ## Prerequisites
 
 - Google Search Console connected (for keyword data)
-- `playwright-cli` skill loaded (for competitor analysis)
+- `playwright-cli` skill loaded (for competitor analysis). If not installed: `npm install -g @playwright/cli@latest`
 - Optionally: `site-audit` and `competitor-analysis` skills for deeper input
 
 ## Brief Generation Workflow

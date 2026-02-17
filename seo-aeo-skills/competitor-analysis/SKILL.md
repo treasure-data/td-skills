@@ -9,7 +9,7 @@ Use playwright-cli to extract and analyze the AEO-relevant structure of competit
 
 ## Prerequisites
 
-- `playwright-cli` skill loaded (provides `playwright-cli` CLI commands)
+- `playwright-cli` skill loaded (provides `playwright-cli` CLI commands). If not installed: `npm install -g @playwright/cli@latest`
 - Optionally: Google Search Console connected for the user's own site data
 
 ## Analysis Workflow

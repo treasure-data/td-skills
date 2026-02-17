@@ -10,7 +10,7 @@ Combine Google Search Console analytics with playwright-cli browser analysis to 
 ## Prerequisites
 
 - Google Search Console connected (provides `google_search_console_*` MCP tools)
-- `playwright-cli` skill loaded (provides `playwright-cli` CLI commands)
+- `playwright-cli` skill loaded (provides `playwright-cli` CLI commands). If not installed: `npm install -g @playwright/cli@latest`
 
 ## Audit Workflow
 
