@@ -14,6 +14,7 @@ Creates complete RT personalization: service configuration + Personalization ent
 - Key events created
 - RT attributes configured
 - Parent segment folder exists
+- TD_API_KEY environment variable set
 
 ## Two-Step Creation Process
 
@@ -30,12 +31,67 @@ Creates complete RT personalization: service configuration + Personalization ent
 
 **Both steps required for complete personalization setup.**
 
+## Migration from Previous Version
+
+**If you previously created a personalization service (before this update):**
+
+The old skill only created the service configuration (Step 1). The entity (Step 2) was missing, making personalization invisible in Console.
+
+### Check if Entity Exists
+
+```bash
+# Detect region
+REGION=$(tdx config get endpoint 2>/dev/null | grep -o '[a-z][a-z][0-9][0-9]' | head -1)
+REGION="${REGION:-us01}"
+
+# List existing personalizations
+RESPONSE=$(curl -s -w "\n%{http_code}" \
+  "https://api-cdp.treasuredata.com/entities/parent_segments/<ps_id>/realtime_personalizations" \
+  -H "Authorization: TD1 ${TD_API_KEY}")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" = "200" ]; then
+  echo "$BODY" | jq '.data[] | {id, name}'
+else
+  echo "❌ Failed to list personalizations (HTTP $HTTP_CODE)"
+  echo "$BODY" | jq '.errors[]? | .detail' 2>/dev/null || echo "$BODY"
+fi
+```
+
+### If Entity is Missing
+
+**Option 1: Run Step 2 Only (Recommended)**
+- Skip Step 1 (service already exists)
+- Follow Step 2 (sections 2a-2e) to create entity
+
+**Option 2: Recreate Everything**
+1. Delete old service: `tdx ps pz delete <ps_id> <service_name>`
+2. Run complete skill (Step 1 + Step 2)
+
+### Verify Migration
+
+After creating entity, test API endpoint:
+```bash
+curl -X GET \
+  "https://${REGION}.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<pz_id>?td_client_id=test_user" \
+  -H "Authorization: TD1 ${TD_API_KEY}"
+```
+
+Should return personalized attributes (not 404).
+
 ## Verify Prerequisites
 
 ```bash
+# Detect region from tdx config
+REGION=$(tdx config get endpoint 2>/dev/null | grep -o '[a-z][a-z][0-9][0-9]' | head -1)
+REGION="${REGION:-us01}"
+echo "Using region: $REGION"
+
 # Check RT status
 RT_STATUS=$(tdx ps view <ps_id> --json | jq -r '.realtime_config.status')
-[ "$RT_STATUS" = "ok" ] || exit 1
+[ "$RT_STATUS" = "ok" ] || { echo "❌ RT status: $RT_STATUS (expected: ok)"; exit 1; }
 
 # List key events
 tdx api "/audiences/<ps_id>/realtime_key_events" --type cdp | jq '.data[] | {id, name}'
@@ -138,11 +194,40 @@ echo "Service ID: $SERVICE_ID"
 
 **This step creates the actual Personalization visible in Console UI.**
 
+### Validate API Key
+
+```bash
+# Validate API key is set
+if [ -z "$TD_API_KEY" ]; then
+  echo "❌ TD_API_KEY environment variable not set"
+  echo "Set it with: export TD_API_KEY=your_master_api_key"
+  exit 1
+fi
+```
+
 ### 2a. Get Parent Segment Folder ID
 
 ```bash
-FOLDER_ID=$(curl -s "https://api-cdp.treasuredata.com/audiences/<ps_id>/folders" \
-  -H "Authorization: TD1 ${TD_API_KEY}" | jq -r '.[0].id')
+RESPONSE=$(curl -s -w "\n%{http_code}" \
+  "https://api-cdp.treasuredata.com/audiences/<ps_id>/folders" \
+  -H "Authorization: TD1 ${TD_API_KEY}")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" != "200" ]; then
+  echo "❌ Failed to get folders (HTTP $HTTP_CODE)"
+  echo "$BODY" | jq '.errors[]? | .detail' 2>/dev/null || echo "$BODY"
+  exit 1
+fi
+
+FOLDER_ID=$(echo "$BODY" | jq -r '.[0].id')
+
+if [ "$FOLDER_ID" = "null" ] || [ -z "$FOLDER_ID" ]; then
+  echo "❌ No folders found for parent segment"
+  echo "Parent segment must have at least one folder"
+  exit 1
+fi
 
 echo "Folder ID: $FOLDER_ID"
 ```
@@ -150,9 +235,29 @@ echo "Folder ID: $FOLDER_ID"
 ### 2b. Get Key Event ID
 
 ```bash
-# Get the key event ID for trigger
-KEY_EVENT_ID=$(tdx api "/audiences/<ps_id>/realtime_key_events" --type cdp | \
-  jq -r '.data[] | select(.name=="<trigger_event_name>") | .id')
+KEY_EVENT_NAME="<trigger_event_name>"
+
+RESPONSE=$(curl -s -w "\n%{http_code}" \
+  "https://api-cdp.treasuredata.com/audiences/<ps_id>/realtime_key_events" \
+  -H "Authorization: TD1 ${TD_API_KEY}")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" != "200" ]; then
+  echo "❌ Failed to get key events (HTTP $HTTP_CODE)"
+  echo "$BODY" | jq '.errors[]? | .detail' 2>/dev/null || echo "$BODY"
+  exit 1
+fi
+
+KEY_EVENT_ID=$(echo "$BODY" | jq -r ".data[] | select(.name==\"$KEY_EVENT_NAME\") | .id")
+
+if [ "$KEY_EVENT_ID" = "null" ] || [ -z "$KEY_EVENT_ID" ]; then
+  echo "❌ Key event '$KEY_EVENT_NAME' not found"
+  echo "Available key events:"
+  echo "$BODY" | jq '.data[] | {id, name}'
+  exit 1
+fi
 
 echo "Key Event ID: $KEY_EVENT_ID"
 ```
@@ -161,13 +266,25 @@ echo "Key Event ID: $KEY_EVENT_ID"
 
 ```bash
 # List all RT attributes with IDs
-tdx api "/audiences/<ps_id>/realtime_attributes?page[size]=100" --type cdp | \
-  jq '.data[] | {
-    id,
-    name,
-    type,
-    aggregations: [.aggregations[]? | .identifier]
-  }' > rt_attributes.json
+RESPONSE=$(curl -s -w "\n%{http_code}" \
+  "https://api-cdp.treasuredata.com/audiences/<ps_id>/realtime_attributes?page[size]=100" \
+  -H "Authorization: TD1 ${TD_API_KEY}")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" != "200" ]; then
+  echo "❌ Failed to get RT attributes (HTTP $HTTP_CODE)"
+  echo "$BODY" | jq '.errors[]? | .detail' 2>/dev/null || echo "$BODY"
+  exit 1
+fi
+
+echo "$BODY" | jq '.data[] | {
+  id,
+  name,
+  type,
+  aggregations: [.aggregations[]? | .identifier]
+}' > rt_attributes.json
 
 cat rt_attributes.json
 ```
@@ -188,7 +305,7 @@ cat rt_attributes.json
 ```json
 {
   "realtimeAttributeId": "<list_attr_id>",
-  "subAttributeIdentifier": "items",  # From aggregations[].identifier
+  "subAttributeIdentifier": "items",
   "outputName": "browsed_products"
 }
 ```
@@ -204,81 +321,120 @@ cat rt_attributes.json
 ### 2e. Create Personalization Entity via API
 
 ```bash
-PERSONALIZATION_RESPONSE=$(curl -s -X POST \
+# Build payload JSON
+cat > personalization_payload.json <<'EOF'
+{
+  "attributes": {
+    "audienceId": "<ps_id>",
+    "name": "<personalization_name>",
+    "description": "<description>",
+    "sections": [
+      {
+        "name": "Default_Section",
+        "entryCriteria": {
+          "name": "Trigger on <event_name>",
+          "description": "Triggered when <event_name> occurs",
+          "keyEventCriteria": {
+            "keyEventId": "<key_event_id>",
+            "keyEventFilters": {
+              "type": "And",
+              "conditions": []
+            }
+          },
+          "profileCriteria": null
+        },
+        "payload": {
+          "response_node": {
+            "type": "ResponseNode",
+            "name": "Response",
+            "description": "Personalization response payload",
+            "definition": {
+              "attributePayload": [
+                {
+                  "realtimeAttributeId": "<single_attr_id>",
+                  "outputName": "last_product"
+                },
+                {
+                  "realtimeAttributeId": "<list_attr_id>",
+                  "subAttributeIdentifier": "items",
+                  "outputName": "browsed_products"
+                },
+                {
+                  "realtimeAttributeId": "<counter_attr_id>",
+                  "outputName": "page_views"
+                }
+              ],
+              "segmentPayload": null,
+              "stringBuilder": []
+            }
+          }
+        },
+        "includeSensitive": false
+      }
+    ]
+  },
+  "relationships": {
+    "parentFolder": {
+      "data": {
+        "id": "<folder_id>",
+        "type": "folder-segment"
+      }
+    }
+  }
+}
+EOF
+
+# Replace placeholders with actual values
+sed -i.bak \
+  -e "s/<ps_id>/$PS_ID/g" \
+  -e "s/<personalization_name>/$PZ_NAME/g" \
+  -e "s/<description>/$PZ_DESC/g" \
+  -e "s/<event_name>/$KEY_EVENT_NAME/g" \
+  -e "s/<key_event_id>/$KEY_EVENT_ID/g" \
+  -e "s/<folder_id>/$FOLDER_ID/g" \
+  -e "s/<single_attr_id>/$SINGLE_ATTR_ID/g" \
+  -e "s/<list_attr_id>/$LIST_ATTR_ID/g" \
+  -e "s/<counter_attr_id>/$COUNTER_ATTR_ID/g" \
+  personalization_payload.json
+
+# Create personalization entity
+RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
   'https://api-cdp.treasuredata.com/entities/realtime_personalizations' \
   -H "Authorization: TD1 ${TD_API_KEY}" \
   -H 'Content-Type: application/vnd.treasuredata.v1+json' \
-  --data '{
-    "attributes": {
-      "audienceId": "<ps_id>",
-      "name": "<personalization_name>",
-      "description": "<description>",
-      "sections": [
-        {
-          "name": "Default_Section",
-          "entryCriteria": {
-            "name": "Trigger on <event_name>",
-            "description": "Triggered when <event_name> occurs",
-            "keyEventCriteria": {
-              "keyEventId": "<key_event_id>",
-              "keyEventFilters": {
-                "type": "And",
-                "conditions": []
-              }
-            },
-            "profileCriteria": null
-          },
-          "payload": {
-            "response_node": {
-              "type": "ResponseNode",
-              "name": "Response",
-              "description": "Personalization response payload",
-              "definition": {
-                "attributePayload": [
-                  {
-                    "realtimeAttributeId": "<single_attr_id>",
-                    "outputName": "last_product"
-                  },
-                  {
-                    "realtimeAttributeId": "<list_attr_id>",
-                    "subAttributeIdentifier": "items",
-                    "outputName": "browsed_products"
-                  },
-                  {
-                    "realtimeAttributeId": "<counter_attr_id>",
-                    "outputName": "page_views"
-                  }
-                ],
-                "segmentPayload": null,
-                "stringBuilder": []
-              }
-            }
-          },
-          "includeSensitive": false
-        }
-      ]
-    },
-    "relationships": {
-      "parentFolder": {
-        "data": {
-          "id": "'"$FOLDER_ID"'",
-          "type": "folder-segment"
-        }
-      }
-    }
-  }')
+  --data @personalization_payload.json)
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ]; then
+  echo "❌ Failed to create Personalization entity (HTTP $HTTP_CODE)"
+  echo ""
+  echo "Possible causes:"
+  echo "  - Invalid folder ID (check parent segment has folders)"
+  echo "  - Invalid key event ID (verify key event exists)"
+  echo "  - Missing RT attribute IDs (check attributes are configured)"
+  echo "  - Invalid attribute payload (check subAttributeIdentifier for list attrs)"
+  echo ""
+  echo "API Response:"
+  echo "$BODY" | jq '.errors[]? | .detail' 2>/dev/null || echo "$BODY"
+  exit 1
+fi
 
 # Extract Personalization ID
-PERSONALIZATION_ID=$(echo "$PERSONALIZATION_RESPONSE" | jq -r '.data.id')
+PERSONALIZATION_ID=$(echo "$BODY" | jq -r '.data.id')
 
 if [ "$PERSONALIZATION_ID" = "null" ] || [ -z "$PERSONALIZATION_ID" ]; then
-  echo "❌ Failed to create Personalization entity"
-  echo "$PERSONALIZATION_RESPONSE" | jq '.'
+  echo "❌ Failed to extract Personalization ID from response"
+  echo "$BODY" | jq '.'
   exit 1
 fi
 
 echo "✅ Personalization entity created!"
 echo "Personalization ID: $PERSONALIZATION_ID"
+
+# Clean up
+rm personalization_payload.json personalization_payload.json.bak 2>/dev/null
 ```
 
 ### 2f. Add Static Strings (Optional)
@@ -324,42 +480,70 @@ Filter personalization based on profile attributes:
 
 ```bash
 # List all personalizations
-curl -s "https://api-cdp.treasuredata.com/entities/parent_segments/<ps_id>/realtime_personalizations" \
-  -H "Authorization: TD1 ${TD_API_KEY}" | jq '.data[] | {
+RESPONSE=$(curl -s -w "\n%{http_code}" \
+  "https://api-cdp.treasuredata.com/entities/parent_segments/<ps_id>/realtime_personalizations" \
+  -H "Authorization: TD1 ${TD_API_KEY}")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" = "200" ]; then
+  echo "$BODY" | jq '.data[] | {
     id,
     name,
     sections_count: (.attributes.sections | length)
   }'
+else
+  echo "❌ Failed to list personalizations (HTTP $HTTP_CODE)"
+fi
 
 # Get specific personalization
-curl -s "https://api-cdp.treasuredata.com/entities/realtime_personalizations/$PERSONALIZATION_ID" \
-  -H "Authorization: TD1 ${TD_API_KEY}" | jq '.data.attributes | {
+RESPONSE=$(curl -s -w "\n%{http_code}" \
+  "https://api-cdp.treasuredata.com/entities/realtime_personalizations/$PERSONALIZATION_ID" \
+  -H "Authorization: TD1 ${TD_API_KEY}")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" = "200" ]; then
+  echo "$BODY" | jq '.data.attributes | {
     name,
     sections: [.sections[] | .name]
   }'
+fi
 ```
 
 ## Console URL
 
 ```
-https://console-next.us01.treasuredata.com/app/ps/<ps_id>/e/<personalization_id>/p/de
+https://console-next.<region>.treasuredata.com/app/ps/<ps_id>/e/<personalization_id>/p/de
 ```
 
-Replace `us01` with your region (eu01, ap01, ap02, etc.).
+Replace `<region>` with your region (us01, eu01, ap01, ap02, etc.).
 
 ## Test API Endpoint
 
 ```bash
 # Get API endpoint
-REGION="us01"  # or user's region
 API_ENDPOINT="https://${REGION}.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<personalization_id>"
 
 echo "API Endpoint: $API_ENDPOINT"
 
 # Test call
-curl -X GET \
+RESPONSE=$(curl -s -w "\n%{http_code}" -X GET \
   "${API_ENDPOINT}?td_client_id=test_user_123&event_name=<trigger_event>" \
-  -H "Authorization: TD1 ${TD_API_KEY}" | jq '.'
+  -H "Authorization: TD1 ${TD_API_KEY}")
+
+HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+BODY=$(echo "$RESPONSE" | sed '$d')
+
+if [ "$HTTP_CODE" = "200" ]; then
+  echo "✅ Personalization API working!"
+  echo "$BODY" | jq '.'
+else
+  echo "❌ Personalization API failed (HTTP $HTTP_CODE)"
+  echo "$BODY"
+fi
 ```
 
 **Expected response:**
@@ -375,7 +559,8 @@ curl -X GET \
 
 **JavaScript (Browser):**
 ```javascript
-const API_ENDPOINT = 'https://us01.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<pz_id>';
+const REGION = 'us01';  // Change to your region
+const API_ENDPOINT = `https://${REGION}.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<pz_id>`;
 
 // Get TD client ID from cookie
 const td_client_id = document.cookie.match(/_td=([^;]+)/)?.[1];
@@ -392,8 +577,9 @@ fetch(`${API_ENDPOINT}?td_client_id=${td_client_id}&event_name=page_view`)
 ```javascript
 const https = require('https');
 
+const REGION = process.env.TD_REGION || 'us01';
 const options = {
-  hostname: 'us01.p13n.in.treasuredata.com',
+  hostname: `${REGION}.p13n.in.treasuredata.com`,
   path: `/audiences/<ps_id>/personalizations/<pz_id>?td_client_id=${userId}`,
   headers: {
     'Authorization': `TD1 ${process.env.TD_API_KEY}`
@@ -409,6 +595,36 @@ https.get(options, (res) => {
   });
 });
 ```
+
+## Verification Checklist
+
+After setup completes, verify:
+
+```bash
+# 1. RT status is "ok"
+tdx ps view <ps_id> --json | jq -r '.realtime_config.status'
+# Expected: "ok"
+
+# 2. Key events exist
+tdx api "/audiences/<ps_id>/realtime_key_events" --type cdp | jq '.data | length'
+# Expected: > 0
+
+# 3. RT attributes exist
+tdx api "/audiences/<ps_id>/realtime_attributes?page[size]=100" --type cdp | jq '.data | length'
+# Expected: > 0
+
+# 4. Personalization entity exists
+curl -s "https://api-cdp.treasuredata.com/entities/parent_segments/<ps_id>/realtime_personalizations" \
+  -H "Authorization: TD1 ${TD_API_KEY}" | jq '.data | length'
+# Expected: > 0
+
+# 5. API endpoint responds
+curl -X GET "https://${REGION}.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<pz_id>?td_client_id=test_user" \
+  -H "Authorization: TD1 ${TD_API_KEY}"
+# Expected: JSON with attributes (not 404)
+```
+
+If any check fails, review the corresponding setup step.
 
 ## Summary Output
 
