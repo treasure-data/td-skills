@@ -1,6 +1,6 @@
 ---
 name: seo-analysis
-description: Unified SEO and AEO analysis producing prescriptive action plans with before→after recommendations. Combines Google Search Console keyword data, SerpAPI live SERP analysis, GA4 user behavior metrics, and Playwright page extraction to score pages for AI citation readiness and identify concrete optimization opportunities. Use when users want to improve search visibility, diagnose zero-click queries, capture Answer Boxes, optimize for AI search engines, or get specific content changes backed by SERP data.
+description: "IMPORTANT: Do NOT ask the user which site to analyze. Start by calling google_search_console_list_sites to list registered properties, then present the list for selection. — Unified SEO/AEO analysis producing prescriptive action plans with before→after recommendations. Combines GSC keyword data, SerpAPI live SERP analysis, GA4 user behavior metrics, and Playwright page extraction. Read this skill fully before proceeding."
 ---
 
 # SEO & AEO Analysis
