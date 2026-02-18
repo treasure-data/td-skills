@@ -7,23 +7,32 @@ description: "Use this skill when the user wants a comprehensive SEO or AEO (Ans
 
 Produce two outputs per analysis: a **data dashboard** (grid-dashboard YAML) showing the current state, and an **action report** (markdown) with specific before→after changes. Optionally, generate a **redline preview** showing all changes applied to the live page.
 
-## CRITICAL: Create a Task List First
+## CRITICAL: Check Tools, Then Create a Task List
 
-**Before doing ANY analysis, create a Task list.** Break down the analysis into concrete steps based on available tools and dashboard fields to populate.
+**Before doing ANY analysis, check which tools are available and create a Task list scoped to those tools.**
 
-Example tasks:
-- List GSC sites and confirm target with user
-- Pull GSC keyword + page performance data (current + prior period)
-- Identify target pages, Quick Win candidates, cannibalization
-- Run SerpAPI for high-priority keywords (SERP features, drift, organic results)
-- Extract target page with Playwright (headings, schema, content, links, images)
-- Scrape top 5 competitor pages with Playwright
-- Pull GA4 behavior metrics for target pages
-- Calculate AEO + On-Page/Technical SEO scores
-- Write grid-dashboard YAML **page by page** (one page at a time)
-- Call `preview_grid_dashboard` after each page is added
-- Write action report (markdown) for each page
-- Ask user: "Would you like to see a redline preview with all changes applied to the live page?"
+### Step 1: Check tool availability
+
+Verify each tool and record what is available:
+
+| Tool | Check method | Required? |
+|------|-------------|-----------|
+| Playwright | `playwright-cli --version` | **Yes — abort if unavailable** |
+| GSC | `google_search_console_list_sites` | No — skip GSC-dependent tasks |
+| SerpAPI | `ToolSearch("select:mcp__tdx-studio__serpapi_google_search")` | No — skip SERP feature analysis |
+| GA4 | `ToolSearch("google_analytics")` | No — skip behavior metrics |
+
+If Playwright is not available, stop and tell the user: "Playwright is required for SEO analysis. Please install it first."
+
+### Step 2: Create Task list based on available tools
+
+Review the **Page Grid Layout** (below) and **Action Report** output requirements. Each cell in the grid has a `Source` column showing which tool provides its data. Build your Task list by:
+
+1. Filtering the grid layout to rows whose Source tools are available
+2. Determining what data to collect from each available tool
+3. Adding output tasks (write YAML, call preview, write action report)
+
+The agent decides the concrete tasks — do not follow a fixed checklist.
 
 ## Getting Started
 
