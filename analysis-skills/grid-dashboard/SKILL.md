@@ -93,7 +93,7 @@ Score visualization with color thresholds. Use for scores, completion rates, hea
     value: 72                # current value
     max: 100                 # maximum value
     label: "B"               # optional — displayed in center (defaults to value)
-    thresholds:              # optional — color breakpoints (defaults: 33=red, 66=yellow, 100=green)
+    thresholds:              # optional — color breakpoints (use hex values, NOT color names)
       - { limit: 40, color: "#ef4444" }
       - { limit: 70, color: "#f59e0b" }
       - { limit: 100, color: "#22c55e" }
