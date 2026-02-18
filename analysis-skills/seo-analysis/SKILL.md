@@ -136,9 +136,240 @@ Keywords close to page 1 with the highest optimization ROI.
 | Medium | 8-12 / 13-17 | 100-500 / > 500 | Moderate — content expansion or restructuring |
 | Low | 13-20 | 100-500 | Higher — may need new content sections |
 
+## Output Modes
+
+This skill supports two output modes: **Dashboard** (visual, interactive) and **Content Brief** (actionable outline). Both are written as YAML files.
+
+### Mode 1: Dashboard Output (default)
+
+After completing analysis, write results to a YAML file and open the interactive dashboard.
+
+**Step 1**: Write the YAML file to `/tmp/seo-dashboard-{domain}.yaml`
+
+```yaml
+type: seo-dashboard
+domain: example.com
+analyzed_at: "2026-02-18"
+period:
+  start: "2026-01-18"
+  end: "2026-02-15"
+
+site_summary:
+  total_impressions: 45000
+  total_clicks: 2100
+  avg_ctr: 0.047
+  avg_position: 18.3
+  quick_wins_count: 12
+  zero_click_count: 8
+  topical_authority:
+    - cluster: "cdp"
+      queries: 45
+      pages: 8
+      avg_position: 6.2
+      page1_rate: 0.78
+      level: strong        # strong | emerging | weak | opportunity
+    - cluster: "data integration"
+      queries: 12
+      pages: 3
+      avg_position: 18.5
+      page1_rate: 0.25
+      level: emerging
+
+pages:
+  "https://example.com/blog/cdp-guide":
+    title: "What is a CDP? Complete Guide"
+
+    aeo_score:
+      total: 58
+      grade: C
+      content_structure:
+        score: 14
+        max: 26
+        gaps: ["4/6 H2 lack BLUF", "No question headings", "No tables"]
+      structured_data:
+        score: 8
+        max: 26
+        gaps: ["No FAQPage schema", "Only Article schema (1 type)"]
+      eeat_signals:
+        score: 16
+        max: 21
+        gaps: ["No author bio", "2 external citations (need 5+)"]
+      ai_readability:
+        score: 14
+        max: 21
+        gaps: ["No TL;DR section", "3/6 sections not self-contained"]
+      technical_aeo:
+        score: 6
+        max: 6
+        gaps: []
+
+    keywords:
+      - query: "what is cdp"
+        position: 11.2
+        impressions: 1840
+        clicks: 33
+        ctr: 0.018
+        priority: high        # high | medium | low
+        serp:
+          answer_box:
+            present: true
+            owner: "competitor.com"
+            type: definition
+          ai_overview: true
+          paa:
+            - "How does a CDP work?"
+            - "CDP vs DMP: what's the difference?"
+          knowledge_graph: false
+          local_pack: false
+          shopping: false
+        ctr_impact:
+          baseline_ctr: 0.025
+          serp_penalties: ["answer_box: -60%", "paa: -15%"]
+          adjusted_ctr: 0.006
+          diagnosis: serp_absorption  # content_problem | serp_absorption
+        drift:
+          gsc_avg: 11.2
+          live_position: 13
+          delta: +1.8
+          classification: stable  # crash | declining | stable | rising | surge | deindex_risk
+
+    zero_click:
+      - query: "what is customer data platform"
+        impressions: 3200
+        type: A               # A | B | C | D
+        root_cause: "AI Overview fully answers the query"
+        remediation: "Add BLUF definition + differentiated value"
+
+    recommendations:
+      - title: "Add BLUF to H2: How Does CDP Work?"
+        impact: high
+        dimension: content_structure
+        location: "H2 section #3"
+        before: "There are many ways to think about how a Customer Data Platform operates..."
+        after: "A CDP works by collecting first-party customer data from websites, apps, and offline sources, then unifying it into persistent profiles using identity resolution."
+        reason: "Answer Box uses BLUF Pattern 1 at 38 words. Current intro is 120 words of filler."
+      - title: "Add FAQPage JSON-LD schema"
+        impact: high
+        dimension: structured_data
+        location: "Page <head>"
+        before: "Only Article schema present"
+        after: "Add FAQPage schema with 4 Q&A pairs from PAA questions"
+        reason: "Sites with 3+ schema types show ~13% higher AI citation rate."
+
+    monitoring:
+      metrics_to_watch:
+        - "GSC CTR for 'what is cdp' (expect improvement in 2-4 weeks)"
+        - "GA4 engagement rate on /blog/cdp-guide"
+      expected_timeline: "Title/meta: 2-4 weeks. Content restructuring: 4-8 weeks. Schema: 2-6 weeks."
+```
+
+**Step 2**: Open the dashboard
+
+```
+preview_seo_dashboard({ file_path: "/tmp/seo-dashboard-example-com.yaml" })
+```
+
+The dashboard renders in the artifact panel with:
+- **Page selector** dropdown to switch between analyzed pages
+- **Site summary** with metric cards and topical authority table
+- **AEO score gauge** (circular, color-coded by grade) with dimension breakdowns
+- **Keywords table** (sortable) with SERP feature icons, CTR diagnosis, position drift
+- **Zero-click queries table** with type badges and remediation
+- **Recommendation cards** with expandable before/after diff views
+- **Monitoring checklist** with timeline expectations
+
+**Step 3**: After the user reviews the dashboard, ask which page they'd like a redline preview for.
+
+### Mode 2: Content Brief Output
+
+When the user asks to create new content, rewrite existing pages, or plan content strategy, produce a content brief. This mode synthesizes analysis findings into an actionable outline.
+
+#### Content Brief YAML
+
+Add a `content_brief` key to any page in the dashboard YAML:
+
+```yaml
+pages:
+  "https://example.com/blog/cdp-guide":
+    title: "What is a CDP? Complete Guide"
+    # ... aeo_score, keywords, etc. as above ...
+
+    content_brief:
+      target_keyword: "what is cdp"
+      priority_score: 82
+      search_intent: informational
+      target_word_count: 2000
+      paa_coverage: "6/8 = 75%"
+
+      title_options:
+        - "What is a CDP? Complete Guide to Customer Data Platforms"
+        - "CDP Guide 2026: What It Is, How It Works, and Why You Need One"
+        - "What is a Customer Data Platform? Everything You Need to Know"
+
+      meta_description: "A CDP collects first-party customer data from all sources and unifies it into persistent profiles. Learn how CDPs work, CDP vs DMP differences, and implementation steps."
+
+      outline:
+        - heading: "What is a CDP?"
+          bluf_pattern: "Pattern 1: Definition-first"
+          layer: primary
+          notes: "30-60 word direct answer. Primary AI citation target."
+        - heading: "How Does a CDP Work?"
+          bluf_pattern: "Pattern 4: Step-first"
+          layer: "primary (PAA)"
+          notes: "Answer from PAA. Lead with 3-step process."
+        - heading: "CDP vs DMP: What's the Difference?"
+          bluf_pattern: "Pattern 3: Verdict-first"
+          layer: "primary (PAA)"
+          notes: "Comparison table + verdict-first BLUF."
+        - heading: "Data Integration Best Practices"
+          bluf_pattern: "Pattern 1: Definition-first"
+          layer: supplementary
+          notes: "Common competitor topic. Lead with key insight."
+        - heading: "Real-Time CDP Use Cases"
+          bluf_pattern: "Pattern 4: Step-first"
+          layer: differentiation
+          notes: "Unique value. Use proprietary examples."
+        - heading: "Frequently Asked Questions"
+          bluf_pattern: null
+          layer: "primary (PAA overflow)"
+          notes: "Remaining PAA questions as Q&A pairs. Wrap with FAQPage JSON-LD."
+
+      schema_requirements:
+        - "Article schema (type, author, datePublished, dateModified)"
+        - "FAQPage schema (minimum 3 Q&A pairs from PAA questions)"
+        - "BreadcrumbList schema"
+
+      bluf_checklist:
+        - "Each H2 section starts with a direct answer (30-60 words)"
+        - "No section begins with filler phrases"
+        - "Key definitions appear within the first 2 sentences"
+        - "Article opens with a TL;DR or executive summary"
+        - "BLUF pattern matches the AB-to-BLUF mapping per section"
+```
+
+#### Content Brief Priority Scoring
+
+When multiple keyword candidates exist, score each 0-100:
+
+| Factor | Weight | Scoring criteria |
+|--------|--------|-----------------|
+| Traffic Potential | 30 pts | `impressions * estimated_ctr_at_position_3` (baseline ~11%). Normalized 0-30 |
+| SERP Vulnerability | 25 pts | +8 per weak domain in top 3 organic. +5 if AB owner is weak. Max 25 |
+| Momentum | 20 pts | Rising (position improved 3+) = 20, Stable = 10, Falling = 5 |
+| Content Leverage | 15 pts | Count `relatedSearches` + `peopleAlsoAsk`. Score = min(15, count * 2) |
+| Feature Opportunity | 10 pts | AB absent = 10, AB present weak source = 5, AB strong source = 0 |
+
+#### 3-Layer Outline Model
+
+| Layer | Source | Purpose |
+|-------|--------|---------|
+| **Primary** | PAA questions from SerpAPI | H2 headings from actual search questions. Each uses BLUF pattern matching AB type |
+| **Supplementary** | Competitor common headings | Topics appearing in 2+ competitors not covered by PAA |
+| **Differentiation** | Original insight | 1-2 unique H2 sections competitors miss |
+
 ## Output Specification — Prescriptive Action Plan
 
-The deliverable is a **prescriptive action plan** with specific before→after changes, not a diagnostic report.
+When the dashboard tool is not available (e.g., CLI mode), fall back to a markdown action plan:
 
 ```markdown
 ## SEO/AEO Analysis: [domain or page]
@@ -167,26 +398,7 @@ Include total impressions, Quick Win count, and top-level AEO score.]
 **After**:
 > [recommended content/structure — provide the actual rewritten text]
 
-**Reason**: [why this change matters — cite SERP data, competitor gap, or scoring dimension.
-Example: "The Answer Box for this keyword uses BLUF Pattern 1 (definition-first) at 42 words.
-Your current intro is 120 words of filler before the definition."]
-
-#### 2. [Next change] — Impact: High
-...
-
-#### 3. [Next change] — Impact: Medium
-...
-
-### Structured Data Additions
-[Specific JSON-LD code to add — not just "add FAQ schema" but the actual markup]
-
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [...]
-}
-```
+**Reason**: [why this change matters — cite SERP data, competitor gap, or scoring dimension.]
 
 ### Quick Wins Summary
 
@@ -208,4 +420,3 @@ schema additions = 2-6 weeks for rich result eligibility.]
 
 - **gsc-analysis** — Deep GSC data analysis: Quick Wins, trends, cannibalization, device/country breakdown, index health
 - **competitor-analysis** — SERP-based competitor discovery and structural comparison
-- **content-brief** — Generate content plans synthesizing analysis findings into outlines with BLUF instructions
