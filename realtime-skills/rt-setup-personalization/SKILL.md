@@ -32,27 +32,35 @@ Orchestrates the complete RT personalization setup: parent segment validation �
 
 **If user provided PS ID or name:**
 ```bash
-# Validate PS exists and check RT status
-tdx ps view <ps_id_or_name> --json | jq '{
+# Check if PS has RT enabled
+tdx ps rt list --json | jq '.[] | select(.id=="<ps_id>" or .name=="<ps_name>") | {
   id, name,
-  rt_enabled: .realtime_config != null,
-  rt_status: .realtime_config.status
+  rt_status: .status,
+  event_tables: (.event_tables | length),
+  key_events: (.key_events | length)
 }'
 ```
 
 **Expected outputs:**
 - `rt_status: "ok"` → RT enabled, proceed to Step 2
 - `rt_status: "updating"` → Wait for RT to be ready
-- `rt_enabled: false` → Show error: "RT not enabled. Contact CSM."
+- Empty result → PS not RT-enabled. Show error: "RT not enabled for this parent segment. Contact CSM."
 
 **If user did NOT provide PS:**
 ```bash
 # List all RT-enabled parent segments
-tdx ps list --json | jq '[.[] | select(.realtime_config != null) | {
+tdx ps rt list --json
+```
+
+**Display to user:**
+```bash
+# Show RT-enabled parent segments with status
+tdx ps rt list --json | jq '.[] | {
   id, name,
-  rt_status: .realtime_config.status,
-  event_tables: (.realtime_config.eventTables | length)
-}]'
+  rt_status: .status,
+  event_tables: (.event_tables | length),
+  key_events: (.key_events | length)
+}'
 ```
 
 **Ask user:** "Which parent segment should we use for RT personalization?"
@@ -457,7 +465,7 @@ After setup completes, verify:
 
 ```bash
 # 1. RT status is "ok"
-tdx ps view <ps_id> --json | jq -r '.realtime_config.status'
+tdx ps rt list --json | jq -r --arg ps "<ps_id_or_name>" '.[] | select(.id==$ps or .name==$ps) | .status'
 # Expected: "ok"
 
 # 2. Key events exist

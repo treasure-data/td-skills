@@ -90,7 +90,7 @@ REGION="${REGION:-us01}"
 echo "Using region: $REGION"
 
 # Check RT status
-RT_STATUS=$(tdx ps view <ps_id> --json | jq -r '.realtime_config.status')
+RT_STATUS=$(tdx ps rt list --json | jq -r --arg ps "<ps_id_or_name>" '.[] | select(.id==$ps or .name==$ps) | .status')
 [ "$RT_STATUS" = "ok" ] || { echo "❌ RT status: $RT_STATUS (expected: ok)"; exit 1; }
 
 # List key events
@@ -602,7 +602,7 @@ After setup completes, verify:
 
 ```bash
 # 1. RT status is "ok"
-tdx ps view <ps_id> --json | jq -r '.realtime_config.status'
+tdx ps rt list --json | jq -r --arg ps "<ps_id_or_name>" '.[] | select(.id==$ps or .name==$ps) | .status'
 # Expected: "ok"
 
 # 2. Key events exist
