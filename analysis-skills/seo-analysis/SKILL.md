@@ -66,7 +66,7 @@ Call for each high-priority keyword from GSC: `serpapi_google_search({ q: "...",
 
 ### Playwright (`playwright-cli`)
 
-On-page structure extraction — **required for AEO scoring and before→after recommendations**.
+On-page structure extraction and visual analysis — **required for AEO scoring and before→after recommendations**.
 
 ```bash
 playwright-cli install --skills                    # setup (once per session)
@@ -80,6 +80,25 @@ Extract from HTML: headings (H1-H6), BLUF analysis (first paragraph after each H
 
 For competitor analysis, scrape top 5 organic results from SerpAPI using the same extraction pattern. Use `playwright-cli goto <url>` for subsequent pages (not `open`).
 
+#### Visual Analysis (full-page screenshot)
+
+Take a full-page screenshot and visually analyze the page. This catches issues that DOM parsing alone cannot detect.
+
+```bash
+playwright-cli screenshot {cwd}/seo/visual-{slug}.png --full-page
+```
+
+Open the screenshot with `open_file` and evaluate:
+- **Hero / Above-the-fold**: Is the value proposition immediately clear? Is there a compelling hero image or visual?
+- **Trust Signals**: Customer logos, certifications, awards, security badges, partner badges
+- **E-E-A-T Visual**: Author photos, team photos, founder images, credentials, bylines
+- **CTA Visibility**: Are primary CTAs prominent and above-the-fold? Color contrast, size, placement
+- **Image Quality**: Professional vs stock, relevance, branding consistency
+- **Visual Hierarchy**: Clear heading structure, whitespace, scannable layout
+- **Social Proof**: Testimonials with photos, case study links, review ratings
+
+Record findings for the dashboard (Visual Analysis scores) and action report (specific recommendations with before→after).
+
 ### Google Analytics (`google_analytics_*`)
 
 User behavior data — engagement, bounce rate, conversions per page. Use for monitoring baselines and behavioral context for recommendations.
@@ -92,14 +111,14 @@ Write results as a **paged grid-dashboard YAML** and call `preview_grid_dashboar
 
 ### Build YAML Page by Page
 
-The YAML is **one file per site** with analyzed pages as keys under `pages:`. Each page has a 4×11 grid — too large to write in a single pass.
+The YAML is **one file per site** with analyzed pages as keys under `pages:`. Each page has a 4×12 grid — too large to write in a single pass.
 
 1. Write `pages:` header + first page's complete grid/cells
 2. Call `preview_grid_dashboard` to verify rendering
 3. Append additional pages to the same file
 4. Call `preview_grid_dashboard` again to refresh
 
-### Page Grid Layout (4×11 per page)
+### Page Grid Layout (4×12 per page)
 
 **Cell merging syntax**: single cell `pos: "1-1"`, merged range `pos: ["2-2", "2-4"]` (YAML array, NOT a string).
 
@@ -110,19 +129,21 @@ The YAML is **one file per site** with analyzed pages as keys under `pages:`. Ea
 | 2 | ["2-2", "2-4"] | `scores` | AEO 5-dimension breakdown (Content Structure, Structured Data, E-E-A-T, AI Readability, Technical AEO) | Playwright |
 | 3 | ["3-1", "3-2"] | `scores` | On-Page SEO (title, meta, headings, internal links, content depth, visual content) | Playwright |
 | 3 | ["3-3", "3-4"] | `scores` | Technical SEO (HTTPS, canonical, structured data, mobile, page speed) | Playwright |
-| 4 | ["4-1", "4-4"] | `table` | Competitor Content Patterns — top 5 SERP winners (headings, word count, format, visuals, schemas) | SerpAPI + Playwright |
-| 5 | ["5-1", "5-4"] | `table` | Topical Authority clusters (cluster, queries, pages, avg position, page-1 rate, level) | GSC |
-| 6 | ["6-1", "6-4"] | `table` | Quick Wins — keywords near page 1 (position 8-20, high impressions) | GSC |
-| 7 | ["7-1", "7-4"] | `table` | All Keywords + SERP features + drift | GSC + SerpAPI |
-| 8 | ["8-1", "8-2"] | `table` | Trending Up — keywords with improving position | GSC |
-| 8 | ["8-3", "8-4"] | `table` | Declining — keywords losing position | GSC |
-| 9 | ["9-1", "9-4"] | `table` | Keyword Cannibalization — same query ranking on multiple pages | GSC |
-| 10 | ["10-1", "10-4"] | `table` | Zero-Click Queries with type and root cause | GSC + SerpAPI |
-| 11 | ["11-1", "11-4"] | `table` | Glossary — abbreviations and terms used in this dashboard | — |
+| 4 | ["4-1", "4-2"] | `scores` | Visual & UX (Hero/Above-fold, Trust Signals, E-E-A-T Visual, CTA Visibility, Image Quality, Visual Hierarchy) | Playwright (screenshot) |
+| 4 | ["4-3", "4-4"] | `markdown` | Visual Analysis Findings — key observations from full-page screenshot review | Playwright (screenshot) |
+| 5 | ["5-1", "5-4"] | `table` | Competitor Content Patterns — top 5 SERP winners (headings, word count, format, visuals, schemas) | SerpAPI + Playwright |
+| 6 | ["6-1", "6-4"] | `table` | Topical Authority clusters (cluster, queries, pages, avg position, page-1 rate, level) | GSC |
+| 7 | ["7-1", "7-4"] | `table` | Quick Wins — keywords near page 1 (position 8-20, high impressions) | GSC |
+| 8 | ["8-1", "8-4"] | `table` | All Keywords + SERP features + drift | GSC + SerpAPI |
+| 9 | ["9-1", "9-2"] | `table` | Trending Up — keywords with improving position | GSC |
+| 9 | ["9-3", "9-4"] | `table` | Declining — keywords losing position | GSC |
+| 10 | ["10-1", "10-4"] | `table` | Keyword Cannibalization — same query ranking on multiple pages | GSC |
+| 11 | ["11-1", "11-4"] | `table` | Zero-Click Queries with type and root cause | GSC + SerpAPI |
+| 12 | ["12-1", "12-4"] | `table` | Glossary — abbreviations and terms used in this dashboard | — |
 
 ### Adapting the Layout
 
-The 11-row layout is the **full data dashboard**. Adapt based on context:
+The 12-row layout is the **full data dashboard**. Adapt based on context:
 
 - **Tool unavailable**: Skip rows whose Source tool is missing. Adjust `grid.rows` accordingly. Row 1 (GSC KPIs) and row 7 (Keywords) are always included.
 - **Focused request**: If the user asks for specific analysis (e.g., "AEO score only", "keyword analysis only"), include only relevant rows.
@@ -137,7 +158,7 @@ pages:
     description: "Analyzed 2026-02-18 (28-day window)"
     grid:
       columns: 4
-      rows: 11
+      rows: 12
     cells:
       - pos: "1-1"
         type: kpi
