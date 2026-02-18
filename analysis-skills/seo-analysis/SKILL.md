@@ -89,22 +89,24 @@ The YAML is **one file per site** with analyzed pages as keys under `pages:`. Ea
 
 ### Page Grid Layout (4×11 per page)
 
-| Row | Cells | Type | Content | Source |
-|-----|-------|------|---------|--------|
-| 1 | 1-1, 1-2, 1-3, 1-4 | `kpi` × 4 | Impressions, Clicks, Avg CTR, Avg Position | GSC |
-| 2 | 2-1 | `gauge` | AEO Score (value/100, grade label) | Playwright |
-| 2 | 2-2 to 2-4 (merged) | `scores` | AEO 5-dimension breakdown (Content Structure, Structured Data, E-E-A-T, AI Readability, Technical AEO) | Playwright |
-| 3 | 3-1 to 3-2 (merged) | `scores` | On-Page SEO (title, meta, headings, internal links, content depth, visual content) | Playwright |
-| 3 | 3-3 to 3-4 (merged) | `scores` | Technical SEO (HTTPS, canonical, structured data, mobile, page speed) | Playwright |
-| 4 | 4-1 to 4-4 (merged) | `table` | Competitor Content Patterns — top 5 SERP winners (headings, word count, format, visuals, schemas) | SerpAPI + Playwright |
-| 5 | 5-1 to 5-4 (merged) | `table` | Topical Authority clusters (cluster, queries, pages, avg position, page-1 rate, level) | GSC |
-| 6 | 6-1 to 6-4 (merged) | `table` | Quick Wins — keywords near page 1 (position 8-20, high impressions) | GSC |
-| 7 | 7-1 to 7-4 (merged) | `table` | All Keywords + SERP features + drift | GSC + SerpAPI |
-| 8 | 8-1 to 8-2 (merged) | `table` | Trending Up — keywords with improving position | GSC |
-| 8 | 8-3 to 8-4 (merged) | `table` | Declining — keywords losing position | GSC |
-| 9 | 9-1 to 9-4 (merged) | `table` | Keyword Cannibalization — same query ranking on multiple pages | GSC |
-| 10 | 10-1 to 10-4 (merged) | `table` | Zero-Click Queries with type and root cause | GSC + SerpAPI |
-| 11 | 11-1 to 11-4 (merged) | `table` | Glossary — abbreviations and terms used in this dashboard | — |
+**Cell merging syntax**: single cell `pos: "1-1"`, merged range `pos: ["2-2", "2-4"]` (YAML array, NOT a string).
+
+| Row | pos | Type | Content | Source |
+|-----|-----|------|---------|--------|
+| 1 | "1-1", "1-2", "1-3", "1-4" | `kpi` × 4 | Impressions, Clicks, Avg CTR, Avg Position | GSC |
+| 2 | "2-1" | `gauge` | AEO Score (value/100, grade label) | Playwright |
+| 2 | ["2-2", "2-4"] | `scores` | AEO 5-dimension breakdown (Content Structure, Structured Data, E-E-A-T, AI Readability, Technical AEO) | Playwright |
+| 3 | ["3-1", "3-2"] | `scores` | On-Page SEO (title, meta, headings, internal links, content depth, visual content) | Playwright |
+| 3 | ["3-3", "3-4"] | `scores` | Technical SEO (HTTPS, canonical, structured data, mobile, page speed) | Playwright |
+| 4 | ["4-1", "4-4"] | `table` | Competitor Content Patterns — top 5 SERP winners (headings, word count, format, visuals, schemas) | SerpAPI + Playwright |
+| 5 | ["5-1", "5-4"] | `table` | Topical Authority clusters (cluster, queries, pages, avg position, page-1 rate, level) | GSC |
+| 6 | ["6-1", "6-4"] | `table` | Quick Wins — keywords near page 1 (position 8-20, high impressions) | GSC |
+| 7 | ["7-1", "7-4"] | `table` | All Keywords + SERP features + drift | GSC + SerpAPI |
+| 8 | ["8-1", "8-2"] | `table` | Trending Up — keywords with improving position | GSC |
+| 8 | ["8-3", "8-4"] | `table` | Declining — keywords losing position | GSC |
+| 9 | ["9-1", "9-4"] | `table` | Keyword Cannibalization — same query ranking on multiple pages | GSC |
+| 10 | ["10-1", "10-4"] | `table` | Zero-Click Queries with type and root cause | GSC + SerpAPI |
+| 11 | ["11-1", "11-4"] | `table` | Glossary — abbreviations and terms used in this dashboard | — |
 
 ### Adapting the Layout
 
