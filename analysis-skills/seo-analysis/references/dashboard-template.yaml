@@ -1,0 +1,304 @@
+# SEO/AEO Dashboard Template — Grid Dashboard YAML
+#
+# One file per site, pages as top-level keys.
+# Each page uses a 4-column x 16-row grid.
+# See grid-dashboard skill for cell type reference.
+
+pages:
+  "https://example.com/blog/cdp-guide":
+    title: "What is a CDP? Complete Guide"
+    description: "Analyzed 2026-02-18 (28-day window)"
+    grid:
+      columns: 4
+      rows: 16
+    cells:
+      # ── Row 1: Page KPIs (GSC) ───────────────────────────────────────
+      - pos: "1-1"
+        type: kpi
+        title: "Impressions"
+        kpi:
+          value: "45,000"
+          change: "+8.2%"
+          trend: up
+          subtitle: "vs. prior 28 days"
+
+      - pos: "1-2"
+        type: kpi
+        title: "Clicks"
+        kpi:
+          value: "2,100"
+          change: "+12.5%"
+          trend: up
+          subtitle: "vs. prior 28 days"
+
+      - pos: "1-3"
+        type: kpi
+        title: "Avg CTR"
+        kpi:
+          value: "4.7%"
+          change: "+0.3%"
+          trend: up
+          subtitle: "vs. prior 28 days"
+
+      - pos: "1-4"
+        type: kpi
+        title: "Avg Position"
+        kpi:
+          value: "18.3"
+          change: "-1.2"
+          trend: up
+          subtitle: "lower is better"
+
+      # ── Row 2: AEO Score (Playwright) ────────────────────────────────
+      - pos: "2-1"
+        type: gauge
+        title: "AEO Score"
+        gauge:
+          value: 58
+          max: 100
+          label: "C"
+          thresholds:
+            - { limit: 40, color: "#ef4444" }
+            - { limit: 60, color: "#f97316" }
+            - { limit: 70, color: "#f59e0b" }
+            - { limit: 80, color: "#84cc16" }
+            - { limit: 100, color: "#22c55e" }
+
+      - pos: ["2-2", "2-4"]
+        type: scores
+        title: "AEO Breakdown"
+        scores:
+          - label: "Content Structure"
+            value: 14
+            max: 26
+          - label: "Structured Data"
+            value: 8
+            max: 26
+          - label: "E-E-A-T Signals"
+            value: 16
+            max: 21
+          - label: "AI Readability"
+            value: 14
+            max: 21
+          - label: "Technical AEO"
+            value: 6
+            max: 6
+
+      # ── Row 3: On-Page + Technical SEO (Playwright) ──────────────────
+      - pos: ["3-1", "3-2"]
+        type: scores
+        title: "On-Page SEO"
+        scores:
+          - label: "Title Tag"
+            value: 8
+            max: 10
+          - label: "Meta Description"
+            value: 6
+            max: 10
+          - label: "Heading Structure"
+            value: 5
+            max: 10
+          - label: "Internal Links"
+            value: 7
+            max: 10
+          - label: "Content Depth"
+            value: 9
+            max: 10
+          - label: "Visual Content"
+            value: 4
+            max: 10
+
+      - pos: ["3-3", "3-4"]
+        type: scores
+        title: "Technical SEO"
+        scores:
+          - label: "HTTPS"
+            value: 10
+            max: 10
+          - label: "Canonical Tag"
+            value: 10
+            max: 10
+          - label: "Structured Data"
+            value: 3
+            max: 10
+          - label: "Mobile Friendly"
+            value: 8
+            max: 10
+          - label: "Page Speed"
+            value: 6
+            max: 10
+
+      # ── Row 4: Competitor Content Patterns (SerpAPI + Playwright) ─────
+      - pos: ["4-1", "4-4"]
+        type: table
+        title: "Competitor Content Patterns"
+        table:
+          headers: ["Rank", "Domain", "Word Count", "Headings", "Format", "Visuals", "Schemas"]
+          rows:
+            - [1, "competitor-a.com", 3200, 12, "Guide", "8 imgs, 2 charts", "Article, FAQPage"]
+            - [2, "competitor-b.com", 2800, 9, "Listicle", "5 imgs", "Article, HowTo"]
+            - [3, "competitor-c.com", 4100, 15, "Guide", "12 imgs, 1 video", "Article, FAQPage, Organization"]
+            - [4, "competitor-d.com", 1900, 7, "FAQ", "3 imgs", "FAQPage"]
+            - [5, "competitor-e.com", 2400, 10, "Comparison", "6 imgs, 1 table", "Article"]
+
+      # ── Row 5: Topical Authority (GSC clusters) ──────────────────────
+      - pos: ["5-1", "5-4"]
+        type: table
+        title: "Topical Authority"
+        table:
+          headers: ["Cluster", "Queries", "Pages", "Avg Position", "Page-1 Rate", "Level"]
+          rows:
+            - ["cdp", 45, 8, 6.2, "78%", "Strong"]
+            - ["data integration", 12, 3, 18.5, "25%", "Emerging"]
+            - ["customer analytics", 8, 2, 24.1, "13%", "Weak"]
+
+      # ── Row 6: Quick Wins (GSC) ──────────────────────────────────────
+      - pos: ["6-1", "6-4"]
+        type: table
+        title: "Quick Wins (Near Page 1)"
+        table:
+          headers: ["Query", "Position", "Impressions", "Page", "Action"]
+          rows:
+            - ["cdp implementation guide", 11.3, 820, "/blog/cdp-impl", "Improve BLUF + add FAQ schema"]
+            - ["customer data platform pricing", 9.8, 1200, "/pricing", "Add pricing table (Pattern 2)"]
+            - ["cdp vs crm", 12.1, 640, "/blog/cdp-vs-crm", "Expand comparison section"]
+
+      # ── Row 7: Keywords + SERP (GSC + SerpAPI) ───────────────────────
+      - pos: ["7-1", "7-4"]
+        type: table
+        title: "Keywords"
+        table:
+          headers: ["Query", "Position", "Impr.", "CTR", "Priority", "SERP Features", "Drift"]
+          rows:
+            - ["what is cdp", 11.2, 1840, "1.8%", "High", "AB AI PAA", "Stable (0)"]
+            - ["cdp vs dmp", 8.5, 920, "3.2%", "High", "PAA", "Rising (-2)"]
+            # ... one row per keyword
+
+      # ── Row 8: Trending + Declining (GSC period comparison) ──────────
+      - pos: ["8-1", "8-2"]
+        type: table
+        title: "Trending Up"
+        table:
+          headers: ["Query", "Position", "Change"]
+          rows:
+            - ["cdp benefits", 8.3, "-4.2"]
+            - ["first party data platform", 14.1, "-3.8"]
+
+      - pos: ["8-3", "8-4"]
+        type: table
+        title: "Declining"
+        table:
+          headers: ["Query", "Position", "Change"]
+          rows:
+            - ["customer data management", 22.4, "+5.1"]
+            - ["data unification tool", 31.2, "+8.3"]
+
+      # ── Row 9: Keyword Cannibalization (GSC) ─────────────────────────
+      - pos: ["9-1", "9-4"]
+        type: table
+        title: "Keyword Cannibalization"
+        table:
+          headers: ["Query", "Page 1", "Pos 1", "Page 2", "Pos 2", "Action"]
+          rows:
+            - ["what is cdp", "/blog/cdp-guide", 11.2, "/products/cdp", 18.7, "Consolidate to /blog/cdp-guide; redirect or noindex product page for this query"]
+
+      # ── Row 10: Zero-Click (GSC + SerpAPI) ───────────────────────────
+      - pos: ["10-1", "10-4"]
+        type: table
+        title: "Zero-Click Queries"
+        table:
+          headers: ["Query", "Impressions", "Type", "Root Cause", "Remediation"]
+          rows:
+            - ["what is customer data platform", 3200, "A", "AI Overview fully answers", "Add BLUF definition + differentiated value"]
+            - ["cdp meaning", 1800, "A", "Answer Box (definition)", "Capture AB with Pattern 1"]
+
+      # ── Row 11: Internal Linking Strategy (Playwright + GSC) ─────────
+      - pos: ["11-1", "11-4"]
+        type: table
+        title: "Internal Linking Strategy"
+        table:
+          headers: ["From Page", "Anchor Text", "To Page", "Rationale"]
+          rows:
+            - ["/blog/data-integration", "customer data platform", "/blog/cdp-guide", "Strong page (pos 3.2) linking to target with primary keyword"]
+            - ["/blog/cdp-guide", "CDP vs CRM comparison", "/blog/cdp-vs-crm", "Support declining keyword with link equity from pillar page"]
+            - ["/products/cdp", "implementation guide", "/blog/cdp-impl", "Product→content link for quick-win keyword (pos 11.3)"]
+
+      # ── Row 12-13: Recommendations (Playwright + SerpAPI + scoring) ──
+      - pos: ["12-1", "13-4"]
+        type: markdown
+        title: "Recommendations"
+        content: |
+          ### 1. Add BLUF to H2: How Does CDP Work?
+          **Impact**: High | **Dimension**: Content Structure | **Location**: H2 section #3
+
+          > **Before**: "There are many ways to think about how a Customer Data Platform operates. The technology has evolved over the years..."
+          > **After**: "A CDP works by collecting first-party customer data from websites, apps, and offline sources, then unifying it into persistent profiles using identity resolution."
+
+          **Reason**: Answer Box uses BLUF Pattern 1 at 38 words. Current intro is 120 words of filler.
+
+          ---
+
+          ### 2. Add FAQPage JSON-LD schema
+          **Impact**: High | **Dimension**: Structured Data | **Location**: Page `<head>`
+
+          > **Before**: Only Article schema present
+          > **After**: Add FAQPage schema with 4 Q&A pairs from PAA questions
+
+          **Reason**: Sites with 3+ schema types show ~13% higher AI citation rate.
+
+      # ── Row 14: Recommended Content Outline ──────────────────────────
+      - pos: ["14-1", "14-4"]
+        type: markdown
+        title: "Recommended Content Outline"
+        content: |
+          Based on top 5 SERP winners (avg 2,880 words, 10.6 headings, guide format). Structure optimized for search intent + LLM citation patterns:
+
+          1. **H1: What is a CDP? The Complete Guide (2026)**
+          2. **H2: TL;DR — What You Need to Know** *(BLUF Pattern 1: definition-first, ≤60 words — AI citation target)*
+          3. **H2: How Does a CDP Work?** *(BLUF Pattern 1 — matches Answer Box)*
+             - H3: Data Collection
+             - H3: Identity Resolution
+             - H3: Unified Profiles
+          4. **H2: CDP vs DMP vs CRM** *(BLUF Pattern 3: verdict-first — targets comparison PAA)*
+          5. **H2: How Much Does a CDP Cost?** *(BLUF Pattern 2: number-first — targets pricing Answer Box)*
+          6. **H2: Do You Need a CDP? 5 Signs** *(BLUF Pattern 5: yes/no-first — targets PAA)*
+          7. **H2: How to Implement a CDP** *(BLUF Pattern 4: step-first — targets list Answer Box)*
+          8. **H2: FAQ** *(4 PAA questions as H3s — FAQPage schema target)*
+
+          **Target**: ~3,000 words | 8+ H2 sections | 10+ images/charts | FAQPage + Article + Organization schema
+
+      # ── Row 15: Topical Authority Strategy ───────────────────────────
+      - pos: ["15-1", "15-4"]
+        type: markdown
+        title: "Topical Authority Strategy"
+        content: |
+          **Expand (Strong clusters)**: CDP cluster has 78% page-1 rate. Create subtopic pages for long-tail: "CDP implementation checklist", "CDP ROI calculator".
+
+          **Prioritize (Emerging)**: Data integration cluster at 25% page-1 rate. Create pillar page + target PAA questions. Build internal links from CDP content.
+
+          **Evaluate (Weak)**: Customer analytics cluster at 13%. Assess competitive landscape before investing — may need 5+ new pages to establish authority.
+
+      # ── Row 16: Monitoring (GA4 + GSC) — review every 2-3 months ─────
+      - pos: ["16-1", "16-4"]
+        type: markdown
+        title: "Monitoring & Iteration"
+        content: |
+          **Metrics to track**:
+          - GSC CTR for "what is cdp" (expect improvement in 2-4 weeks)
+          - GA4 engagement rate on /blog/cdp-guide
+          - GSC position for "how does cdp work"
+          - Cannibalization: monitor /products/cdp position for "what is cdp"
+          - Internal link click-through from new strategic links
+
+          **Expected timeline**: Title/meta: 2-4 weeks. Content restructuring: 4-8 weeks. Schema: 2-6 weeks.
+
+          **Review cadence**: Re-run this analysis every **2-3 months** on GSC data. Track impressions, clicks, and position trends. If a page stalls, update content: add sections, improve intros, refresh data and visuals. SEO content is publish → monitor → improve, not publish and forget.
+
+  # ── Additional pages follow the same 16-row structure ────────────────
+  "https://example.com/products/cdp":
+    title: "CDP Product Page"
+    grid:
+      columns: 4
+      rows: 16
+    cells:
+      # ... same 16-row structure per page
