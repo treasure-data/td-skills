@@ -138,8 +138,9 @@ Full template: [references/dashboard-template.yaml](references/dashboard-templat
 
 ### Rendering
 
+Save to `{cwd}/seo/seo-dashboard-{domain}.yaml` and call with the **absolute path**:
 ```
-preview_grid_dashboard({ file_path: "./seo/seo-dashboard-{domain}.yaml" })
+preview_grid_dashboard({ file_path: "/absolute/path/to/seo/seo-dashboard-{domain}.yaml" })
 ```
 
 **Column conventions**: SERP features: `AB` `AI` `PAA` `KG` `LP` `SH`. Drift: `Stable (0)`, `Rising (-2)`, `Declining (+4)`, `Crash (+8)`, `Surge (-6)`.
@@ -148,9 +149,9 @@ preview_grid_dashboard({ file_path: "./seo/seo-dashboard-{domain}.yaml" })
 
 After the dashboard, render an **interactive action report** via `preview_action_report`. See **action-report** skill for YAML format and field reference.
 
-Save as `./seo/action-report-{slug}.yaml` and call:
+Save to `{cwd}/seo/action-report-{slug}.yaml` and call with the **absolute path**:
 ```
-preview_action_report({ file_path: "./seo/action-report-{slug}.yaml" })
+preview_action_report({ file_path: "/absolute/path/to/seo/action-report-{slug}.yaml" })
 ```
 
 Each action item uses the `{as_is, to_be, reason}` structure. Key requirements:

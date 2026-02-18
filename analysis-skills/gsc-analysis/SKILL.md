@@ -133,9 +133,9 @@ The dashboard shows **data and analysis only** — no recommendations, no "you s
 
 After the dashboard, render an **interactive action report** via `preview_action_report`. See **action-report** skill for YAML format and field reference.
 
-Save as `./seo/gsc-action-report-{domain}.yaml` and call:
+Save to `{cwd}/seo/gsc-action-report-{domain}.yaml` and call with the **absolute path**:
 ```
-preview_action_report({ file_path: "./seo/gsc-action-report-{domain}.yaml" })
+preview_action_report({ file_path: "/absolute/path/to/seo/gsc-action-report-{domain}.yaml" })
 ```
 
 Map each GSC finding to an action item with `{as_is, to_be, reason}`:
