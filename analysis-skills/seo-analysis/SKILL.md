@@ -248,7 +248,7 @@ Keywords close to page 1 with the highest optimization ROI.
 
 Write analysis results as a **grid-dashboard YAML** and call `preview_grid_dashboard`. See the **grid-dashboard** skill for full cell type reference.
 
-Use a **4-column × 6-row grid** with the following layout per analyzed page:
+Use a **4-column × 7-row grid** with the following layout per analyzed page:
 
 | Row | Cells | Type | Content |
 |-----|-------|------|---------|
@@ -257,8 +257,8 @@ Use a **4-column × 6-row grid** with the following layout per analyzed page:
 | 2 | 2-2 to 2-4 (merged) | `scores` | AEO dimension breakdown (5 bars: Content Structure, Structured Data, E-E-A-T, AI Readability, Technical AEO) |
 | 3 | 3-1 to 3-4 (merged) | `table` | Keywords: query, position, impressions, CTR, priority, SERP features, drift |
 | 4 | 4-1 to 4-4 (merged) | `table` | Zero-Click Queries: query, impressions, type (A/B/C/D), root cause, remediation |
-| 5 | 5-1 to 5-4 (merged) | `markdown` | Recommendations: numbered list with impact badge, before→after quotes, reason |
-| 6 | 6-1 to 6-4 (merged) | `markdown` | Monitoring: metrics to watch checklist + expected timeline |
+| 5-6 | 5-1 to 6-4 (merged 2 rows) | `markdown` | Recommendations: numbered list with impact badge, before→after quotes, reason |
+| 7 | 7-1 to 7-4 (merged) | `markdown` | Monitoring: metrics to watch checklist + expected timeline |
 
 ### Complete YAML Template
 
@@ -267,7 +267,7 @@ title: "SEO/AEO Analysis: example.com"
 description: "/blog/cdp-guide — Analyzed 2026-02-18 (28-day window)"
 grid:
   columns: 4
-  rows: 6
+  rows: 7
 cells:
   # ── Row 1: KPIs (from GSC) ───────────────────────────────────────────
   - pos: "1-1"
@@ -361,8 +361,8 @@ cells:
       rows:
         - ["what is customer data platform", 3200, "A", "AI Overview fully answers", "Add BLUF definition + differentiated value"]
 
-  # ── Row 5: Recommendations (Playwright + SerpAPI + AEO scoring) ──────
-  - pos: ["5-1", "5-4"]
+  # ── Row 5-6: Recommendations (Playwright + SerpAPI + AEO scoring) ────
+  - pos: ["5-1", "6-4"]
     type: markdown
     title: "Recommendations"
     content: |
@@ -386,8 +386,8 @@ cells:
 
       **Reason**: Sites with 3+ schema types show ~13% higher AI citation rate.
 
-  # ── Row 6: Monitoring (GA4 + GSC) ────────────────────────────────────
-  - pos: ["6-1", "6-4"]
+  # ── Row 7: Monitoring (GA4 + GSC) ────────────────────────────────────
+  - pos: ["7-1", "7-4"]
     type: markdown
     title: "Monitoring"
     content: |
