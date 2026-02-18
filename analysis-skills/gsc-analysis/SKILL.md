@@ -131,53 +131,31 @@ The dashboard shows **data and analysis only** — no recommendations, no "you s
 
 ### Output 2: Action Report
 
-After the dashboard, output a **markdown action report** saved as `./seo/gsc-action-report-{domain}.md`. This is where all recommendations go — specific, concrete, and prioritized.
+After the dashboard, render an **interactive action report** via `preview_action_report`. See **action-report** skill for YAML format and field reference.
 
-Structure:
-
-```markdown
-# GSC Action Report: [domain]
-
-**Period**: YYYY-MM-DD to YYYY-MM-DD
-
-## Quick Win Actions
-[For each quick-win keyword: specific page to optimize, what to change, expected position improvement]
-
-## CTR Improvement Actions
-[For each CTR opportunity: current title/meta, recommended replacement, expected CTR lift]
-
-## Cannibalization Resolution
-[For each cannibalized query: which page to keep as primary, what to do with secondary pages (merge/canonical/differentiate)]
-
-## Content Refresh Priorities
-[Declining keywords: specific content changes needed to recover positions]
-
-## Device/Country-Specific Fixes
-[Mobile UX issues, localization opportunities with specific actions]
-
-## Index Health Fixes
-[Pages to resubmit, noindex tags to remove, redirects to fix]
-
-## Topical Authority Strategy
-[Clusters to expand, new content to create, internal linking recommendations]
-
-## Implementation Priority
-### High Priority (1-2 weeks)
-1. [action] — [reason]
-
-### Medium Priority (2-4 weeks)
-2. [action]
-
-### Low Priority (1+ month)
-3. [action]
+Save as `./seo/gsc-action-report-{domain}.yaml` and call:
+```
+preview_action_report({ file_path: "./seo/gsc-action-report-{domain}.yaml" })
 ```
 
-### Fallback (No Dashboard)
+Map each GSC finding to an action item with `{as_is, to_be, reason}`:
 
-When `preview_grid_dashboard` is not available, combine both outputs into a single markdown report with a data summary table at the top followed by the action sections.
+- **Quick Wins**: `as_is` = current title/meta/content, `to_be` = optimized version targeting the keyword
+- **CTR Opportunities**: `as_is` = current title tag + meta description, `to_be` = rewritten versions
+- **Cannibalization**: `as_is` = competing pages listed, `to_be` = resolution (merge/canonical/differentiate)
+- **Declining Keywords**: `as_is` = current content state, `to_be` = specific content refresh
+- **Index Health**: `as_is` = current issue (noindex, redirect, crawl error), `to_be` = fix
+- **Topical Authority**: `as_is` = current coverage gaps, `to_be` = new content or linking plan
+
+Use `category` to group by analysis dimension (e.g., "Quick Win", "CTR", "Cannibalization", "Index Health").
+
+### Fallback (No Artifact Panel)
+
+When `preview_grid_dashboard` or `preview_action_report` is not available, combine both outputs as formatted markdown directly in the conversation.
 
 ## Related Skills
 
 - **grid-dashboard** — Grid dashboard YAML format reference (cell types, layout, merging)
+- **action-report** — Action report YAML format reference (as-is/to-be/reason cards)
 - **seo-analysis** — Add live SERP context and AEO scoring to GSC data; produces prescriptive action plans
 - **competitor-analysis** — Compare GSC performance against competitor page structures

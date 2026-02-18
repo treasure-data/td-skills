@@ -146,18 +146,22 @@ preview_grid_dashboard({ file_path: "./seo/seo-dashboard-{domain}.yaml" })
 
 ## Output 2: Action Report
 
-After the dashboard, output a **detailed markdown action report** for each analyzed page. This is where all recommendations, before→after changes, schema code, internal linking strategy, content outlines, and monitoring plans go.
+After the dashboard, render an **interactive action report** via `preview_action_report`. See **action-report** skill for YAML format and field reference.
 
-Save as `./seo/action-report-{slug}.md`.
+Save as `./seo/action-report-{slug}.yaml` and call:
+```
+preview_action_report({ file_path: "./seo/action-report-{slug}.yaml" })
+```
 
-Full template and structure: [references/action-report-template.md](references/action-report-template.md)
+Each action item uses the `{as_is, to_be, reason}` structure. Key requirements:
+- `as_is`: Include **actual current HTML** (in code blocks) — not vague descriptions
+- `to_be`: Include **complete replacement code** — copy-paste-ready HTML, JSON-LD, or config
+- `reason`: Cite specific data — SERP features, AEO score dimensions, competitor patterns
+- `category`: Map to AEO/SEO dimension (Content Structure, Structured Data, E-E-A-T, etc.)
+- `priority`: Based on effort-to-impact ratio (high = low effort + high impact)
+- `summary`: Include AEO score, key findings, and total estimated impact
 
-Key requirements:
-- Every change includes **actual current HTML** and **complete replacement code**
-- Schema markup is **copy-paste-ready JSON-LD**
-- Internal links specify exact source page, anchor text, and target
-- Content outline reflects SERP winner patterns + BLUF patterns
-- Changes are prioritized by effort-to-impact ratio
+For detailed content structure reference: [references/action-report-template.md](references/action-report-template.md)
 
 ## Output 3: Redline Preview (Optional)
 
@@ -335,12 +339,13 @@ Read these files as needed during analysis. Do not load all at once.
 | Topical Clustering | Cluster algorithm + authority levels | [../gsc-analysis/references/topical-clustering.md](../gsc-analysis/references/topical-clustering.md) |
 | GSC Query Patterns | GSC API call patterns + jq filters | [../gsc-analysis/references/gsc-query-patterns.md](../gsc-analysis/references/gsc-query-patterns.md) |
 
-## Fallback Output (CLI / No Dashboard)
+## Fallback Output (CLI / No Artifact Panel)
 
-When `preview_grid_dashboard` is not available, output the action report markdown directly in the conversation. Include a summary table with AEO scores and key metrics at the top.
+When `preview_grid_dashboard` or `preview_action_report` is not available, output both dashboard summary and action items as formatted markdown directly in the conversation.
 
 ## Related Skills
 
 - **grid-dashboard** — Grid dashboard YAML format reference (cell types, layout, merging)
+- **action-report** — Action report YAML format reference (as-is/to-be/reason cards)
 - **gsc-analysis** — Deep GSC data analysis: Quick Wins, trends, cannibalization, device/country breakdown
 - **competitor-analysis** — SERP-based competitor discovery and structural comparison
