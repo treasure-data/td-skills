@@ -321,6 +321,9 @@ cat rt_attributes.json
 ### 2e. Create Personalization Entity via API
 
 ```bash
+# Generate unique payload node ID (matches frontend: crypto.randomUUID())
+PAYLOAD_NODE_ID=$(uuidgen | tr -d '-' | tr '[:upper:]' '[:lower:]')
+
 # Build payload JSON
 cat > personalization_payload.json <<'EOF'
 {
@@ -344,7 +347,7 @@ cat > personalization_payload.json <<'EOF'
           "profileCriteria": null
         },
         "payload": {
-          "response_node": {
+          "<payload_node_id>": {
             "type": "ResponseNode",
             "name": "Response",
             "description": "Personalization response payload",
@@ -392,6 +395,7 @@ sed -i.bak \
   -e "s/<event_name>/$KEY_EVENT_NAME/g" \
   -e "s/<key_event_id>/$KEY_EVENT_ID/g" \
   -e "s/<folder_id>/$FOLDER_ID/g" \
+  -e "s/<payload_node_id>/$PAYLOAD_NODE_ID/g" \
   -e "s/<single_attr_id>/$SINGLE_ATTR_ID/g" \
   -e "s/<list_attr_id>/$LIST_ATTR_ID/g" \
   -e "s/<counter_attr_id>/$COUNTER_ATTR_ID/g" \
