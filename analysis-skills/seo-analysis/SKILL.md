@@ -144,7 +144,7 @@ This skill supports two output modes: **Dashboard** (visual, interactive) and **
 
 After completing analysis, write results to a YAML file and open the interactive dashboard.
 
-**Step 1**: Write the YAML file to `/tmp/seo-dashboard-{domain}.yaml`
+**Step 1**: Write the YAML file to `./seo/seo-dashboard-{domain}.yaml` (relative to working directory)
 
 ```yaml
 type: seo-dashboard
@@ -266,7 +266,7 @@ pages:
 **Step 2**: Open the dashboard
 
 ```
-preview_seo_dashboard({ file_path: "/tmp/seo-dashboard-example-com.yaml" })
+preview_seo_dashboard({ file_path: "./seo/seo-dashboard-example-com.yaml" })
 ```
 
 The dashboard renders in the artifact panel with:
