@@ -70,8 +70,8 @@ actions:
 | `title` | Yes | Short action title (imperative form: "Add...", "Rewrite...", "Fix...") |
 | `priority` | Yes | `high`, `medium`, or `low` — determines sort order and color |
 | `category` | No | Category tag (e.g., "Content Structure", "Technical SEO") |
-| `as_is` | Yes | Current state — markdown (use code blocks for HTML/JSON/config) |
-| `to_be` | Yes | Recommended state — markdown (complete replacement, not a diff) |
+| `as_is` | Yes | As-Is (current state) — markdown (use code blocks for HTML/JSON/config) |
+| `to_be` | Yes | To-Be (recommended state) — markdown (complete replacement, not a diff) |
 | `reason` | Yes | Why this change — cite data, competitor patterns, expected effect |
 | `impact` | No | Expected impact (e.g., "+35-40 clicks/month", "CTR +2%") |
 
@@ -80,7 +80,7 @@ actions:
 The dashboard renders actions sorted by priority (high → medium → low) as flat cards with no expand/collapse. Each card shows:
 
 - **Header**: number badge, title, priority badge, category badge
-- **Diff area**: side-by-side Current (red background) / Recommended (green background)
+- **Diff area**: As-Is (red card) / To-Be (green card) stacked vertically
 - **Reason**: explanation text below the diff
 - **Impact**: metric at bottom of card (if provided)
 
