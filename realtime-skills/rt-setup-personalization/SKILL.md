@@ -41,11 +41,19 @@ See [steps/01-02-validate-discovery.md](./steps/01-02-validate-discovery.md) for
 
 **Step 1:** Validate parent segment exists and check RT status
 ```bash
-# Check RT status
+# Check if PS has RT enabled
 tdx ps rt list --json | jq '.[] | select(.id=="<ps_id>" or .name=="<ps_name>") | {
-  id, name, rt_status: .status
+  id, name,
+  rt_status: .status,
+  event_tables: (.event_tables | length),
+  key_events: (.key_events | length)
 }'
 ```
+
+**Expected outputs:**
+- `rt_status: "ok"` → RT enabled, proceed to Step 2
+- `rt_status: "updating"` → Wait for RT to be ready
+- Empty result → PS not RT-enabled. Show error: "RT not enabled for this parent segment. Contact CSM."
 
 **Step 2:** Ask user about use case (Web Personalization, Cart Recovery, User Profile API, etc.)
 
@@ -64,7 +72,16 @@ See [steps/03-06-data-exploration.md](./steps/03-06-data-exploration.md) for det
 
 **Step 3:** Explore parent segment batch attributes
 ```bash
-tdx ps view <ps_id> --json | jq '.attributes[] | {name, type}'
+# List all RT-enabled parent segments
+tdx ps rt list --json
+
+# Show RT-enabled parent segments with status
+tdx ps rt list --json | jq '.[] | {
+  id, name,
+  rt_status: .status,
+  event_tables: (.event_tables | length),
+  key_events: (.key_events | length)
+}'
 ```
 
 **Step 4:** Discover streaming event tables
@@ -275,27 +292,40 @@ curl -X POST 'https://api-cdp.treasuredata.com/entities/realtime_personalization
 
 See [steps/10-verification.md](./steps/10-verification.md) for complete verification checklist.
 
-### Quick Verification
+### Verification Checklist
+
+After setup completes, verify:
 
 ```bash
 # 1. RT status is "ok"
-tdx ps rt list --json | jq -r --arg ps "<ps_id>" '.[] | select(.id==$ps) | .status'
+tdx ps rt list --json | jq -r --arg ps "<ps_id_or_name>" '.[] | select(.id==$ps or .name==$ps) | .status'
+# Expected: "ok"
 
 # 2. Key events exist
 tdx api "/audiences/<ps_id>/realtime_key_events" --type cdp | jq '.data | length'
+# Expected: > 0
 
 # 3. RT attributes exist
 tdx api "/audiences/<ps_id>/realtime_attributes?page[size]=100" --type cdp | jq '.data | length'
+# Expected: > 0
 
-# 4. API endpoint responds
-curl "https://${REGION}.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<pz_id>?td_client_id=test" \
+# 4. Configuration deployed
+curl -s "https://api-cdp.treasuredata.com/entities/parent_segments/<ps_id>/realtime_personalizations" \
+  -H "Authorization: TD1 ${TD_API_KEY}" | jq '.data | length'
+# Expected: > 0
+
+# 5. API endpoint responds
+curl -X GET "https://${REGION}.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<pz_id>?td_client_id=test_user" \
   -H "Authorization: TD1 ${TD_API_KEY}"
+# Expected: JSON with attributes (not 404)
 ```
 
 **Console URL:**
 ```
 https://console-next.${REGION}.treasuredata.com/app/ps/<ps_id>/e/<pz_id>/p/de
 ```
+
+If any check fails, review the corresponding setup step.
 
 ---
 
@@ -311,3 +341,29 @@ This orchestrator ensures all checkpoints are met:
 - API endpoint tested
 
 For RT Triggers (Journeys) instead, use the `rt-setup-triggers` skill which shares Steps 1-7.
+
+## Error Handling
+
+**RT not enabled:**
+```
+❌ RT 2.0 is not enabled for this parent segment.
+→ Contact your CSM to enable RT 2.0.
+```
+
+**No RT-enabled parent segments:**
+```
+❌ No RT-enabled parent segments found in your account.
+→ Contact your CSM to enable RT 2.0 for a parent segment.
+```
+
+**RT status "updating":**
+```
+⚠️  RT configuration is updating. Waiting for status "ok"...
+→ This typically takes 30-90 seconds.
+```
+
+**Missing event tables:**
+```
+❌ No streaming event tables found in database "<db>".
+→ Verify database name or check if events are being ingested.
+```
