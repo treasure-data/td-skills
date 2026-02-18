@@ -7,6 +7,21 @@ description: Unified SEO and AEO analysis producing prescriptive action plans wi
 
 Produce a prescriptive action plan — specific before→after content changes with reasoning — by combining keyword performance, live SERP context, user behavior data, and on-page structure analysis.
 
+## Workflow
+
+When a user requests SEO analysis, follow this sequence — **do not ask the user for a site URL**:
+
+1. **List GSC sites**: Call `google_search_console_list_sites` to get all registered properties
+2. **Present the list**: Show the sites and ask the user which one to analyze (or auto-select if only one)
+3. **Pull GSC data**: Fetch keyword performance for the selected site (top pages, queries, impressions, clicks, CTR, position)
+4. **Identify target pages**: From the GSC data, identify the top pages and Quick Win candidates
+5. **Run SerpAPI**: For high-priority keywords, fetch live SERP features (Answer Box, AI Overview, PAA)
+6. **Extract page signals**: Use Playwright to download target page HTML and run `extract_page_signals.py`
+7. **Score and analyze**: Calculate AEO scores, CTR impact, position drift, zero-click diagnosis
+8. **Write dashboard YAML**: Save results to `./seo/seo-dashboard-{domain}.yaml`
+9. **Open dashboard**: Call `preview_seo_dashboard` to render the interactive dashboard
+10. **Redline preview**: Ask which page to show redline edits for
+
 ## Available Tools
 
 | Tool | What it provides in SEO/AEO context |
