@@ -1,39 +1,132 @@
 ---
 name: seo-analysis
-description: "IMPORTANT: Do NOT ask the user which site to analyze. Start by calling google_search_console_list_sites to list registered properties, then present the list for selection. — Unified SEO/AEO analysis producing prescriptive action plans with before→after recommendations. Combines GSC keyword data, SerpAPI live SERP analysis, GA4 user behavior metrics, and Playwright page extraction. Read this skill fully before proceeding."
+description: "CRITICAL: (1) Create a Task list FIRST — plan all analysis steps before starting. (2) Do NOT ask the user for a site URL — call google_search_console_list_sites to discover properties. — Unified SEO/AEO analysis using GSC, SerpAPI, Playwright page extraction, and GA4. Output follows the dashboard YAML schema; use all available tools to populate every field. Read this skill fully before proceeding."
 ---
 
 # SEO & AEO Analysis
 
-Produce a prescriptive action plan — specific before→after content changes with reasoning — by combining keyword performance, live SERP context, user behavior data, and on-page structure analysis.
+Produce a prescriptive action plan — specific before→after content changes with reasoning — by combining keyword performance, live SERP context, on-page structure extraction, and user behavior data. The **dashboard YAML schema** (see Output section) defines what data to collect. Use all available tools to populate every field.
 
-## Workflow
+## CRITICAL: Create a Task List First
 
-When a user requests SEO analysis, follow this sequence — **do not ask the user for a site URL**:
+**Before doing ANY analysis, create a Task list** using `TodoWrite` (or the task management tool available in your environment). Break down the analysis into concrete steps based on what tools are available and what YAML fields need to be populated. This prevents skipping steps.
 
-1. **List GSC sites**: Call `google_search_console_list_sites` to get all registered properties
-2. **Present the list**: Show the sites and ask the user which one to analyze (or auto-select if only one)
-3. **Pull GSC data**: Fetch keyword performance for the selected site (top pages, queries, impressions, clicks, CTR, position)
-4. **Identify target pages**: From the GSC data, identify the top pages and Quick Win candidates
-5. **Run SerpAPI**: For high-priority keywords, fetch live SERP features (Answer Box, AI Overview, PAA)
-6. **Extract page signals**: Use Playwright to download target page HTML and run `extract_page_signals.py`
-7. **Score and analyze**: Calculate AEO scores, CTR impact, position drift, zero-click diagnosis
-8. **Write dashboard YAML**: Save results to `./seo/seo-dashboard-{domain}.yaml`
-9. **Open dashboard**: Call `preview_seo_dashboard` to render the interactive dashboard
-10. **Redline preview**: Ask which page to show redline edits for
+Example tasks:
+- List GSC sites and confirm target with user
+- Pull GSC keyword + page performance data
+- Identify target pages and Quick Win candidates
+- Run SerpAPI for high-priority keywords (SERP features, position drift)
+- Extract each target page with Playwright (headings, schema, content structure)
+- Pull GA4 behavior metrics for target pages
+- Calculate AEO scores from Playwright extraction data
+- Synthesize: CTR impact, zero-click diagnosis, recommendations with before→after
+- Write dashboard YAML and open `preview_seo_dashboard`
+- Ask user which page to show redline preview for
 
-## Available Tools
+Update each task as you complete it. Do not proceed to the next step without marking the current one done.
 
-| Tool | What it provides in SEO/AEO context |
-|------|-------------------------------------|
-| **GSC MCP** (`google_search_console_*`) | Keyword performance (position, impressions, clicks, CTR), Quick Win identification, cannibalization detection, trend comparison, index health, topical authority mapping. Data has ~3-day delay; large results (5,000 rows) need `jq` or chunked reads |
-| **SerpAPI** (`serpapi_google_search`) | Live SERP features (Answer Box, AI Overview, Knowledge Graph, PAA), position drift vs GSC averages, competitor discovery, zero-click root cause diagnosis. Check availability: `ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }` |
-| **GA4 MCP** (`google_analytics_*`) | User behavior on pages: bounce rate, engagement time, conversions, traffic sources. Measures before/after impact of changes. Use `google_analytics_run_report` with dimensions like `pagePath` and metrics like `engagementRate`, `averageSessionDuration`, `conversions` |
-| **Playwright** + `extract_page_signals.py` | On-page structure extraction: headings, BLUF analysis, JSON-LD schema, content metrics, internal/external links. Setup: `playwright-cli install --skills`. Run: `playwright-cli open <url>` → `playwright-cli run-code "async page => { return await page.content(); }" > /tmp/page.html` → `python3 analysis-skills/scripts/extract_page_signals.py /tmp/page.html --url <url>` |
+## Getting Started
+
+Do NOT ask the user which site to analyze. Call `google_search_console_list_sites` to discover registered properties, then present the list for selection (auto-select if only one).
+
+## Tools
+
+### Google Search Console (`google_search_console_*`)
+
+**Purpose**: Keyword performance data — the foundation of the analysis.
+
+**Key calls**:
+- `google_search_console_list_sites` — discover properties (prefer `sc-domain:` format)
+- `google_search_console_query_analytics` — keyword/page performance with dimensions and filters
+
+**Usage notes**:
+- Data has **~3-day delay**: set `end_date` to 3 days before today
+- Standard window: 28 days (`end_date - 27 days` to `end_date`)
+- Large results (5,000 rows) can exceed 256KB — use `jq` filters, `Grep`, or `Read` with `offset/limit`
+- Use `dimensions: ["query", "page"]` for keyword→page mapping
+
+**Populates YAML fields**: `site_summary` (impressions, clicks, CTR, position), `keywords` (query, position, impressions, clicks, ctr, priority), `zero_click` (queries with impressions > 200 and clicks = 0), `topical_authority` clusters
+
+### SerpAPI (`serpapi_google_search`)
+
+**Purpose**: Live SERP features, position drift, zero-click root cause diagnosis.
+
+**Availability check** (required before use):
+```
+ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }
+```
+
+**Usage**: Call for each high-priority keyword identified from GSC data:
+```
+serpapi_google_search({ q: "what is cdp", gl: "us", hl: "en" })
+```
+
+**Extract from results**:
+- `answer_box` — type (definition/list/table), owner URL, content
+- `ai_overview` — presence and content
+- `people_also_ask` — PAA questions (used for FAQ schema recommendations)
+- `knowledge_graph` — entity presence
+- `organic_results` — live position for drift calculation
+- `shopping_results`, `local_results` — SERP feature presence
+
+**Populates YAML fields**: `keywords[].serp` (all SERP features), `keywords[].drift` (compare live position vs GSC average), `keywords[].ctr_impact` (SERP penalty calculation), `zero_click[].type` (A/B/C/D classification)
+
+### Playwright (`playwright-cli`)
+
+**Purpose**: On-page structure extraction — **required for AEO scoring and before→after recommendations**. Without Playwright extraction, you cannot score Content Structure, Structured Data, E-E-A-T, or AI Readability dimensions, and you cannot write specific before→after text in recommendations.
+
+**Setup** (run once per session if needed):
+```bash
+playwright-cli install --skills
+```
+
+**Extract page HTML** for each target page:
+```bash
+playwright-cli open <url>
+playwright-cli run-code "async page => { const html = await page.content(); return html; }" > ./seo/page-raw.html
+```
+
+**What to extract from the HTML** (parse the downloaded HTML):
+- **Heading structure**: All H1-H6 tags, their text, and nesting
+- **BLUF analysis**: First paragraph after each H2 — does it lead with a direct answer? Length in words?
+- **JSON-LD schemas**: All `<script type="application/ld+json">` blocks — types present (Article, FAQPage, HowTo, Organization, etc.)
+- **Content metrics**: Total word count, paragraph count, list/table presence
+- **Internal/external links**: Count and destinations
+- **Meta tags**: title, description, canonical, OG tags
+- **Author information**: Author name, bio, links
+- **Date signals**: Published date, modified date
+
+**Populates YAML fields**: `aeo_score` (all 5 dimensions scored from on-page signals), `recommendations[].before` (actual current text quoted from page), `recommendations[].after` (rewritten text based on BLUF patterns and SERP data), `recommendations[].location` (specific H2/element reference)
+
+### Google Analytics (`google_analytics_*`)
+
+**Purpose**: User behavior data — engagement, bounce rate, conversions per page.
+
+**Key call**:
+```
+google_analytics_run_report({
+  dimensions: [{ name: "pagePath" }],
+  metrics: [
+    { name: "screenPageViews" },
+    { name: "engagementRate" },
+    { name: "averageSessionDuration" },
+    { name: "bounceRate" },
+    { name: "conversions" }
+  ],
+  dateRanges: [{ startDate: "28daysAgo", endDate: "today" }],
+  dimensionFilter: {
+    filter: { fieldName: "pagePath", stringFilter: { matchType: "CONTAINS", value: "/blog/" } }
+  }
+})
+```
+
+**Populates YAML fields**: `monitoring.metrics_to_watch` (baseline metrics for before/after comparison), behavioral context for recommendations (e.g., high bounce rate → content structure issues)
 
 ## AEO Scoring Model
 
-Five dimensions, 100 points total. Evaluates on-page signals only — no SERP data required. Full rubric in [references/aeo-scoring.md](references/aeo-scoring.md).
+Five dimensions, 100 points total. **Requires Playwright page extraction** — evaluates on-page signals only.
+
+Full rubric in [references/aeo-scoring.md](references/aeo-scoring.md).
 
 | Dimension | Points | Key criteria |
 |-----------|--------|-------------|
@@ -151,15 +244,9 @@ Keywords close to page 1 with the highest optimization ROI.
 | Medium | 8-12 / 13-17 | 100-500 / > 500 | Moderate — content expansion or restructuring |
 | Low | 13-20 | 100-500 | Higher — may need new content sections |
 
-## Output Modes
+## Dashboard Output
 
-This skill produces two visual outputs: **Dashboard** (analysis overview) and **Redline Preview** (per-page edit markup).
-
-### Mode 1: Dashboard Output (default)
-
-After completing analysis, write results to a YAML file and open the interactive dashboard.
-
-**Step 1**: Write the YAML file to `./seo/seo-dashboard-{domain}.yaml` (relative to working directory)
+Write analysis results to `./seo/seo-dashboard-{domain}.yaml` and call `preview_seo_dashboard` to render the interactive dashboard. The YAML schema below defines **all fields to populate** — use the tools described above to collect data for every field.
 
 ```yaml
 type: seo-dashboard
@@ -194,7 +281,7 @@ pages:
   "https://example.com/blog/cdp-guide":
     title: "What is a CDP? Complete Guide"
 
-    aeo_score:
+    aeo_score:                              # ← Requires Playwright extraction
       total: 58
       grade: C
       content_structure:
@@ -218,14 +305,14 @@ pages:
         max: 6
         gaps: []
 
-    keywords:
+    keywords:                               # ← GSC data + SerpAPI enrichment
       - query: "what is cdp"
         position: 11.2
         impressions: 1840
         clicks: 33
         ctr: 0.018
         priority: high        # high | medium | low
-        serp:
+        serp:                               # ← Requires SerpAPI
           answer_box:
             present: true
             owner: "competitor.com"
@@ -237,25 +324,25 @@ pages:
           knowledge_graph: false
           local_pack: false
           shopping: false
-        ctr_impact:
+        ctr_impact:                         # ← GSC CTR + SerpAPI penalties
           baseline_ctr: 0.025
           serp_penalties: ["answer_box: -60%", "paa: -15%"]
           adjusted_ctr: 0.006
           diagnosis: serp_absorption  # content_problem | serp_absorption
-        drift:
+        drift:                              # ← GSC avg vs SerpAPI live position
           gsc_avg: 11.2
           live_position: 13
           delta: +1.8
           classification: stable  # crash | declining | stable | rising | surge | deindex_risk
 
-    zero_click:
+    zero_click:                             # ← GSC (impressions, 0 clicks) + SerpAPI (type classification)
       - query: "what is customer data platform"
         impressions: 3200
         type: A               # A | B | C | D
         root_cause: "AI Overview fully answers the query"
         remediation: "Add BLUF definition + differentiated value"
 
-    recommendations:
+    recommendations:                        # ← Playwright (before text) + SerpAPI (BLUF pattern) + scoring (dimension)
       - title: "Add BLUF to H2: How Does CDP Work?"
         impact: high
         dimension: content_structure
@@ -271,46 +358,36 @@ pages:
         after: "Add FAQPage schema with 4 Q&A pairs from PAA questions"
         reason: "Sites with 3+ schema types show ~13% higher AI citation rate."
 
-    monitoring:
+    monitoring:                             # ← GA4 baseline + GSC metrics
       metrics_to_watch:
         - "GSC CTR for 'what is cdp' (expect improvement in 2-4 weeks)"
         - "GA4 engagement rate on /blog/cdp-guide"
       expected_timeline: "Title/meta: 2-4 weeks. Content restructuring: 4-8 weeks. Schema: 2-6 weeks."
 ```
 
-**Step 2**: Open the dashboard
-
+Open the dashboard:
 ```
 preview_seo_dashboard({ file_path: "./seo/seo-dashboard-example-com.yaml" })
 ```
 
-The dashboard renders in the artifact panel with:
-- **Page selector** dropdown to switch between analyzed pages
-- **Site summary** with metric cards and topical authority table
-- **AEO score gauge** (circular, color-coded by grade) with dimension breakdowns
-- **Keywords table** (sortable) with SERP feature icons, CTR diagnosis, position drift
-- **Zero-click queries table** with type badges and remediation
-- **Recommendation cards** with expandable before/after diff views
-- **Monitoring checklist** with timeline expectations
+The dashboard renders with: page selector dropdown, site summary cards, AEO score gauge with dimension breakdowns, sortable keywords table with SERP icons, zero-click table, recommendation cards with before/after diffs, and monitoring checklist.
 
-**Step 3**: After the user reviews the dashboard, ask which page they'd like a redline preview for.
+## Redline Preview
 
-### Redline Preview Flow
+After the user reviews the dashboard and selects a page for detailed edits:
 
-After the user selects a page from the dashboard:
-
-1. **Download HTML** with Playwright: `playwright-cli open <url>` → save full page HTML
+1. **Download HTML** with Playwright: `playwright-cli open <url>` → save full rendered HTML
 2. **Apply redline edits** based on the dashboard's `recommendations` for that page:
    - Wrap original text in `<del>` (strikethrough, red)
    - Insert replacement text in `<ins>` (underline, green) immediately below
    - Apply changes at the locations specified in each recommendation
 3. **Show preview**: `preview_document({ file_path: "./seo/redline-{slug}.html" })`
 
-The user sees the actual page with proposed changes visually marked — deletions in red strikethrough, insertions in green — making it easy to review and approve edits before implementation.
+The user sees the actual page with proposed changes visually marked — deletions in red strikethrough, insertions in green.
 
-## Output Specification — Prescriptive Action Plan
+## Fallback Output (CLI / No Dashboard)
 
-When the dashboard tool is not available (e.g., CLI mode), fall back to a markdown action plan:
+When `preview_seo_dashboard` is not available, output a markdown action plan:
 
 ```markdown
 ## SEO/AEO Analysis: [domain or page]
@@ -334,12 +411,12 @@ Include total impressions, Quick Win count, and top-level AEO score.]
 #### 1. [Change title] — Impact: High
 **Location**: [specific H2 section or page element]
 **Before**:
-> [current content/structure — quote actual text from page extraction]
+> [current content — quote actual text from Playwright extraction]
 
 **After**:
-> [recommended content/structure — provide the actual rewritten text]
+> [recommended content — provide the actual rewritten text]
 
-**Reason**: [why this change matters — cite SERP data, competitor gap, or scoring dimension.]
+**Reason**: [cite SERP data, competitor gap, or scoring dimension]
 
 ### Quick Wins Summary
 
@@ -352,9 +429,8 @@ Include total impressions, Quick Win count, and top-level AEO score.]
 |-------|-------------|------|------------|-------------------|
 
 ### Monitoring
-[Which GA4/GSC metrics to watch after implementing changes.
-Expected timeline: title/meta changes = 2-4 weeks, content restructuring = 4-8 weeks,
-schema additions = 2-6 weeks for rich result eligibility.]
+[GA4/GSC metrics to watch. Expected timeline: title/meta = 2-4 weeks,
+content restructuring = 4-8 weeks, schema additions = 2-6 weeks.]
 ```
 
 ## Related Skills

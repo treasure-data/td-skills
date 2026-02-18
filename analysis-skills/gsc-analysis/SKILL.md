@@ -167,4 +167,3 @@ Cluster GSC queries by keyword stems, calculate per-cluster metrics, then cross-
 
 - **seo-analysis** — Add live SERP context and AEO scoring to GSC data; produces prescriptive action plans
 - **competitor-analysis** — Compare GSC performance against competitor page structures
-- **content-brief** — Generate content briefs targeting quick-win keywords from this analysis

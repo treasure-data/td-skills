@@ -144,4 +144,3 @@ Different AI platforms weight different signals. See [../seo-analysis/references
 
 - **seo-analysis** — Full SEO/AEO audit with scoring and prescriptive action plan
 - **gsc-analysis** — Keyword performance data to inform which keywords to analyze competitively
-- **content-brief** — Generate actionable content plans based on gap analysis findings
