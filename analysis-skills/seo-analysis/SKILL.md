@@ -23,7 +23,7 @@ Example tasks:
 - Write grid-dashboard YAML **page by page** (one page at a time)
 - Call `preview_grid_dashboard` after each page is added
 - Write action report (markdown) for each page
-- Ask user: "添削を反映したページ画像を表示しますか？"
+- Ask user: "Would you like to see a redline preview with all changes applied to the live page?"
 
 ## Getting Started
 
@@ -158,7 +158,7 @@ Key requirements:
 
 ## Output 3: Redline Preview (Optional)
 
-After the action report is complete, ask the user: **"添削を反映したページ画像を表示しますか？"**
+After the action report is complete, ask the user: **"Would you like to see a redline preview with all changes applied to the live page?"**
 
 If yes, apply **all** recommendations from the action report to the live page via Playwright and take a full-page screenshot. The goal is a complete before→after visual — not a partial preview.
 
