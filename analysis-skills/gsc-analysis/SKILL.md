@@ -108,62 +108,76 @@ Check via `list_sitemaps` → `get_sitemap` (compare submitted vs indexed counts
 
 Cluster GSC queries by keyword stems, calculate per-cluster metrics, then cross-reference with SerpAPI Knowledge Graph data. Full algorithm and authority level classification in [references/topical-clustering.md](references/topical-clustering.md).
 
-## Output Specification — GSC Performance Report
+## Outputs
+
+Produce **two separate outputs**: a data dashboard and an action report. The dashboard presents facts and current state only. The action report provides specific, concrete recommendations. Never mix the two — keep data and actions cleanly separated.
+
+### Output 1: Data Dashboard
+
+Render an interactive dashboard via `preview_grid_dashboard`. See **grid-dashboard** skill for YAML format, cell types, and layout rules.
+
+Design the grid layout flexibly based on available data and what the user asked for. Use KPIs for headline metrics, tables for keyword lists, charts for trends, and scores for breakdowns. Example sections to include (adapt as needed):
+
+- **KPIs**: Total impressions, clicks, avg CTR, avg position (with period-over-period change)
+- **Quick Wins table**: Position 8-20 keywords with high impressions
+- **Trending / Declining tables**: Keywords with significant position changes
+- **Cannibalization table**: Queries competing across multiple pages
+- **Zero-Click table**: High-impression zero-click queries with type classification
+- **Device / Country breakdown**: Position gaps across segments
+- **Topical Authority table**: Cluster metrics and authority levels
+- **Index Health**: Sitemap coverage, indexing issues
+
+The dashboard shows **data and analysis only** — no recommendations, no "you should do X" statements.
+
+### Output 2: Action Report
+
+After the dashboard, output a **markdown action report** saved as `./seo/gsc-action-report-{domain}.md`. This is where all recommendations go — specific, concrete, and prioritized.
+
+Structure:
 
 ```markdown
-## GSC Analysis Report: [domain]
+# GSC Action Report: [domain]
 
 **Period**: YYYY-MM-DD to YYYY-MM-DD
 
-### Performance Summary
+## Quick Win Actions
+[For each quick-win keyword: specific page to optimize, what to change, expected position improvement]
 
-| Metric | Value |
-|--------|-------|
-| Total queries | X |
-| Total pages | X |
-| Average position | X.X |
-| Total impressions | X |
-| Total clicks | X |
-| Average CTR | X.X% |
+## CTR Improvement Actions
+[For each CTR opportunity: current title/meta, recommended replacement, expected CTR lift]
 
-### Quick Wins
-[Position 8-20, impressions > 100, prioritized High/Medium/Low]
+## Cannibalization Resolution
+[For each cannibalized query: which page to keep as primary, what to do with secondary pages (merge/canonical/differentiate)]
 
-### CTR Opportunities
-[Impressions > 500, CTR < 2%, with suggested title/meta improvements]
+## Content Refresh Priorities
+[Declining keywords: specific content changes needed to recover positions]
 
-### Trending Keywords
-[Rising and falling keywords with position delta]
+## Device/Country-Specific Fixes
+[Mobile UX issues, localization opportunities with specific actions]
 
-### Keyword Cannibalization
-[Queries with 2+ competing pages, severity, resolution recommendation]
-[+ SERP Arbiter results if SerpAPI available]
+## Index Health Fixes
+[Pages to resubmit, noindex tags to remove, redirects to fix]
 
-### Device Performance
-[Desktop vs mobile position gaps, mobile-specific issues]
+## Topical Authority Strategy
+[Clusters to expand, new content to create, internal linking recommendations]
 
-### Country Breakdown
-[Top countries, market-specific opportunities]
+## Implementation Priority
+### High Priority (1-2 weeks)
+1. [action] — [reason]
 
-### Zero-Click Queries
-[High-impression zero-click queries with root cause classification if SerpAPI available]
+### Medium Priority (2-4 weeks)
+2. [action]
 
-### CTR Impact Scores
-[Content Problem vs SERP Feature Absorption diagnosis — requires SerpAPI]
-
-### Index Health
-[Sitemap coverage, indexing issues, URL inspection results]
-
-### Topical Authority Map
-[Cluster authority levels with recommended actions — requires SerpAPI]
-
-### Recommended Next Steps
-1. [Highest impact action with specific keyword/page]
-2. [Second priority]
-3. [Third priority]
+### Low Priority (1+ month)
+3. [action]
 ```
+
+### Fallback (No Dashboard)
+
+When `preview_grid_dashboard` is not available, combine both outputs into a single markdown report with a data summary table at the top followed by the action sections.
 
 ## Related Skills
 
+- **grid-dashboard** — Grid dashboard YAML format reference (cell types, layout, merging)
 - **seo-analysis** — Add live SERP context and AEO scoring to GSC data; produces prescriptive action plans
 - **competitor-analysis** — Compare GSC performance against competitor page structures
