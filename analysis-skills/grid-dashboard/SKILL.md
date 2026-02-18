@@ -123,8 +123,9 @@ Bar colors: green (≥75%), yellow (40–74%), red (<40%).
 
 ### `table` — Sortable Table
 
-Structured data with click-to-sort columns. Use for data tables, rankings, comparisons.
+Structured data with click-to-sort columns. Two formats accepted:
 
+**Format 1 — Flat arrays** (compact):
 ```yaml
 - pos: "3-1"
   type: table
@@ -135,6 +136,33 @@ Structured data with click-to-sort columns. Use for data tables, rankings, compa
       - ["what is cdp", 11.2, 1840, "1.8%"]
       - ["cdp vs dmp", 8.5, 920, "3.2%"]
     sortable: true           # optional — defaults to true
+```
+
+**Format 2 — Column definitions** (readable, preferred for many columns):
+```yaml
+- pos: "3-1"
+  type: table
+  title: "Top Keywords"
+  table:
+    columns:
+      - key: query
+        label: "Keyword"
+      - key: position
+        label: "Position"
+      - key: impressions
+        label: "Impressions"
+      - key: ctr
+        label: "CTR"
+    rows:
+      - query: "what is cdp"
+        position: 11.2
+        impressions: 1840
+        ctr: "1.8%"
+      - query: "cdp vs dmp"
+        position: 8.5
+        impressions: 920
+        ctr: "3.2%"
+    sortable: true
 ```
 
 ### `chart` — Chart.js Chart
@@ -162,7 +190,7 @@ Any Chart.js chart type (bar, line, pie, doughnut, radar, etc.). Use for trends,
 
 ### `markdown` — Rich Text
 
-GFM markdown rendered with marked.js. Use for summaries, recommendations, checklists, any text content.
+GFM markdown rendered with marked.js. Use for summaries, recommendations, checklists, any text content. Both `content` and `markdown` keys are accepted.
 
 ```yaml
 - pos: "4-1"
@@ -177,6 +205,16 @@ GFM markdown rendered with marked.js. Use for summaries, recommendations, checkl
 
     ### 2. Add FAQPage schema
     **Impact**: High | **Dimension**: Structured Data
+```
+
+`markdown` key also works:
+```yaml
+- pos: "4-1"
+  type: markdown
+  title: "Glossary"
+  markdown: |
+    - **AI**: AI Overview
+    - **PAA**: People Also Ask
 ```
 
 Markdown tables (GFM pipe syntax) are also styled with the dashboard theme.
