@@ -109,6 +109,14 @@ The YAML is **one file per site** with analyzed pages as keys under `pages:`. Ea
 | 15 | 15-1 to 15-4 (merged) | `markdown` | Topical Authority strategy — expand/defend/build recommendations | GSC |
 | 16 | 16-1 to 16-4 (merged) | `markdown` | Monitoring & Iteration (metrics, timeline, 2-3 month review cadence) | GA4 + GSC |
 
+### Adapting the Layout
+
+The 16-row layout is the **full comprehensive analysis**. Adapt based on context:
+
+- **Tool unavailable**: Skip rows whose Source tool is missing. Adjust `grid.rows` accordingly. Row 1 (GSC KPIs) and row 7 (Keywords) are always included.
+- **Focused request**: If the user asks for specific analysis (e.g., "AEO score only", "keyword analysis only"), include only relevant rows.
+- **Single page**: Still use `pages:` structure with one entry.
+
 ### YAML Structure
 
 ```yaml
