@@ -1,11 +1,11 @@
 ---
 name: seo-analysis
-description: "Use this skill when the user wants a comprehensive SEO or AEO (Answer Engine Optimization) audit of their website or specific pages. Trigger on requests like 'analyze SEO', 'AEO score', 'SEO audit', 'optimize for AI search', 'improve rankings', or 'why is my page not ranking'. Combines Google Search Console, SerpAPI, Playwright, and GA4 to produce an interactive grid-dashboard with KPIs, AEO scores, keyword tables, and actionable before/after recommendations."
+description: "Use this skill when the user wants a comprehensive SEO or AEO (Answer Engine Optimization) audit of their website or specific pages. Trigger on requests like 'analyze SEO', 'AEO score', 'SEO audit', 'optimize for AI search', 'improve rankings', or 'why is my page not ranking'. Combines Google Search Console, SerpAPI, Playwright, and GA4 to produce a data dashboard and a detailed action report with before/after recommendations."
 ---
 
 # SEO & AEO Analysis
 
-Produce a prescriptive action plan — specific before→after content changes with reasoning — by combining keyword performance, live SERP context, on-page structure extraction, and user behavior data. The **dashboard layout** (see Dashboard Output) defines what data to collect.
+Produce two outputs per analysis: a **data dashboard** (grid-dashboard YAML) showing the current state, and an **action report** (markdown) with specific before→after changes. Optionally, generate a **redline preview** showing all changes applied to the live page.
 
 ## CRITICAL: Create a Task List First
 
@@ -20,11 +20,10 @@ Example tasks:
 - Scrape top 5 competitor pages with Playwright
 - Pull GA4 behavior metrics for target pages
 - Calculate AEO + On-Page/Technical SEO scores
-- Build internal linking strategy + recommended content outline
-- Synthesize: CTR impact, zero-click diagnosis, recommendations with before→after
 - Write grid-dashboard YAML **page by page** (one page at a time)
 - Call `preview_grid_dashboard` after each page is added
-- Ask user which page to show redline preview for
+- Write action report (markdown) for each page
+- Ask user: "添削を反映したページ画像を表示しますか？"
 
 ## Getting Started
 
@@ -73,20 +72,22 @@ For competitor analysis, scrape top 5 organic results from SerpAPI using the sam
 
 User behavior data — engagement, bounce rate, conversions per page. Use for monitoring baselines and behavioral context for recommendations.
 
-## Dashboard Output
+## Output 1: Data Dashboard
+
+The dashboard shows **data and analysis only** — no action items, no recommendations. Its purpose is to present the current state of SEO/AEO performance so the user can understand where they stand before reviewing the action report.
 
 Write results as a **paged grid-dashboard YAML** and call `preview_grid_dashboard`. See **grid-dashboard** skill for cell type reference.
 
 ### Build YAML Page by Page
 
-The YAML is **one file per site** with analyzed pages as keys under `pages:`. Each page has a 4×16 grid — too large to write in a single pass.
+The YAML is **one file per site** with analyzed pages as keys under `pages:`. Each page has a 4×10 grid — too large to write in a single pass.
 
 1. Write `pages:` header + first page's complete grid/cells
 2. Call `preview_grid_dashboard` to verify rendering
 3. Append additional pages to the same file
 4. Call `preview_grid_dashboard` again to refresh
 
-### Page Grid Layout (4×16 per page)
+### Page Grid Layout (4×10 per page)
 
 | Row | Cells | Type | Content | Source |
 |-----|-------|------|---------|--------|
@@ -102,16 +103,11 @@ The YAML is **one file per site** with analyzed pages as keys under `pages:`. Ea
 | 8 | 8-1 to 8-2 (merged) | `table` | Trending Up — keywords with improving position | GSC |
 | 8 | 8-3 to 8-4 (merged) | `table` | Declining — keywords losing position | GSC |
 | 9 | 9-1 to 9-4 (merged) | `table` | Keyword Cannibalization — same query ranking on multiple pages | GSC |
-| 10 | 10-1 to 10-4 (merged) | `table` | Zero-Click Queries with type and remediation | GSC + SerpAPI |
-| 11 | 11-1 to 11-4 (merged) | `table` | Internal Linking Strategy — recommended links with anchor text and rationale | Playwright + GSC |
-| 12-13 | 12-1 to 13-4 (merged) | `markdown` | Recommendations with before→after diffs | All |
-| 14 | 14-1 to 14-4 (merged) | `markdown` | Recommended Content Outline — heading structure matching SERP winners + LLM citation patterns | SerpAPI + Playwright |
-| 15 | 15-1 to 15-4 (merged) | `markdown` | Topical Authority strategy — expand/defend/build recommendations | GSC |
-| 16 | 16-1 to 16-4 (merged) | `markdown` | Monitoring & Iteration (metrics, timeline, 2-3 month review cadence) | GA4 + GSC |
+| 10 | 10-1 to 10-4 (merged) | `table` | Zero-Click Queries with type and root cause | GSC + SerpAPI |
 
 ### Adapting the Layout
 
-The 16-row layout is the **full comprehensive analysis**. Adapt based on context:
+The 10-row layout is the **full data dashboard**. Adapt based on context:
 
 - **Tool unavailable**: Skip rows whose Source tool is missing. Adjust `grid.rows` accordingly. Row 1 (GSC KPIs) and row 7 (Keywords) are always included.
 - **Focused request**: If the user asks for specific analysis (e.g., "AEO score only", "keyword analysis only"), include only relevant rows.
@@ -126,21 +122,16 @@ pages:
     description: "Analyzed 2026-02-18 (28-day window)"
     grid:
       columns: 4
-      rows: 16
+      rows: 10
     cells:
       - pos: "1-1"
         type: kpi
         title: "Impressions"
         kpi: { value: "45,000", change: "+8.2%", trend: up, subtitle: "vs. prior 28 days" }
       # ... remaining cells follow the layout table above
-
-  "https://example.com/products/cdp":
-    title: "CDP Product Page"
-    grid: { columns: 4, rows: 16 }
-    cells: [...]
 ```
 
-Full template with all 16 rows: [references/dashboard-template.yaml](references/dashboard-template.yaml)
+Full template: [references/dashboard-template.yaml](references/dashboard-template.yaml)
 
 ### Rendering
 
@@ -150,25 +141,26 @@ preview_grid_dashboard({ file_path: "./seo/seo-dashboard-{domain}.yaml" })
 
 **Column conventions**: SERP features: `AB` `AI` `PAA` `KG` `LP` `SH`. Drift: `Stable (0)`, `Rising (-2)`, `Declining (+4)`, `Crash (+8)`, `Surge (-6)`.
 
-## References
+## Output 2: Action Report
 
-Read these files as needed during analysis. Do not load all at once.
+After the dashboard, output a **detailed markdown action report** for each analyzed page. This is where all recommendations, before→after changes, schema code, internal linking strategy, content outlines, and monitoring plans go.
 
-| Reference | When to read | Path |
-|-----------|-------------|------|
-| AEO Scoring rubric | Calculating AEO scores (5 dimensions, 100 pts) | [references/aeo-scoring.md](references/aeo-scoring.md) |
-| BLUF Writing Patterns | Writing before→after recommendations | [references/bluf-patterns.md](references/bluf-patterns.md) |
-| Intent Classification | Mapping SERP features to content format | [references/intent-classification.md](references/intent-classification.md) |
-| Zero-Click Strategy | Classifying zero-click queries (Type A/B/C/D) | [references/zero-click-strategy.md](references/zero-click-strategy.md) |
-| Platform Citations | AI platform-specific optimization | [references/platform-citations.md](references/platform-citations.md) |
-| Dashboard Template | Full 16-row YAML template per page | [references/dashboard-template.yaml](references/dashboard-template.yaml) |
-| CTR Impact Scoring | Baseline CTR + SERP penalty calculation | [../gsc-analysis/references/ctr-scoring.md](../gsc-analysis/references/ctr-scoring.md) |
-| Topical Clustering | Cluster algorithm + authority levels | [../gsc-analysis/references/topical-clustering.md](../gsc-analysis/references/topical-clustering.md) |
-| GSC Query Patterns | GSC API call patterns + jq filters | [../gsc-analysis/references/gsc-query-patterns.md](../gsc-analysis/references/gsc-query-patterns.md) |
+Save as `./seo/action-report-{slug}.md`.
 
-## Redline Preview
+Full template and structure: [references/action-report-template.md](references/action-report-template.md)
 
-After the user reviews the dashboard and selects a page for detailed edits, apply changes directly on the live page via Playwright to preserve all original CSS styling.
+Key requirements:
+- Every change includes **actual current HTML** and **complete replacement code**
+- Schema markup is **copy-paste-ready JSON-LD**
+- Internal links specify exact source page, anchor text, and target
+- Content outline reflects SERP winner patterns + BLUF patterns
+- Changes are prioritized by effort-to-impact ratio
+
+## Output 3: Redline Preview (Optional)
+
+After the action report is complete, ask the user: **"添削を反映したページ画像を表示しますか？"**
+
+If yes, apply **all** recommendations from the action report to the live page via Playwright and take a full-page screenshot. The goal is a complete before→after visual — not a partial preview.
 
 **1. Navigate to target page** (reuse existing Playwright session):
 ```bash
@@ -197,7 +189,7 @@ playwright-cli run-code "async page => {
 }"
 ```
 
-**3. Apply each recommendation** via DOM manipulation. For each before→after change, find the target text and wrap it:
+**3. Apply ALL recommendations** from the action report via DOM manipulation. For each before→after change, find the target element and inject the redline markup:
 ```bash
 playwright-cli run-code "async page => {
   // Example: Replace first paragraph under a specific H2
@@ -211,7 +203,7 @@ playwright-cli run-code "async page => {
         del.innerHTML = p.innerHTML;
         const ins = document.createElement('ins');
         ins.className = 'seo-redline-ins';
-        ins.textContent = 'A CDP works by collecting first-party customer data from websites, apps, and offline sources, then unifying it into persistent profiles using identity resolution.';
+        ins.textContent = 'A CDP works by collecting first-party customer data...';
         p.replaceWith(del, ins);
       }
     }, section);
@@ -219,54 +211,35 @@ playwright-cli run-code "async page => {
 }"
 ```
 
-Repeat for each recommendation. Adapt the selector and replacement text per recommendation.
+Repeat for **every recommendation** in the action report. Include heading changes, meta changes, new sections, FAQ additions, schema annotations — everything.
 
 **4. Take full-page screenshot**:
 ```bash
 playwright-cli screenshot ./seo/redline-{slug}.png --full-page
 ```
 
-**5. Show to user**: Present the screenshot image. The user sees the actual page with proposed changes visually marked — deletions in red strikethrough, insertions in green with border.
+**5. Show to user** via `open_file`. The user sees the complete page with all proposed changes visually marked — deletions in red strikethrough, insertions in green with border.
+
+## References
+
+Read these files as needed during analysis. Do not load all at once.
+
+| Reference | When to read | Path |
+|-----------|-------------|------|
+| AEO Scoring rubric | Calculating AEO scores (5 dimensions, 100 pts) | [references/aeo-scoring.md](references/aeo-scoring.md) |
+| BLUF Writing Patterns | Writing before→after recommendations | [references/bluf-patterns.md](references/bluf-patterns.md) |
+| Intent Classification | Mapping SERP features to content format | [references/intent-classification.md](references/intent-classification.md) |
+| Zero-Click Strategy | Classifying zero-click queries (Type A/B/C/D) | [references/zero-click-strategy.md](references/zero-click-strategy.md) |
+| Platform Citations | AI platform-specific optimization | [references/platform-citations.md](references/platform-citations.md) |
+| Dashboard Template | Full 10-row YAML template per page | [references/dashboard-template.yaml](references/dashboard-template.yaml) |
+| Action Report Template | Markdown action report structure | [references/action-report-template.md](references/action-report-template.md) |
+| CTR Impact Scoring | Baseline CTR + SERP penalty calculation | [../gsc-analysis/references/ctr-scoring.md](../gsc-analysis/references/ctr-scoring.md) |
+| Topical Clustering | Cluster algorithm + authority levels | [../gsc-analysis/references/topical-clustering.md](../gsc-analysis/references/topical-clustering.md) |
+| GSC Query Patterns | GSC API call patterns + jq filters | [../gsc-analysis/references/gsc-query-patterns.md](../gsc-analysis/references/gsc-query-patterns.md) |
 
 ## Fallback Output (CLI / No Dashboard)
 
-When `preview_grid_dashboard` is not available, output a markdown action plan:
-
-```markdown
-## SEO/AEO Analysis: [domain or page]
-
-### Summary
-[3-5 sentences: current state, biggest opportunities, estimated impact]
-
-### AEO Score: XX/100
-
-| Dimension | Score | Max | Key gap |
-|-----------|-------|-----|---------|
-| Content Structure | X | 26 | [gap] |
-| Structured Data | X | 26 | [gap] |
-| E-E-A-T Signals | X | 21 | [gap] |
-| AI Readability | X | 21 | [gap] |
-| Technical AEO | X | 6 | [gap] |
-
-### Recommended Changes
-
-#### 1. [Change title] — Impact: High
-**Location**: [specific H2 or element]
-> **Before**: [actual current text]
-> **After**: [rewritten text]
-**Reason**: [cite SERP data or scoring dimension]
-
-### Quick Wins Summary
-| Keyword | Position | Impressions | SERP Features | Action |
-|---------|----------|-------------|---------------|--------|
-
-### Zero-Click Diagnosis
-| Query | Impressions | Type | Root Cause | Recommended Change |
-|-------|-------------|------|------------|-------------------|
-
-### Monitoring
-[Metrics to watch. Timeline: title/meta 2-4 weeks, content 4-8 weeks, schema 2-6 weeks.]
-```
+When `preview_grid_dashboard` is not available, output the action report markdown directly in the conversation. Include a summary table with AEO scores and key metrics at the top.
 
 ## Related Skills
 
