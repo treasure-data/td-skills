@@ -393,7 +393,7 @@ After setup completes, verify:
 
 ```bash
 # 1. RT status is "ok"
-tdx ps view <ps_id> --json | jq -r '.realtime_config.status'
+tdx ps rt list --json | jq -r '.[] | select(.id=="<ps_id>") | .status'
 # Expected: "ok"
 
 # 2. Key events exist
