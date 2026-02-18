@@ -131,6 +131,15 @@
         "./aps-doc-skills/golden",
         "./aps-doc-skills/master-segment"
       ]
+    },
+    {
+      "name": "email-campaign-skills",
+      "description": "Generate enterprise-grade HTML email campaigns with strategy briefs, live preview in Treasure Studio, iterative natural language editing, and push to Treasure Engage",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./email-campaign-skills/email-campaign"
+      ]
     }
   ]
 }
