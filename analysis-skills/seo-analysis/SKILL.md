@@ -20,7 +20,7 @@ Example tasks:
 - Pull GA4 behavior metrics for target pages
 - Calculate AEO scores from Playwright extraction data
 - Synthesize: CTR impact, zero-click diagnosis, recommendations with before→after
-- Write dashboard YAML and open `preview_seo_dashboard`
+- Write grid-dashboard YAML and open `preview_grid_dashboard`
 - Ask user which page to show redline preview for
 
 Update each task as you complete it. Do not proceed to the next step without marking the current one done.
@@ -246,131 +246,168 @@ Keywords close to page 1 with the highest optimization ROI.
 
 ## Dashboard Output
 
-Write analysis results to `./seo/seo-dashboard-{domain}.yaml` and call `preview_seo_dashboard` to render the interactive dashboard. The YAML schema below defines **all fields to populate** — use the tools described above to collect data for every field.
+Write analysis results as a **grid-dashboard YAML** and call `preview_grid_dashboard`. See the **grid-dashboard** skill for full cell type reference.
+
+Use a **4-column × 6-row grid** with the following layout per analyzed page:
+
+| Row | Cells | Type | Content |
+|-----|-------|------|---------|
+| 1 | 1-1, 1-2, 1-3, 1-4 | `kpi` × 4 | Impressions, Clicks, Avg CTR, Avg Position |
+| 2 | 2-1 | `gauge` | AEO Score (value/100, grade as label, A/B/C/D/F thresholds) |
+| 2 | 2-2 to 2-4 (merged) | `scores` | AEO dimension breakdown (5 bars: Content Structure, Structured Data, E-E-A-T, AI Readability, Technical AEO) |
+| 3 | 3-1 to 3-4 (merged) | `table` | Keywords: query, position, impressions, CTR, priority, SERP features, drift |
+| 4 | 4-1 to 4-4 (merged) | `table` | Zero-Click Queries: query, impressions, type (A/B/C/D), root cause, remediation |
+| 5 | 5-1 to 5-4 (merged) | `markdown` | Recommendations: numbered list with impact badge, before→after quotes, reason |
+| 6 | 6-1 to 6-4 (merged) | `markdown` | Monitoring: metrics to watch checklist + expected timeline |
+
+### Complete YAML Template
 
 ```yaml
-type: seo-dashboard
-domain: example.com
-analyzed_at: "2026-02-18"
-period:
-  start: "2026-01-18"
-  end: "2026-02-15"
+title: "SEO/AEO Analysis: example.com"
+description: "/blog/cdp-guide — Analyzed 2026-02-18 (28-day window)"
+grid:
+  columns: 4
+  rows: 6
+cells:
+  # ── Row 1: KPIs (from GSC) ───────────────────────────────────────────
+  - pos: "1-1"
+    type: kpi
+    title: "Impressions"
+    kpi:
+      value: "45,000"
+      change: "+8.2%"
+      trend: up
+      subtitle: "vs. prior 28 days"
 
-site_summary:
-  total_impressions: 45000
-  total_clicks: 2100
-  avg_ctr: 0.047
-  avg_position: 18.3
-  quick_wins_count: 12
-  zero_click_count: 8
-  topical_authority:
-    - cluster: "cdp"
-      queries: 45
-      pages: 8
-      avg_position: 6.2
-      page1_rate: 0.78
-      level: strong        # strong | emerging | weak | opportunity
-    - cluster: "data integration"
-      queries: 12
-      pages: 3
-      avg_position: 18.5
-      page1_rate: 0.25
-      level: emerging
+  - pos: "1-2"
+    type: kpi
+    title: "Clicks"
+    kpi:
+      value: "2,100"
+      change: "+12.5%"
+      trend: up
+      subtitle: "vs. prior 28 days"
 
-pages:
-  "https://example.com/blog/cdp-guide":
-    title: "What is a CDP? Complete Guide"
+  - pos: "1-3"
+    type: kpi
+    title: "Avg CTR"
+    kpi:
+      value: "4.7%"
+      change: "+0.3%"
+      trend: up
+      subtitle: "vs. prior 28 days"
 
-    aeo_score:                              # ← Requires Playwright extraction
-      total: 58
-      grade: C
-      content_structure:
-        score: 14
+  - pos: "1-4"
+    type: kpi
+    title: "Avg Position"
+    kpi:
+      value: "18.3"
+      change: "-1.2"
+      trend: up
+      subtitle: "lower is better"
+
+  # ── Row 2: AEO Score (from Playwright extraction) ────────────────────
+  - pos: "2-1"
+    type: gauge
+    title: "AEO Score"
+    gauge:
+      value: 58
+      max: 100
+      label: "C"
+      thresholds:
+        - { limit: 40, color: "#ef4444" }   # F/D
+        - { limit: 60, color: "#f97316" }   # C
+        - { limit: 70, color: "#f59e0b" }   # B
+        - { limit: 80, color: "#84cc16" }   # A
+        - { limit: 100, color: "#22c55e" }  # A+
+
+  - pos: ["2-2", "2-4"]
+    type: scores
+    title: "AEO Breakdown"
+    scores:
+      - label: "Content Structure"
+        value: 14
         max: 26
-        gaps: ["4/6 H2 lack BLUF", "No question headings", "No tables"]
-      structured_data:
-        score: 8
+      - label: "Structured Data"
+        value: 8
         max: 26
-        gaps: ["No FAQPage schema", "Only Article schema (1 type)"]
-      eeat_signals:
-        score: 16
+      - label: "E-E-A-T Signals"
+        value: 16
         max: 21
-        gaps: ["No author bio", "2 external citations (need 5+)"]
-      ai_readability:
-        score: 14
+      - label: "AI Readability"
+        value: 14
         max: 21
-        gaps: ["No TL;DR section", "3/6 sections not self-contained"]
-      technical_aeo:
-        score: 6
+      - label: "Technical AEO"
+        value: 6
         max: 6
-        gaps: []
 
-    keywords:                               # ← GSC data + SerpAPI enrichment
-      - query: "what is cdp"
-        position: 11.2
-        impressions: 1840
-        clicks: 33
-        ctr: 0.018
-        priority: high        # high | medium | low
-        serp:                               # ← Requires SerpAPI
-          answer_box:
-            present: true
-            owner: "competitor.com"
-            type: definition
-          ai_overview: true
-          paa:
-            - "How does a CDP work?"
-            - "CDP vs DMP: what's the difference?"
-          knowledge_graph: false
-          local_pack: false
-          shopping: false
-        ctr_impact:                         # ← GSC CTR + SerpAPI penalties
-          baseline_ctr: 0.025
-          serp_penalties: ["answer_box: -60%", "paa: -15%"]
-          adjusted_ctr: 0.006
-          diagnosis: serp_absorption  # content_problem | serp_absorption
-        drift:                              # ← GSC avg vs SerpAPI live position
-          gsc_avg: 11.2
-          live_position: 13
-          delta: +1.8
-          classification: stable  # crash | declining | stable | rising | surge | deindex_risk
+  # ── Row 3: Keywords (GSC + SerpAPI) ──────────────────────────────────
+  - pos: ["3-1", "3-4"]
+    type: table
+    title: "Keywords"
+    table:
+      headers: ["Query", "Position", "Impr.", "CTR", "Priority", "SERP Features", "Drift"]
+      rows:
+        - ["what is cdp", 11.2, 1840, "1.8%", "High", "AB AI PAA", "Stable (0)"]
+        - ["cdp vs dmp", 8.5, 920, "3.2%", "High", "PAA", "Rising (-2)"]
+        # ... one row per keyword
 
-    zero_click:                             # ← GSC (impressions, 0 clicks) + SerpAPI (type classification)
-      - query: "what is customer data platform"
-        impressions: 3200
-        type: A               # A | B | C | D
-        root_cause: "AI Overview fully answers the query"
-        remediation: "Add BLUF definition + differentiated value"
+  # ── Row 4: Zero-Click (GSC + SerpAPI) ────────────────────────────────
+  - pos: ["4-1", "4-4"]
+    type: table
+    title: "Zero-Click Queries"
+    table:
+      headers: ["Query", "Impressions", "Type", "Root Cause", "Remediation"]
+      rows:
+        - ["what is customer data platform", 3200, "A", "AI Overview fully answers", "Add BLUF definition + differentiated value"]
 
-    recommendations:                        # ← Playwright (before text) + SerpAPI (BLUF pattern) + scoring (dimension)
-      - title: "Add BLUF to H2: How Does CDP Work?"
-        impact: high
-        dimension: content_structure
-        location: "H2 section #3"
-        before: "There are many ways to think about how a Customer Data Platform operates..."
-        after: "A CDP works by collecting first-party customer data from websites, apps, and offline sources, then unifying it into persistent profiles using identity resolution."
-        reason: "Answer Box uses BLUF Pattern 1 at 38 words. Current intro is 120 words of filler."
-      - title: "Add FAQPage JSON-LD schema"
-        impact: high
-        dimension: structured_data
-        location: "Page <head>"
-        before: "Only Article schema present"
-        after: "Add FAQPage schema with 4 Q&A pairs from PAA questions"
-        reason: "Sites with 3+ schema types show ~13% higher AI citation rate."
+  # ── Row 5: Recommendations (Playwright + SerpAPI + AEO scoring) ──────
+  - pos: ["5-1", "5-4"]
+    type: markdown
+    title: "Recommendations"
+    content: |
+      ### 1. Add BLUF to H2: How Does CDP Work?
+      **Impact**: High | **Dimension**: Content Structure | **Location**: H2 section #3
 
-    monitoring:                             # ← GA4 baseline + GSC metrics
-      metrics_to_watch:
-        - "GSC CTR for 'what is cdp' (expect improvement in 2-4 weeks)"
-        - "GA4 engagement rate on /blog/cdp-guide"
-      expected_timeline: "Title/meta: 2-4 weeks. Content restructuring: 4-8 weeks. Schema: 2-6 weeks."
+      > **Before**: "There are many ways to think about how a Customer Data Platform operates. The technology has evolved over the years..."
+
+      > **After**: "A CDP works by collecting first-party customer data from websites, apps, and offline sources, then unifying it into persistent profiles using identity resolution."
+
+      **Reason**: Answer Box uses BLUF Pattern 1 at 38 words. Current intro is 120 words of filler.
+
+      ---
+
+      ### 2. Add FAQPage JSON-LD schema
+      **Impact**: High | **Dimension**: Structured Data | **Location**: Page `<head>`
+
+      > **Before**: Only Article schema present
+
+      > **After**: Add FAQPage schema with 4 Q&A pairs from PAA questions
+
+      **Reason**: Sites with 3+ schema types show ~13% higher AI citation rate.
+
+  # ── Row 6: Monitoring (GA4 + GSC) ────────────────────────────────────
+  - pos: ["6-1", "6-4"]
+    type: markdown
+    title: "Monitoring"
+    content: |
+      **Metrics to watch**:
+      - GSC CTR for "what is cdp" (expect improvement in 2-4 weeks)
+      - GA4 engagement rate on /blog/cdp-guide
+      - GSC position for "how does cdp work"
+
+      **Expected timeline**: Title/meta: 2-4 weeks. Content restructuring: 4-8 weeks. Schema: 2-6 weeks.
 ```
 
-Open the dashboard:
+### Rendering
+
 ```
-preview_seo_dashboard({ file_path: "./seo/seo-dashboard-example-com.yaml" })
+preview_grid_dashboard({ file_path: "./seo/seo-dashboard-{domain}.yaml" })
 ```
 
-The dashboard renders with: page selector dropdown, site summary cards, AEO score gauge with dimension breakdowns, sortable keywords table with SERP icons, zero-click table, recommendation cards with before/after diffs, and monitoring checklist.
+**SERP features column convention**: Abbreviations in the Keywords table: `AB` = Answer Box, `AI` = AI Overview, `PAA` = People Also Ask, `KG` = Knowledge Graph, `LP` = Local Pack, `SH` = Shopping.
+
+**Drift column convention**: Classification + delta in parens: `Stable (0)`, `Rising (-2)`, `Declining (+4)`, `Crash (+8)`, `Surge (-6)`.
 
 ## Redline Preview
 
@@ -387,7 +424,7 @@ The user sees the actual page with proposed changes visually marked — deletion
 
 ## Fallback Output (CLI / No Dashboard)
 
-When `preview_seo_dashboard` is not available, output a markdown action plan:
+When `preview_grid_dashboard` is not available, output a markdown action plan:
 
 ```markdown
 ## SEO/AEO Analysis: [domain or page]
@@ -435,5 +472,6 @@ content restructuring = 4-8 weeks, schema additions = 2-6 weeks.]
 
 ## Related Skills
 
+- **grid-dashboard** — Grid dashboard YAML format reference (cell types, layout, merging)
 - **gsc-analysis** — Deep GSC data analysis: Quick Wins, trends, cannibalization, device/country breakdown, index health
 - **competitor-analysis** — SERP-based competitor discovery and structural comparison

@@ -116,10 +116,11 @@
     },
     {
       "name": "analysis-skills",
-      "description": "SEO and AEO analysis skills with declarative domain knowledge. Includes: (1) seo-analysis — unified SEO/AEO audit with prescriptive action plans, interactive dashboard, and content briefs using GSC, SerpAPI, GA4, and Playwright, (2) gsc-analysis — Google Search Console data analysis for keyword research and performance monitoring, (3) competitor-analysis — SERP-based competitor discovery and structural comparison.",
+      "description": "SEO and AEO analysis skills with visual dashboards. Includes: (1) grid-dashboard — generic grid dashboard YAML format for visual reports, (2) seo-analysis — unified SEO/AEO audit with prescriptive action plans and grid-dashboard output using GSC, SerpAPI, GA4, and Playwright, (3) gsc-analysis — Google Search Console data analysis for keyword research and performance monitoring, (4) competitor-analysis — SERP-based competitor discovery and structural comparison.",
       "source": "./",
       "strict": false,
       "skills": [
+        "./analysis-skills/grid-dashboard",
         "./analysis-skills/gsc-analysis",
         "./analysis-skills/seo-analysis",
         "./analysis-skills/competitor-analysis"
