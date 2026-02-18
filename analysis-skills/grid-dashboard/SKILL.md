@@ -5,25 +5,52 @@ description: "Use this skill when you need to output a visual dashboard in the a
 
 # Grid Dashboard
 
-Build visual dashboards rendered in the artifact panel via `preview_grid_dashboard`. The agent writes a YAML file defining a grid of typed cells; the MCP App renders it.
+Build visual dashboards rendered in the artifact panel via `preview_grid_dashboard`. The agent writes a YAML file defining pages of grid cells; the MCP App renders them with a page selector.
 
 ## YAML Structure
 
+The YAML is **page-based**: top-level `pages` object where each key is a page identifier (e.g., URL, label) and each value defines a grid with cells.
+
 ```yaml
-title: "Dashboard Title"           # optional — shown as header
-description: "Brief description"   # optional — shown below title
-grid:
-  columns: 3                       # number of columns
-  rows: 3                          # number of rows
-cells:
-  - pos: "1-1"                     # row-column (1-based)
-    type: kpi                      # cell type
-    title: "Cell Title"            # optional — uppercase label above content
-    kpi:                           # type-specific config
-      value: "1,234"
-      change: "+12%"
-      trend: up
+pages:
+  "Page A":
+    title: "Page A Dashboard"        # optional — shown as header
+    description: "Brief description"  # optional — shown below title
+    grid:
+      columns: 3                     # number of columns
+      rows: 3                        # number of rows
+    cells:
+      - pos: "1-1"                   # row-column (1-based)
+        type: kpi                    # cell type
+        title: "Cell Title"          # optional — uppercase label above content
+        kpi:                         # type-specific config
+          value: "1,234"
+          change: "+12%"
+          trend: up
+
+  "Page B":
+    title: "Page B Dashboard"
+    grid:
+      columns: 4
+      rows: 8
+    cells:
+      - pos: "1-1"
+        type: kpi
+        # ...
 ```
+
+The UI renders a **select box** at the top to switch between pages.
+
+## Building YAML Incrementally
+
+**CRITICAL**: For large dashboards (e.g., SEO analysis with 16-row grids per page), build the YAML **one page at a time**:
+
+1. Write the `pages:` header and the first page's complete grid + cells
+2. Call `preview_grid_dashboard` to verify it renders correctly
+3. Append additional pages to the same YAML file
+4. Call `preview_grid_dashboard` again to refresh
+
+This prevents context exhaustion from writing massive YAML in a single pass. Each page's grid and cells should be self-contained.
 
 ## Grid Layout
 
@@ -162,7 +189,7 @@ Write the YAML file and call:
 preview_grid_dashboard({ file_path: "/absolute/path/to/dashboard.yaml" })
 ```
 
-The dashboard renders in the artifact panel with light/dark theme support.
+The dashboard renders in the artifact panel with light/dark theme support and a page selector dropdown.
 
 ## Fallback (No Artifact Panel)
 
