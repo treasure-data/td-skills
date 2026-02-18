@@ -160,11 +160,65 @@ Read these files as needed during analysis. Do not load all at once.
 
 ## Redline Preview
 
-After the user reviews the dashboard and selects a page for detailed edits:
+After the user reviews the dashboard and selects a page for detailed edits, apply changes directly on the live page via Playwright to preserve all original CSS styling.
 
-1. **Download HTML** with Playwright: `playwright-cli open <url>` → save rendered HTML
-2. **Apply redline edits** from recommendations: `<del>` (red strikethrough) + `<ins>` (green underline)
-3. **Show preview**: `preview_document({ file_path: "./seo/redline-{slug}.html" })`
+**1. Navigate to target page** (reuse existing Playwright session):
+```bash
+playwright-cli goto <url>
+```
+
+**2. Inject redline styles**:
+```bash
+playwright-cli run-code "async page => {
+  await page.addStyleTag({ content: \`
+    .seo-redline-del {
+      background: rgba(255,0,0,0.15);
+      text-decoration: line-through;
+      text-decoration-color: #c00;
+    }
+    .seo-redline-ins {
+      background: rgba(0,180,0,0.15);
+      text-decoration: underline;
+      text-decoration-color: #060;
+      display: block;
+      margin: 4px 0;
+      padding: 2px 4px;
+      border-left: 3px solid #060;
+    }
+  \`});
+}"
+```
+
+**3. Apply each recommendation** via DOM manipulation. For each before→after change, find the target text and wrap it:
+```bash
+playwright-cli run-code "async page => {
+  // Example: Replace first paragraph under a specific H2
+  const section = await page.\$('h2:has-text(\"How Does a CDP Work\")');
+  if (section) {
+    await page.evaluate(el => {
+      const p = el.nextElementSibling;
+      if (p) {
+        const del = document.createElement('del');
+        del.className = 'seo-redline-del';
+        del.innerHTML = p.innerHTML;
+        const ins = document.createElement('ins');
+        ins.className = 'seo-redline-ins';
+        ins.textContent = 'A CDP works by collecting first-party customer data from websites, apps, and offline sources, then unifying it into persistent profiles using identity resolution.';
+        p.replaceWith(del, ins);
+      }
+    }, section);
+  }
+}"
+```
+
+Repeat for each recommendation. Adapt the selector and replacement text per recommendation.
+
+**4. Take full-page screenshot**:
+```bash
+playwright-cli screenshot ./seo/redline-{slug}.png --full-page
+```
+
+**5. Show to user**: Present the screenshot image. The user sees the actual page with proposed changes visually marked — deletions in red strikethrough, insertions in green with border.
 
 ## Fallback Output (CLI / No Dashboard)
 
