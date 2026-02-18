@@ -1,236 +1,147 @@
 ---
 name: competitor-analysis
-description: Analyze competitor web pages for SEO and AEO structure using SerpAPI for SERP-based competitor discovery and Playwright browser automation with Python-based HTML extraction for structural comparison. Extracts heading hierarchy, structured data (JSON-LD), meta tags, content metrics, and BLUF patterns. Use when users want to compare their page against competitors, find content gaps, understand why a competitor ranks higher, reverse-engineer Answer Box winners, or benchmark page structure.
+description: Analyze competitor web pages for SEO and AEO structure using SerpAPI for SERP-based competitor discovery and Playwright with Python-based HTML extraction for structural comparison. Produces side-by-side comparisons of heading hierarchy, structured data, BLUF patterns, content metrics, and Answer Box reverse engineering. Use when users want to compare their page against competitors, find content gaps, understand why a competitor ranks higher, or reverse-engineer Answer Box winners.
 ---
 
 # Competitor Analysis
 
-Discover competitors via SerpAPI and compare page structures using Playwright and Python-based HTML extraction.
+Discover competitors via live SERP data and compare page structures to identify content gaps and optimization opportunities.
 
-## Tool Availability Check
+## Available Tools
 
-Before starting, verify SerpAPI is available: `ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }`. If available, use it for all SerpAPI steps below. If not, skip SerpAPI-dependent steps.
+| Tool | What it provides in competitor context |
+|------|---------------------------------------|
+| **SerpAPI** (`serpapi_google_search`) | SERP-based competitor discovery (top organic results for target keyword), SERP feature map, Answer Box source identification, PAA questions for heading gaps. Check availability: `ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }` |
+| **Playwright** + `extract_page_signals.py` | On-page structure extraction for both user's page and competitor pages: headings, BLUF analysis, JSON-LD schema, content metrics, links. Setup: `playwright-cli install --skills`. Run: `playwright-cli open <url>` → extract HTML → `python3 analysis-skills/scripts/extract_page_signals.py /tmp/page.html --url <url>`. For subsequent pages use `playwright-cli goto <url>` instead of `open`. Close with `playwright-cli close` |
+| **GSC MCP** (`google_search_console_*`) | Optional. User's own keyword performance data to identify which keywords to analyze competitively |
 
-## Prerequisites
+## SERP-Based Competitor Discovery
 
-- `playwright-cli` skill loaded (provides `playwright-cli` CLI commands). If not installed: `npm install -g @playwright/cli@latest`
-- Python 3 available (for HTML signal extraction script)
-- Optionally: Google Search Console connected for the user's own site data
-- Optionally: SerpAPI connected (provides `serpapi_google_search` MCP tool) for automatic competitor discovery from live SERP
+When SerpAPI is available, search the target keyword to find actual ranking competitors rather than relying on user guesses. From results:
+- Top 3 organic URLs excluding the user's domain
+- SERP features present (determines optimization priority)
+- User's current position if they appear
 
-## Glossary
+Without SerpAPI, the user provides 1-3 competitor URLs manually.
 
-Technical terms should be annotated on first use in the output report. For the full glossary, see [../references/glossary.md](../references/glossary.md).
+## Structural Comparison Dimensions
 
-## Analysis Workflow
+The `extract_page_signals.py` script outputs JSON with all SEO/AEO signals. These are the key dimensions for side-by-side comparison:
 
-### Step 1: Collect URLs
+| Dimension | What to compare | Competitive significance |
+|-----------|----------------|------------------------|
+| Word Count | Content depth and comprehensiveness | Thin content rarely ranks for competitive keywords |
+| H2 Sections | Topic breadth and organization | More H2s typically means broader topic coverage |
+| Question Headings | H2/H3 phrased as questions | Question headings drive PAA capture and AEO citation |
+| JSON-LD Types | Schema types present | 3+ schema types = ~13% higher AI citation rate |
+| FAQ Schema | FAQPage with Q&A pairs | Most impactful schema for AI citation |
+| BLUF Sections | Sections with direct-answer openings | BLUF content is 2.8x more likely to be cited by AI |
+| Lists & Tables | Structured content formatting | AI engines extract tabular/list data easily |
+| Images | Visual content with alt text | Alt text contributes to image search and accessibility |
+| Internal Links | Internal link count and anchor texts | Signals topical authority and site structure |
+| External Citations | Outbound reference links | Signals E-E-A-T; Perplexity especially favors data citations |
 
-Ask the user for:
-1. **Their page URL** (the page to improve)
-2. **Target keyword** (the query they want to rank for)
+## Answer Box Reverse Engineering
 
-#### Auto-discover competitors with SerpAPI (recommended)
+When the SERP has an Answer Box, reverse-engineer why that specific page was selected.
 
-If SerpAPI is connected, search the target keyword to find actual ranking competitors:
+**Analysis framework:**
 
-```
-serpapi_google_search
-  query: "<target keyword>"
-  num: 10
-  gl: "<user's market, e.g. us, jp>"
-  hl: "<user's language, e.g. en, ja>"
-```
+| Factor | What to examine |
+|--------|----------------|
+| Cited section heading | Which H2 contains the Answer Box content |
+| Text length | Word count of the first content block (optimal: 30-60 words) |
+| BLUF pattern type | From `bluf_pattern_type` field (definition/number/verdict/step/yesno) |
+| Sentence structure | Short declarative vs long compound sentences |
+| Schema support | Which JSON-LD types the AB source uses |
+| Content format | Paragraph, list, table, or hybrid |
 
-From the results:
-- Extract the top 3 organic result URLs (excluding the user's own domain)
-- Note SERP features present (answer box, knowledge graph, PAA, local pack) — these inform the optimization strategy
-- Record position of the user's page if it appears in results
+**Replication strategy**: Match the winning BLUF pattern, target the same word count (±20%), use the same sentence structure, and add equivalent or stronger schema support.
 
-Present the discovered competitors to the user for confirmation before proceeding.
+See [../seo-analysis/references/bluf-patterns.md](../seo-analysis/references/bluf-patterns.md) for the Answer Box → BLUF pattern mapping.
 
-#### Manual fallback
-
-If SerpAPI is not connected, ask the user for **1-3 competitor URLs** (pages ranking above them for the target keyword). If the user only has a keyword, use GSC to find their ranking page (see [../gsc-analysis/SKILL.md](../gsc-analysis/SKILL.md)), then ask them to provide competitor URLs.
-
-### Step 2: Extract page data (per URL)
-
-For the first URL, open the browser:
-
-```bash
-playwright-cli open <first_url>
-```
-
-Capture the page structure and visual layout:
-
-```bash
-playwright-cli snapshot
-playwright-cli screenshot
-```
-
-Extract all signals using the shared Python script:
-
-```bash
-playwright-cli run-code "async page => { return await page.content(); }" > /tmp/page.html
-python3 analysis-skills/scripts/extract_page_signals.py /tmp/page.html --url <first_url>
-```
-
-The script outputs JSON containing all SEO/AEO signals: title, meta description, OG/Twitter metadata, headings (with question detection), JSON-LD (structured data), schema types, entity properties, BLUF analysis with pattern classification, word count, lists, tables, images (with alt analysis), and link counts with anchor texts.
-
-For subsequent URLs, navigate without reopening:
-
-```bash
-playwright-cli goto <next_url>
-playwright-cli snapshot
-playwright-cli screenshot
-playwright-cli run-code "async page => { return await page.content(); }" > /tmp/page.html
-python3 analysis-skills/scripts/extract_page_signals.py /tmp/page.html --url <next_url>
-```
-
-Close the browser when done:
-
-```bash
-playwright-cli close
-```
-
-See [../references/playwright-workflow.md](../references/playwright-workflow.md) for the full workflow reference.
-
-### Step 3: SERP feature context (if SerpAPI available)
-
-Before comparing page structures, understand what the SERP looks like for the target keyword. Use the SerpAPI results from Step 1 to document:
-
-```
-## SERP Feature Map for "[keyword]"
-
-| Feature          | Present? | Details                              |
-|------------------|----------|--------------------------------------|
-| Answer Box       | Yes/No   | Type, source URL                     |
-| Knowledge Graph  | Yes/No   | Entity, description                  |
-| People Also Ask  | Yes/No   | List questions (use for heading gaps) |
-| Top Stories      | Yes/No   | News sources                         |
-| Local Pack       | Yes/No   | Business type                        |
-| Sitelinks        | Yes/No   | Which domains have them              |
-```
-
-This context is critical for prioritizing recommendations — if Google shows an answer box, the top priority is capturing it with BLUF content; if PAA dominates, question-format headings matter most.
-
-### Step 4: Answer Box Reverse Engineering (if Answer Box present)
-
-If the SerpAPI results from Step 1 include an `answerBox`, reverse-engineer why that specific page was selected:
-
-1. **Identify the AB source**: Get the Answer Box URL from `answerBox.url` (this may be different from the top organic result)
-
-2. **Extract the AB source page**: Open the Answer Box source URL and extract its signals:
-
-```bash
-playwright-cli open <answer_box_url>
-playwright-cli run-code "async page => { return await page.content(); }" > /tmp/ab_source.html
-python3 analysis-skills/scripts/extract_page_signals.py /tmp/ab_source.html --url <answer_box_url>
-```
-
-3. **Match AB snippet to page content**: Compare the `answerBox.snippet` text from SerpAPI against the extracted `bluf_analysis` sections. Find which H2 section's `first_content` most closely matches the AB snippet.
-
-4. **Analyze the winning pattern**: For the matched section, document:
-   - **Cited section heading**: The H2 that contains the Answer Box content
-   - **Text length**: Word count of the first content block
-   - **BLUF pattern type**: From `bluf_pattern_type` field (definition/number/verdict/step/yesno)
-   - **Sentence structure**: Short declarative sentences vs long compound sentences
-   - **Schema support**: Which JSON-LD types the AB source uses
-   - **Content format**: Paragraph, list, table, or hybrid
-
-5. **Generate replication strategy**: Based on the winning pattern, provide specific instructions:
-
-```
-## Answer Box Reverse Engineering: "[keyword]"
-
-### Current AB Owner
-- **URL**: competitor.com/page
-- **Winning section**: H2 "What is [topic]?"
-- **BLUF pattern**: Definition-first (Pattern 1)
-- **Text length**: 42 words
-- **Schema**: Article + FAQPage
-
-### Replication Strategy
-1. Create/rewrite your H2 section targeting the same question
-2. Use BLUF Pattern 1 (definition-first) — start with "[Topic] is..."
-3. Keep the answer to 30-50 words (AB source uses 42)
-4. Add FAQPage schema wrapping the Q&A
-5. Use the same sentence structure: [Definition]. [Expansion]. [Key detail].
-```
-
-See [../aeo-analysis/references/bluf-patterns.md](../aeo-analysis/references/bluf-patterns.md) for the AB→BLUF pattern mapping table.
-
-> If no Answer Box is present in the SERP, skip this step and proceed to Step 5.
-
-### Step 5: Compare and identify gaps
-
-Build a side-by-side comparison table from the extracted JSON:
-
-```
-## Structure Comparison
-
-| Signal              | Your Page     | Competitor A  | Competitor B  |
-|---------------------|---------------|---------------|---------------|
-| Word Count          | 1,200         | 2,400         | 1,800         |
-| H2 Sections         | 4             | 8             | 6             |
-| Question Headings   | 0             | 5             | 3             |
-| JSON-LD Types       | Article       | Article, FAQ  | Article, HowTo|
-| FAQ Schema          | No            | Yes           | No            |
-| BLUF Sections       | 1/4           | 6/8           | 4/6           |
-| Lists               | 2             | 8             | 5             |
-| Tables              | 0             | 2             | 1             |
-| Images              | 3             | 10            | 7             |
-| Internal Links      | 5             | 15            | 10            |
-| External Citations  | 1             | 7             | 4             |
-```
-
-### Step 6: Heading gap analysis
-
-Compare heading topics across all pages:
-
-```
 ## Content Gap Analysis
 
-### Topics competitors cover that you don't:
-- "How much does X cost?" (Competitor A, H2)
-- "X vs Y comparison" (Competitor B, H2)
-- "Common mistakes" (Both competitors, H2)
+### Heading Gap Methodology
 
-### Your unique topics (keep these):
-- "Case study: ..." (Your page, H2)
+Compare H2 topics across all extracted pages:
 
-### Heading structure recommendations:
-1. Add H2: "How much does [topic] cost?" — both competitors cover pricing
-2. Add H2: "[Topic] vs [Alternative]: Which is better?" — comparison tables get cited by AI
-3. Convert "Our Services" → "What [services] do we offer?" — question format for AEO
+| Gap type | Definition | Action |
+|----------|-----------|--------|
+| Competitor-only topics | H2 topics appearing in 1+ competitors but not in user's page | Add as new H2 sections |
+| User-only topics | H2 topics unique to the user's page | Keep — these are differentiators |
+| Common topics | H2 topics in both user and competitors | Compare depth and BLUF quality |
+| PAA-driven gaps | PAA questions not addressed by any page | Opportunity for user to capture |
+
+### Structural Gap Patterns
+
+| User's page has... | Competitors have... | Recommendation |
+|--------------------|---------------------|---------------|
+| No FAQ schema | FAQPage JSON-LD | Add FAQ schema — most impactful for AI citation |
+| Paragraph-heavy sections | BLUF openings | Rewrite section intros with direct answers |
+| Few external citations | 5+ references | Add authoritative external sources |
+| No comparison tables | Tables/lists | Convert paragraphs to structured formats |
+| Generic headings | Question-format H2s | Rephrase headings as questions users ask |
+
+## Platform-Specific Considerations
+
+Different AI platforms weight different signals. See [../seo-analysis/references/platform-citations.md](../seo-analysis/references/platform-citations.md) for platform-specific optimization strategies.
+
+## Output Specification — Competitor Comparison
+
+```markdown
+## Competitor Analysis: "[target keyword]"
+
+### SERP Landscape
+[SERP feature map: Answer Box, AI Overview, PAA, Knowledge Graph, etc.]
+[User's current position and top competitor positions]
+
+### Structure Comparison
+
+| Signal | Your Page | Competitor A | Competitor B | Competitor C |
+|--------|-----------|-------------|-------------|-------------|
+| Word Count | ... | ... | ... | ... |
+| H2 Sections | ... | ... | ... | ... |
+| Question Headings | ... | ... | ... | ... |
+| JSON-LD Types | ... | ... | ... | ... |
+| FAQ Schema | ... | ... | ... | ... |
+| BLUF Sections | ... | ... | ... | ... |
+| Lists | ... | ... | ... | ... |
+| Tables | ... | ... | ... | ... |
+| Images | ... | ... | ... | ... |
+| Internal Links | ... | ... | ... | ... |
+| External Citations | ... | ... | ... | ... |
+
+### Answer Box Analysis
+[If Answer Box present: reverse engineering of winning page with replication strategy]
+
+### Content Gaps
+
+**Topics competitors cover that you don't:**
+- [Topic] (Competitor A, H2) — [why it matters]
+
+**Your unique topics (keep these):**
+- [Topic] (differentiator)
+
+**PAA questions not addressed by anyone:**
+- [Question] — opportunity to capture
+
+### Priority Recommendations
+
+#### High Impact
+1. [Most impactful structural change with specific before→after]
+2. [Second most impactful]
+
+#### Medium Impact
+3. [Moderate improvement]
+4. [Additional improvement]
+
+#### Low Impact
+5. [Minor optimization]
 ```
-
-### Step 7: Recommendations
-
-Provide prioritized recommendations:
-
-```
-## Priority Actions
-
-### High Impact (do first)
-1. **Add FAQ schema** — Competitor A has it, you don't. FAQ schema is most impactful for AI citation.
-2. **Rewrite section intros with BLUF** — 3/4 of your sections lack direct answers.
-
-### Medium Impact
-3. **Add comparison table** — Both competitors use tables. AI engines extract tabular data easily.
-4. **Increase external citations** — You have 1 source, competitors average 5.5.
-
-### Low Impact
-5. **Add more list formatting** — Convert paragraphs to bullet points where listing items.
-```
-
-## Platform-Specific Insights
-
-When relevant, note platform-specific optimization. See [../aeo-analysis/references/platform-citations.md](../aeo-analysis/references/platform-citations.md) for AI platform citation patterns and strategies for Google AI Overview, Perplexity, ChatGPT Search, and Claude Search.
 
 ## Related Skills
 
-- **gsc-analysis**: Get keyword performance data to inform competitor URL selection
-- **aeo-analysis**: Deep AEO audit of your own pages with scoring (no GSC/SerpAPI needed)
-- **seo-analysis**: SEO audit with live SERP context and position drift detection
-- **content-brief**: Generate actionable content plans based on gap analysis
+- **seo-analysis** — Full SEO/AEO audit with scoring and prescriptive action plan
+- **gsc-analysis** — Keyword performance data to inform which keywords to analyze competitively
+- **content-brief** — Generate actionable content plans based on gap analysis findings
