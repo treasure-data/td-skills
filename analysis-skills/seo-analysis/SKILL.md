@@ -80,14 +80,14 @@ Write results as a **paged grid-dashboard YAML** and call `preview_grid_dashboar
 
 ### Build YAML Page by Page
 
-The YAML is **one file per site** with analyzed pages as keys under `pages:`. Each page has a 4×10 grid — too large to write in a single pass.
+The YAML is **one file per site** with analyzed pages as keys under `pages:`. Each page has a 4×11 grid — too large to write in a single pass.
 
 1. Write `pages:` header + first page's complete grid/cells
 2. Call `preview_grid_dashboard` to verify rendering
 3. Append additional pages to the same file
 4. Call `preview_grid_dashboard` again to refresh
 
-### Page Grid Layout (4×10 per page)
+### Page Grid Layout (4×11 per page)
 
 | Row | Cells | Type | Content | Source |
 |-----|-------|------|---------|--------|
@@ -104,10 +104,11 @@ The YAML is **one file per site** with analyzed pages as keys under `pages:`. Ea
 | 8 | 8-3 to 8-4 (merged) | `table` | Declining — keywords losing position | GSC |
 | 9 | 9-1 to 9-4 (merged) | `table` | Keyword Cannibalization — same query ranking on multiple pages | GSC |
 | 10 | 10-1 to 10-4 (merged) | `table` | Zero-Click Queries with type and root cause | GSC + SerpAPI |
+| 11 | 11-1 to 11-4 (merged) | `table` | Glossary — abbreviations and terms used in this dashboard | — |
 
 ### Adapting the Layout
 
-The 10-row layout is the **full data dashboard**. Adapt based on context:
+The 11-row layout is the **full data dashboard**. Adapt based on context:
 
 - **Tool unavailable**: Skip rows whose Source tool is missing. Adjust `grid.rows` accordingly. Row 1 (GSC KPIs) and row 7 (Keywords) are always included.
 - **Focused request**: If the user asks for specific analysis (e.g., "AEO score only", "keyword analysis only"), include only relevant rows.
@@ -122,7 +123,7 @@ pages:
     description: "Analyzed 2026-02-18 (28-day window)"
     grid:
       columns: 4
-      rows: 10
+      rows: 11
     cells:
       - pos: "1-1"
         type: kpi

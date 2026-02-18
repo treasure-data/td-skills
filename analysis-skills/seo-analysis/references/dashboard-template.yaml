@@ -1,7 +1,7 @@
 # SEO/AEO Dashboard Template — Grid Dashboard YAML
 #
 # One file per site, pages as top-level keys.
-# Each page uses a 4-column x 10-row grid.
+# Each page uses a 4-column x 11-row grid.
 # Dashboard shows DATA AND ANALYSIS ONLY — no action items.
 # Action recommendations go in the Action Report (markdown).
 # See grid-dashboard skill for cell type reference.
@@ -12,7 +12,7 @@ pages:
     description: "Analyzed 2026-02-18 (28-day window)"
     grid:
       columns: 4
-      rows: 10
+      rows: 11
     cells:
       # ── Row 1: Page KPIs (GSC) ───────────────────────────────────────
       - pos: "1-1"
@@ -214,11 +214,36 @@ pages:
             - ["what is customer data platform", 3200, "A", "AI Overview fully answers"]
             - ["cdp meaning", 1800, "A", "Answer Box (definition)"]
 
-  # ── Additional pages follow the same 10-row structure ────────────────
+      # ── Row 11: Glossary ────────────────────────────────────────────────
+      - pos: ["11-1", "11-4"]
+        type: table
+        title: "Glossary"
+        table:
+          headers: ["Term", "Definition"]
+          rows:
+            - ["AEO", "Answer Engine Optimization — optimizing content to be cited by AI search engines and LLMs"]
+            - ["SERP", "Search Engine Results Page — the page Google shows after a search query"]
+            - ["CTR", "Click-Through Rate — percentage of impressions that result in a click"]
+            - ["E-E-A-T", "Experience, Expertise, Authoritativeness, Trustworthiness — Google's content quality criteria"]
+            - ["AB (Answer Box)", "A highlighted answer shown at the top of Google search results"]
+            - ["AI (AI Overview)", "Google's AI-generated summary shown above organic results"]
+            - ["PAA (People Also Ask)", "Expandable related questions shown in Google search results"]
+            - ["KG (Knowledge Graph)", "Google's information panel shown on the right side of results"]
+            - ["LP (Local Pack)", "Map and local business listings shown in search results"]
+            - ["SH (Shopping)", "Product listings with prices shown in search results"]
+            - ["Zero-Click", "A search where the user gets the answer on Google without clicking any result"]
+            - ["Cannibalization", "Multiple pages on the same site competing for the same keyword, weakening both"]
+            - ["Drift", "How much a keyword's ranking position has changed recently"]
+            - ["Quick Win", "A keyword ranking just outside page 1 (positions 8-20) that can be pushed up with small changes"]
+            - ["Topical Authority", "How strongly a site is associated with a topic, based on coverage depth and rankings"]
+            - ["BLUF", "Bottom Line Up Front — placing the key answer in the first sentence of a section"]
+            - ["JSON-LD Schema", "Structured data markup that helps search engines understand page content"]
+
+  # ── Additional pages follow the same 11-row structure ────────────────
   "https://example.com/products/cdp":
     title: "CDP Product Page"
     grid:
       columns: 4
-      rows: 10
+      rows: 11
     cells:
-      # ... same 10-row structure per page
+      # ... same 11-row structure per page
