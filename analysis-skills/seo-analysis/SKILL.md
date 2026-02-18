@@ -13,12 +13,15 @@ Produce a prescriptive action plan — specific before→after content changes w
 
 Example tasks:
 - List GSC sites and confirm target with user
-- Pull GSC keyword + page performance data
-- Identify target pages and Quick Win candidates
-- Run SerpAPI for high-priority keywords (SERP features, position drift)
-- Extract each target page with Playwright (headings, schema, content structure)
+- Pull GSC keyword + page performance data (current + prior period for trends)
+- Identify target pages, Quick Win candidates, keyword cannibalization
+- Run SerpAPI for high-priority keywords (SERP features, position drift, organic results)
+- Extract target page with Playwright (headings, schema, content, links, images)
+- Scrape top 5 competitor pages with Playwright (heading structure, word count, format, visuals, schemas)
 - Pull GA4 behavior metrics for target pages
-- Calculate AEO scores from Playwright extraction data
+- Calculate AEO scores + On-Page/Technical SEO scores from extraction data
+- Build internal linking strategy from GSC page data + Playwright link extraction
+- Build recommended content outline from competitor patterns + SERP intent + BLUF mapping
 - Synthesize: CTR impact, zero-click diagnosis, recommendations with before→after
 - Write grid-dashboard YAML and open `preview_grid_dashboard`
 - Ask user which page to show redline preview for
@@ -73,7 +76,7 @@ serpapi_google_search({ q: "what is cdp", gl: "us", hl: "en" })
 
 ### Playwright (`playwright-cli`)
 
-**Purpose**: On-page structure extraction — **required for AEO scoring and before→after recommendations**. Without Playwright extraction, you cannot score Content Structure, Structured Data, E-E-A-T, or AI Readability dimensions, and you cannot write specific before→after text in recommendations.
+**Purpose**: On-page structure extraction — **required for AEO scoring, before→after recommendations, and competitor content pattern analysis**. Without Playwright extraction, you cannot score Content Structure, Structured Data, E-E-A-T, or AI Readability dimensions, and you cannot write specific before→after text in recommendations.
 
 **Setup** (run once per session if needed):
 ```bash
@@ -91,12 +94,38 @@ playwright-cli run-code "async page => { const html = await page.content(); retu
 - **BLUF analysis**: First paragraph after each H2 — does it lead with a direct answer? Length in words?
 - **JSON-LD schemas**: All `<script type="application/ld+json">` blocks — types present (Article, FAQPage, HowTo, Organization, etc.)
 - **Content metrics**: Total word count, paragraph count, list/table presence
-- **Internal/external links**: Count and destinations
+- **Internal/external links**: Count, destinations, and anchor text of internal links
 - **Meta tags**: title, description, canonical, OG tags
 - **Author information**: Author name, bio, links
 - **Date signals**: Published date, modified date
+- **Visual content**: Image count, images with/without alt text, infographic/chart presence
 
-**Populates YAML fields**: `aeo_score` (all 5 dimensions scored from on-page signals), `recommendations[].before` (actual current text quoted from page), `recommendations[].after` (rewritten text based on BLUF patterns and SERP data), `recommendations[].location` (specific H2/element reference)
+#### Competitor Content Pattern Analysis
+
+**Before writing recommendations, scrape the top 5 organic results** from SerpAPI for the primary keyword. For each competitor page, extract with Playwright:
+
+```bash
+playwright-cli open <competitor-url>
+playwright-cli run-code "async page => { const html = await page.content(); return html; }" > ./seo/competitor-N.html
+```
+
+**Extract from each competitor**:
+- **Heading count** (H2/H3) and subtopics covered
+- **Word count** (total body text)
+- **Content format** (guide, listicle, comparison, tutorial, FAQ)
+- **Visual assets** (image count, video embeds, tables, infographics)
+- **Schema types** present (FAQPage, HowTo, Article, etc.)
+
+This populates the **Competitor Content Patterns** table and informs the **Recommended Content Outline** — showing which heading structure, word count, and format Google is rewarding for this keyword.
+
+#### Internal Linking Strategy
+
+From the target page's Playwright extraction + GSC page performance data:
+- Identify which **internal pages link to the target** (and which don't but should)
+- Identify which **high-authority pages** (strong topical clusters from GSC) could provide link equity
+- Recommend specific **anchor text** based on target keywords
+
+**Populates YAML fields**: `aeo_score` (all 5 dimensions), On-Page SEO scores, `recommendations[].before/after`, Competitor Content Patterns table, Internal Linking Strategy table, Recommended Content Outline
 
 ### Google Analytics (`google_analytics_*`)
 
@@ -248,25 +277,28 @@ Keywords close to page 1 with the highest optimization ROI.
 
 Write analysis results as a **grid-dashboard YAML** and call `preview_grid_dashboard`. See the **grid-dashboard** skill for full cell type reference.
 
-Use a **4-column × 13-row grid** with the following layout per analyzed page:
+Use a **4-column × 16-row grid** with the following layout per analyzed page:
 
 | Row | Cells | Type | Content |
 |-----|-------|------|---------|
 | 1 | 1-1, 1-2, 1-3, 1-4 | `kpi` × 4 | Impressions, Clicks, Avg CTR, Avg Position |
 | 2 | 2-1 | `gauge` | AEO Score (value/100, grade label) |
 | 2 | 2-2 to 2-4 (merged) | `scores` | AEO 5-dimension breakdown |
-| 3 | 3-1 to 3-2 (merged) | `scores` | On-Page SEO (title, meta, headings, internal links, content depth) |
+| 3 | 3-1 to 3-2 (merged) | `scores` | On-Page SEO (title, meta, headings, internal links, content depth, visual content) |
 | 3 | 3-3 to 3-4 (merged) | `scores` | Technical SEO (HTTPS, canonical, structured data, mobile, page speed) |
-| 4 | 4-1 to 4-4 (merged) | `table` | Topical Authority clusters (cluster, queries, pages, avg position, page-1 rate, level) |
-| 5 | 5-1 to 5-4 (merged) | `table` | Quick Wins — keywords near page 1 (position 8-20, high impressions) |
-| 6 | 6-1 to 6-4 (merged) | `table` | All Keywords + SERP features + drift |
-| 7 | 7-1 to 7-2 (merged) | `table` | Trending Up — keywords with improving position |
-| 7 | 7-3 to 7-4 (merged) | `table` | Declining — keywords losing position |
-| 8 | 8-1 to 8-4 (merged) | `table` | Keyword Cannibalization — same query ranking on multiple pages |
-| 9 | 9-1 to 9-4 (merged) | `table` | Zero-Click Queries with type and remediation |
-| 10-11 | 10-1 to 11-4 (merged) | `markdown` | Recommendations with before→after diffs |
-| 12 | 12-1 to 12-4 (merged) | `markdown` | Monitoring checklist + expected timeline |
-| 13 | 13-1 to 13-4 (merged) | `markdown` | Topical Authority strategy — expand/defend/build recommendations |
+| 4 | 4-1 to 4-4 (merged) | `table` | Competitor Content Patterns — top 5 SERP results (headings, word count, format, visuals, schemas) |
+| 5 | 5-1 to 5-4 (merged) | `table` | Topical Authority clusters (cluster, queries, pages, avg position, page-1 rate, level) |
+| 6 | 6-1 to 6-4 (merged) | `table` | Quick Wins — keywords near page 1 (position 8-20, high impressions) |
+| 7 | 7-1 to 7-4 (merged) | `table` | All Keywords + SERP features + drift |
+| 8 | 8-1 to 8-2 (merged) | `table` | Trending Up — keywords with improving position |
+| 8 | 8-3 to 8-4 (merged) | `table` | Declining — keywords losing position |
+| 9 | 9-1 to 9-4 (merged) | `table` | Keyword Cannibalization — same query ranking on multiple pages |
+| 10 | 10-1 to 10-4 (merged) | `table` | Zero-Click Queries with type and remediation |
+| 11 | 11-1 to 11-4 (merged) | `table` | Internal Linking Strategy — recommended links with anchor text and rationale |
+| 12-13 | 12-1 to 13-4 (merged) | `markdown` | Recommendations with before→after diffs |
+| 14 | 14-1 to 14-4 (merged) | `markdown` | Recommended Content Outline — heading structure matching SERP winners + LLM citation patterns |
+| 15 | 15-1 to 15-4 (merged) | `markdown` | Topical Authority strategy — expand/defend/build recommendations |
+| 16 | 16-1 to 16-4 (merged) | `markdown` | Monitoring — metrics, timeline, 2-3 month review cadence |
 
 ### Complete YAML Template
 
@@ -275,7 +307,7 @@ title: "SEO/AEO Analysis: example.com"
 description: "/blog/cdp-guide — Analyzed 2026-02-18 (28-day window)"
 grid:
   columns: 4
-  rows: 13
+  rows: 16
 cells:
   # ── Row 1: Site KPIs (GSC) ─────────────────────────────────────────
   - pos: "1-1"
@@ -369,6 +401,9 @@ cells:
       - label: "Content Depth"
         value: 9
         max: 10
+      - label: "Visual Content"
+        value: 4
+        max: 10
 
   - pos: ["3-3", "3-4"]
     type: scores
@@ -390,8 +425,21 @@ cells:
         value: 6
         max: 10
 
-  # ── Row 4: Topical Authority (GSC clusters) ────────────────────────
+  # ── Row 4: Competitor Content Patterns (SerpAPI + Playwright) ───────
   - pos: ["4-1", "4-4"]
+    type: table
+    title: "Competitor Content Patterns"
+    table:
+      headers: ["Rank", "Domain", "Word Count", "Headings", "Format", "Visuals", "Schemas"]
+      rows:
+        - [1, "competitor-a.com", 3200, 12, "Guide", "8 imgs, 2 charts", "Article, FAQPage"]
+        - [2, "competitor-b.com", 2800, 9, "Listicle", "5 imgs", "Article, HowTo"]
+        - [3, "competitor-c.com", 4100, 15, "Guide", "12 imgs, 1 video", "Article, FAQPage, Organization"]
+        - [4, "competitor-d.com", 1900, 7, "FAQ", "3 imgs", "FAQPage"]
+        - [5, "competitor-e.com", 2400, 10, "Comparison", "6 imgs, 1 table", "Article"]
+
+  # ── Row 5: Topical Authority (GSC clusters) ────────────────────────
+  - pos: ["5-1", "5-4"]
     type: table
     title: "Topical Authority"
     table:
@@ -401,8 +449,8 @@ cells:
         - ["data integration", 12, 3, 18.5, "25%", "Emerging"]
         - ["customer analytics", 8, 2, 24.1, "13%", "Weak"]
 
-  # ── Row 5: Quick Wins (GSC) ────────────────────────────────────────
-  - pos: ["5-1", "5-4"]
+  # ── Row 6: Quick Wins (GSC) ────────────────────────────────────────
+  - pos: ["6-1", "6-4"]
     type: table
     title: "Quick Wins (Near Page 1)"
     table:
@@ -412,8 +460,8 @@ cells:
         - ["customer data platform pricing", 9.8, 1200, "/pricing", "Add pricing table (Pattern 2)"]
         - ["cdp vs crm", 12.1, 640, "/blog/cdp-vs-crm", "Expand comparison section"]
 
-  # ── Row 6: Keywords + SERP (GSC + SerpAPI) ─────────────────────────
-  - pos: ["6-1", "6-4"]
+  # ── Row 7: Keywords + SERP (GSC + SerpAPI) ─────────────────────────
+  - pos: ["7-1", "7-4"]
     type: table
     title: "Keywords"
     table:
@@ -423,8 +471,8 @@ cells:
         - ["cdp vs dmp", 8.5, 920, "3.2%", "High", "PAA", "Rising (-2)"]
         # ... one row per keyword
 
-  # ── Row 7: Trending + Declining (GSC period comparison) ────────────
-  - pos: ["7-1", "7-2"]
+  # ── Row 8: Trending + Declining (GSC period comparison) ────────────
+  - pos: ["8-1", "8-2"]
     type: table
     title: "Trending Up"
     table:
@@ -433,7 +481,7 @@ cells:
         - ["cdp benefits", 8.3, "-4.2"]
         - ["first party data platform", 14.1, "-3.8"]
 
-  - pos: ["7-3", "7-4"]
+  - pos: ["8-3", "8-4"]
     type: table
     title: "Declining"
     table:
@@ -442,8 +490,8 @@ cells:
         - ["customer data management", 22.4, "+5.1"]
         - ["data unification tool", 31.2, "+8.3"]
 
-  # ── Row 8: Keyword Cannibalization (GSC) ───────────────────────────
-  - pos: ["8-1", "8-4"]
+  # ── Row 9: Keyword Cannibalization (GSC) ───────────────────────────
+  - pos: ["9-1", "9-4"]
     type: table
     title: "Keyword Cannibalization"
     table:
@@ -451,8 +499,8 @@ cells:
       rows:
         - ["what is cdp", "/blog/cdp-guide", 11.2, "/products/cdp", 18.7, "Consolidate to /blog/cdp-guide; redirect or noindex product page for this query"]
 
-  # ── Row 9: Zero-Click (GSC + SerpAPI) ──────────────────────────────
-  - pos: ["9-1", "9-4"]
+  # ── Row 10: Zero-Click (GSC + SerpAPI) ─────────────────────────────
+  - pos: ["10-1", "10-4"]
     type: table
     title: "Zero-Click Queries"
     table:
@@ -461,8 +509,19 @@ cells:
         - ["what is customer data platform", 3200, "A", "AI Overview fully answers", "Add BLUF definition + differentiated value"]
         - ["cdp meaning", 1800, "A", "Answer Box (definition)", "Capture AB with Pattern 1"]
 
-  # ── Row 10-11: Recommendations (Playwright + SerpAPI + scoring) ────
-  - pos: ["10-1", "11-4"]
+  # ── Row 11: Internal Linking Strategy (Playwright + GSC) ───────────
+  - pos: ["11-1", "11-4"]
+    type: table
+    title: "Internal Linking Strategy"
+    table:
+      headers: ["From Page", "Anchor Text", "To Page", "Rationale"]
+      rows:
+        - ["/blog/data-integration", "customer data platform", "/blog/cdp-guide", "Strong page (pos 3.2) linking to target with primary keyword"]
+        - ["/blog/cdp-guide", "CDP vs CRM comparison", "/blog/cdp-vs-crm", "Support declining keyword with link equity from pillar page"]
+        - ["/products/cdp", "implementation guide", "/blog/cdp-impl", "Product→content link for quick-win keyword (pos 11.3)"]
+
+  # ── Row 12-13: Recommendations (Playwright + SerpAPI + scoring) ────
+  - pos: ["12-1", "13-4"]
     type: markdown
     title: "Recommendations"
     content: |
@@ -486,21 +545,29 @@ cells:
 
       **Reason**: Sites with 3+ schema types show ~13% higher AI citation rate.
 
-  # ── Row 12: Monitoring (GA4 + GSC) ─────────────────────────────────
-  - pos: ["12-1", "12-4"]
+  # ── Row 14: Recommended Content Outline (SerpAPI + Playwright competitor analysis) ──
+  - pos: ["14-1", "14-4"]
     type: markdown
-    title: "Monitoring"
+    title: "Recommended Content Outline"
     content: |
-      **Metrics to watch**:
-      - GSC CTR for "what is cdp" (expect improvement in 2-4 weeks)
-      - GA4 engagement rate on /blog/cdp-guide
-      - GSC position for "how does cdp work"
-      - Cannibalization: monitor /products/cdp position for "what is cdp"
+      Based on top 5 SERP winners (avg 2,880 words, 10.6 headings, guide format). Structure optimized for search intent + LLM citation patterns:
 
-      **Expected timeline**: Title/meta: 2-4 weeks. Content restructuring: 4-8 weeks. Schema: 2-6 weeks.
+      1. **H1: What is a CDP? The Complete Guide (2026)**
+      2. **H2: TL;DR — What You Need to Know** *(BLUF Pattern 1: definition-first, ≤60 words — AI citation target)*
+      3. **H2: How Does a CDP Work?** *(BLUF Pattern 1 — matches Answer Box)*
+         - H3: Data Collection
+         - H3: Identity Resolution
+         - H3: Unified Profiles
+      4. **H2: CDP vs DMP vs CRM** *(BLUF Pattern 3: verdict-first — targets comparison PAA)*
+      5. **H2: How Much Does a CDP Cost?** *(BLUF Pattern 2: number-first — targets pricing Answer Box)*
+      6. **H2: Do You Need a CDP? 5 Signs** *(BLUF Pattern 5: yes/no-first — targets PAA)*
+      7. **H2: How to Implement a CDP** *(BLUF Pattern 4: step-first — targets list Answer Box)*
+      8. **H2: FAQ** *(4 PAA questions as H3s — FAQPage schema target)*
 
-  # ── Row 13: Topical Authority Strategy ─────────────────────────────
-  - pos: ["13-1", "13-4"]
+      **Target**: ~3,000 words | 8+ H2 sections | 10+ images/charts | FAQPage + Article + Organization schema
+
+  # ── Row 15: Topical Authority Strategy ─────────────────────────────
+  - pos: ["15-1", "15-4"]
     type: markdown
     title: "Topical Authority Strategy"
     content: |
@@ -509,6 +576,22 @@ cells:
       **Prioritize (Emerging)**: Data integration cluster at 25% page-1 rate. Create pillar page + target PAA questions. Build internal links from CDP content.
 
       **Evaluate (Weak)**: Customer analytics cluster at 13%. Assess competitive landscape before investing — may need 5+ new pages to establish authority.
+
+  # ── Row 16: Monitoring (GA4 + GSC) — review every 2-3 months ──────
+  - pos: ["16-1", "16-4"]
+    type: markdown
+    title: "Monitoring & Iteration"
+    content: |
+      **Metrics to track**:
+      - GSC CTR for "what is cdp" (expect improvement in 2-4 weeks)
+      - GA4 engagement rate on /blog/cdp-guide
+      - GSC position for "how does cdp work"
+      - Cannibalization: monitor /products/cdp position for "what is cdp"
+      - Internal link click-through from new strategic links
+
+      **Expected timeline**: Title/meta: 2-4 weeks. Content restructuring: 4-8 weeks. Schema: 2-6 weeks.
+
+      **Review cadence**: Re-run this analysis every **2-3 months** on GSC data. Track impressions, clicks, and position trends. If a page stalls, update content: add sections, improve intros, refresh data and visuals. SEO content is publish → monitor → improve, not publish and forget.
 ```
 
 ### Rendering
