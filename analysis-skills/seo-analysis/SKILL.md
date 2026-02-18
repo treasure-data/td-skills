@@ -138,7 +138,7 @@ Keywords close to page 1 with the highest optimization ROI.
 
 ## Output Modes
 
-This skill supports two output modes: **Dashboard** (visual, interactive) and **Content Brief** (actionable outline). Both are written as YAML files.
+This skill produces two visual outputs: **Dashboard** (analysis overview) and **Redline Preview** (per-page edit markup).
 
 ### Mode 1: Dashboard Output (default)
 
@@ -280,92 +280,18 @@ The dashboard renders in the artifact panel with:
 
 **Step 3**: After the user reviews the dashboard, ask which page they'd like a redline preview for.
 
-### Mode 2: Content Brief Output
+### Redline Preview Flow
 
-When the user asks to create new content, rewrite existing pages, or plan content strategy, produce a content brief. This mode synthesizes analysis findings into an actionable outline.
+After the user selects a page from the dashboard:
 
-#### Content Brief YAML
+1. **Download HTML** with Playwright: `playwright-cli open <url>` → save full page HTML
+2. **Apply redline edits** based on the dashboard's `recommendations` for that page:
+   - Wrap original text in `<del>` (strikethrough, red)
+   - Insert replacement text in `<ins>` (underline, green) immediately below
+   - Apply changes at the locations specified in each recommendation
+3. **Show preview**: `preview_document({ file_path: "./seo/redline-{slug}.html" })`
 
-Add a `content_brief` key to any page in the dashboard YAML:
-
-```yaml
-pages:
-  "https://example.com/blog/cdp-guide":
-    title: "What is a CDP? Complete Guide"
-    # ... aeo_score, keywords, etc. as above ...
-
-    content_brief:
-      target_keyword: "what is cdp"
-      priority_score: 82
-      search_intent: informational
-      target_word_count: 2000
-      paa_coverage: "6/8 = 75%"
-
-      title_options:
-        - "What is a CDP? Complete Guide to Customer Data Platforms"
-        - "CDP Guide 2026: What It Is, How It Works, and Why You Need One"
-        - "What is a Customer Data Platform? Everything You Need to Know"
-
-      meta_description: "A CDP collects first-party customer data from all sources and unifies it into persistent profiles. Learn how CDPs work, CDP vs DMP differences, and implementation steps."
-
-      outline:
-        - heading: "What is a CDP?"
-          bluf_pattern: "Pattern 1: Definition-first"
-          layer: primary
-          notes: "30-60 word direct answer. Primary AI citation target."
-        - heading: "How Does a CDP Work?"
-          bluf_pattern: "Pattern 4: Step-first"
-          layer: "primary (PAA)"
-          notes: "Answer from PAA. Lead with 3-step process."
-        - heading: "CDP vs DMP: What's the Difference?"
-          bluf_pattern: "Pattern 3: Verdict-first"
-          layer: "primary (PAA)"
-          notes: "Comparison table + verdict-first BLUF."
-        - heading: "Data Integration Best Practices"
-          bluf_pattern: "Pattern 1: Definition-first"
-          layer: supplementary
-          notes: "Common competitor topic. Lead with key insight."
-        - heading: "Real-Time CDP Use Cases"
-          bluf_pattern: "Pattern 4: Step-first"
-          layer: differentiation
-          notes: "Unique value. Use proprietary examples."
-        - heading: "Frequently Asked Questions"
-          bluf_pattern: null
-          layer: "primary (PAA overflow)"
-          notes: "Remaining PAA questions as Q&A pairs. Wrap with FAQPage JSON-LD."
-
-      schema_requirements:
-        - "Article schema (type, author, datePublished, dateModified)"
-        - "FAQPage schema (minimum 3 Q&A pairs from PAA questions)"
-        - "BreadcrumbList schema"
-
-      bluf_checklist:
-        - "Each H2 section starts with a direct answer (30-60 words)"
-        - "No section begins with filler phrases"
-        - "Key definitions appear within the first 2 sentences"
-        - "Article opens with a TL;DR or executive summary"
-        - "BLUF pattern matches the AB-to-BLUF mapping per section"
-```
-
-#### Content Brief Priority Scoring
-
-When multiple keyword candidates exist, score each 0-100:
-
-| Factor | Weight | Scoring criteria |
-|--------|--------|-----------------|
-| Traffic Potential | 30 pts | `impressions * estimated_ctr_at_position_3` (baseline ~11%). Normalized 0-30 |
-| SERP Vulnerability | 25 pts | +8 per weak domain in top 3 organic. +5 if AB owner is weak. Max 25 |
-| Momentum | 20 pts | Rising (position improved 3+) = 20, Stable = 10, Falling = 5 |
-| Content Leverage | 15 pts | Count `relatedSearches` + `peopleAlsoAsk`. Score = min(15, count * 2) |
-| Feature Opportunity | 10 pts | AB absent = 10, AB present weak source = 5, AB strong source = 0 |
-
-#### 3-Layer Outline Model
-
-| Layer | Source | Purpose |
-|-------|--------|---------|
-| **Primary** | PAA questions from SerpAPI | H2 headings from actual search questions. Each uses BLUF pattern matching AB type |
-| **Supplementary** | Competitor common headings | Topics appearing in 2+ competitors not covered by PAA |
-| **Differentiation** | Original insight | 1-2 unique H2 sections competitors miss |
+The user sees the actual page with proposed changes visually marked — deletions in red strikethrough, insertions in green — making it easy to review and approve edits before implementation.
 
 ## Output Specification — Prescriptive Action Plan
 
