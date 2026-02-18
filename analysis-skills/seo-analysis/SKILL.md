@@ -24,7 +24,14 @@ Verify each tool and record what is available:
 
 If Playwright is not available, stop and tell the user: "Playwright is required for SEO analysis. Please install it first."
 
-### Step 2: Create Task list based on available tools
+### Step 2: Identify target page(s) and confirm with user
+
+The analysis is **per page**. Before creating tasks, determine which page(s) to analyze:
+
+- **GSC available**: Call `google_search_console_list_sites` to discover sites (auto-select if only one). Then pull page-level performance data to identify candidate pages (high impressions, Quick Win positions, etc.). Present candidates to the user and confirm which page(s) to analyze.
+- **GSC unavailable**: Ask the user for the target URL(s) directly.
+
+### Step 3: Create Task list based on available tools
 
 Review the **Page Grid Layout** (below) and **Action Report** output requirements. Each cell in the grid has a `Source` column showing which tool provides its data. Build your Task list by:
 
@@ -33,10 +40,6 @@ Review the **Page Grid Layout** (below) and **Action Report** output requirement
 3. Adding output tasks (write YAML, call preview, write action report)
 
 The agent decides the concrete tasks — do not follow a fixed checklist.
-
-## Getting Started
-
-Do NOT ask the user which site to analyze. Call `google_search_console_list_sites` to discover registered properties, then present the list for selection (auto-select if only one).
 
 ## Tools
 
