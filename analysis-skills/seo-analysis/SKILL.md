@@ -248,17 +248,25 @@ Keywords close to page 1 with the highest optimization ROI.
 
 Write analysis results as a **grid-dashboard YAML** and call `preview_grid_dashboard`. See the **grid-dashboard** skill for full cell type reference.
 
-Use a **4-column × 7-row grid** with the following layout per analyzed page:
+Use a **4-column × 13-row grid** with the following layout per analyzed page:
 
 | Row | Cells | Type | Content |
 |-----|-------|------|---------|
 | 1 | 1-1, 1-2, 1-3, 1-4 | `kpi` × 4 | Impressions, Clicks, Avg CTR, Avg Position |
-| 2 | 2-1 | `gauge` | AEO Score (value/100, grade as label, A/B/C/D/F thresholds) |
-| 2 | 2-2 to 2-4 (merged) | `scores` | AEO dimension breakdown (5 bars: Content Structure, Structured Data, E-E-A-T, AI Readability, Technical AEO) |
-| 3 | 3-1 to 3-4 (merged) | `table` | Keywords: query, position, impressions, CTR, priority, SERP features, drift |
-| 4 | 4-1 to 4-4 (merged) | `table` | Zero-Click Queries: query, impressions, type (A/B/C/D), root cause, remediation |
-| 5-6 | 5-1 to 6-4 (merged 2 rows) | `markdown` | Recommendations: numbered list with impact badge, before→after quotes, reason |
-| 7 | 7-1 to 7-4 (merged) | `markdown` | Monitoring: metrics to watch checklist + expected timeline |
+| 2 | 2-1 | `gauge` | AEO Score (value/100, grade label) |
+| 2 | 2-2 to 2-4 (merged) | `scores` | AEO 5-dimension breakdown |
+| 3 | 3-1 to 3-2 (merged) | `scores` | On-Page SEO (title, meta, headings, internal links, content depth) |
+| 3 | 3-3 to 3-4 (merged) | `scores` | Technical SEO (HTTPS, canonical, structured data, mobile, page speed) |
+| 4 | 4-1 to 4-4 (merged) | `table` | Topical Authority clusters (cluster, queries, pages, avg position, page-1 rate, level) |
+| 5 | 5-1 to 5-4 (merged) | `table` | Quick Wins — keywords near page 1 (position 8-20, high impressions) |
+| 6 | 6-1 to 6-4 (merged) | `table` | All Keywords + SERP features + drift |
+| 7 | 7-1 to 7-2 (merged) | `table` | Trending Up — keywords with improving position |
+| 7 | 7-3 to 7-4 (merged) | `table` | Declining — keywords losing position |
+| 8 | 8-1 to 8-4 (merged) | `table` | Keyword Cannibalization — same query ranking on multiple pages |
+| 9 | 9-1 to 9-4 (merged) | `table` | Zero-Click Queries with type and remediation |
+| 10-11 | 10-1 to 11-4 (merged) | `markdown` | Recommendations with before→after diffs |
+| 12 | 12-1 to 12-4 (merged) | `markdown` | Monitoring checklist + expected timeline |
+| 13 | 13-1 to 13-4 (merged) | `markdown` | Topical Authority strategy — expand/defend/build recommendations |
 
 ### Complete YAML Template
 
@@ -267,9 +275,9 @@ title: "SEO/AEO Analysis: example.com"
 description: "/blog/cdp-guide — Analyzed 2026-02-18 (28-day window)"
 grid:
   columns: 4
-  rows: 7
+  rows: 13
 cells:
-  # ── Row 1: KPIs (from GSC) ───────────────────────────────────────────
+  # ── Row 1: Site KPIs (GSC) ─────────────────────────────────────────
   - pos: "1-1"
     type: kpi
     title: "Impressions"
@@ -306,7 +314,7 @@ cells:
       trend: up
       subtitle: "lower is better"
 
-  # ── Row 2: AEO Score (from Playwright extraction) ────────────────────
+  # ── Row 2: AEO Score (Playwright) ──────────────────────────────────
   - pos: "2-1"
     type: gauge
     title: "AEO Score"
@@ -315,11 +323,11 @@ cells:
       max: 100
       label: "C"
       thresholds:
-        - { limit: 40, color: "#ef4444" }   # F/D
-        - { limit: 60, color: "#f97316" }   # C
-        - { limit: 70, color: "#f59e0b" }   # B
-        - { limit: 80, color: "#84cc16" }   # A
-        - { limit: 100, color: "#22c55e" }  # A+
+        - { limit: 40, color: "#ef4444" }
+        - { limit: 60, color: "#f97316" }
+        - { limit: 70, color: "#f59e0b" }
+        - { limit: 80, color: "#84cc16" }
+        - { limit: 100, color: "#22c55e" }
 
   - pos: ["2-2", "2-4"]
     type: scores
@@ -341,8 +349,71 @@ cells:
         value: 6
         max: 6
 
-  # ── Row 3: Keywords (GSC + SerpAPI) ──────────────────────────────────
-  - pos: ["3-1", "3-4"]
+  # ── Row 3: On-Page + Technical SEO (Playwright) ────────────────────
+  - pos: ["3-1", "3-2"]
+    type: scores
+    title: "On-Page SEO"
+    scores:
+      - label: "Title Tag"
+        value: 8
+        max: 10
+      - label: "Meta Description"
+        value: 6
+        max: 10
+      - label: "Heading Structure"
+        value: 5
+        max: 10
+      - label: "Internal Links"
+        value: 7
+        max: 10
+      - label: "Content Depth"
+        value: 9
+        max: 10
+
+  - pos: ["3-3", "3-4"]
+    type: scores
+    title: "Technical SEO"
+    scores:
+      - label: "HTTPS"
+        value: 10
+        max: 10
+      - label: "Canonical Tag"
+        value: 10
+        max: 10
+      - label: "Structured Data"
+        value: 3
+        max: 10
+      - label: "Mobile Friendly"
+        value: 8
+        max: 10
+      - label: "Page Speed"
+        value: 6
+        max: 10
+
+  # ── Row 4: Topical Authority (GSC clusters) ────────────────────────
+  - pos: ["4-1", "4-4"]
+    type: table
+    title: "Topical Authority"
+    table:
+      headers: ["Cluster", "Queries", "Pages", "Avg Position", "Page-1 Rate", "Level"]
+      rows:
+        - ["cdp", 45, 8, 6.2, "78%", "Strong"]
+        - ["data integration", 12, 3, 18.5, "25%", "Emerging"]
+        - ["customer analytics", 8, 2, 24.1, "13%", "Weak"]
+
+  # ── Row 5: Quick Wins (GSC) ────────────────────────────────────────
+  - pos: ["5-1", "5-4"]
+    type: table
+    title: "Quick Wins (Near Page 1)"
+    table:
+      headers: ["Query", "Position", "Impressions", "Page", "Action"]
+      rows:
+        - ["cdp implementation guide", 11.3, 820, "/blog/cdp-impl", "Improve BLUF + add FAQ schema"]
+        - ["customer data platform pricing", 9.8, 1200, "/pricing", "Add pricing table (Pattern 2)"]
+        - ["cdp vs crm", 12.1, 640, "/blog/cdp-vs-crm", "Expand comparison section"]
+
+  # ── Row 6: Keywords + SERP (GSC + SerpAPI) ─────────────────────────
+  - pos: ["6-1", "6-4"]
     type: table
     title: "Keywords"
     table:
@@ -352,17 +423,46 @@ cells:
         - ["cdp vs dmp", 8.5, 920, "3.2%", "High", "PAA", "Rising (-2)"]
         # ... one row per keyword
 
-  # ── Row 4: Zero-Click (GSC + SerpAPI) ────────────────────────────────
-  - pos: ["4-1", "4-4"]
+  # ── Row 7: Trending + Declining (GSC period comparison) ────────────
+  - pos: ["7-1", "7-2"]
+    type: table
+    title: "Trending Up"
+    table:
+      headers: ["Query", "Position", "Change"]
+      rows:
+        - ["cdp benefits", 8.3, "-4.2"]
+        - ["first party data platform", 14.1, "-3.8"]
+
+  - pos: ["7-3", "7-4"]
+    type: table
+    title: "Declining"
+    table:
+      headers: ["Query", "Position", "Change"]
+      rows:
+        - ["customer data management", 22.4, "+5.1"]
+        - ["data unification tool", 31.2, "+8.3"]
+
+  # ── Row 8: Keyword Cannibalization (GSC) ───────────────────────────
+  - pos: ["8-1", "8-4"]
+    type: table
+    title: "Keyword Cannibalization"
+    table:
+      headers: ["Query", "Page 1", "Pos 1", "Page 2", "Pos 2", "Action"]
+      rows:
+        - ["what is cdp", "/blog/cdp-guide", 11.2, "/products/cdp", 18.7, "Consolidate to /blog/cdp-guide; redirect or noindex product page for this query"]
+
+  # ── Row 9: Zero-Click (GSC + SerpAPI) ──────────────────────────────
+  - pos: ["9-1", "9-4"]
     type: table
     title: "Zero-Click Queries"
     table:
       headers: ["Query", "Impressions", "Type", "Root Cause", "Remediation"]
       rows:
         - ["what is customer data platform", 3200, "A", "AI Overview fully answers", "Add BLUF definition + differentiated value"]
+        - ["cdp meaning", 1800, "A", "Answer Box (definition)", "Capture AB with Pattern 1"]
 
-  # ── Row 5-6: Recommendations (Playwright + SerpAPI + AEO scoring) ────
-  - pos: ["5-1", "6-4"]
+  # ── Row 10-11: Recommendations (Playwright + SerpAPI + scoring) ────
+  - pos: ["10-1", "11-4"]
     type: markdown
     title: "Recommendations"
     content: |
@@ -386,8 +486,8 @@ cells:
 
       **Reason**: Sites with 3+ schema types show ~13% higher AI citation rate.
 
-  # ── Row 7: Monitoring (GA4 + GSC) ────────────────────────────────────
-  - pos: ["7-1", "7-4"]
+  # ── Row 12: Monitoring (GA4 + GSC) ─────────────────────────────────
+  - pos: ["12-1", "12-4"]
     type: markdown
     title: "Monitoring"
     content: |
@@ -395,8 +495,20 @@ cells:
       - GSC CTR for "what is cdp" (expect improvement in 2-4 weeks)
       - GA4 engagement rate on /blog/cdp-guide
       - GSC position for "how does cdp work"
+      - Cannibalization: monitor /products/cdp position for "what is cdp"
 
       **Expected timeline**: Title/meta: 2-4 weeks. Content restructuring: 4-8 weeks. Schema: 2-6 weeks.
+
+  # ── Row 13: Topical Authority Strategy ─────────────────────────────
+  - pos: ["13-1", "13-4"]
+    type: markdown
+    title: "Topical Authority Strategy"
+    content: |
+      **Expand (Strong clusters)**: CDP cluster has 78% page-1 rate. Create subtopic pages for long-tail: "CDP implementation checklist", "CDP ROI calculator".
+
+      **Prioritize (Emerging)**: Data integration cluster at 25% page-1 rate. Create pillar page + target PAA questions. Build internal links from CDP content.
+
+      **Evaluate (Weak)**: Customer analytics cluster at 13%. Assess competitive landscape before investing — may need 5+ new pages to establish authority.
 ```
 
 ### Rendering
