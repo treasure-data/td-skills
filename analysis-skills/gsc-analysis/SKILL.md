@@ -1,6 +1,6 @@
 ---
 name: gsc-analysis
-description: Deep analysis of Google Search Console data for keyword research, performance monitoring, and SEO opportunity discovery. Identifies quick wins, CTR opportunities, keyword cannibalization, trending keywords, zero-click queries, and index health issues. Use as the data foundation for seo-analysis, competitor-analysis, and content-brief skills, or standalone for GSC reporting and keyword strategy.
+description: "Use this skill when the user wants to analyze Google Search Console data. Trigger on requests like 'GSC analysis', 'keyword performance', 'search console report', 'quick wins', 'keyword cannibalization', 'zero-click queries', or 'index health'. Identifies ranking opportunities, CTR gaps, trending keywords, and content issues from GSC data. Also used as the data foundation for seo-analysis and competitor-analysis skills."
 ---
 
 # GSC Analysis

@@ -1,6 +1,6 @@
 ---
 name: seo-analysis
-description: "CRITICAL: (1) Create a Task list FIRST — plan all analysis steps before starting. (2) Do NOT ask the user for a site URL — call google_search_console_list_sites to discover properties. — Unified SEO/AEO analysis using GSC, SerpAPI, Playwright page extraction, and GA4. Output follows the dashboard YAML schema; use all available tools to populate every field. Read this skill fully before proceeding."
+description: "Use this skill when the user wants a comprehensive SEO or AEO (Answer Engine Optimization) audit of their website or specific pages. Trigger on requests like 'analyze SEO', 'AEO score', 'SEO audit', 'optimize for AI search', 'improve rankings', or 'why is my page not ranking'. Combines Google Search Console, SerpAPI, Playwright, and GA4 to produce an interactive grid-dashboard with KPIs, AEO scores, keyword tables, and actionable before/after recommendations."
 ---
 
 # SEO & AEO Analysis

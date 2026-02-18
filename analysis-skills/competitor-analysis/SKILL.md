@@ -1,6 +1,6 @@
 ---
 name: competitor-analysis
-description: Analyze competitor web pages for SEO and AEO structure using SerpAPI for SERP-based competitor discovery and Playwright with Python-based HTML extraction for structural comparison. Produces side-by-side comparisons of heading hierarchy, structured data, BLUF patterns, content metrics, and Answer Box reverse engineering. Use when users want to compare their page against competitors, find content gaps, understand why a competitor ranks higher, or reverse-engineer Answer Box winners.
+description: "Use this skill when the user wants to compare their page against competitors or understand why a competitor ranks higher. Trigger on requests like 'competitor analysis', 'compare with competitor', 'content gap', 'why does X rank above me', or 'reverse-engineer Answer Box'. Discovers competitors via SerpAPI SERP results and compares heading structure, structured data, BLUF patterns, and content metrics."
 ---
 
 # Competitor Analysis

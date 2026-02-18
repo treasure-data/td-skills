@@ -1,6 +1,6 @@
 ---
 name: grid-dashboard
-description: "Reference skill for building visual dashboards with preview_grid_dashboard. Defines YAML format, 6 cell types (markdown, chart, table, kpi, gauge, scores), grid layout, and cell merging. Use this when any analysis skill needs to output a structured visual dashboard."
+description: "Use this skill when you need to output a visual dashboard in the artifact panel using preview_grid_dashboard. Trigger when building any structured visual report, analysis dashboard, or data overview. Defines the YAML format for 6 cell types: kpi (metric cards), gauge (score meters), scores (progress bars), table (sortable data), chart (Chart.js), and markdown (rich text). Also use when another skill references 'grid-dashboard' for output format."
 ---
 
 # Grid Dashboard
