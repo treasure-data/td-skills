@@ -1,7 +1,7 @@
 ---
 name: email-campaign
 description: This skill should be used when the user asks to "create an email", "build an email campaign", "design an email template", "generate an email for a segment", "preview an email", or "push an email to Engage". Generates enterprise-grade HTML email templates with live preview in Treasure Studio and natural language editing, then pushes the final version to Treasure Engage.
-version: 1.1.0
+version: 1.0.0
 ---
 
 # Email Campaign Builder
@@ -16,6 +16,15 @@ Use this skill when:
 - The user requests a "preview" of an email in Treasure Studio
 - The user says "push to Engage", "ship it", or "send to Engage" to publish a finalized email
 - The user needs A/B testing variants for an email campaign
+
+## Prerequisites
+
+This skill requires:
+- **Treasure Studio MCP server** (`tdx-studio`) — for email preview via `preview_document`
+- **tdx CLI** — for workflow execution and Engage integration
+- **(Optional)** `engage_email_builder` TD Workflow — for automated push to Engage
+
+If Studio preview is unavailable, emails will be saved to disk only. If the Engage workflow is not deployed, the skill falls back to manual HTML export.
 
 ## Core Principles
 
@@ -63,6 +72,14 @@ Available merge tags:
 - `{{profile.tier_name}}` — loyalty tier (Bronze, Silver, Gold, Platinum)
 - `{{profile.points_to_next_tier}}` — points needed for next tier
 
+*Note:* These merge tags assume a parent segment with the following output columns:
+- `first_name` (STRING)
+- `loyalty_points` (INTEGER)
+- `tier_name` (STRING)
+- `points_to_next_tier` (INTEGER)
+
+Verify your parent segment includes these fields before using merge tags. To list available fields: `tdx ps desc <ps_id> -o`
+
 ## Workflow
 
 The skill follows a four-phase loop: **Generate → Preview → Edit → Ship**.
@@ -75,6 +92,8 @@ When the user requests an email campaign, produce a strategy brief first:
 2. **Strategy brief** — output a concise brief with: segment name, audience profile, next best channel, message copy, next best offer, and recommended imagery direction.
 3. **HTML email** — generate a complete, standalone HTML email following the design patterns in `references/email-design-patterns.md`. Use BeeFree-compatible, responsive table-based layout with inline CSS.
 4. **Save to disk** — write the HTML to `/tmp/email_campaign_preview.html`.
+
+*Note:* `/tmp` is a temporary location cleared on system restart. Use "push to Engage" or manually export to a permanent location (e.g., `~/email_exports/`) before rebooting.
 
 ### Phase 2: Preview
 
@@ -104,7 +123,7 @@ When the user says "push to Engage", "ship it", "publish", or "send to Engage":
 
 1. Read the final HTML from `/tmp/email_campaign_preview.html`.
 2. Run the Engage email builder workflow. Refer to `references/engage-integration.md` for the exact command and parameters.
-3. Report the result and link to Engage Studio: `https://console-next.us01.treasuredata.com/app/es/01997f0c-44e7-798f-b4a9-68c8e8810d24/em/templates`
+3. Report the result and direct the user to check **Engage Studio → Email Templates** to see the new template.
 
 ## Common Patterns
 
@@ -138,7 +157,10 @@ Generate two distinct variants for testing copy or CTA effectiveness.
 1. Generate Variant A and Variant B with distinct copy or CTA changes.
 2. Save each to separate files: `/tmp/email_campaign_variant_a.html` and `/tmp/email_campaign_variant_b.html`.
 3. Preview each in sequence using `preview_document`.
-4. When shipping, push both variants and note which is A vs B.
+4. When shipping, push each variant as a separate template:
+   - First push: template named "Campaign Name — Variant A"
+   - Second push: template named "Campaign Name — Variant B"
+5. Then configure the A/B test in Engage Studio UI.
 
 **When to use:** The user explicitly requests A/B testing or you recommend it for campaigns targeting >5,000 recipients.
 
@@ -154,6 +176,13 @@ Generate two distinct variants for testing copy or CTA effectiveness.
 8. **Track merge tags** — Display the list of active merge tags after each preview cycle.
 9. **Test across clients** — Design for Outlook, Gmail, Apple Mail, and Yahoo Mail compatibility.
 10. **Save before preview** — Always write HTML to disk before calling `preview_document`.
+
+## Email Size Limits
+
+- **Subject line:** Keep under 50 characters for mobile display
+- **Preheader text:** 40–90 characters (appears after subject in inbox)
+- **Total HTML size:** Under 100KB for best deliverability
+- **Image file size:** Under 1MB per image
 
 ## Common Issues and Solutions
 
@@ -203,6 +232,18 @@ cp /tmp/email_campaign_preview.html ~/email_exports/campaign_name_2025-01-15.htm
 1. Verify image URLs use HTTPS (not HTTP).
 2. Confirm the Unsplash/Pexels photo ID is valid.
 3. Check the `?auto=format&fit=crop&w=1200&q=80` query parameters are present.
+
+### Issue: Image URLs broken or outdated
+
+**Symptoms:**
+- Images that previously worked now return 404 errors
+- Unsplash/Pexels removed the original photo
+
+**Solutions:**
+1. Search for a replacement image on Unsplash or Pexels with a similar subject.
+2. Use the standard photo ID format: `https://images.unsplash.com/photo-{photo_id}?auto=format&fit=crop&w=1200&q=80`
+3. Verify the new image loads in a browser before updating the email.
+4. For production campaigns, consider uploading images to your own CDN or asset storage for permanence.
 
 ## Related Skills
 

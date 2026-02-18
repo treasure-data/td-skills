@@ -28,11 +28,14 @@ Required parameters:
 
 ### Step 3: Confirm
 
-After the workflow runs, link the user to Engage Studio:
+After the workflow runs, direct the user to check **Engage Studio → Email Templates** to see the new template.
 
+The Engage Studio URL follows this pattern:
 ```
-https://console-next.us01.treasuredata.com/app/es/01997f0c-44e7-798f-b4a9-68c8e8810d24/em/templates
+https://console-next.{region}.treasuredata.com/app/es/{workspace_id}/em/templates
 ```
+
+Where `{region}` is the user's TD region (e.g., `us01`, `eu01`, `jp01`) and `{workspace_id}` is their workspace identifier.
 
 ### Fallback: Manual export
 
