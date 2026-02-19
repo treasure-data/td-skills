@@ -54,10 +54,29 @@ This prevents context exhaustion from writing massive YAML in a single pass. Eac
 
 ## Grid Layout
 
+**This is NOT a CSS framework 12-column grid (like Bootstrap).** `columns` is the literal number of columns displayed. If you want 3 columns, set `columns: 3` — do NOT set `columns: 12` and merge cells to simulate 3 columns. The tool validates cell positions and will return errors for invalid formats.
+
 - `grid.columns` and `grid.rows` must be **numbers** matching the actual cell count (not strings, not `auto`). Do not declare more rows/columns than cells occupy
 - `pos: "row-col"` — 1-based coordinates (e.g., `"1-1"` = top-left)
-- **Cell merging**: `pos: ["1-1", "1-3"]` merges from row 1 col 1 to row 1 col 3. **MUST be a YAML array** of two strings — never a single string like `"1-1to1-3"`
+- **Cell merging**: `pos: ["1-1", "1-3"]` merges from row 1 col 1 to row 1 col 3. **MUST be a YAML array** of two strings
 - Each row has a fixed height range (120px–360px) — do not overfill cells
+- **Horizontal merging is useful** — tables and charts benefit from full-width display (e.g., `pos: ["3-1", "3-4"]`)
+- **Vertical merging is rarely needed** — each row is at least 120px tall, so spanning 3 rows creates 360px+ of height, which is excessive for most content. Only merge vertically for very long markdown or tables with many rows. In most cases, let each cell occupy a single row.
+
+**Correct pos format**:
+```yaml
+pos: "1-1"              # single cell at row 1, column 1
+pos: ["1-1", "1-3"]     # merged cell from (1,1) to (1,3)
+pos: ["3-1", "5-4"]     # merged cell spanning rows 3-5 and columns 1-4
+```
+
+**WRONG — these will cause tool errors**:
+```yaml
+pos: "1-1:1-3"          # ✗ colon separator
+pos: "1-1to1-3"         # ✗ "to" separator
+pos: "1-1,1-3"          # ✗ comma in string
+pos: [1, 1]             # ✗ numbers instead of "row-col" strings
+```
 
 **Common grid sizes**:
 - 3×3 — compact overview (9 cells)
