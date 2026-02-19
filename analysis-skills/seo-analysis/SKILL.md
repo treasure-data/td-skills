@@ -74,7 +74,18 @@ playwright-cli run-code "async page => {           # extract HTML
   const html = await page.content(); return html;
 }" > ./seo/page.html
 playwright-cli goto <url>                          # navigate (after open)
-playwright-cli screenshot {cwd}/seo/visual-{slug}.png --full-page  # visual analysis
+```
+
+**Screenshots** — always wait for images to fully load before capturing:
+```bash
+playwright-cli run-code "async page => {
+  await page.waitForLoadState('networkidle');
+  await page.evaluate(() => Promise.all(
+    Array.from(document.images).filter(img => !img.complete)
+      .map(img => new Promise(r => { img.onload = img.onerror = r; }))
+  ));
+}"
+playwright-cli screenshot {cwd}/seo/visual-{slug}.png --full-page
 ```
 
 Open screenshots with `open_file` to visually analyze the page — this catches issues that DOM parsing alone cannot detect.
