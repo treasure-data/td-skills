@@ -28,6 +28,10 @@ Step 6: Define RT Attributes ✓
 Step 7: Configure RT Infrastructure ✓ (SHARED with rt-setup-triggers)
 Step 8: Create Personalization Service ✓
 Step 9: Create Personalization Entity ✓
+  9a. Get Parent Segment Folder
+  9b. Get Key Event and Attribute IDs
+  9c. Validate Payload (REQUIRED - use rt-personalization-validation skill)
+  9d. Create Entity via API
 Step 10: Verify & Test ✓
 ```
 
@@ -211,7 +215,15 @@ Error: "sections[0].payload.node_id.definition.attribute_payload": ["Attribute p
 "stringBuilder": null
 ```
 
-**For complete validation rules and error-free templates, use the `rt-personalization-validation` skill.**
+**REQUIRED VALIDATION STEP:**
+
+At Step 9c, you MUST invoke the `rt-personalization-validation` skill to validate the payload before making the API call. This is a mandatory step in the workflow, not optional. The validation skill will:
+- Check for empty arrays that should be null
+- Verify payload structure completeness
+- Validate field names and uniqueness
+- Prevent all common API errors
+
+**Do not skip Step 9c validation. Proceeding directly to the API call without validation will likely result in errors.**
 
 ---
 
