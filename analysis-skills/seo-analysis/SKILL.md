@@ -119,6 +119,8 @@ The dashboard shows **data and analysis only** — no action items, no recommend
 
 Design the grid layout based on the analysis dimensions you collected. Use `pages:` structure with one entry per analyzed page. One file per site. **Always include a glossary** as the last row — define all abbreviations and industry terms used in the dashboard.
 
+Include all analysis findings in the dashboard. Do not omit relevant insights, metrics, or supporting facts. Ensure the dashboard fully reflects the complete analysis results.
+
 Save to `{cwd}/seo/seo-dashboard-{domain}.yaml` and call with the **absolute path**:
 ```
 preview_grid_dashboard({ file_path: "/absolute/path/to/seo/seo-dashboard-{domain}.yaml" })
