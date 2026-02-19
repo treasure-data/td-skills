@@ -13,14 +13,16 @@ Produce two outputs per analysis: a **data dashboard** (grid-dashboard YAML) sho
 
 ### Step 1: Check tool availability
 
-Verify each tool and record what is available:
+Verify each tool using the **exact** commands below and record what is available:
 
-| Tool | Check method | Required? |
+| Tool | Check command | Required? |
 |------|-------------|-----------|
-| Playwright | `playwright-cli --version` | **Yes — abort if unavailable** |
-| GSC | `google_search_console_list_sites` | No — skip GSC-dependent tasks |
-| SerpAPI | `serpapi_google_search` | No — skip SERP feature analysis |
-| GA4 | `google_analytics_list_properties` | No — skip behavior metrics |
+| Playwright | `Bash: playwright-cli --version` | **Yes — abort if unavailable** |
+| GSC | `ToolSearch { "query": "select:mcp__tdx-studio__google_search_console_list_sites", "max_results": 1 }` | No — skip GSC-dependent tasks |
+| SerpAPI | `ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }` | No — skip SERP feature analysis |
+| GA4 | `ToolSearch { "query": "select:mcp__tdx-studio__google_analytics_list_properties", "max_results": 1 }` | No — skip behavior metrics |
+
+Run all four checks in parallel. If ToolSearch returns a `tool_reference`, the tool is available. If it returns "No matching deferred tools found", skip that tool's tasks.
 
 If Playwright is not available, stop and tell the user: "Playwright is required for SEO analysis. Please install it first."
 
@@ -68,12 +70,7 @@ Example analysis dimensions (adapt based on available tools):
 
 ### SerpAPI (`serpapi_google_search`)
 
-**Availability check** (required before use):
-```
-ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }
-```
-
-Call: `serpapi_google_search({ q: "...", gl: "us", hl: "en" })`. Key response fields: `answer_box`, `ai_overview`, `people_also_ask`, `knowledge_graph`, `organic_results`, `shopping_results`, `local_results`.
+Availability is confirmed in Step 1. Call: `serpapi_google_search({ q: "...", gl: "us", hl: "en" })`. Key response fields: `answer_box`, `ai_overview`, `people_also_ask`, `knowledge_graph`, `organic_results`, `shopping_results`, `local_results`.
 
 ### Playwright (`playwright-cli`)
 
