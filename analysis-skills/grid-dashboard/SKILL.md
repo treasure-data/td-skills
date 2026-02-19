@@ -54,7 +54,7 @@ This prevents context exhaustion from writing massive YAML in a single pass. Eac
 
 ## Grid Layout
 
-- `grid.columns` and `grid.rows` must be **numbers** (not strings, not `auto`)
+- `grid.columns` and `grid.rows` must be **numbers** matching the actual cell count (not strings, not `auto`). Do not declare more rows/columns than cells occupy
 - `pos: "row-col"` — 1-based coordinates (e.g., `"1-1"` = top-left)
 - **Cell merging**: `pos: ["1-1", "1-3"]` merges from row 1 col 1 to row 1 col 3. **MUST be a YAML array** of two strings — never a single string like `"1-1to1-3"`
 - Each row has a fixed height range (120px–360px) — do not overfill cells
