@@ -7,6 +7,8 @@ description: "Use this skill when you need to output a visual dashboard in the a
 
 Build visual dashboards rendered in the artifact panel via `preview_grid_dashboard`. The agent writes a YAML file defining pages of grid cells; the MCP App renders them with a page selector.
 
+(IMPORTANT): Include all analysis findings in the dashboard — do not omit relevant insights, metrics, or supporting facts. Build incrementally (see "Building YAML Incrementally" below).
+
 ## YAML Structure
 
 The YAML is **page-based**: top-level `pages` object where each key is a page identifier (e.g., URL, label) and each value defines a grid with cells.
@@ -43,14 +45,23 @@ The UI renders a **select box** at the top to switch between pages.
 
 ## Building YAML Incrementally
 
-**CRITICAL**: For large dashboards (e.g., SEO analysis with 16-row grids per page), build the YAML **one page at a time**:
+**CRITICAL**: Large dashboards MUST be built incrementally. Do NOT attempt to write the entire YAML in a single tool call — this causes output truncation mid-generation.
 
-1. Write the `pages:` header and the first page's complete grid + cells
-2. Call `preview_grid_dashboard` to verify it renders correctly
-3. Append additional pages to the same YAML file
-4. Call `preview_grid_dashboard` again to refresh
+**Multi-page dashboards** — build one page at a time:
 
-This prevents context exhaustion from writing massive YAML in a single pass. Each page's grid and cells should be self-contained.
+1. **Write** the file with `pages:` header and the first page's complete grid + cells
+2. **Edit** the file to append the next page
+3. Repeat step 2 until all pages are written
+4. Call `preview_grid_dashboard` **once** at the end
+
+**Single pages with many cells (12+ rows)** — build in row batches:
+
+1. **Write** the file with `pages:` header, grid config, and the first 4–6 rows of cells
+2. **Edit** to append the next 4–6 rows at the end of the `cells` array
+3. Repeat until all rows are written
+4. Call `preview_grid_dashboard` once at the end
+
+Each tool call should produce a manageable amount of YAML. Never write more than ~6 grid rows in a single tool call.
 
 ## Grid Layout
 

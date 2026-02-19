@@ -7,6 +7,17 @@ description: "Use this skill when you need to output a structured action report 
 
 Render prioritized action reports in the artifact panel via `preview_action_report`. The agent writes a YAML file defining an executive summary and a list of action items; the MCP App renders them as visual cards sorted by priority.
 
+## Building the Report Incrementally
+
+**CRITICAL**: Large reports (6+ actions) MUST be built in batches to avoid output truncation. Do NOT attempt to write the entire YAML in a single tool call.
+
+1. **Write** the file with `title`, `subtitle`, `summary`, and the first 2–3 actions
+2. **Edit** the file to append the next 2–3 actions at the end of the `actions` array
+3. Repeat step 2 until all actions are written
+4. Call `preview_action_report` **once** at the end — never mid-build
+
+Each Edit call should add at most 3 action items. This keeps individual tool call output small and prevents mid-generation truncation.
+
 ## YAML Structure
 
 ```yaml

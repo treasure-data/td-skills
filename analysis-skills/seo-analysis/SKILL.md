@@ -115,11 +115,9 @@ User behavior data — engagement, bounce rate, conversions per page. Use for mo
 
 ## Output 1: Data Dashboard
 
-The dashboard shows **data and analysis only** — no action items, no recommendations. MUST read the **grid-dashboard** skill for YAML format, cell types, and layout reference.
+The dashboard shows **data and analysis only** — no action items, no recommendations. MUST read the **grid-dashboard** skill for YAML format, cell types, and layout reference. **Build the YAML incrementally** — follow the incremental approach described in the grid-dashboard skill.
 
 Design the grid layout based on the analysis dimensions you collected. Use `pages:` structure with one entry per analyzed page. One file per site. **Always include a glossary** as the last row — define all abbreviations and industry terms used in the dashboard.
-
-Include all analysis findings in the dashboard. Do not omit relevant insights, metrics, or supporting facts. Ensure the dashboard fully reflects the complete analysis results.
 
 Save to `{cwd}/seo/seo-dashboard-{domain}.yaml` and call with the **absolute path**:
 ```
@@ -132,7 +130,7 @@ Reference template: [references/dashboard-template.yaml](references/dashboard-te
 
 ## Output 2: Action Report
 
-After the dashboard, render an **interactive action report** via `preview_action_report`. MUST read **action-report** skill for YAML format and field reference.
+After the dashboard, render an **interactive action report** via `preview_action_report`. MUST read **action-report** skill for YAML format and field reference. **Build the YAML incrementally** — follow the incremental approach described in the action-report skill.
 
 Save to `{cwd}/seo/action-report-{slug}.yaml` and call with the **absolute path**:
 ```
@@ -147,8 +145,6 @@ Each action item uses the `{as_is, to_be, reason}` structure. Key requirements:
 - `priority`: Based on effort-to-impact ratio (high = low effort + high impact)
 - `summary`: Include AEO score, key findings, and total estimated impact
 - **Glossary**: Include a glossary section at the end defining all abbreviations and industry terms used in the report
-
-Always update the report in small batches (≤3 cards per edit). Run `preview_action_report` once, at the end, after the report is fully finalized.
 
 ## References
 
