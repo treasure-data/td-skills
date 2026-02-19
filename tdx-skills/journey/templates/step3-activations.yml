@@ -1,0 +1,56 @@
+# ---
+# Step 3: Activations
+# ---
+#
+# Define activation destinations for each stage's outbound actions.
+#
+# --- Discovery First (do NOT skip) ---
+#   tdx connection list                       # List available connections
+#   tdx connection schema "Connection Name"   # Get connector_config fields
+#
+# Do NOT guess connection names or connector_config fields.
+#
+# Load **activation** skill for schedule options, column masking, behavior export.
+# Load **connector-config** skill for connector-specific fields.
+#
+# --- Schedule: ask the client ---
+#   run_after_journey_refresh: true       — most common for journeys
+#   schedule: { type: daily, ... }        — fixed schedule (see activation skill)
+#
+# --- After designing ---
+#   1. Add activations: section organized by stage
+#   2. Show to client, get confirmation, then move to Step 4
+#
+# ---
+
+type: journey
+name: Welcome Onboarding Journey
+description: 3-stage onboarding flow for new customers
+reentry: no_reentry
+
+segments:
+  # (segments from Steps 1-2, omitted for brevity)
+
+activations:
+  # -- Example: SFMC email activation --
+  welcome-email:
+    name: Welcome Email Campaign
+    connection: My SFMC Connection         # from `tdx connection list`
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:                       # from `tdx connection schema`
+      de_name: WelcomeEmails
+      shared_data_extension: false
+      data_operation: upsert
+
+  # -- Example: different connector (SMS) --
+  sms-reminder:
+    name: SMS Reminder
+    connection: Twilio SMS Connection
+    all_columns: true
+    run_after_journey_refresh: true
+    connector_config:
+      message_template: welcome_reminder
+
+  # Repeat same pattern for each stage activation.
+  # For fixed schedule instead of run_after_journey_refresh, see activation skill.

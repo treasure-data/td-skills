@@ -1,6 +1,6 @@
 ---
 name: segment
-description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers filtering with operators (Equal, In, Greater, TimeWithinPast, Contain), folder organization, and activations for Salesforce/Google Ads exports. Use when creating audience segments, validating with `tdx sg push --dry-run`, or listing fields with `tdx sg fields`.
+description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers Value/Behavior condition types, all operators (Equal, In, Between, TimeWithinPast, etc.), behavior aggregations with filters, and nested condition groups. Use when creating audience segments with filtering rules, configuring behavior-based conditions, managing segment hierarchies, or exploring available fields with `tdx sg fields`.
 ---
 
 # tdx Segment - CDP Child Segment Management
@@ -45,89 +45,83 @@ rule:
       operator:
         type: TimeWithinPast
         value: 30
-        unit: day  # year | quarter | month | week | day | hour | minute | second
+        unit: day
 ```
 
-## Activations
+## Condition Types
 
-```yaml
-activations:
-  - name: SFMC Contact Sync
-    connection: salesforce-marketing    # From tdx connection list
-    columns:
-      - email
-      - first_name
-    schedule:
-      type: daily                       # none | daily | hourly
-      timezone: America/Los_Angeles
-    connector_config:                   # Use `tdx connection schema <type>` for fields
-      de_name: ContactSync
-      shared_data_extension: false
-      data_operation: upsert
-    notification:
-      notify_on: [onSuccess, onFailure]
-      email_recipients: [team@company.com]
-```
+Four condition types can be used inside `conditions:`:
 
-See **connector-config** skill for `connector_config` details.
+| Type | Purpose |
+|------|---------|
+| `Value` | Filter by attribute column |
+| `Behavior` | Aggregate behavior table data |
+| `include` / `exclude` | Reference another segment |
+| `And` / `Or` | Nested condition group |
 
 ## Operators
 
-| Type | Example |
-|------|---------|
-| `Equal`, `NotEqual` | `value: "active"` |
-| `Greater`, `GreaterEqual`, `Less`, `LessEqual` | `value: 1000` |
-| `In`, `NotIn` | `value: ["US", "CA"]` |
-| `Contain`, `StartWith`, `EndWith` | `value: ["@gmail.com"]` |
-| `Regexp` | `value: "^[A-Z]{2}[0-9]{4}$"` |
-| `IsNull` | (no value) |
-| `TimeWithinPast` | `value: 30, unit: day` |
+| Category | Types | Required Fields | Example |
+|----------|-------|----------------|---------|
+| Comparison | `Equal`, `NotEqual`, `Greater`, `GreaterEqual`, `Less`, `LessEqual` | `value` (string/number) | `type: Equal, value: "active"` |
+| Range | `Between` | `min` and/or `max` | `min: 18, max: 65` |
+| Set | `In`, `NotIn` | `value` (array) | `value: ["US", "CA"]` |
+| Text | `Contain`, `StartWith`, `EndWith` | `value` (string array) | `value: ["@gmail.com"]` |
+| Pattern | `Regexp` | `value` (string) | `value: "^[A-Z]{2}[0-9]{4}$"` |
+| Null | `IsNull` | (none) | `type: IsNull` (use `not: true` for "is not null") |
+| Time | `TimeWithinPast`, `TimeWithinNext` | `value` + `unit` | `value: 30, unit: day` (Past=recency, Next=future window) |
+| Time | `TimeRange` | `duration` + `from` | See example below |
+| Time | `TimeToday` | (none) | Matches today's date only |
 
-## Behavior Conditions (Aggregations)
+**Negation**: Any operator supports `not: true` (e.g., `type: Contain, value: ["test"], not: true`)
 
-Query behavior data from parent segment with aggregations:
+**Units**: `year | quarter | month | week | day | hour | minute | second` (singular only)
+
+### TimeRange Example
+
+"7-day window starting from 1 month ago":
 
 ```yaml
-rule:
-  type: And
-  conditions:
-    # Count behavior occurrences
-    - type: Value
-      attribute: add_to_cart_event
-      operator:
-        type: GreaterEqual
-        value: 1
-      aggregation:
-        type: Count              # Count | Sum | Avg | Min | Max
-      source: cart_abandonment   # Behavior name from parent segment
-
-    # Sum behavior values
-    - type: Value
-      attribute: order_total
-      operator:
-        type: Greater
-        value: 500
-      aggregation:
-        type: Sum
-      source: purchase_history
-
-    # Time-based behavior filtering
-    - type: Value
-      attribute: timestamp
-      operator:
-        type: GreaterEqual
-        value: 30
-        unit: days               # Filter to last 30 days
-      aggregation:
-        type: Max
-      source: purchase_history
+operator:
+  type: TimeRange
+  duration:
+    day: 7                       # Window length
+  from:
+    last: 1                      # Starting point offset
+    unit: month
 ```
 
-**Aggregation types**: `Count`, `Sum`, `Avg`, `Min`, `Max`
+## Behavior Conditions
+
+Query behavior table data with aggregations. Use `type: Behavior` (not `Value`). `attribute` should be the event/column name from the behavior table (run `tdx sg fields` to list). Always provide a concrete name — the CDP API rejects empty attribute.
+
+```yaml
+# Sum order_total for Electronics purchases in last 90 days
+- type: Behavior
+  attribute: order_total             # Event or column name from behavior table
+  source: behavior_purchase_history  # behavior_<table_name> (prefix required)
+  aggregation:
+    type: Sum                        # Count | Sum | Average | Min | Max
+    column: order_total              # Required for Sum/Average/Min/Max (not Count)
+  operator:
+    type: Greater
+    value: 500
+  timeWindow:                        # Optional: restrict to recent window
+    duration: 90
+    unit: day
+  filter:                            # Optional: filter rows before aggregation
+    type: And
+    conditions:
+      - type: Value
+        attribute: category
+        operator:
+          type: Equal
+          value: "Electronics"
+```
+
+`filter` supports the same operators as top-level Value conditions.
 
 ## Segment References (Include/Exclude)
-
-Reuse conditions from existing segments:
 
 ```yaml
 rule:
@@ -137,9 +131,34 @@ rule:
       segment: high-value-users
     - type: exclude              # Exclude members of another segment
       segment: churned-users
+    - type: include
+      segment: "Existing Segment Name" # Use the segment name as it appears in TD
 ```
 
-**Time units**: `year`, `quarter`, `month`, `week`, `day`, `hour`, `minute`, `second` (singular form only)
+## Nested Condition Groups
+
+Combine And/Or logic with nesting:
+
+```yaml
+rule:
+  type: And
+  conditions:
+    - type: Or
+      conditions:
+        - type: Value
+          attribute: country
+          operator: { type: Equal, value: "US" }
+        - type: Value
+          attribute: country
+          operator: { type: Equal, value: "CA" }
+    - type: Value
+      attribute: ltv
+      operator: { type: Greater, value: 1000 }
+```
+
+## Array Matching
+
+Add `arrayMatching` to Value/Behavior conditions: `any | all | { atLeast: N } | { atMost: N } | { exactly: N }`
 
 ## Folder Structure
 
@@ -156,11 +175,13 @@ segments/customer-360/
 |-------|----------|
 | Context not set | `tdx sg use "Customer 360"` |
 | Field not available | `tdx sg fields` or run parent workflow |
-| Activation not working | `tdx connection list` to verify connection |
+| Between missing bounds | At least one of `min` or `max` required |
+| Behavior source unknown | Check parent segment behavior table names |
 
 ## Related Skills
 
-- **connector-config** - Configure connector_config for activations
+- **activation** - Configure activations (connections, schedule, columns)
+- **connector-config** - `connector_config` fields per connector type
 - **validate-segment** - Validate segment YAML syntax
 - **parent-segment** - Manage parent segments
 

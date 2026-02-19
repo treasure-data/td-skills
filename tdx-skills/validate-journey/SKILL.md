@@ -1,6 +1,6 @@
 ---
 name: validate-journey
-description: Validates CDP journey YAML configurations against tdx schema requirements. Use when reviewing journey structure, checking step types and parameters, verifying segment references, or troubleshooting journey configuration errors before pushing to Treasure Data.
+description: Validation reference for CDP journey YAML. Lists all error codes, step type requirements, and flow control rules. Use alongside the **journey** skill when troubleshooting validation errors from `tdx journey validate` or `tdx journey push --dry-run`, checking step parameters, or understanding flow control constraints (merge, branching, convergence).
 ---
 
 # Journey YAML Validation
@@ -11,59 +11,185 @@ tdx journey validate path/to/journey.yml  # Validate specific file
 tdx journey push --dry-run                # Preview changes before push
 ```
 
+## Validation Checks
+
+### Structure Validation
+
+| Code | Level | Description |
+|------|-------|-------------|
+| `MISSING_NAME` | error | Journey missing `name` field |
+| `MISSING_STAGES` | error | Journey has no `stages` defined |
+| `MISSING_GOAL` | error | Journey has no `goal` defined |
+| `TOO_MANY_STAGES` | error | More than 8 stages |
+| `MISSING_ENTRY_CRITERIA` | error | Stage missing `entry_criteria` |
+| `MISSING_MILESTONE` | error | Non-last stage missing `milestone` |
+| `MISSING_EXIT_CRITERIA` | warning | Stage has no `exit_criteria` |
+
+### Step Count Validation
+
+| Code | Level | Description |
+|------|-------|-------------|
+| `INSUFFICIENT_STEPS` | error | Stage has 0-1 steps (needs at least 2) |
+| `FEW_STEPS` | warning | Stage has 2-3 steps (may be too simple) |
+
+### Step Validation
+
+| Code | Level | Description |
+|------|-------|-------------|
+| `DUPLICATE_STEP_NAME` | error | Two steps share the same name |
+| `INVALID_NEXT_REFERENCE` | error | `next` points to non-existent step |
+| `MISSING_WAIT_PARAMS` | error | Wait step missing `duration`+`unit` or `condition` |
+| `MISSING_SEGMENT_REFERENCE` | error | Condition wait or branch missing `segment` |
+| `MISSING_ACTIVATION_REF` | error | Activation step missing `with.activation` |
+| `MISSING_CONDITIONS` | error | Decision point or AB test missing branches/variants |
+| `INVALID_AB_TEST_PERCENTAGES` | error | AB test variant percentages don't sum to 100 |
+| `INVALID_JUMP_TARGET` | error | Jump step missing `target.journey` or `target.stage` |
+| `END_STEP_HAS_NEXT_OR_WITH` | error | End step has `next` or `with` field |
+
+### Flow Control Validation
+
+| Code | Level | Description |
+|------|-------|-------------|
+| `MISSING_END_STEP` | error | Stage has no `end` step |
+| `CONVERGENCE_WITHOUT_MERGE` | error | Multiple paths converge on a non-merge step |
+| `SINGLE_INPUT_MERGE` | warning | Merge step has only one input path |
+| `MERGE_TO_MERGE_CHAIN` | error | Merge step's `next` is another merge step |
+| `BRANCH_DIRECTLY_TO_MERGE` | error | Decision/A/B test/condition wait branch goes directly to merge (no action) |
+
+### API Constraints (not checked by `tdx journey validate`, but rejected by the API)
+
+| Constraint | Description |
+|-----------|-------------|
+| Branch must have activation | Every decision_point/ab_test/condition wait branch MUST have an activation step before merge |
+| Wait after activation | A wait step must follow every activation step. If activation → merge, place wait after merge |
+
+### Reference Validation
+
+| Code | Level | Description |
+|------|-------|-------------|
+| `MISSING_ACTIVATION_DEFINITION` | error | Activation key not found in `activations:` section |
+| `UNUSED_EMBEDDED_SEGMENT` | warning | Segment defined in `segments:` but never referenced |
+
 ## Required Structure
 
 ```yaml
 type: journey              # Required
 name: Journey Name
-
 reentry: no_reentry        # no_reentry | reentry_unless_goal_achieved | reentry_always
 
+goal:                      # Required
+  name: Goal Name
+  segment: goal-segment    # Embedded segment (defined in segments: section)
+
 journeys:
-  - state: draft           # draft | launched
-    latest: true           # Exactly one must be true
+  - state: draft
     stages:
       - name: Stage Name
-        steps: [...]
+        entry_criteria:        # Required
+          name: Entry Name
+          segment: entry-segment
+        exit_criteria:         # Recommended (warning if missing)
+          - name: Exit Name
+            segment: exit-segment
+        milestone:             # Required for non-last stages
+          name: Milestone Name
+          segment: milestone-segment
+        steps:                 # At least 2 steps required (4+ recommended)
+          - type: activation
+            name: Send Email
+            next: End Stage
+            with:
+              activation: email-key
+          - type: end
+            name: End Stage
 ```
 
-**Limits**: Max 8 stages, 120 events/journey, 70 events/stage, 30 versions
+**Limits**: Max 8 stages (validated locally). API constraints: 120 events/journey, 70 events/stage, 30 versions
 
 ## Step Types Quick Reference
 
 | Type | Required `with` | Notes |
 |------|-----------------|-------|
-| `wait` | `duration` + `unit` OR `condition` | condition has `segment`, optional `next`, `timeout` |
+| `wait` | `duration` + `unit`, OR `condition`, OR `wait_until` | Condition wait: NO top-level `next:` (paths inside `condition`). Optional: `days_of_week` |
 | `activation` | `activation` | key from activations section |
 | `decision_point` | `branches[]` | each needs segment, next |
 | `ab_test` | `variants[]` | percentages must sum to 100 |
-| `merge` | (none) | |
+| `merge` | (none) | required when multiple paths converge |
 | `jump` | `target` with `journey`, `stage` | target is an object |
-| `end` | (none) | no `next` or `with` |
+| `end` | (none) | no `next` or `with` allowed |
 
 **Important**: `next:` is a direct field on step, not inside `with:`
 
-## Wait Condition Format
+## Design Rules (not caught by validator)
+
+- Condition wait paths MUST lead to **different actions** — if both paths do the same thing, use duration wait instead
+- Every branch (decision_point, ab_test, condition wait) should perform a **meaningful, distinct action**
+- Prefer flat branching over nested branching — inner branches must merge before joining outer branch
+- A wait step must follow every activation step (place after merge if activation → merge)
+- **Frequency capping**: wait between activations; avoid >1 message/day/channel
+- **Consent/Suppression**: use entry_criteria/exit_criteria segments for opt-in and removal
+
+## Flow Control Rules
 
 ```yaml
-# Wait for segment match with different paths for matched vs timeout
-- type: wait
-  name: Wait for Purchase
+# Pattern: decision → actions → merge → wait → end
+- type: decision_point
+  name: Check Status
   with:
-    condition:
-      segment: made-purchase    # Wait until segment match
-      next: follow-up           # Optional: defaults to next sequential step
-      timeout:                  # Max wait duration
-        duration: 14
-        unit: day
-        next: timeout-path      # Required when using different paths
+    branches:
+      - name: Active
+        segment: active_users
+        next: Send Offer          # Must NOT point directly to merge
+      - name: Others
+        excluded: true
+        next: Send Reminder
+
+- type: activation
+  name: Send Offer
+  next: Rejoin
+  with: { activation: offer }
+
+- type: activation
+  name: Send Reminder
+  next: Rejoin
+  with: { activation: reminder }
+
+- type: merge
+  name: Rejoin                    # Required: multiple paths need merge
+  next: Wait After Rejoin         # Must NOT point to another merge
+
+- type: wait
+  name: Wait After Rejoin
+  next: end
+  with: { duration: 1, unit: day }
+
+- type: end
+  name: End Stage
 ```
+
+## Condition Wait Format
+
+Condition wait has NO top-level `next:` — paths are inside `condition`:
+
+```yaml
+with:
+  condition:
+    segment: made-purchase
+    next: matched-path          # Path when condition met
+    timeout:
+      duration: 14
+      unit: day
+      next: timeout-path        # Path when max wait exceeded
+```
+
+See **journey** skill for all wait step options (duration, wait_until, days_of_week).
 
 ## Segment References
 
-- Embedded: `segment: my-segment` (defined in `segments:` section)
-- External: `segment: ref:Existing Segment` (use `ref:` prefix)
+- **Embedded** (recommended): `segment: my-segment` (defined in `segments:` section)
+- **External ref**: `segment: ref:Segment Name` — see **journey** skill for `ref:` limitations
 
 ## Related Skills
 
 - **journey** - Full journey creation and management
+- **validate-segment** - Segment rule validation
