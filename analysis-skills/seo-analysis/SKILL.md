@@ -19,8 +19,8 @@ Verify each tool and record what is available:
 |------|-------------|-----------|
 | Playwright | `playwright-cli --version` | **Yes — abort if unavailable** |
 | GSC | `google_search_console_list_sites` | No — skip GSC-dependent tasks |
-| SerpAPI | `ToolSearch("select:mcp__tdx-studio__serpapi_google_search")` | No — skip SERP feature analysis |
-| GA4 | `ToolSearch("google_analytics")` | No — skip behavior metrics |
+| SerpAPI | `serpapi_google_search` | No — skip SERP feature analysis |
+| GA4 | `google_analytics_list_properties` | No — skip behavior metrics |
 
 If Playwright is not available, stop and tell the user: "Playwright is required for SEO analysis. Please install it first."
 
