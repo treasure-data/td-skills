@@ -127,7 +127,7 @@ Structured data with click-to-sort columns. Two formats accepted:
 
 **Format 1 — Flat arrays** (compact):
 ```yaml
-- pos: "3-1"
+- pos: ["3-1", "3-4"]            # merged across columns 1-4
   type: table
   title: "Top Keywords"
   table:
