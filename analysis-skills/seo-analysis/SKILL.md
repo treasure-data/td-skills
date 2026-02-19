@@ -114,14 +114,12 @@ User behavior data — engagement, bounce rate, conversions per page. Use for mo
 
 The dashboard shows **data and analysis only** — no action items, no recommendations. MUST read the **grid-dashboard** skill for YAML format, cell types, and layout reference. **Build the YAML incrementally** — follow the incremental approach described in the grid-dashboard skill.
 
-Design the grid layout based on the analysis dimensions you collected. Use `pages:` structure with one entry per analyzed page. One file per site. **Always include a glossary** as the last row — define all abbreviations and industry terms used in the dashboard.
+Design the grid layout freely based on the actual data you collected — choose the number of rows, columns, and cell types that best tell the story. Do NOT follow a fixed template. Use `pages:` structure with one entry per analyzed page. One file per site. **Always include a glossary** as the last row — define all abbreviations and industry terms used in the dashboard.
 
 Save to `{cwd}/seo/seo-dashboard-{domain}.yaml` and call with the **absolute path**:
 ```
 preview_grid_dashboard({ file_path: "/absolute/path/to/seo/seo-dashboard-{domain}.yaml" })
 ```
-
-Reference template: [references/dashboard-template.yaml](references/dashboard-template.yaml)
 
 **Column conventions**: SERP features: `AB` `AI` `PAA` `KG` `LP` `SH`. Drift: `Stable (0)`, `Rising (-2)`, `Declining (+4)`, `Crash (+8)`, `Surge (-6)`.
 
@@ -153,8 +151,6 @@ Read these files as needed during analysis. Do not load all at once.
 | BLUF Writing Patterns | Writing before→after recommendations | [references/bluf-patterns.md](references/bluf-patterns.md) |
 | Intent Classification | Mapping SERP features to content format | [references/intent-classification.md](references/intent-classification.md) |
 | Zero-Click Strategy | Classifying zero-click queries (Type A/B/C/D) | [references/zero-click-strategy.md](references/zero-click-strategy.md) |
-| Platform Citations | AI platform-specific optimization | [references/platform-citations.md](references/platform-citations.md) |
-| Dashboard Template | YAML template per page (reference example) | [references/dashboard-template.yaml](references/dashboard-template.yaml) |
 | CTR Impact Scoring | Baseline CTR + SERP penalty calculation | [references/ctr-scoring.md](references/ctr-scoring.md) |
 | Topical Clustering | Cluster algorithm + authority levels | [references/topical-clustering.md](references/topical-clustering.md) |
 | GSC Query Patterns | GSC API call patterns + jq filters | [references/gsc-query-patterns.md](references/gsc-query-patterns.md) |
