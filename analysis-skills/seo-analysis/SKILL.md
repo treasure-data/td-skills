@@ -138,12 +138,6 @@ Each action item uses the `{as_is, to_be, reason}` structure. Key requirements:
 
 Read the **action-report** skill for YAML format and field reference.
 
-## Output 3: Redline Preview (Optional)
-
-After the action report is complete, ask the user: **"Would you like to see a redline preview with all changes applied to the live page?"**
-
-If yes, read [references/redline-preview.md](references/redline-preview.md) for the complete DOM manipulation workflow (CSS injection, 4 replacement patterns, screenshot).
-
 ## References
 
 Read these files as needed during analysis. Do not load all at once.
@@ -156,7 +150,6 @@ Read these files as needed during analysis. Do not load all at once.
 | Zero-Click Strategy | Classifying zero-click queries (Type A/B/C/D) | [references/zero-click-strategy.md](references/zero-click-strategy.md) |
 | Platform Citations | AI platform-specific optimization | [references/platform-citations.md](references/platform-citations.md) |
 | Dashboard Template | YAML template per page (reference example) | [references/dashboard-template.yaml](references/dashboard-template.yaml) |
-| Redline Preview | DOM manipulation workflow for visual diff | [references/redline-preview.md](references/redline-preview.md) |
 | CTR Impact Scoring | Baseline CTR + SERP penalty calculation | [references/ctr-scoring.md](references/ctr-scoring.md) |
 | Topical Clustering | Cluster algorithm + authority levels | [references/topical-clustering.md](references/topical-clustering.md) |
 | GSC Query Patterns | GSC API call patterns + jq filters | [references/gsc-query-patterns.md](references/gsc-query-patterns.md) |
