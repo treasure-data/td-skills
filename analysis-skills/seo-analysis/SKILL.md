@@ -87,7 +87,7 @@ User behavior data — engagement, bounce rate, conversions per page. Use for mo
 
 The dashboard shows **data and analysis only** — no action items, no recommendations. Read the **grid-dashboard** skill for YAML format, cell types, and layout reference.
 
-Design the grid layout based on the analysis dimensions you collected. Use `pages:` structure with one entry per analyzed page. One file per site.
+Design the grid layout based on the analysis dimensions you collected. Use `pages:` structure with one entry per analyzed page. One file per site. **Always include a glossary** as the last row — define all abbreviations and industry terms used in the dashboard.
 
 Save to `{cwd}/seo/seo-dashboard-{domain}.yaml` and call with the **absolute path**:
 ```
@@ -114,6 +114,7 @@ Each action item uses the `{as_is, to_be, reason}` structure. Key requirements:
 - `category`: Map to AEO/SEO dimension (Content Structure, Structured Data, E-E-A-T, etc.)
 - `priority`: Based on effort-to-impact ratio (high = low effort + high impact)
 - `summary`: Include AEO score, key findings, and total estimated impact
+- **Glossary**: Include a glossary section at the end defining all abbreviations and industry terms used in the report
 
 For detailed content structure reference: [references/action-report-template.md](references/action-report-template.md)
 
@@ -289,9 +290,9 @@ Read these files as needed during analysis. Do not load all at once.
 | Platform Citations | AI platform-specific optimization | [references/platform-citations.md](references/platform-citations.md) |
 | Dashboard Template | YAML template per page (reference example) | [references/dashboard-template.yaml](references/dashboard-template.yaml) |
 | Action Report Template | Markdown action report structure | [references/action-report-template.md](references/action-report-template.md) |
-| CTR Impact Scoring | Baseline CTR + SERP penalty calculation | [../gsc-analysis/references/ctr-scoring.md](../gsc-analysis/references/ctr-scoring.md) |
-| Topical Clustering | Cluster algorithm + authority levels | [../gsc-analysis/references/topical-clustering.md](../gsc-analysis/references/topical-clustering.md) |
-| GSC Query Patterns | GSC API call patterns + jq filters | [../gsc-analysis/references/gsc-query-patterns.md](../gsc-analysis/references/gsc-query-patterns.md) |
+| CTR Impact Scoring | Baseline CTR + SERP penalty calculation | [references/ctr-scoring.md](references/ctr-scoring.md) |
+| Topical Clustering | Cluster algorithm + authority levels | [references/topical-clustering.md](references/topical-clustering.md) |
+| GSC Query Patterns | GSC API call patterns + jq filters | [references/gsc-query-patterns.md](references/gsc-query-patterns.md) |
 
 ## Fallback Output (CLI / No Artifact Panel)
 
@@ -301,5 +302,4 @@ When `preview_grid_dashboard` or `preview_action_report` is not available, outpu
 
 - **grid-dashboard** — Grid dashboard YAML format reference (cell types, layout, merging)
 - **action-report** — Action report YAML format reference (as-is/to-be/reason cards)
-- **gsc-analysis** — Deep GSC data analysis: Quick Wins, trends, cannibalization, device/country breakdown
 - **competitor-analysis** — SERP-based competitor discovery and structural comparison

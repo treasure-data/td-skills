@@ -25,7 +25,7 @@ Zero-click queries are keywords where a site has impressions but receives zero c
 1. **Align content format to intent**: If the query is informational, ensure the ranking page is a guide/article, not a product page
 2. **Create a dedicated page**: If no page matches the intent, create new content targeting the query
 3. **Improve title and meta description**: Rewrite to clearly signal the content matches the searcher's intent
-4. **Check cannibalization**: Ensure a better-matched page isn't being suppressed by an intent-mismatched page (see gsc-analysis skill — Cannibalization Detection)
+4. **Check cannibalization**: Ensure a better-matched page isn't being suppressed by an intent-mismatched page (check GSC data for keyword cannibalization)
 
 ### Type C: Brand Answer Box Owned
 

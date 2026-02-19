@@ -12,7 +12,7 @@ Discover competitors via live SERP data and compare page structures to identify 
 | Tool | What it provides in competitor context |
 |------|---------------------------------------|
 | **SerpAPI** (`serpapi_google_search`) | SERP-based competitor discovery (top organic results for target keyword), SERP feature map, Answer Box source identification, PAA questions for heading gaps. Check availability: `ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }` |
-| **Playwright** + `extract_page_signals.py` | On-page structure extraction for both user's page and competitor pages: headings, BLUF analysis, JSON-LD schema, content metrics, links. Setup: `playwright-cli install --skills`. Run: `playwright-cli open <url>` → extract HTML → `python3 analysis-skills/scripts/extract_page_signals.py /tmp/page.html --url <url>`. For subsequent pages use `playwright-cli goto <url>` instead of `open`. Close with `playwright-cli close` |
+| **Playwright** + `extract_page_signals.py` | On-page structure extraction for both user's page and competitor pages: headings, BLUF analysis, JSON-LD schema, content metrics, links. Setup: `playwright-cli install --skills`. Run: `playwright-cli open <url>` → extract HTML → `python3 scripts/extract_page_signals.py /tmp/page.html --url <url>`. For subsequent pages use `playwright-cli goto <url>` instead of `open`. Close with `playwright-cli close` |
 | **GSC MCP** (`google_search_console_*`) | Optional. User's own keyword performance data to identify which keywords to analyze competitively |
 
 ## SERP-Based Competitor Discovery
@@ -143,4 +143,3 @@ Different AI platforms weight different signals. See [../seo-analysis/references
 ## Related Skills
 
 - **seo-analysis** — Full SEO/AEO audit with scoring and prescriptive action plan
-- **gsc-analysis** — Keyword performance data to inform which keywords to analyze competitively
