@@ -186,7 +186,7 @@ Structured data with click-to-sort columns. Two formats accepted:
 
 ### `chart` — Chart.js Chart
 
-Any Chart.js chart type (bar, line, pie, doughnut, radar, etc.). Use for trends, distributions, comparisons.
+Pass standard Chart.js config (`type`, `data`, `options`). Any chart type supported.
 
 ```yaml
 - pos: "3-2"
@@ -209,34 +209,16 @@ Any Chart.js chart type (bar, line, pie, doughnut, radar, etc.). Use for trends,
 
 ### `markdown` — Rich Text
 
-GFM markdown rendered with marked.js. Use for summaries, recommendations, checklists, any text content. Both `content` and `markdown` keys are accepted.
+GFM markdown content. Both `content` and `markdown` keys are accepted.
 
 ```yaml
 - pos: "4-1"
   type: markdown
-  title: "Recommendations"
+  title: "Summary"
   content: |
-    ### 1. Add BLUF to H2 sections
-    **Impact**: High | **Dimension**: Content Structure
-
-    > **Before**: "There are many ways to think about..."
-    > **After**: "A CDP works by collecting first-party data..."
-
-    ### 2. Add FAQPage schema
-    **Impact**: High | **Dimension**: Structured Data
+    ### Key Finding
+    **Impact**: High — content depth is 1/6 of competitors
 ```
-
-`markdown` key also works:
-```yaml
-- pos: "4-1"
-  type: markdown
-  title: "Glossary"
-  markdown: |
-    - **AI**: AI Overview
-    - **PAA**: People Also Ask
-```
-
-Markdown tables (GFM pipe syntax) are also styled with the dashboard theme.
 
 ## Rendering
 
