@@ -209,7 +209,7 @@ Pass standard Chart.js config (`type`, `data`, `options`). Any chart type suppor
 
 ### `markdown` — Rich Text
 
-GFM markdown content. Both `content` and `markdown` keys are accepted.
+GFM markdown content. Use `content` or `markdown` key — **must be a top-level string, NOT a nested object**.
 
 ```yaml
 - pos: "4-1"
@@ -218,6 +218,13 @@ GFM markdown content. Both `content` and `markdown` keys are accepted.
   content: |
     ### Key Finding
     **Impact**: High — content depth is 1/6 of competitors
+```
+
+**WRONG** — `markdown.content` nested object will cause a tool error:
+```yaml
+  markdown:
+    content: |       # ✗ nested under markdown — must be a top-level key
+      Some text
 ```
 
 ## Rendering
