@@ -66,11 +66,37 @@ tdx api "/audiences/<ps_id>/realtime_attributes?page[size]=100" --type cdp | \
   jq '.data[] | {id, name, type}'
 ```
 
-### 9c. Create Personalization Entity
+### 9c. Validate Personalization Payload (REQUIRED)
 
-**Critical Validation Rules:**
-1. ✅ Use `null` not `[]` for unused arrays (stringBuilder, segmentPayload)
-2. ✅ At least one of attributePayload/stringBuilder must have content
+**⚠️ CRITICAL: Always validate the payload BEFORE making the API call.**
+
+**Instructions for Claude Code:**
+
+Before creating the personalization entity, you MUST:
+
+1. **Generate the complete personalization payload JSON** with actual values (not placeholders)
+2. **Use the `rt-personalization-validation` skill** to validate the payload structure
+3. **Fix any validation errors** identified by the validation skill
+4. **Verify these critical rules:**
+   - ✅ Empty arrays `[]` must be changed to `null` (most common error)
+   - ✅ At least one of `attributePayload` or `stringBuilder` has content (not null/empty)
+   - ✅ All `outputName` values are unique across the section
+   - ✅ List attributes include correct `subAttributeIdentifier`
+   - ✅ No template brackets `{{` or `}}` in stringBuilder values
+
+**Only proceed to 9d after validation passes.**
+
+**Why this matters:** The API has strict validation rules with misleading error messages. Proactive validation prevents the common "Attribute payload can't be blank" error which wastes time debugging.
+
+---
+
+### 9d. Create Personalization Entity
+
+**After validation passes in 9c**, proceed with entity creation:
+
+**Entity Creation Rules:**
+1. ✅ Use `null` not `[]` for unused arrays (validated in 9c)
+2. ✅ At least one of attributePayload/stringBuilder has content (validated in 9c)
 3. ✅ Generate unique payload node ID using UUID
 
 ```bash

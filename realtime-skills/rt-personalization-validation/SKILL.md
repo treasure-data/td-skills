@@ -1,11 +1,27 @@
 ---
 name: rt-personalization-validation
-description: Validates RT Personalization Entity payloads before creation to prevent common API errors. Use when encountering "Attribute payload can't be blank" or other personalization creation errors, or when reviewing personalization entity JSON before API calls.
+description: Validates RT Personalization Entity payloads before creation to prevent common API errors. MUST be invoked proactively during rt-setup-personalization workflow at Step 9c before making the entity creation API call. Also use when encountering "Attribute payload can't be blank" errors or when reviewing personalization entity JSON.
 ---
 
 # RT Personalization Entity Validation
 
 Validates personalization entity payloads and provides error-free templates.
+
+## When to Use This Skill
+
+### Proactive Validation (REQUIRED)
+**During `rt-setup-personalization` workflow at Step 9c:**
+- MUST be invoked BEFORE making the personalization entity creation API call
+- Validates the complete payload JSON with actual values (not placeholders)
+- Prevents common API errors by catching issues before submission
+- This is a mandatory workflow step, not optional
+
+### Reactive Validation (Debugging)
+**After encountering API errors:**
+- When seeing "Attribute payload can't be blank" errors
+- When personalization creation fails with validation errors
+- When reviewing existing personalization configurations
+- When troubleshooting payload structure issues
 
 ## Critical Validation Rules
 
