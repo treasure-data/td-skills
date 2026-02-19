@@ -85,7 +85,9 @@ See **connector-config** skill for `connector_config` details.
 
 ## Behavior Conditions (Aggregations)
 
-Query behavior data from parent segment with aggregations:
+Query behavior data from parent segment with aggregations.
+
+**CRITICAL: Always use `attribute: ""` (empty string) for behavior aggregations!**
 
 ```yaml
 rule:
@@ -93,37 +95,41 @@ rule:
   conditions:
     # Count behavior occurrences
     - type: Value
-      attribute: add_to_cart_event
+      attribute: ""              # Empty string for behavior aggregations!
       operator:
         type: GreaterEqual
         value: 1
       aggregation:
         type: Count              # Count | Sum | Avg | Min | Max
-      source: cart_abandonment   # Behavior name from parent segment
+      source: behavior_email_open   # Full behavior table name (use tdx ps desc to find)
 
-    # Sum behavior values
+    # Sum behavior column values
     - type: Value
-      attribute: order_total
+      attribute: ""              # Empty string for behavior aggregations!
       operator:
         type: Greater
         value: 500
       aggregation:
         type: Sum
-      source: purchase_history
+      source: behavior_purchase
 
-    # Time-based behavior filtering
+    # Average, Min, Max also supported
     - type: Value
-      attribute: timestamp
+      attribute: ""
       operator:
         type: GreaterEqual
-        value: 30
-        unit: days               # Filter to last 30 days
+        value: 100
       aggregation:
-        type: Max
-      source: purchase_history
+        type: Average
+      source: behavior_purchase
 ```
 
-**Aggregation types**: `Count`, `Sum`, `Avg`, `Min`, `Max`
+**Finding behavior table names**: Use `tdx ps desc "ParentSegmentName"` to list available behavior tables.
+Behavior tables typically start with `behavior_` prefix (e.g., `behavior_email_open`, `behavior_purchase`).
+
+**Aggregation types**: `Count`, `Sum`, `Average`, `Min`, `Max`
+
+**Common mistake**: DO NOT use a field name in `attribute` - it must be `""` (empty string) for behavior aggregations!
 
 ## Segment References (Include/Exclude)
 
