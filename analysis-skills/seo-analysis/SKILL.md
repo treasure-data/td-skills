@@ -115,7 +115,7 @@ User behavior data — engagement, bounce rate, conversions per page. Use for mo
 
 ## Output 1: Data Dashboard
 
-The dashboard shows **data and analysis only** — no action items, no recommendations. Read the **grid-dashboard** skill for YAML format, cell types, and layout reference.
+The dashboard shows **data and analysis only** — no action items, no recommendations. MUST read the **grid-dashboard** skill for YAML format, cell types, and layout reference.
 
 Design the grid layout based on the analysis dimensions you collected. Use `pages:` structure with one entry per analyzed page. One file per site. **Always include a glossary** as the last row — define all abbreviations and industry terms used in the dashboard.
 
@@ -130,7 +130,7 @@ Reference template: [references/dashboard-template.yaml](references/dashboard-te
 
 ## Output 2: Action Report
 
-After the dashboard, render an **interactive action report** via `preview_action_report`. See **action-report** skill for YAML format and field reference.
+After the dashboard, render an **interactive action report** via `preview_action_report`. MUST read **action-report** skill for YAML format and field reference.
 
 Save to `{cwd}/seo/action-report-{slug}.yaml` and call with the **absolute path**:
 ```
@@ -146,7 +146,7 @@ Each action item uses the `{as_is, to_be, reason}` structure. Key requirements:
 - `summary`: Include AEO score, key findings, and total estimated impact
 - **Glossary**: Include a glossary section at the end defining all abbreviations and industry terms used in the report
 
-Read the **action-report** skill for YAML format and field reference.
+Always update the report in small batches (≤3 cards per edit). Run `preview_action_report` once, at the end, after the report is fully finalized.
 
 ## References
 
