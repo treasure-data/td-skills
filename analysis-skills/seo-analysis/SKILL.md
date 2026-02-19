@@ -1,6 +1,6 @@
 ---
 name: seo-analysis
-description: "Use this skill when the user wants a comprehensive SEO or AEO (Answer Engine Optimization) audit of their website or specific pages. Trigger on requests like 'analyze SEO', 'AEO score', 'SEO audit', 'optimize for AI search', 'improve rankings', or 'why is my page not ranking'. Combines Google Search Console, SerpAPI, Playwright, and GA4 to produce a data dashboard and a detailed action report with before/after recommendations."
+description: "Runs SEO and AEO (Answer Engine Optimization) analysis on websites or specific pages. Use when the user mentions SEO, AEO, search rankings, search optimization, or wants to analyze how their pages perform in search engines and AI answers. Produces a data dashboard and action report with before/after recommendations."
 ---
 
 # SEO & AEO Analysis
