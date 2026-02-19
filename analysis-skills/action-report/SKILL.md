@@ -1,6 +1,6 @@
 ---
 name: action-report
-description: "Use this skill when you need to output a structured action report in the artifact panel using preview_action_report. Trigger when presenting prioritized recommendations with before/after changes. Defines the YAML format for action reports with title, executive summary, and action items (as-is, to-be, reason). Also use when another skill references 'action-report' for output format."
+description: "YAML format reference for action reports rendered via preview_action_report. MUST be read before writing any action report YAML — defines the report structure (title, summary, actions array) and action item fields (as_is, to_be, reason, priority, category, impact) with incremental build workflow. Required by seo-analysis and any skill that produces prioritized recommendations."
 ---
 
 # Action Report
