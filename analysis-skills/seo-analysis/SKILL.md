@@ -54,7 +54,17 @@ Example analysis dimensions (adapt based on available tools):
 - `query_analytics` — keyword/page performance with dimensions and filters
 - Data has **~3-day delay**: set `end_date` to 3 days before today
 - Standard window: 28 days. Large results (5,000 rows) can exceed 256KB — use `jq`, `Grep`, or `Read` with offset/limit
-- Use `dimensions: ["query", "page"]` for keyword→page mapping
+
+**CRITICAL**: `dimensions` must be a real array and `row_limit` must be a number — NOT strings:
+```json
+{
+  "site_url": "sc-domain:example.com",
+  "start_date": "2026-01-20",
+  "end_date": "2026-02-16",
+  "dimensions": ["query", "page"],
+  "row_limit": 50
+}
+```
 
 ### SerpAPI (`serpapi_google_search`)
 
