@@ -33,19 +33,22 @@ The analysis is **per page**. Before creating tasks, determine which page(s) to 
 
 ### Step 3: Create Task list based on available tools
 
-Review the **Page Grid Layout** (below) and **Action Report** output requirements. Each cell in the grid has a `Source` column showing which tool provides its data. Build your Task list by:
+Build your Task list from the analysis dimensions below, scoped to the tools confirmed in Step 1. Read the **grid-dashboard** and **action-report** skills for output format reference.
 
-1. Filtering the grid layout to rows whose Source tools are available
-2. Determining what data to collect from each available tool
-3. Adding output tasks (write YAML, call preview, write action report)
-
-The agent decides the concrete tasks — do not follow a fixed checklist.
+Example analysis dimensions (adapt based on available tools):
+- GSC keyword & page performance data (current vs prior period comparison)
+- Quick Win keywords (near page 1), keyword cannibalization detection
+- SERP feature analysis per keyword (answer box, AI overview, PAA, knowledge graph)
+- On-page structure extraction (headings, JSON-LD schemas, meta tags, internal links, content depth)
+- Full-page visual analysis via screenshot (trust signals, E-E-A-T visual cues, CTA visibility, hero/above-fold, image quality, visual hierarchy)
+- Competitor page structure comparison (top SERP winners' headings, word count, schemas, visuals)
+- AEO scoring (Content Structure, Structured Data, E-E-A-T, AI Readability, Technical AEO)
+- On-Page & Technical SEO scoring
+- User behavior context (engagement, bounce rate, conversions)
 
 ## Tools
 
 ### Google Search Console (`google_search_console_*`)
-
-Keyword performance data — the foundation of the analysis.
 
 - `list_sites` — discover properties (prefer `sc-domain:` format)
 - `query_analytics` — keyword/page performance with dimensions and filters
@@ -55,18 +58,14 @@ Keyword performance data — the foundation of the analysis.
 
 ### SerpAPI (`serpapi_google_search`)
 
-Live SERP features, position drift, zero-click root cause diagnosis.
-
 **Availability check** (required before use):
 ```
 ToolSearch { "query": "select:mcp__tdx-studio__serpapi_google_search", "max_results": 1 }
 ```
 
-Call for each high-priority keyword from GSC: `serpapi_google_search({ q: "...", gl: "us", hl: "en" })`. Extract `answer_box`, `ai_overview`, `people_also_ask`, `knowledge_graph`, `organic_results`, `shopping_results`, `local_results`.
+Call: `serpapi_google_search({ q: "...", gl: "us", hl: "en" })`. Key response fields: `answer_box`, `ai_overview`, `people_also_ask`, `knowledge_graph`, `organic_results`, `shopping_results`, `local_results`.
 
 ### Playwright (`playwright-cli`)
-
-On-page structure extraction and visual analysis — **required for AEO scoring and before→after recommendations**.
 
 ```bash
 playwright-cli install --skills                    # setup (once per session)
@@ -74,30 +73,11 @@ playwright-cli open <url>                          # open page
 playwright-cli run-code "async page => {           # extract HTML
   const html = await page.content(); return html;
 }" > ./seo/page.html
+playwright-cli goto <url>                          # navigate (after open)
+playwright-cli screenshot {cwd}/seo/visual-{slug}.png --full-page  # visual analysis
 ```
 
-Extract from HTML: headings (H1-H6), BLUF analysis (first paragraph after each H2), JSON-LD schemas, word count, internal/external links with anchor text, meta tags, author info, date signals, images with alt text.
-
-For competitor analysis, scrape top 5 organic results from SerpAPI using the same extraction pattern. Use `playwright-cli goto <url>` for subsequent pages (not `open`).
-
-#### Visual Analysis (full-page screenshot)
-
-Take a full-page screenshot and visually analyze the page. This catches issues that DOM parsing alone cannot detect.
-
-```bash
-playwright-cli screenshot {cwd}/seo/visual-{slug}.png --full-page
-```
-
-Open the screenshot with `open_file` and evaluate:
-- **Hero / Above-the-fold**: Is the value proposition immediately clear? Is there a compelling hero image or visual?
-- **Trust Signals**: Customer logos, certifications, awards, security badges, partner badges
-- **E-E-A-T Visual**: Author photos, team photos, founder images, credentials, bylines
-- **CTA Visibility**: Are primary CTAs prominent and above-the-fold? Color contrast, size, placement
-- **Image Quality**: Professional vs stock, relevance, branding consistency
-- **Visual Hierarchy**: Clear heading structure, whitespace, scannable layout
-- **Social Proof**: Testimonials with photos, case study links, review ratings
-
-Record findings for the dashboard (Visual Analysis scores) and action report (specific recommendations with before→after).
+Open screenshots with `open_file` to visually analyze the page — this catches issues that DOM parsing alone cannot detect.
 
 ### Google Analytics (`google_analytics_*`)
 
@@ -105,76 +85,16 @@ User behavior data — engagement, bounce rate, conversions per page. Use for mo
 
 ## Output 1: Data Dashboard
 
-The dashboard shows **data and analysis only** — no action items, no recommendations. Its purpose is to present the current state of SEO/AEO performance so the user can understand where they stand before reviewing the action report.
+The dashboard shows **data and analysis only** — no action items, no recommendations. Read the **grid-dashboard** skill for YAML format, cell types, and layout reference.
 
-Write results as a **paged grid-dashboard YAML** and call `preview_grid_dashboard`. See **grid-dashboard** skill for cell type reference.
-
-### Build YAML Page by Page
-
-The YAML is **one file per site** with analyzed pages as keys under `pages:`. Each page has a 4×12 grid — too large to write in a single pass.
-
-1. Write `pages:` header + first page's complete grid/cells
-2. Call `preview_grid_dashboard` to verify rendering
-3. Append additional pages to the same file
-4. Call `preview_grid_dashboard` again to refresh
-
-### Page Grid Layout (4×12 per page)
-
-**Cell merging syntax**: single cell `pos: "1-1"`, merged range `pos: ["2-2", "2-4"]` (YAML array, NOT a string).
-
-| Row | pos | Type | Content | Source |
-|-----|-----|------|---------|--------|
-| 1 | "1-1", "1-2", "1-3", "1-4" | `kpi` × 4 | Impressions, Clicks, Avg CTR, Avg Position | GSC |
-| 2 | "2-1" | `gauge` | AEO Score (value/100, grade label) | Playwright |
-| 2 | ["2-2", "2-4"] | `scores` | AEO 5-dimension breakdown (Content Structure, Structured Data, E-E-A-T, AI Readability, Technical AEO) | Playwright |
-| 3 | ["3-1", "3-2"] | `scores` | On-Page SEO (title, meta, headings, internal links, content depth, visual content) | Playwright |
-| 3 | ["3-3", "3-4"] | `scores` | Technical SEO (HTTPS, canonical, structured data, mobile, page speed) | Playwright |
-| 4 | ["4-1", "4-2"] | `scores` | Visual & UX (Hero/Above-fold, Trust Signals, E-E-A-T Visual, CTA Visibility, Image Quality, Visual Hierarchy) | Playwright (screenshot) |
-| 4 | ["4-3", "4-4"] | `markdown` | Visual Analysis Findings — key observations from full-page screenshot review | Playwright (screenshot) |
-| 5 | ["5-1", "5-4"] | `table` | Competitor Content Patterns — top 5 SERP winners (headings, word count, format, visuals, schemas) | SerpAPI + Playwright |
-| 6 | ["6-1", "6-4"] | `table` | Topical Authority clusters (cluster, queries, pages, avg position, page-1 rate, level) | GSC |
-| 7 | ["7-1", "7-4"] | `table` | Quick Wins — keywords near page 1 (position 8-20, high impressions) | GSC |
-| 8 | ["8-1", "8-4"] | `table` | All Keywords + SERP features + drift | GSC + SerpAPI |
-| 9 | ["9-1", "9-2"] | `table` | Trending Up — keywords with improving position | GSC |
-| 9 | ["9-3", "9-4"] | `table` | Declining — keywords losing position | GSC |
-| 10 | ["10-1", "10-4"] | `table` | Keyword Cannibalization — same query ranking on multiple pages | GSC |
-| 11 | ["11-1", "11-4"] | `table` | Zero-Click Queries with type and root cause | GSC + SerpAPI |
-| 12 | ["12-1", "12-4"] | `table` | Glossary — abbreviations and terms used in this dashboard | — |
-
-### Adapting the Layout
-
-The 12-row layout is the **full data dashboard**. Adapt based on context:
-
-- **Tool unavailable**: Skip rows whose Source tool is missing. Adjust `grid.rows` accordingly. Row 1 (GSC KPIs) and row 7 (Keywords) are always included.
-- **Focused request**: If the user asks for specific analysis (e.g., "AEO score only", "keyword analysis only"), include only relevant rows.
-- **Single page**: Still use `pages:` structure with one entry.
-
-### YAML Structure
-
-```yaml
-pages:
-  "https://example.com/blog/cdp-guide":
-    title: "What is a CDP? Complete Guide"
-    description: "Analyzed 2026-02-18 (28-day window)"
-    grid:
-      columns: 4
-      rows: 12
-    cells:
-      - pos: "1-1"
-        type: kpi
-        title: "Impressions"
-        kpi: { value: "45,000", change: "+8.2%", trend: up, subtitle: "vs. prior 28 days" }
-      # ... remaining cells follow the layout table above
-```
-
-Full template: [references/dashboard-template.yaml](references/dashboard-template.yaml)
-
-### Rendering
+Design the grid layout based on the analysis dimensions you collected. Use `pages:` structure with one entry per analyzed page. One file per site.
 
 Save to `{cwd}/seo/seo-dashboard-{domain}.yaml` and call with the **absolute path**:
 ```
 preview_grid_dashboard({ file_path: "/absolute/path/to/seo/seo-dashboard-{domain}.yaml" })
 ```
+
+Reference template: [references/dashboard-template.yaml](references/dashboard-template.yaml)
 
 **Column conventions**: SERP features: `AB` `AI` `PAA` `KG` `LP` `SH`. Drift: `Stable (0)`, `Rising (-2)`, `Declining (+4)`, `Crash (+8)`, `Surge (-6)`.
 
@@ -367,7 +287,7 @@ Read these files as needed during analysis. Do not load all at once.
 | Intent Classification | Mapping SERP features to content format | [references/intent-classification.md](references/intent-classification.md) |
 | Zero-Click Strategy | Classifying zero-click queries (Type A/B/C/D) | [references/zero-click-strategy.md](references/zero-click-strategy.md) |
 | Platform Citations | AI platform-specific optimization | [references/platform-citations.md](references/platform-citations.md) |
-| Dashboard Template | Full 10-row YAML template per page | [references/dashboard-template.yaml](references/dashboard-template.yaml) |
+| Dashboard Template | YAML template per page (reference example) | [references/dashboard-template.yaml](references/dashboard-template.yaml) |
 | Action Report Template | Markdown action report structure | [references/action-report-template.md](references/action-report-template.md) |
 | CTR Impact Scoring | Baseline CTR + SERP penalty calculation | [../gsc-analysis/references/ctr-scoring.md](../gsc-analysis/references/ctr-scoring.md) |
 | Topical Clustering | Cluster algorithm + authority levels | [../gsc-analysis/references/topical-clustering.md](../gsc-analysis/references/topical-clustering.md) |
