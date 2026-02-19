@@ -90,6 +90,15 @@ playwright-cli screenshot {cwd}/seo/visual-{slug}.png --full-page
 
 Open screenshots with `open_file` to visually analyze the page — this catches issues that DOM parsing alone cannot detect.
 
+**On-page signal extraction** — after saving HTML, run the bundled script to extract structured SEO/AEO signals (headings, BLUF analysis, JSON-LD schemas, entity properties, links, images):
+```bash
+playwright-cli run-code "async page => {
+  const html = await page.content(); return html;
+}" > ./seo/page.html
+python3 scripts/extract_page_signals.py ./seo/page.html --url <url>
+```
+Output is JSON with word count, heading structure (with question detection), schema types and flags (FAQ, HowTo, Article, Breadcrumb, VideoObject, Speakable), BLUF pattern classification per H2 (definition/number/verdict/step/yesno), internal/external link counts with anchors, image alt text coverage, and E-E-A-T entity properties (author, sameAs, about). Use `--fields` to select specific fields, `--compact` for minified output.
+
 ### Google Analytics (`google_analytics_*`)
 
 User behavior data — engagement, bounce rate, conversions per page. Use for monitoring baselines and behavioral context for recommendations.
@@ -313,4 +322,3 @@ When `preview_grid_dashboard` or `preview_action_report` is not available, outpu
 
 - **grid-dashboard** — Grid dashboard YAML format reference (cell types, layout, merging)
 - **action-report** — Action report YAML format reference (as-is/to-be/reason cards)
-- **competitor-analysis** — SERP-based competitor discovery and structural comparison
