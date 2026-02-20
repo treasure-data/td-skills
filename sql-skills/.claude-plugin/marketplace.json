@@ -1,0 +1,32 @@
+{
+  "name": "sql-skills",
+  "owner": {
+    "name": "TD Skills",
+    "email": "dev@treasuredata.com"
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "description": "SQL skills for Treasure Data - Trino, Hive, and optimization tools"
+  },
+  "plugins": [
+    {
+      "name": "sql-skills",
+      "description": "SQL query skills for Treasure Data including Trino and Hive query optimization, time-based filtering, and advanced data analysis",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./trino",
+        "./hive",
+        "./trino-optimizer",
+        "./trino-to-hive-migration",
+        "./td-mcp",
+        "./time-filtering",
+        "./query-explainer",
+        "./schema-explorer",
+        "./smart-sampler",
+        "./data-profiler",
+        "./analytical-query"
+      ]
+    }
+  ]
+}

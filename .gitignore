@@ -1,0 +1,10 @@
+# Local documentation only
+sql-skills/docs/
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store

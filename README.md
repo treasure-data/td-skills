@@ -6,16 +6,50 @@ Treasure Data skills for [Claude Code](https://claude.com/claude-code) to enhanc
 
 Skills are folders of instructions and resources that Claude loads dynamically to improve performance on specialized tasks. These TD skills teach Claude how to use our tools and follow our best practices.
 
+## 🔴 MANDATORY AUTO-INVOCATION - SQL Analyst Suite
+
+**Five core SQL skills now automatically invoke based on your questions:**
+
+| Skill | Auto-Invokes When | Examples |
+|-------|------------------|----------|
+| **analytical-query** | Asking for analysis/metrics/trends | "Top 10 products by revenue", "Count daily signups", "Show revenue trends" |
+| **smart-sampler** | Asking for data samples/records | "Show 100 sample orders", "Give me examples of null emails", "Preview recent data" |
+| **schema-explorer** | Asking about schema/structure/PII | "What tables are available?", "Show me the schema for orders", "Find PII columns" |
+| **data-profiler** | Asking for data quality/distributions | "Profile the orders table", "Analyze data quality", "What's the distribution of revenue?" |
+| **query-explainer** | Sharing SQL queries to understand | "Explain this query: [SQL]", "What does this do?", "Break down this query" |
+
 ## Available Skills
 
 ### SQL Skills
 
-- **[sql-skills/trino](./sql-skills/trino)** - Write and optimize SQL queries for Trino with TD best practices
-- **[sql-skills/hive](./sql-skills/hive)** - Create efficient Hive queries following TD conventions
-- **[sql-skills/time-filtering](./sql-skills/time-filtering)** - Time-based filtering with td_interval() and td_time_range() for partition pruning and query performance
-- **[sql-skills/trino-optimizer](./sql-skills/trino-optimizer)** - Optimize slow Trino queries, fix timeouts and memory errors, reduce costs
+#### Core Analyst Skills ⭐ MANDATORY AUTO-INVOCATION
+
+**Analytical & Data Exploration Suite:**
+
+- **[sql-skills/analytical-query](./sql-skills/analytical-query)** - 🔴 **MANDATORY** - Natural language to SQL analytics. Auto-invokes on: summarize, aggregate, analyze, top N, trends, metrics, KPI. Generates optimized queries, executes automatically, and creates professional Plotly visualizations. **Also auto-invokes smart-sampler for sampling/data preview requests.**
+
+- **[sql-skills/smart-sampler](./sql-skills/smart-sampler)** - Intelligent data sampling with multiple strategies (random, time-based, stratified, edge-case). Auto-invokes for: sample, show records, preview data, show examples. Perfect for data exploration and finding examples without full scans.
+
+#### Query Support & Optimization
+
+**Schema Discovery & Analysis:**
+- **[sql-skills/schema-explorer](./sql-skills/schema-explorer)** - 🔴 **AUTO-INVOKED** - Discover databases, tables, columns, and PII fields across your TD environment. Auto-invokes on: "What tables", "Show schema", "Find tables with", "List columns", "Describe table"
+
+- **[sql-skills/data-profiler](./sql-skills/data-profiler)** - 🔴 **AUTO-INVOKED** - Analyze data quality, distributions, completeness, null rates, and outliers with professional visualizations. Auto-invokes on: "Profile table", "Analyze data quality", "Show distribution", "Data stats"
+
+- **[sql-skills/query-explainer](./sql-skills/query-explainer)** - 🔴 **AUTO-INVOKED** - Convert SQL queries to natural language explanations, identify performance issues, and generate documentation. Auto-invokes on: "Explain this query", "What does this SQL do?", "Break down this query"
+
+**Query Optimization & Development:**
+- **[sql-skills/trino](./sql-skills/trino)** - Write and optimize SQL queries for Trino with TD best practices (td_interval, approx functions, time filtering)
+- **[sql-skills/hive](./sql-skills/hive)** - Create efficient Hive queries following TD conventions for large data processing
+- **[sql-skills/time-filtering](./sql-skills/time-filtering)** - Advanced time-based filtering with td_interval() and td_time_range() for partition pruning and query performance
+- **[sql-skills/trino-optimizer](./sql-skills/trino-optimizer)** - Optimize slow Trino queries, fix timeouts and memory errors, reduce costs with execution log analysis
 - **[sql-skills/trino-to-hive-migration](./sql-skills/trino-to-hive-migration)** - Convert Trino queries to Hive to resolve memory errors and handle large datasets
 - **[sql-skills/td-mcp](./sql-skills/td-mcp)** - Connect Claude Code to TD via MCP server for natural language data exploration and queries
+
+#### Data Discovery & Profiling
+
+(See auto-invocation section above - schema-explorer and data-profiler are included above with auto-invocation rules)
 
 ### Realtime Skills
 
@@ -90,7 +124,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 2. **Browse and install plugins:**
 
    Select "Browse and install plugins" from the menu, then choose from:
-   - `sql-skills` - Trino and Hive query assistance, Trino CLI, and TD MCP server
+   - `sql-skills` - Analyst suite (analytical-query, smart-sampler, data-profiler), Trino and Hive query assistance, query optimization, and TD MCP server
    - `realtime-skills` - RT 2.0 end-to-end orchestrators, configuration, personalization services, real-time journeys, and activation/identity log monitoring
    - `workflow-skills` - Treasure Workflow creation, management, and dbt transformations
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
@@ -113,6 +147,20 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 Once installed, explicitly reference skills using the `skill` keyword to trigger them:
 
 ```
+"Show me the top 10 products by revenue last 30 days" → analytical-query (AUTO-INVOKED)
+"Sample 100 recent orders from the sales table" → smart-sampler (AUTO-INVOKED)
+"Give me examples of null email addresses" → smart-sampler (AUTO-INVOKED)
+"Analyze the revenue trend by month" → analytical-query (AUTO-INVOKED)
+"Profile the customers table for data quality" → data-profiler (AUTO-INVOKED)
+"What tables are available in my database?" → schema-explorer (AUTO-INVOKED)
+"Show me the schema for the orders table" → schema-explorer (AUTO-INVOKED)
+"Find tables with PII columns" → schema-explorer (AUTO-INVOKED)
+"What columns does the sales table have?" → schema-explorer (AUTO-INVOKED)
+"Explain this query: SELECT * FROM orders WHERE time > now() - 7d" → query-explainer (AUTO-INVOKED)
+"What does this SQL do? [paste query]" → query-explainer (AUTO-INVOKED)
+"Break down this complex query step by step" → query-explainer (AUTO-INVOKED)
+"Profile the events table for null values and distribution" → data-profiler (AUTO-INVOKED)
+"Show me data quality metrics for the users table" → data-profiler (AUTO-INVOKED)
 "Use the Trino skill to extract data from sample_datasets.nasdaq table"
 "Use the Hive skill to write a query for daily user aggregation"
 "Use the time-filtering skill to add partition pruning to my query"
@@ -153,10 +201,12 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the visualization skill to create a Plotly chart with TD colors"
 ```
 
-Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
-- Use the word "skill" in your request
-- Be specific about what you want to accomplish
+**🔴 AUTO-INVOCATION NOTES:**
+- **Analytical-Query**: Automatically invoked for analysis questions (top, trends, count, sum, metrics)
+- **Smart-Sampler**: Automatically invoked for sampling requests (sample, show records, preview, examples)
+- **Schema-Explorer**: Automatically invoked for schema questions (what tables, show schema, find columns, describe table)
+- **Data-Profiler**: Automatically invoked for data quality/profiling requests (profile, analyze quality, distributions)
+- **Query-Explainer**: Automatically invoked when sharing SQL queries to understand (explain query, what does this do)
 
 ## Creating Your Own TD Skills
 
@@ -194,6 +244,13 @@ To contribute a new skill or improve an existing one:
 2. Test the skill with Claude Code
 3. Submit a pull request with clear documentation
 
+## Documentation
+
+For detailed documentation on individual skills, each skill contains a `SKILL.md` file with comprehensive information:
+
+- **SQL Skills Documentation**: See individual `SKILL.md` files in each skill directory (e.g., `./sql-skills/analytical-query/SKILL.md`)
+- **Architecture & Development Guides**: See `./sql-skills/docs/` for detailed guides and blueprints
+
 ## Support
 
 For questions or issues:
@@ -203,3 +260,8 @@ For questions or issues:
 ---
 
 **Note:** These skills are for internal TD use only.
+
+**Latest Updates:**
+- Analytical-Query and Smart-Sampler skills now available with auto-invocation
+- Comprehensive SQL analyst suite for data analysis and exploration
+- Detailed documentation available in `sql-skills/docs/` directory
