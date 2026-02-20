@@ -1,6 +1,6 @@
 ---
 name: rt-setup-personalization
-description: Complete workflow to set up RT 2.0 personalization from scratch - validates parent segment RT status, discovers event tables and attributes, configures RT infrastructure (events, attributes, ID stitching), creates personalization service, and deploys the personalization entity with payload. Use when user wants to "create realtime setup and build personalization" or "set up RT personalization end-to-end".
+description: Complete workflow to set up RT 2.0 personalization from scratch - validates parent segment RT status, discovers event tables and attributes, configures RT infrastructure (events, attributes, ID stitching), creates personalization service, and deploys the personalization entity with payload. Use when user wants to "create realtime setup and build personalization" or "set up RT personalization end-to-end". Includes automatic validation using rt-personalization-validation skill to prevent common API errors.
 ---
 
 # RT 2.0 Personalization Setup - Complete Workflow
@@ -12,25 +12,38 @@ Orchestrates the complete RT personalization setup: parent segment validation �
 - TD CLI installed: `tdx`
 - Authenticated: `tdx auth setup`
 - Parent segment created in Data Workbench
-- Master API key with full permissions
+- Master API key with full permissions: `export TD_API_KEY=your_key`
 
 ## Workflow Overview
 
+Complete 9-step workflow. **Each step must complete successfully before proceeding.**
+
 ```
-1. Validate Parent Segment (RT enabled?)
-2. Use Case Discovery (Web? Cart? Profile?)
-3. Data Exploration (Events, Attributes)
-4. RT Configuration (Events, Attributes, ID Stitching)
-5. Personalization Service Creation
-6. Personalization Entity Deployment (with payload)
-7. API Integration & Testing
+Step 1: Validate Parent Segment ✓
+Step 2: Use Case Discovery ✓
+Step 3: Explore PS Attributes ✓
+Step 4: Discover Event Tables ✓
+Step 5: Define ID Stitching ✓
+Step 6: Define RT Attributes ✓
+Step 7: Configure RT Infrastructure ✓ (SHARED with rt-setup-triggers)
+Step 8: Create Personalization Service ✓
+Step 9: Create Personalization Entity ✓
+  9a. Get Parent Segment Folder
+  9b. Get Key Event and Attribute IDs
+  9c. Validate Payload (REQUIRED - use rt-personalization-validation skill)
+  9d. Create Entity via API
+Step 10: Verify & Test ✓
 ```
 
-## Step 1: Parent Segment Validation
+---
 
-### Check if user provided PS
+## Steps 1-2: Validate & Discover Use Case
 
-**If user provided PS ID or name:**
+See [steps/01-02-validate-discovery.md](./steps/01-02-validate-discovery.md) for detailed implementation.
+
+### Quick Summary
+
+**Step 1:** Validate parent segment exists and check RT status
 ```bash
 # Check if PS has RT enabled
 tdx ps rt list --json | jq '.[] | select(.id=="<ps_id>" or .name=="<ps_name>") | {
@@ -46,14 +59,26 @@ tdx ps rt list --json | jq '.[] | select(.id=="<ps_id>" or .name=="<ps_name>") |
 - `rt_status: "updating"` → Wait for RT to be ready
 - Empty result → PS not RT-enabled. Show error: "RT not enabled for this parent segment. Contact CSM."
 
-**If user did NOT provide PS:**
+**Step 2:** Ask user about use case (Web Personalization, Cart Recovery, User Profile API, etc.)
+
+**Checkpoints:**
+- ✓ Parent segment ID confirmed
+- ✓ RT status validated ("ok" or "not_configured")
+- ✓ Use case selected
+
+---
+
+## Steps 3-6: Data Exploration
+
+See [steps/03-06-data-exploration.md](./steps/03-06-data-exploration.md) for detailed implementation.
+
+### Quick Summary
+
+**Step 3:** Explore parent segment batch attributes
 ```bash
 # List all RT-enabled parent segments
 tdx ps rt list --json
-```
 
-**Display to user:**
-```bash
 # Show RT-enabled parent segments with status
 tdx ps rt list --json | jq '.[] | {
   id, name,
@@ -63,244 +88,88 @@ tdx ps rt list --json | jq '.[] | {
 }'
 ```
 
-**Ask user:** "Which parent segment should we use for RT personalization?"
-- Present list of RT-enabled segments
-- If none found: "No RT-enabled parent segments. Contact CSM to enable RT."
-
-## Region Detection
-
+**Step 4:** Discover streaming event tables
 ```bash
-# Detect user's region from tdx config
-REGION=$(tdx config get endpoint 2>/dev/null | grep -o '[a-z][a-z][0-9][0-9]' | head -1)
-REGION="${REGION:-us01}"
-echo "Using region: $REGION"
-```
-
-
-## Step 2: Use Case Discovery
-
-**Ask user:** "What's your RT personalization use case?"
-
-**Common use cases:**
-- **Web Personalization**: Show personalized content/recommendations on page load
-  - Events: pageviews, product_views
-  - Attributes: last_product_viewed, browsed_products_list, page_views_24h
-
-- **Cart Recovery**: Personalized offers when user adds to cart
-  - Events: add_to_cart, cart_view
-  - Attributes: cart_items_list, cart_value, last_cart_update
-
-- **User Profile API**: Return user profile data in real-time
-  - Events: login, session_start
-  - Attributes: loyalty_tier, total_purchase_value, lifetime_orders
-
-- **Content Recommendations**: Personalized content based on consumption
-  - Events: content_view, video_watch
-  - Attributes: viewed_content_list, favorite_categories, watch_time_24h
-
-**Store use case** for attribute/event suggestions in next steps.
-
-## Step 3: Explore Parent Segment Attributes
-
-```bash
-# Get all PS attributes (batch layer)
-tdx ps view <ps_id> --json | jq '.attributes[] | {
-  name, type, description
-}' > ps_attributes.json
-
-# Review attributes relevant to use case
-cat ps_attributes.json | jq -r '.name'
-```
-
-**For Web Personalization use case**, look for:
-- Customer tier: `loyalty_tier`, `customer_segment`, `vip_status`
-- Demographics: `city`, `country`, `age_group`
-- Historical data: `total_purchase_value`, `lifetime_orders`
-
-**Ask user:** "Which batch attributes should be available in personalization responses?"
-- Multi-select from discovered attributes
-- Suggest relevant attributes based on use case
-
-## Step 4: Discover Streaming Event Tables
-
-```bash
-# List databases
-tdx databases --json | jq -r '.[].name'
-
-# Ask user for event database
-# Then list tables
 tdx tables "<event_db>.*" --json | jq -r '.[].name'
-
-# Search for common event patterns
-tdx tables "<event_db>.*" --json | jq -r '.[].name' | \
-  grep -E '(pageview|page_view|cart|purchase|event|click|view)'
 ```
 
-**For Web Personalization**, suggest tables like:
-- `pageviews`, `page_view`, `web_events`
-- `product_views`, `item_views`
-- `clicks`, `interactions`
+**Step 5:** Define ID stitching keys (td_client_id, email, canonical_id)
 
-**Get table schema:**
+**Step 6:** Define RT attributes based on use case (single, list, counter types)
+
+**Checkpoints:**
+- ✓ Batch attributes identified
+- ✓ Event tables discovered and selected
+- ✓ ID stitching keys defined
+- ✓ RT attributes planned (types and aggregations)
+
+---
+
+## Step 7: Configure RT Infrastructure
+
+**SHARED CONFIGURATION** - See [steps/07-rt-config.md](./steps/07-rt-config.md) for complete implementation.
+
+This step is identical for both RT Personalization and RT Triggers.
+
+### Quick Summary
+
+**7a. Configure Event Tables & Key Events**
 ```bash
-tdx describe <event_db>.<table> --json | jq '.columns[] | {
-  name, type
-}'
-```
-
-**Ask user:** "Which event tables should RT track?"
-- Multi-select from discovered tables
-- For each table, ask: "What should this event be called?" (e.g., "page_view")
-
-## Step 5: Define ID Stitching Keys
-
-**Discover ID columns from event schemas:**
-```bash
-# Find ID-like columns
-tdx describe <event_db>.<table> --json | jq -r '.columns[] |
-  select(.name | test("id|email|user|client|canonical")) | .name'
-```
-
-**Common stitching keys:**
-- `td_client_id` (cookie-based, always recommended)
-- `email`
-- `user_id`, `customer_id`
-- `canonical_id` (master ID, recommended as primary key)
-
-**Ask user:** "Which columns should be used for ID stitching?"
-- Multi-select discovered ID columns
-- Recommend: td_client_id, email, canonical_id
-- Ask: "Which should be the primary key?" (suggest canonical_id or most complete)
-
-## Step 6: Define RT Attributes
-
-Based on use case, suggest RT attributes:
-
-**For Web Personalization:**
-```yaml
-attributes:
-  - name: last_product_viewed
-    type: single
-    source_event: page_view
-    source_field: product_id
-    aggregation: last
-
-  - name: browsed_products_list
-    type: list
-    source_event: page_view
-    source_field: product_id
-    aggregation: distinct_list
-    max_items: 100
-    expiry_days: 60
-
-  - name: page_views_24h
-    type: counter
-    source_event: page_view
-    aggregation: count
-    window_duration: 24h
-```
-
-**Ask user:** "Use recommended attributes or customize?"
-- Show recommendations based on use case
-- Allow customization: add/remove attributes
-
-## Step 7: Create RT Configuration
-
-### Validate API Key
-
-```bash
-# Validate API key is set
-if [ -z "$TD_API_KEY" ]; then
-  echo "❌ TD_API_KEY environment variable not set"
-  echo "Set it with: export TD_API_KEY=your_master_api_key"
-  exit 1
-fi
-```
-
-
-**Call rt-config sub-skills** to configure RT:
-
-### 7a. Configure Event Tables
-```bash
-# Check if RT config exists
-RT_CONFIG_EXISTS=$(tdx ps view <ps_id> --json | jq '.realtime_config != null')
-
-if [ "$RT_CONFIG_EXISTS" = "false" ]; then
-  # Initialize new RT config
-  tdx ps pz init <ps_id> -o rt_config.yaml
-else
-  # Pull existing RT config
-  tdx ps pull <ps_id> -o rt_config.yaml
-fi
-```
-
-**Add event tables via API:**
-```bash
+# Add event tables
 tdx api "/audiences/<ps_id>/realtime_setting" --type cdp -X PATCH --data '{
-  "eventTables": [
-    {"database": "<db>", "table": "<table1>"},
-    {"database": "<db>", "table": "<table2>"}
-  ]
+  "eventTables": [{"database": "<db>", "table": "<table>"}]
 }'
-```
 
-**Create key events:**
-```bash
-# For each event table
+# Create key events
 tdx api "/audiences/<ps_id>/realtime_key_events" --type cdp -X POST --data '{
   "name": "<event_name>",
   "databaseName": "<db>",
   "tableName": "<table>",
-  "description": "<description>",
   "filterRule": {"type": "And", "conditions": []}
 }'
 ```
 
-### 7b. Configure ID Stitching
+**7b. Configure ID Stitching**
 ```bash
 tdx api "/audiences/<ps_id>/realtime_setting" --type cdp -X PATCH --data '{
   "keyColumns": [
-    {"name": "td_client_id", "validRegexp": null, "invalidTexts": [], "internal": false},
-    {"name": "email", "validRegexp": null, "invalidTexts": [], "internal": false}
+    {"name": "td_client_id", "validRegexp": null, "invalidTexts": [], "internal": false}
   ],
   "extLookupKey": "<primary_key>"
 }'
 ```
 
-### 7c. Create RT Attributes
+**7c. Create RT Attributes**
 ```bash
-# For each attribute, POST to create
-# Single attribute example:
+# Single attribute
 tdx api "/audiences/<ps_id>/realtime_attributes" --type cdp -X POST --data '{
   "name": "<attr_name>",
-  "identifier": "<attr_identifier>",
   "type": "single",
   "realtimeKeyEventId": "<key_event_id>",
-  "valueColumn": "<column_name>",
+  "valueColumn": "<column>",
   "dataType": "string",
   "duration": {"value": 1, "unit": "day"}
 }'
 
-# List attribute example:
+# List attribute
 tdx api "/audiences/<ps_id>/realtime_attributes" --type cdp -X POST --data '{
-  "name": "<list_attr_name>",
+  "name": "<list_attr>",
   "type": "list",
   "realtimeKeyEventId": "<key_event_id>",
-  "valueColumn": "<column_name>",
-  "idColumn": "<column_name>",
+  "idColumn": "<id_column>",
   "maxItems": 100,
   "aggregations": [{
     "name": "items",
     "identifier": "items",
-    "column": "<column_name>",
+    "column": "<column>",
     "aggregationType": "distinct_list"
   }],
   "duration": {"value": 60, "unit": "day"}
 }'
 
-# Counter attribute example:
+# Counter attribute
 tdx api "/audiences/<ps_id>/realtime_attributes" --type cdp -X POST --data '{
-  "name": "<counter_attr_name>",
+  "name": "<counter_attr>",
   "type": "counter",
   "realtimeKeyEventId": "<key_event_id>",
   "counterType": "total",
@@ -311,155 +180,131 @@ tdx api "/audiences/<ps_id>/realtime_attributes" --type cdp -X POST --data '{
 
 **Wait for RT status "ok":**
 ```bash
-while [ "$(tdx ps view <ps_id> --json | jq -r '.realtime_config.status')" != "ok" ]; do
-  echo "Waiting for RT config..."
+while [ "$(tdx ps rt list --json | jq -r --arg ps '<ps_id>' '.[] | select(.id==$ps) | .status')" != "ok" ]; do
+  echo "Waiting for RT infrastructure..."
   sleep 10
 done
+echo "✅ RT infrastructure ready"
 ```
 
-## Step 8: Create Personalization Service
+**Checkpoints:**
+- ✓ Event tables configured
+- ✓ Key events created
+- ✓ ID stitching configured
+- ✓ RT attributes created
+- ✓ RT status is "ok"
 
-**Generate service YAML:**
-```yaml
-parent_segment_id: '<ps_id>'
-parent_segment_name: '<ps_name>'
-personalization_service:
-  name: '<use_case>_personalization'
-  description: '<use_case> personalization service'
-  trigger_event: '<key_event_name>'
+---
 
-  sections:
-    - name: 'VIP Customers'
-      criteria: 'loyalty_tier = ''VIP'''
-      attributes:
-        - last_product_viewed
-        - browsed_products_list
-        - vip_discount_percentage
-      batch_segments: []
+## ⚠️ Validation & Common Errors
 
-    - name: 'Default'
-      criteria: ''  # Matches all
-      attributes:
-        - last_product_viewed
-        - page_views_24h
-      batch_segments: []
+**CRITICAL:** Personalization entity creation has strict validation rules. The most common error is:
+
+```
+Error: "sections[0].payload.node_id.definition.attribute_payload": ["Attribute payload can't be blank"]
 ```
 
-**Push service:**
+**Root cause:** Using empty arrays `[]` instead of `null` for unused fields.
+
+**Quick fix:**
+```json
+// ❌ FAILS
+"stringBuilder": []
+
+// ✅ WORKS
+"stringBuilder": null
+```
+
+**REQUIRED VALIDATION STEP:**
+
+At Step 9c, you MUST invoke the `rt-personalization-validation` skill to validate the payload before making the API call. This is a mandatory step in the workflow, not optional. The validation skill will:
+- Check for empty arrays that should be null
+- Verify payload structure completeness
+- Validate field names and uniqueness
+- Prevent all common API errors
+
+**Do not skip Step 9c validation. Proceeding directly to the API call without validation will likely result in errors.**
+
+---
+
+## Steps 8-9: Create Personalization
+
+See [steps/08-09-personalization.md](./steps/08-09-personalization.md) for detailed implementation.
+
+### Quick Summary
+
+**Step 8:** Create personalization service via tdx
 ```bash
 cat > pz_service.yaml << 'EOF'
-<YAML_CONTENT>
+parent_segment_id: '<ps_id>'
+personalization_service:
+  name: '<use_case>_personalization'
+  trigger_event: '<key_event_name>'
+  sections:
+    - name: 'Default'
+      criteria: ''
+      attributes: [last_product_viewed, page_views_24h]
 EOF
 
 tdx ps push pz_service.yaml -y
 ```
 
-## Step 9: Create Personalization Entity (with Payload)
-
-**Critical: This creates the actual Personalization in Console UI**
-
-### 9a. Get Parent Segment Folder
+**Step 9:** Create personalization entity via API (with payload)
 ```bash
+# Generate unique payload node ID
+PAYLOAD_NODE_ID=$(uuidgen | tr -d '-' | tr '[:upper:]' '[:lower:]')
+
+# Get folder ID
 FOLDER_ID=$(curl -s "https://api-cdp.treasuredata.com/audiences/<ps_id>/folders" \
   -H "Authorization: TD1 ${TD_API_KEY}" | jq -r '.[0].id')
-```
 
-### 9b. Get Key Event and Attribute IDs
-```bash
-# Get key event ID
-KEY_EVENT_ID=$(tdx api "/audiences/<ps_id>/realtime_key_events" --type cdp | \
-  jq -r '.data[] | select(.name=="<event_name>") | .id')
-
-# Get RT attribute IDs
-tdx api "/audiences/<ps_id>/realtime_attributes?page[size]=100" --type cdp | \
-  jq '.data[] | {id, name, type}'
-```
-
-### 9c. Create Personalization Entity
-```bash
-PERSONALIZATION_RESPONSE=$(curl -s -X POST \
-  'https://api-cdp.treasuredata.com/entities/realtime_personalizations' \
+# Create entity
+curl -X POST 'https://api-cdp.treasuredata.com/entities/realtime_personalizations' \
   -H "Authorization: TD1 ${TD_API_KEY}" \
   -H 'Content-Type: application/vnd.treasuredata.v1+json' \
-  --data '{
-    "attributes": {
-      "audienceId": "<ps_id>",
-      "name": "<use_case>_personalization",
-      "description": "RT personalization for <use_case>",
-      "sections": [
-        {
-          "name": "Default_Section",
-          "entryCriteria": {
-            "name": "Page View Trigger",
-            "description": "Triggered on page view events",
-            "keyEventCriteria": {
-              "keyEventId": "<key_event_id>",
-              "keyEventFilters": {"type": "And", "conditions": []}
-            },
-            "profileCriteria": null
-          },
-          "payload": {
-            "response_node": {
-              "type": "ResponseNode",
-              "name": "Personalization Response",
-              "description": "Return personalized attributes",
-              "definition": {
-                "attributePayload": [
-                  {
-                    "realtimeAttributeId": "<single_attr_id>",
-                    "outputName": "last_product"
-                  },
-                  {
-                    "realtimeAttributeId": "<list_attr_id>",
-                    "subAttributeIdentifier": "items",
-                    "outputName": "browsed_products"
-                  }
-                ],
-                "segmentPayload": null,
-                "stringBuilder": []
-              }
+  --data "{
+    \"attributes\": {
+      \"audienceId\": \"<ps_id>\",
+      \"name\": \"<use_case>_personalization\",
+      \"sections\": [{
+        \"name\": \"Default_Section\",
+        \"entryCriteria\": {
+          \"keyEventCriteria\": {
+            \"keyEventId\": \"<key_event_id>\",
+            \"keyEventFilters\": {\"type\": \"And\", \"conditions\": []}
+          }
+        },
+        \"payload\": {
+          \"$PAYLOAD_NODE_ID\": {
+            \"type\": \"ResponseNode\",
+            \"definition\": {
+              \"attributePayload\": [
+                {\"realtimeAttributeId\": \"<attr_id>\", \"outputName\": \"last_product\"}
+              ]
             }
-          },
-          "includeSensitive": false
+          }
         }
-      ]
+      }]
     },
-    "relationships": {
-      "parentFolder": {
-        "data": {
-          "id": "<folder_id>",
-          "type": "folder-segment"
-        }
-      }
+    \"relationships\": {
+      \"parentFolder\": {\"data\": {\"id\": \"<folder_id>\", \"type\": \"folder-segment\"}}
     }
-  }')
-
-PERSONALIZATION_ID=$(echo "$PERSONALIZATION_RESPONSE" | jq -r '.data.id')
+  }"
 ```
 
-**Console URL:**
-```
-https://console-next.${REGION}.treasuredata.com/app/ps/<ps_id>/e/<personalization_id>/p/de
-```
+**Checkpoints:**
+- ✓ Service created
+- ✓ Entity deployed
+- ✓ Visible in Console
+- ✓ API endpoint available
 
-## Step 10: Verify & Test
+---
 
-```bash
-# Verify personalization created
-curl -s "https://api-cdp.treasuredata.com/entities/parent_segments/<ps_id>/realtime_personalizations" \
-  -H "Authorization: TD1 ${TD_API_KEY}" | jq '.data[] | {id, name}'
+## Step 10: Verification
 
-# Get API endpoint
-echo "API Endpoint:"
-echo "https://<region>.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<personalization_id>"
+See [steps/10-verification.md](./steps/10-verification.md) for complete verification checklist.
 
-# Test API call
-curl -X GET \
-  "https://<region>.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<personalization_id>?td_client_id=test_user" \
-  -H "Authorization: TD1 ${TD_API_KEY}"
-```
-
-## Verification Checklist
+### Verification Checklist
 
 After setup completes, verify:
 
@@ -487,39 +332,27 @@ curl -X GET "https://${REGION}.p13n.in.treasuredata.com/audiences/<ps_id>/person
 # Expected: JSON with attributes (not 404)
 ```
 
+**Console URL:**
+```
+https://console-next.${REGION}.treasuredata.com/app/ps/<ps_id>/e/<pz_id>/p/de
+```
+
 If any check fails, review the corresponding setup step.
 
-## Summary Output
+---
 
-```markdown
-✅ RT Personalization Setup Complete!
+## Summary
 
-Parent Segment: <ps_name> (<ps_id>)
-Use Case: <use_case>
+This orchestrator ensures all checkpoints are met:
+- Parent segment validated
+- Use case discovered
+- Data explored (batch attributes, event tables, IDs)
+- RT infrastructure configured (events, attributes, stitching)
+- Personalization service created
+- Personalization entity deployed
+- API endpoint tested
 
-RT Configuration:
-  - Event Tables: <count> configured
-  - Key Events: <event_names>
-  - RT Attributes: <count> created
-  - Batch Attributes: <count> imported
-  - ID Stitching Keys: <count> configured
-
-Personalization:
-  - Service: <service_name> (created)
-  - Entity: <personalization_id> (deployed)
-  - Sections: <section_count>
-
-API Endpoint:
-  https://<region>.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<personalization_id>
-
-Console URL:
-  https://console-next.<region>.treasuredata.com/app/ps/<ps_id>/e/<personalization_id>/p/de
-
-Next Steps:
-  1. Test API endpoint with real user IDs
-  2. Integrate into web/mobile app
-  3. Monitor activation logs
-```
+For RT Triggers (Journeys) instead, use the `rt-setup-triggers` skill which shares Steps 1-7.
 
 ## Error Handling
 
@@ -546,31 +379,3 @@ Next Steps:
 ❌ No streaming event tables found in database "<db>".
 → Verify database name or check if events are being ingested.
 ```
-
-## For RT Triggers Instead
-
-If user wants **RT Triggers** (journeys) instead of personalization:
-- Follow Steps 1-7 (same RT config needed)
-- Skip Steps 8-9 (personalization service/entity)
-- Create RT Journey via API:
-
-```bash
-# Create journey
-curl -X POST "https://api-cdp.treasuredata.com/entities/realtime_journeys" \
-  -H "Authorization: TD1 ${TD_API_KEY}" \
-  --data '{
-    "attributes": {
-      "audienceId": "<ps_id>",
-      "segmentFolderId": "<folder_id>",
-      "name": "<journey_name>",
-      "reentryMode": "reentry_unless_goal_achieved",
-      "realtimeJourneyStages": [{"name": "Stage 1"}],
-      "state": "draft"
-    }
-  }'
-
-# Create activation and link to journey
-# Launch journey
-```
-
-See `rt-triggers` skill for complete journey creation workflow.
