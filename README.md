@@ -10,12 +10,28 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ### SQL Skills
 
+#### Core Analyst Skills ⭐ MANDATORY AUTO-INVOCATION
+
+**Analytical & Data Exploration Suite:**
+
+- **[sql-skills/analytical-query](./sql-skills/analytical-query)** - 🔴 **MANDATORY** - Natural language to SQL analytics. Auto-invokes on: summarize, aggregate, analyze, top N, trends, metrics, KPI. Generates optimized queries, executes automatically, and creates professional Plotly visualizations. **Also auto-invokes smart-sampler for sampling/data preview requests.**
+
+- **[sql-skills/smart-sampler](./sql-skills/smart-sampler)** - Intelligent data sampling with multiple strategies (random, time-based, stratified, edge-case). Auto-invokes for: sample, show records, preview data, show examples. Perfect for data exploration and finding examples without full scans.
+
+#### Query Support & Optimization
+
 - **[sql-skills/trino](./sql-skills/trino)** - Write and optimize SQL queries for Trino with TD best practices
 - **[sql-skills/hive](./sql-skills/hive)** - Create efficient Hive queries following TD conventions
 - **[sql-skills/time-filtering](./sql-skills/time-filtering)** - Time-based filtering with td_interval() and td_time_range() for partition pruning and query performance
 - **[sql-skills/trino-optimizer](./sql-skills/trino-optimizer)** - Optimize slow Trino queries, fix timeouts and memory errors, reduce costs
 - **[sql-skills/trino-to-hive-migration](./sql-skills/trino-to-hive-migration)** - Convert Trino queries to Hive to resolve memory errors and handle large datasets
 - **[sql-skills/td-mcp](./sql-skills/td-mcp)** - Connect Claude Code to TD via MCP server for natural language data exploration and queries
+
+#### Data Discovery & Profiling
+
+- **[sql-skills/schema-explorer](./sql-skills/schema-explorer)** - Discover databases, tables, columns, and PII fields
+- **[sql-skills/data-profiler](./sql-skills/data-profiler)** - Analyze data quality, distributions, completeness, and outliers
+- **[sql-skills/query-explainer](./sql-skills/query-explainer)** - Convert SQL to natural language explanations and documentation
 
 ### Realtime Skills
 
@@ -90,7 +106,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 2. **Browse and install plugins:**
 
    Select "Browse and install plugins" from the menu, then choose from:
-   - `sql-skills` - Trino and Hive query assistance, Trino CLI, and TD MCP server
+   - `sql-skills` - Analyst suite (analytical-query, smart-sampler, data-profiler), Trino and Hive query assistance, query optimization, and TD MCP server
    - `realtime-skills` - RT 2.0 end-to-end orchestrators, configuration, personalization services, real-time journeys, and activation/identity log monitoring
    - `workflow-skills` - Treasure Workflow creation, management, and dbt transformations
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
@@ -113,6 +129,11 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 Once installed, explicitly reference skills using the `skill` keyword to trigger them:
 
 ```
+"Show me the top 10 products by revenue last 30 days" → analytical-query (AUTO-INVOKED)
+"Sample 100 recent orders from the sales table" → smart-sampler (AUTO-INVOKED)
+"Give me examples of null email addresses" → smart-sampler (AUTO-INVOKED)
+"Analyze the revenue trend by month" → analytical-query (AUTO-INVOKED)
+"Profile the customers table for data quality" → data-profiler
 "Use the Trino skill to extract data from sample_datasets.nasdaq table"
 "Use the Hive skill to write a query for daily user aggregation"
 "Use the time-filtering skill to add partition pruning to my query"
@@ -153,10 +174,9 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the visualization skill to create a Plotly chart with TD colors"
 ```
 
-Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
-- Use the word "skill" in your request
-- Be specific about what you want to accomplish
+**🔴 AUTO-INVOCATION NOTES:**
+- **Analytical-Query**: Automatically invoked for analysis questions (top, trends, count, sum, metrics)
+- **Smart-Sampler**: Automatically invoked for sampling requests (sample, show records, preview, examples)
 
 ## Creating Your Own TD Skills
 
@@ -194,6 +214,13 @@ To contribute a new skill or improve an existing one:
 2. Test the skill with Claude Code
 3. Submit a pull request with clear documentation
 
+## Documentation
+
+For detailed documentation on individual skills, each skill contains a `SKILL.md` file with comprehensive information:
+
+- **SQL Skills Documentation**: See individual `SKILL.md` files in each skill directory (e.g., `./sql-skills/analytical-query/SKILL.md`)
+- **Architecture & Development Guides**: See `./sql-skills/docs/` for detailed guides and blueprints
+
 ## Support
 
 For questions or issues:
@@ -203,3 +230,8 @@ For questions or issues:
 ---
 
 **Note:** These skills are for internal TD use only.
+
+**Latest Updates:**
+- Analytical-Query and Smart-Sampler skills now available with auto-invocation
+- Comprehensive SQL analyst suite for data analysis and exploration
+- Detailed documentation available in `sql-skills/docs/` directory
