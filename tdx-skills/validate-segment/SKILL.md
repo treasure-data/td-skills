@@ -49,19 +49,27 @@ year | quarter | month | week | day | hour | minute | second
 
 ## Behavior Aggregation Structure
 
+**CRITICAL**: When `source` is present (behavior aggregation), `attribute` MUST be `""` (empty string).
+
 ```yaml
 # Behavior condition with aggregation
 - type: Value
-  attribute: field_name          # Or "" for pure count
+  attribute: ""                  # MUST be empty string for behavior aggregations!
   operator:
     type: GreaterEqual
     value: 1
   aggregation:
-    type: Count                  # Count | Sum | Avg | Min | Max
-  source: behavior_name          # Behavior from parent segment
+    type: Count                  # Count | Sum | Average | Min | Max
+  source: behavior_email_open    # Full behavior table name (e.g., behavior_email_open, behavior_purchase)
 ```
 
-**Required fields**: `aggregation.type` and `source` must both be present
+**Required fields**:
+- `aggregation.type` and `source` must both be present
+- `attribute` must be `""` (empty string) when `source` is present
+
+**Common errors**:
+- ❌ `attribute: email_open` + `source: behavior_email_open` → Treated as attribute filter, not behavior aggregation
+- ✅ `attribute: ""` + `source: behavior_email_open` → Correct behavior aggregation
 
 ## Related Skills
 
