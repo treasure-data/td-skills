@@ -46,7 +46,7 @@
     },
     {
       "name": "workflow-skills",
-      "description": "Treasure Workflow orchestration and data transformation skills including workflow creation, management, debugging, optimization, dbt (data build tool) for Treasure Data Trino, and Activation Actions for creating custom activation workflows with incremental exports, data transformation, compliance checks, and multi-platform delivery",
+      "description": "Treasure Workflow orchestration including workflow creation, management, debugging, dbt for TD Trino, and Activation Actions for custom activation workflows",
       "source": "./",
       "strict": false,
       "skills": [
