@@ -3,7 +3,7 @@ name: analytical-query
 description: |
   🤖 AUTONOMOUS DATA ANALYSIS - Auto-invokes on analytical keywords. Intelligently converts natural language questions into TD-optimized Trino SQL queries with automatic schema discovery, query optimization, execution, and professional Plotly visualization.
 
-  **Auto-invokes on:** summarize, aggregate, analyze, profile, top N, ranking, distribution, trend, group by, count, sum, average, compare, breakdown, growth, rate, metrics, KPI, dashboard query, analytics question, reporting query.
+  **Auto-invokes on:** summarize, aggregate, analyze, profile, top N, ranking, distribution, trend, group by, count, sum, average, compare, breakdown, growth, rate, metrics, KPI, dashboard query, analytics question, reporting query, sample, preview data, show records, show examples.
 
   **Smart features:**
   - 🔍 Auto-invokes schema-explorer when table names not provided
@@ -11,6 +11,7 @@ description: |
   - 📊 Renders professional Plotly visualizations
   - 🎯 Handles complex aggregations, time-series, and comparisons
   - 🔐 No table names? Discovers them automatically!
+  - 📋 **NEW:** Auto-invokes smart-sampler for data sampling requests!
 
 triggers:
   - summarize
@@ -44,6 +45,12 @@ triggers:
   - list the
   - find the
   - get me
+  - sample
+  - show records
+  - show me records
+  - show examples
+  - show me examples
+  - preview data
 ---
 
 # SQL Analytical Query
@@ -56,16 +63,25 @@ Converts natural language questions into Trino SQL queries, executes them via `t
 
 **This skill MUST be automatically invoked for ANY analytical question asked in the sql-skills marketplace.**
 
-### Universal Auto-Invocation Rule
+**This skill ALSO auto-invokes smart-sampler for data sampling requests.**
 
+### Universal Auto-Invocation Rules
+
+**For Analytical Questions:**
 This rule applies to:
 - ✅ **ALL users** (you, team members, external users)
 - ✅ **ALL environments** (local, cloud, CI/CD)
 - ✅ **ALL projects** using sql-skills
 - ✅ **ALL questions** asking for analysis, aggregation, trends, rankings, comparisons
 
+**For Sampling Requests:**
+When users ask for data samples, records, or examples:
+- ✅ **MUST invoke `/sql-skills:smart-sampler`** - Mandatory for all sampling requests
+- ✅ **MUST NOT skip** - Sampling is a primary use case for this skill integration
+
 ### Trigger Keywords (ALWAYS Auto-Invoke)
 
+**Analytical Keywords:**
 ANY question containing these keywords or asking for analytical operations should IMMEDIATELY invoke this skill:
 
 ```
@@ -75,13 +91,29 @@ most popular    growth    distribution    performance
 aggregation    ranking    summary    metrics    KPI
 ```
 
+**Sampling Keywords (Auto-invoke smart-sampler):**
+ANY question containing these keywords should AUTOMATICALLY invoke `/sql-skills:smart-sampler`:
+
+```
+sample    show records    show examples    preview data    show me records
+give me examples    find examples    show me examples    look at data
+display records    list records    find records    show sample
+```
+
 ### 5-Step Mandatory Workflow (Never Skip Any Step)
 
+**For Analytical Queries:**
 1. **Parse** - Extract database, table, fields, time range
 2. **Generate SQL** - Build TD-optimized query with time filters
 3. **Optimize** - AUTOMATICALLY call `/sql-skills:trino-optimizer` ← CRITICAL
 4. **Execute** - Run via `tdx query --json`
 5. **Visualize** - Render markdown table + 2-3 Plotly charts
+
+**For Sampling Requests:**
+1. **Detect Sampling Intent** - User asks for records, examples, or data preview
+2. **Invoke smart-sampler** - AUTOMATICALLY call `/sql-skills:smart-sampler` ← MANDATORY
+3. **Present Results** - Display sample records as markdown table
+4. *Optional: If user also wants analysis* → Continue with steps 2-5 above
 
 ### Non-Negotiable Requirements
 
@@ -522,6 +554,7 @@ Before execution, verify:
 - **time-filtering** - Advanced time filtering patterns
 - **trino-optimizer** - Query optimization techniques
 - **schema-explorer** - 🔍 AUTO-INVOKED for table discovery
+- **smart-sampler** - 📋 **AUTO-INVOKED for sampling requests** (Mandatory for all "show records", "sample", "preview" keywords)
 - **tdx-basic** - tdx CLI query execution
 - **field-agent-visualization** - Advanced Plotly patterns
 
@@ -598,6 +631,133 @@ The skill uses semantic keywords to find tables:
 1. Vague questions → Let schema-explorer find relevant tables
 2. "What tables do we have?" → Use schema-explorer directly
 3. "Find tables with PII" → Use schema-explorer discovery
+
+---
+
+## Smart-Sampler Integration Guide
+
+### When Auto-Invocation Happens
+
+**The skill automatically invokes smart-sampler when:**
+
+1. User asks for data records/examples (sampling request)
+2. Sampling keywords detected ("show records", "sample", "preview", "show examples")
+3. User wants to explore actual row-level data
+
+**Examples that trigger auto-invoke:**
+- ✅ "Show me 100 sample records from orders" → smart-sampler invoked
+- ✅ "Give me examples of null email addresses" → smart-sampler invoked
+- ✅ "Sample high-value transactions last month" → smart-sampler invoked
+- ✅ "Show me 50 records per product category" → smart-sampler invoked
+- ❌ "Show me top 10 products by revenue" → analytical-query (aggregation, not sampling)
+- ❌ "Count customers by status" → analytical-query (metrics, not sampling)
+
+### How Smart-Sampler Works in This Context
+
+**When sampling is detected:**
+
+1. **Parse sampling request** - Extract table, limit, filter criteria
+2. **Determine sampling strategy:**
+   - Random sampling (default)
+   - Time-based (recent data)
+   - Stratified (balanced by dimension)
+   - Edge case (nulls, extremes)
+3. **Generate optimized sampling query** with time filters
+4. **Execute via tdx query** - Get actual row data
+5. **Present as markdown table** - Show records
+
+### Smart-Sampler Strategies Available
+
+| Strategy | Use Case | Example |
+|----------|----------|---------|
+| **Random** | Quick data preview | "Show 100 samples" |
+| **Time-Based** | Recent data exploration | "Show recent orders" |
+| **Stratified** | Balanced representation | "Sample 50 per category" |
+| **Edge Case** | Find anomalies | "Show null emails" |
+| **Outliers** | Extreme values | "Show top 1% by price" |
+
+### Smart-Sampler Sampling Methods
+
+**Simple Random:**
+```sql
+select * from table
+where td_interval(time, '-7d', 'JST')
+order by rand()
+limit 100
+```
+
+**Stratified (Balanced):**
+```sql
+with ranked as (
+  select *, row_number() over (partition by category order by rand()) as rn
+  from table where td_interval(time, '-30d', 'JST')
+)
+select * from ranked where rn <= 50
+```
+
+**Edge Cases (Nulls):**
+```sql
+select * from table
+where td_interval(time, '-30d', 'JST')
+and email is null
+limit 100
+```
+
+**Recent Data:**
+```sql
+select * from table
+where td_interval(time, '-1d', 'JST')
+order by time desc
+limit 100
+```
+
+---
+
+## Combined Analytical-Query + Smart-Sampler Workflow
+
+**Scenario: User wants to analyze AND explore data**
+
+```
+User: "Show me top 10 products by revenue AND sample some recent orders"
+
+Step 1: Parse question
+   → Detect TWO intents: analysis (top products) + sampling (sample orders)
+
+Step 2: Execute analytical query for top products
+   → Generate GROUP BY query
+   → Invoke trino-optimizer
+   → Execute and visualize
+
+Step 3: Execute smart-sampler for order records
+   → Generate sampling query
+   → Execute via smart-sampler
+   → Present records table
+
+Step 4: Present combined results
+   → Metrics table + charts (from analytical-query)
+   → Sample records table (from smart-sampler)
+```
+
+**Key Difference:**
+- **Analytical-Query:** Aggregations (COUNT, SUM, AVG) → Visualizations
+- **Smart-Sampler:** Row-level data (SELECT *) → Data exploration
+
+### Integration Best Practices
+
+1. **Analytical → Sampling Flow:**
+   - First analyze metrics (analytical-query)
+   - Then drill into examples (smart-sampler)
+   - Understand patterns + explore details
+
+2. **Sampling → Analytical Flow:**
+   - First preview data (smart-sampler)
+   - Then analyze patterns (analytical-query)
+   - Explore + understand metrics
+
+3. **Combined Requests:**
+   - Detect both intents in question
+   - Execute both skills
+   - Present results side-by-side
 
 ## Resources
 
