@@ -1,0 +1,121 @@
+# GDPR Compliance Check Activation Action
+# Use case: Filter out profiles that have requested data deletion before export
+
+timezone: UTC
+
+_export:
+  # Activation parameters (automatically provided)
+  segment_id: ${segment_id}
+  activation_id: ${activation_id}
+  activation_output_database: ${activation_output_database}
+  activation_output_table: ${activation_output_table}
+  profile_count: ${profile_count}
+
+  # Compliance configuration
+  compliance_database: "compliance"
+  gdpr_deletion_table: "gdpr_deletion_requests"
+  gdpr_optout_table: "gdpr_marketing_optouts"
+
+  td:
+    database: ${activation_output_database}
+
++start:
+  echo>: "Starting GDPR compliance check for activation ${activation_id}"
+
++check_deletion_requests:
+  td>: |
+    SELECT
+      a.*,
+      d.request_date AS deletion_request_date,
+      o.optout_date AS marketing_optout_date,
+      CASE
+        WHEN d.email IS NOT NULL THEN 'DELETION_REQUESTED'
+        WHEN o.email IS NOT NULL THEN 'MARKETING_OPTOUT'
+        ELSE 'COMPLIANT'
+      END AS compliance_status
+    FROM ${activation_output_database}.${activation_output_table} a
+
+    -- Check deletion requests
+    LEFT JOIN ${compliance_database}.${gdpr_deletion_table} d
+      ON LOWER(TRIM(a.email)) = LOWER(TRIM(d.email))
+
+    -- Check marketing opt-outs
+    LEFT JOIN ${compliance_database}.${gdpr_optout_table} o
+      ON LOWER(TRIM(a.email)) = LOWER(TRIM(o.email))
+  database: ${activation_output_database}
+  create_table: compliance_checked_${activation_id}
+
++filter_compliant_profiles:
+  td>: |
+    SELECT
+      customer_id,
+      email,
+      first_name,
+      last_name,
+      phone,
+      country,
+      city
+    FROM ${activation_output_database}.compliance_checked_${activation_id}
+    WHERE compliance_status = 'COMPLIANT'
+  database: ${activation_output_database}
+  create_table: compliant_profiles_${activation_id}
+
++log_excluded_profiles:
+  td>: |
+    SELECT
+      '${activation_id}' AS activation_id,
+      '${segment_id}' AS segment_id,
+      email,
+      compliance_status,
+      deletion_request_date,
+      marketing_optout_date,
+      CURRENT_TIMESTAMP AS logged_at,
+      'Excluded from activation due to GDPR' AS reason
+    FROM ${activation_output_database}.compliance_checked_${activation_id}
+    WHERE compliance_status != 'COMPLIANT'
+  database: ${compliance_database}
+  insert_into: exclusion_log
+
++create_compliance_summary:
+  td>: |
+    SELECT
+      '${activation_id}' AS activation_id,
+      COUNT(*) AS total_profiles,
+      SUM(CASE WHEN compliance_status = 'COMPLIANT' THEN 1 ELSE 0 END) AS compliant_count,
+      SUM(CASE WHEN compliance_status = 'DELETION_REQUESTED' THEN 1 ELSE 0 END) AS deletion_count,
+      SUM(CASE WHEN compliance_status = 'MARKETING_OPTOUT' THEN 1 ELSE 0 END) AS optout_count,
+      ROUND(100.0 * SUM(CASE WHEN compliance_status = 'COMPLIANT' THEN 1 ELSE 0 END) / COUNT(*), 2) AS compliance_percentage,
+      CURRENT_TIMESTAMP AS summary_timestamp
+    FROM ${activation_output_database}.compliance_checked_${activation_id}
+  database: ${compliance_database}
+  create_table: compliance_summary_${activation_id}
+
++log_summary:
+  td>: |
+    SELECT
+      'Compliance Summary for Activation ${activation_id}' AS summary,
+      total_profiles,
+      compliant_count,
+      deletion_count,
+      optout_count,
+      compliance_percentage || '%' AS compliance_pct
+    FROM ${compliance_database}.compliance_summary_${activation_id}
+
++export_compliant_profiles:
+  td_result_export>:
+    database: ${activation_output_database}
+    table: compliant_profiles_${activation_id}
+    result_url: "braze://your-braze-authentication"
+    # Replace with your actual authentication
+
++cleanup:
+  td_ddl>:
+  drop_tables:
+    - ${activation_output_database}.compliance_checked_${activation_id}
+    - ${activation_output_database}.compliant_profiles_${activation_id}
+
++finish:
+  echo>: "GDPR compliance check completed for activation ${activation_id}"
+
+_error:
+  echo>: "GDPR compliance check failed for activation ${activation_id}. Check logs."
