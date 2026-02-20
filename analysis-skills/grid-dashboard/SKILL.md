@@ -197,7 +197,11 @@ Structured data with click-to-sort columns. Two formats accepted:
 
 ### `chart` — Chart.js Chart
 
-Pass standard Chart.js config (`type`, `data`, `options`). Any chart type supported.
+Pass standard Chart.js config (`type`, `data`, `options`).
+
+**Standard types**: `bar`, `line`, `pie`, `doughnut`, `radar`, `polarArea`, `bubble`, `scatter`
+
+**Plugin types** (also available): `sankey`, `treemap`, `matrix`, `wordcloud`, `candlestick`, `ohlc`
 
 ```yaml
 - pos: "3-2"
