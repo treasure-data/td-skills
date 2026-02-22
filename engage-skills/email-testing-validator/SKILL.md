@@ -49,7 +49,7 @@ echo "Subject: $template_subject"
 ### 3. Workspace Context Verification
 ```bash
 # Verify current workspace context
-current_workspace=$(tdx context | grep engage_workspace || echo "No engage workspace set")
+current_workspace=$(tdx use | grep engage_workspace || echo "No engage workspace set")
 echo "Current workspace: $current_workspace"
 
 # List available workspaces

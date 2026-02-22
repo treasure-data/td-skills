@@ -328,7 +328,7 @@ check_template_permissions() {
 
   # Check current workspace context
   echo "Current workspace context:"
-  tdx context | grep engage_workspace || echo "⚠️ No engage workspace context set"
+  tdx use | grep engage_workspace || echo "⚠️ No engage workspace context set"
 
   # Set workspace context for testing
   tdx engage workspace use "$workspace_name"

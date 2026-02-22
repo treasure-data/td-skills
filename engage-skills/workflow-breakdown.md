@@ -3,9 +3,9 @@
 ## ✅ Completed Skills (Thin wrappers around actual tdx commands)
 
 1. **email-template-creator** - Uses `tdx engage template create/update/delete`
-2. **email-campaign-creator** - Uses `tdx engage campaign create/launch/pause/resume/test`
+2. **email-campaign-creator** - Uses `tdx engage campaign create/launch/pause/resume/duplicate`
 3. **email-template-manager** - Uses `tdx engage template list/show/update/delete`
-4. **email-testing-validator** - Uses `tdx engage campaign test` + basic validation
+4. **email-testing-validator** - Uses `tdx engage campaign show` + basic validation
 5. **email-journey-builder** - Uses `tdx journey validate/push/pull` with email YAML
 
 ## Realistic Composable Workflows
@@ -38,7 +38,7 @@ Create journey YAML, set up campaigns, test delivery.
 
 ❌ **Complex Analytics** - No advanced performance monitoring (use SQL directly)
 ❌ **Template Versioning** - No backup/restore systems (tdx doesn't support this)
-❌ **Advanced A/B Testing** - No complex testing frameworks (use basic `campaign test`)
+❌ **Advanced A/B Testing** - No complex testing frameworks (use web interface for test sends)
 ❌ **Sophisticated Personalization** - No merge tag builders (use journey YAML as-is)
 ❌ **Deliverability Analysis** - No complex validation (use simple pre-flight checks)
 ❌ **Content Optimization** - No AI-powered content suggestions (out of scope)
@@ -48,7 +48,7 @@ Create journey YAML, set up campaigns, test delivery.
 Each skill is a **thin wrapper** around actual `tdx` commands:
 - **email-template-creator**: wraps `tdx engage template create`
 - **email-campaign-creator**: wraps `tdx engage campaign create/launch/pause`
-- **email-testing-validator**: wraps `tdx engage campaign test`
+- **email-testing-validator**: wraps `tdx engage campaign show` + validation checks
 - **email-journey-builder**: wraps `tdx journey validate/push/pull`
 
 ## Skills Are Focused & Composable

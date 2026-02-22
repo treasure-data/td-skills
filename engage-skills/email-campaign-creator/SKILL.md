@@ -129,20 +129,19 @@ tdx engage campaign pause "Welcome Series"
 # Resume campaign after changes (PAUSED → LIVE)
 tdx engage campaign resume "Welcome Series"
 
-# Permanently finish always-on campaign (LIVE/PAUSED → FINISHED)
-tdx engage campaign finish "Welcome Series"  # Permanent action!
+# Note: There is no "finish" command in tdx CLI.
+# To permanently end an always-on campaign, use the TD Engage web interface.
 ```
 
 #### **Universal Campaign Operations**
 ```bash
-# Test any campaign type
-tdx engage campaign test "Campaign Name" --email "test@treasuredata.com"
-
 # Duplicate any campaign (creates new DRAFT)
 tdx engage campaign duplicate "Campaign Name"
 
 # Update campaign (only when DRAFT or PAUSED for always-on)
 tdx engage campaign update "Campaign Name" --description "Updated description"
+
+# Note: Test sends are not available via CLI - use TD Engage web interface for test emails
 ```
 
 #### **Campaign Status Rules**
@@ -159,11 +158,10 @@ tdx engage campaign update "Campaign Name" --description "Updated description"
 
 ### Campaign Testing
 ```bash
-# Send test email
-tdx engage campaign test "Campaign Name" --email "test@treasuredata.com"
-
-# Test in specific workspace
-tdx engage campaign test "Campaign Name" --email "test@example.com" --workspace "Marketing"
+# Note: Test sends are not available via CLI
+# Use TD Engage web interface to send test emails before launching campaigns
+# After testing, launch the campaign:
+tdx engage campaign launch "Campaign Name"
 ```
 
 ## Simple Workflows
@@ -331,13 +329,12 @@ validate_campaign() {
 ### Before Launching Any Campaign:
 ```bash
 # 1. Verify workspace context
-tdx context | grep engage_workspace
+tdx use | grep engage_workspace
 
 # 2. Check campaign configuration
 tdx engage campaign show "Campaign Name" --full
 
-# 3. Test campaign delivery
-tdx engage campaign test "Campaign Name" --email "test@company.com"
+# 3. Test campaign delivery via TD Engage web interface (no CLI test command)
 
 # 4. Verify sender profile (if configured)
 tdx engage campaign show "Campaign Name" | grep sender
@@ -362,6 +359,7 @@ tdx journey list | grep "Journey Name"
 
 **Prerequisites:**
 - **email-template-creator** - Create templates for campaigns
+- **email-campaign-skills** - Generate enterprise-grade HTML email campaigns with strategy briefs, live preview in Treasure Studio, iterative natural language editing, and push to Treasure Engage
 
 **Audience & Targeting:**
 - **tdx-skills:segment** - Create audience segments for campaign targeting

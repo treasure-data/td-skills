@@ -83,10 +83,10 @@ steps:
 ### Create and Validate Journey
 ```bash
 # Validate journey YAML syntax
-tdx journey validate --file welcome-journey.yml
+tdx journey validate welcome-journey.yml
 
 # Push journey to TD
-tdx journey push --file welcome-journey.yml --description "Initial welcome series"
+tdx journey push welcome-journey.yml
 
 # View deployed journey
 tdx journey view "Welcome Series"
@@ -98,10 +98,10 @@ tdx journey list
 ### Journey Updates
 ```bash
 # Update journey with changes
-tdx journey push --file welcome-journey.yml --description "Updated email templates"
+tdx journey push welcome-journey.yml
 
 # Pull journey to local file
-tdx journey pull --name "Welcome Series" --file updated-journey.yml
+tdx journey pull "Welcome Series"
 ```
 
 ### Journey Monitoring
@@ -109,11 +109,8 @@ tdx journey pull --name "Welcome Series" --file updated-journey.yml
 # Check journey status
 tdx journey view "Welcome Series"
 
-# View recent journey sessions
-tdx journey sessions --name "Welcome Series" --limit 10
-
-# Get journey metrics
-tdx journey metrics --name "Welcome Series" --period "last_7_days"
+# View journey statistics
+tdx journey stats "Welcome Series"
 ```
 
 ## Email Journey Patterns
@@ -211,7 +208,7 @@ validate_journey() {
   echo "Validating journey file: $journey_file"
 
   # Check YAML syntax
-  if ! tdx journey validate --file "$journey_file"; then
+  if ! tdx journey validate "$journey_file"; then
     echo "❌ YAML validation failed"
     return 1
   fi
@@ -238,7 +235,6 @@ validate_journey() {
 # Deploy journey with validation
 deploy_journey() {
   local journey_file="$1"
-  local description="$2"
 
   # Validate first
   if ! validate_journey "$journey_file"; then
@@ -248,7 +244,7 @@ deploy_journey() {
 
   # Deploy journey
   echo "Deploying journey: $journey_file"
-  tdx journey push --file "$journey_file" --description "$description"
+  tdx journey push "$journey_file"
 
   if [ $? -eq 0 ]; then
     echo "✅ Journey deployed successfully"
@@ -271,13 +267,13 @@ monitor_journey() {
 
   echo "Journey Status: $journey_name"
 
-  # Check recent sessions
-  echo "Recent sessions:"
-  tdx journey sessions --name "$journey_name" --limit 5
+  # Check journey details and statistics
+  echo "Journey details:"
+  tdx journey view "$journey_name"
 
-  # Get performance metrics
-  echo "Performance metrics:"
-  tdx journey metrics --name "$journey_name" --period "last_7_days"
+  # Get journey statistics
+  echo "Journey statistics:"
+  tdx journey stats "$journey_name"
 }
 
 # Usage: monitor_journey "Welcome Series"
@@ -391,7 +387,7 @@ comprehensive_journey_validation() {
 
   # 3. TDX journey validation
   echo "Validating with tdx journey..."
-  if tdx journey validate --file "$journey_file"; then
+  if tdx journey validate "$journey_file"; then
     echo "✅ TDX journey validation passed"
   else
     echo "❌ TDX journey validation failed"
@@ -471,14 +467,14 @@ debug_journey_execution() {
   journey_info=$(tdx journey view "$journey_name")
   echo "$journey_info"
 
-  # Check recent sessions
-  echo -e "\nRecent journey sessions:"
-  recent_sessions=$(tdx journey sessions --name "$journey_name" --limit 5 2>/dev/null)
+  # Check journey statistics
+  echo -e "\nJourney statistics:"
+  journey_stats=$(tdx journey stats "$journey_name" 2>/dev/null)
 
-  if [ -n "$recent_sessions" ]; then
-    echo "$recent_sessions"
+  if [ -n "$journey_stats" ]; then
+    echo "$journey_stats"
   else
-    echo "No recent sessions found"
+    echo "No statistics available"
   fi
 
   # Check parent segment status
@@ -568,19 +564,19 @@ analyze_journey_performance() {
   echo "Period: Last $days days"
   echo "================================"
 
-  # Get journey metrics if available
-  journey_metrics=$(tdx journey metrics --name "$journey_name" --period "last_${days}_days" 2>/dev/null)
+  # Get journey statistics
+  journey_stats=$(tdx journey stats "$journey_name" 2>/dev/null)
 
-  if [ -n "$journey_metrics" ]; then
-    echo "Journey Metrics:"
-    echo "$journey_metrics"
+  if [ -n "$journey_stats" ]; then
+    echo "Journey Statistics:"
+    echo "$journey_stats"
   else
-    echo "No metrics available from tdx journey metrics"
+    echo "No statistics available from tdx journey stats"
   fi
 
   # Pull journey configuration to get step details
   journey_file="temp_journey_$(date +%s).yml"
-  if tdx journey pull --name "$journey_name" --file "$journey_file" >/dev/null 2>&1; then
+  if tdx journey pull "$journey_name" --yes >/dev/null 2>&1; then
     echo -e "\nEmail step analysis:"
 
     # Extract custom_event_ids
