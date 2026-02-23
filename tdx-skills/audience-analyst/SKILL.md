@@ -1,6 +1,6 @@
 ---
 name: audience-analyst
-description: Analyze CDP audience data, visualize insights with charts, and create segment YAML files. Orchestrates the full workflow from parent segment schema discovery through data quality checks, Trino SQL analysis, chart visualization, to segment YAML generation and push.
+description: Marketing analysis orchestrator for CDP audience data. Guides a 5-stage workflow — schema discovery, data quality assessment (null ratio thresholds), incremental Trino SQL analysis, chart visualization with render_chart, and actionable recommendations. Use when users want to explore customer attributes, analyze behavioral trends, or visualize audience insights before deciding on next steps.
 ---
 
 # Audience Analyst - Marketing Analysis & Segment Creation Orchestrator
