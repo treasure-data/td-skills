@@ -149,6 +149,48 @@ validate_all_campaigns() {
 }
 ```
 
+## Journey Validation
+
+### Validate Journey YAML
+```bash
+# Validate journey YAML syntax before deployment
+tdx journey validate welcome-series.yml
+
+# Validate all journey files in current directory
+for f in *.yml; do
+  echo "Validating: $f"
+  tdx journey validate "$f" && echo "  ✅ Valid" || echo "  ❌ Invalid"
+done
+```
+
+### Journey Pre-Deploy Check
+```bash
+validate_journey_for_launch() {
+  local journey_file="$1"
+
+  echo "Journey Validation: $journey_file"
+
+  # 1. YAML syntax
+  if ! tdx journey validate "$journey_file"; then
+    echo "❌ YAML validation failed"
+    return 1
+  fi
+  echo "✅ YAML syntax valid"
+
+  # 2. Parent segment exists
+  parent_segment=$(grep "parent_segment:" "$journey_file" | \
+    sed 's/.*: *["'"'"']*\([^"'"'"']*\)["'"'"']*.*/\1/')
+  if tdx ps view "$parent_segment" >/dev/null 2>&1; then
+    echo "✅ Parent segment exists: $parent_segment"
+  else
+    echo "❌ Parent segment not found: $parent_segment"
+    return 1
+  fi
+
+  echo "✅ Journey ready for deployment"
+}
+```
+
 ## Manual Testing Process
 
 **CLI cannot send test emails.** Use TD Engage web interface for test sends.
@@ -162,21 +204,7 @@ validate_all_campaigns() {
    ```
 
 2. **Test Email Sending** (Web Interface Required)
-   - Navigate to TD Engage web interface
-   - Open campaign
-   - Send test emails to:
-     - Gmail: `test.gmail@company.com`
-     - Outlook: `test.outlook@company.com`
-     - Yahoo: `test.yahoo@company.com`
-
-3. **Verification Checklist**
-   - [ ] Email delivered (not spam)
-   - [ ] HTML rendering correct
-   - [ ] Images display
-   - [ ] Links clickable
-   - [ ] Mobile responsive
-   - [ ] Unsubscribe link works
-   - [ ] Subject line displays properly
+   - Navigate to TD Engage web interface > Open campaign > Send test emails
 
 ### Readiness Report Function
 ```bash
@@ -255,3 +283,4 @@ tdx engage campaign launch "Campaign Name"
 **Integration:**
 - **email-template-manager** - Manage templates
 - **email-journey-builder** - Validate journey email components
+- **tdx-skills:validate-journey** - Full journey YAML validation

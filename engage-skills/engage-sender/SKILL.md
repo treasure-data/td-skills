@@ -31,13 +31,7 @@ TD Engage sender profiles and domain configuration using TD Console's **automati
 **Step 2: DNS Implementation**
 1. Copy generated zone file from TD Console
 2. Provide to IT team for DNS configuration
-3. TD automatically generates:
-   - **SPF (TXT)** - Authorizes TD to send emails
-   - **DKIM (TXT)** - Cryptographic email signing
-   - **DMARC (TXT)** - Authentication policy
-   - **CNAME (Click Tracking)** - Link tracking
-   - **CNAME (Image Hosting)** - CDN delivery
-   - **MX (Mail Exchange)** - Bounce processing
+3. TD auto-generates: SPF, DKIM, DMARC, CNAME (click tracking + image hosting), MX records
 
 **Step 3: Domain Verification**
 1. Click **"Verify Domain"** in TD Console
@@ -124,6 +118,32 @@ tdx engage workspace show "Marketing Team"
 
 # List workspaces
 tdx engage workspace list
+```
+
+## Connection & Integration Discovery
+
+### Check Available Connections
+```bash
+# List all data connections configured in the account
+tdx connection list
+
+# Show details for a specific connection
+tdx connection show "Email Delivery"
+
+# List available connector types
+tdx connection types
+
+# View connector schema for activation configuration
+tdx connection schema <connector_type>
+```
+
+### Programmatic Status Checks via API
+```bash
+# Query CDP API for sender/domain related entities
+tdx api /entities/parent_segments --type cdp
+
+# Query Engage-related API endpoints directly
+tdx api /engage/v1/workspaces --type td
 ```
 
 ## Sender Performance Monitoring
@@ -271,14 +291,6 @@ dig @8.8.8.8 txt company.com         # Google DNS
 dig @1.1.1.1 txt company.com         # Cloudflare DNS
 dig @208.67.222.222 txt company.com  # OpenDNS
 ```
-
-## Important Notes
-
-- **No manual DNS record creation** - TD auto-generates zone files
-- **No CLI sender profile commands** - use TD Console only
-- **Domain verification automatic** - TD polls DNS for 72 hours
-- **DNS records auto-generated** - copy from TD Console
-- **Workspace context required** - set with `tdx use engage_workspace`
 
 ## Related Skills
 

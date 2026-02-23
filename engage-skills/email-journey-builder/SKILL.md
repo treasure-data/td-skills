@@ -19,7 +19,7 @@ Creates journey YAML files with email activation steps using `tdx journey` comma
 
 ## Basic Journey YAML
 
-### Simple Email Sequence
+### Email Sequence
 ```yaml
 # welcome-journey.yml
 name: "Welcome Series"
@@ -49,35 +49,7 @@ steps:
       custom_event_id: "followup_sent"
 ```
 
-### Multi-Email Journey
-```yaml
-# newsletter-series.yml
-name: "Newsletter Series"
-description: "Weekly newsletter sequence"
-parent_segment: "newsletter_master"
-folder: "Newsletter"
-
-steps:
-  - name: "week_1_newsletter"
-    type: "activation"
-    email:
-      template_id: "newsletter-week-1"
-      sender_id: "newsletter-sender-uuid"
-      custom_event_id: "newsletter_week_1"
-    next: "wait_1_week"
-
-  - name: "wait_1_week"
-    type: "wait"
-    duration: "7d"
-    next: "week_2_newsletter"
-
-  - name: "week_2_newsletter"
-    type: "activation"
-    email:
-      template_id: "newsletter-week-2"
-      sender_id: "newsletter-sender-uuid"
-      custom_event_id: "newsletter_week_2"
-```
+Extend by adding more `wait` → `activation` pairs for multi-email sequences.
 
 ## Journey Commands
 
@@ -92,6 +64,12 @@ tdx journey push welcome-journey.yml
 # View deployed journey
 tdx journey view "Welcome Series"
 
+# View with execution statistics
+tdx journey view "Welcome Series" --include-stats
+
+# Open journey in web browser for visual inspection
+tdx journey view "Welcome Series" -w
+
 # List all journeys
 tdx journey list
 
@@ -102,6 +80,15 @@ tdx journey pull "Welcome Series"
 tdx journey push welcome-journey.yml
 ```
 
+### Journey Lifecycle
+```bash
+# Pause a running journey
+tdx journey pause "Welcome Series"
+
+# Resume a paused journey
+tdx journey resume "Welcome Series"
+```
+
 ### Journey Monitoring
 ```bash
 # Check journey status
@@ -109,6 +96,9 @@ tdx journey view "Welcome Series"
 
 # View journey statistics
 tdx journey stats "Welcome Series"
+
+# View stats for a specific stage
+tdx journey stats "Welcome Series" --stage "send_welcome"
 
 # Extract journey to YAML
 tdx journey pull "Welcome Series" --yes
@@ -299,7 +289,7 @@ ORDER BY journey_step
 | Error | TD-Specific Solution |
 |-------|---------------------|
 | "Template not found in activation" | Verify template_id matches template name |
-| "Campaign not accepting activations" | Campaign must be in Live status (not Paused/Finished) |
+| "Campaign not accepting activations" | Campaign must be in ACTIVE status (not PAUSED/COMPLETED) |
 | "Invalid custom_event_id format" | Use alphanumeric and underscores only |
 
 ## TD-Specific Patterns

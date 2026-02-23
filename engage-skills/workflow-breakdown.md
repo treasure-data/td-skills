@@ -46,10 +46,10 @@ Create journey YAML, set up campaigns, test delivery.
 ## Core Principle: Thin Wrappers
 
 Each skill is a **thin wrapper** around actual `tdx` commands:
-- **email-template-creator**: wraps `tdx engage template create`
-- **email-campaign-creator**: wraps `tdx engage campaign create/launch/pause`
-- **email-testing-validator**: wraps `tdx engage campaign show` + validation checks
-- **email-journey-builder**: wraps `tdx journey validate/push/pull`
+- **email-template-creator**: wraps `tdx engage template create` (with `--editor-type` support)
+- **email-campaign-creator**: wraps `tdx engage campaign create/launch/pause/resume/duplicate`
+- **email-testing-validator**: wraps `tdx engage campaign show` + `tdx journey validate` + validation checks
+- **email-journey-builder**: wraps `tdx journey validate/push/pull/view/stats/pause/resume`
 
 ## Skills Are Focused & Composable
 

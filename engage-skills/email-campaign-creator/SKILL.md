@@ -20,15 +20,15 @@ Creates email campaigns using `tdx engage campaign` commands. Handles campaign s
 TD Engage has two distinct campaign types:
 
 ### Batch Campaigns
-- Execute once on schedule, auto-finish after delivery
-- Status: `Draft → Active → Finished`
+- Execute once on schedule, auto-complete after delivery
+- Status: `DRAFT → ACTIVE → COMPLETED`
 - Use for: One-time promotions, scheduled newsletters, announcements
 
 ### Always-On Campaigns
-- Remain Live, accept multiple journey activations
-- Status: `Draft → Live → Paused → Live → Finished`
+- Remain active, accept multiple journey activations
+- Status: `DRAFT → ACTIVE → PAUSED → ACTIVE → COMPLETED`
 - Use for: Welcome series, cart abandonment, behavioral triggers
-- **Requires**: `--parent-segment` flag
+- Created with `--segment` pointing to a parent segment path
 
 ## Campaign Creation
 
@@ -60,17 +60,17 @@ tdx engage campaign create --name "VIP Newsletter" --type email \
 # Basic always-on (for journey activation)
 tdx engage campaign create --name "Welcome Series" --type email \
   --description "Continuous welcome emails triggered by journeys" \
-  --parent-segment "Marketing Master"
+  --segment "Marketing Master"
 
 # With sender configuration
 tdx engage campaign create --name "Cart Recovery" --type email \
   --description "Automated cart abandonment recovery" \
-  --parent-segment "E-commerce Master" \
+  --segment "E-commerce Master" \
   --email-sender-id "sender-uuid-123"
 
 # With JSON columns for personalization
 tdx engage campaign create --name "Product Updates" --type email \
-  --parent-segment "Customer 360" \
+  --segment "Customer 360" \
   --email-sender-id "sender-uuid-123" \
   --json-columns "email,name,company,preferences"
 ```
@@ -82,10 +82,10 @@ tdx engage campaign create --name "Product Updates" --type email \
 # List all campaigns
 tdx engage campaign list
 
-# List by status
+# List by status (valid: DRAFT, ACTIVE, PAUSED, COMPLETED)
 tdx engage campaign list --status DRAFT
 tdx engage campaign list --status ACTIVE
-tdx engage campaign list --status LIVE
+tdx engage campaign list --status PAUSED
 
 # Show campaign details
 tdx engage campaign show "Campaign Name"
@@ -108,7 +108,7 @@ tdx engage campaign update "Campaign Name" --description "Updated description"
 # Update segment (batch campaigns only, when in DRAFT)
 tdx engage campaign update "Campaign Name" --segment "New/Segment Path"
 
-# Note: Parent segment cannot be changed for always-on campaigns after creation
+# Note: Segment cannot be changed for always-on campaigns after launch
 ```
 
 ## Campaign Lifecycle
@@ -118,7 +118,7 @@ tdx engage campaign update "Campaign Name" --segment "New/Segment Path"
 # Launch (DRAFT → ACTIVE)
 tdx engage campaign launch "Newsletter Campaign"
 
-# Auto-finishes after delivery (ACTIVE → FINISHED)
+# Auto-completes after delivery (ACTIVE → COMPLETED)
 
 # Duplicate for reuse
 tdx engage campaign duplicate "Newsletter Campaign"
@@ -126,13 +126,13 @@ tdx engage campaign duplicate "Newsletter Campaign"
 
 ### Always-On Campaign Lifecycle
 ```bash
-# Launch (DRAFT → LIVE)
+# Launch (DRAFT → ACTIVE)
 tdx engage campaign launch "Welcome Series"
 
-# Pause to make changes (LIVE → PAUSED)
+# Pause to make changes (ACTIVE → PAUSED)
 tdx engage campaign pause "Welcome Series"
 
-# Resume after changes (PAUSED → LIVE)
+# Resume after changes (PAUSED → ACTIVE)
 tdx engage campaign resume "Welcome Series"
 
 # Note: No CLI finish command - use TD Engage web interface
@@ -140,15 +140,15 @@ tdx engage campaign resume "Welcome Series"
 
 ### Campaign Status Rules
 
-| Type | Draft | Active/Live | Paused | Finished |
-|------|-------|-------------|--------|----------|
-| **Batch** | ✅ Edit | ❌ Read-only | N/A | ❌ Read-only |
-| **Always-On** | ✅ Edit | ❌ Read-only | ✅ Edit | ❌ Read-only |
+| Type | DRAFT | ACTIVE | PAUSED | COMPLETED |
+|------|-------|--------|--------|-----------|
+| **Batch** | Edit | Read-only | N/A | Read-only |
+| **Always-On** | Edit | Read-only | Edit | Read-only |
 
 **Key TD-Specific Rules:**
-- Batch campaigns auto-finish after delivery
-- Always-on campaigns stay Live indefinitely
-- Parent segment locked after always-on campaign launch
+- Batch campaigns auto-complete after delivery
+- Always-on campaigns stay ACTIVE indefinitely
+- Segment locked after always-on campaign launch
 - Only paused always-on campaigns can be edited
 
 ## Campaign Functions
@@ -209,15 +209,15 @@ launch_drafts() {
 ### Campaign Lifecycle
 | Error | TD-Specific Solution |
 |-------|---------------------|
-| "Cannot edit Live campaign" | Pause first: `tdx engage campaign pause "Name"` |
-| "Cannot launch Paused campaign" | Resume first: `tdx engage campaign resume "Name"` |
-| "Cannot change parent segment" | Parent segment locked after launch - create new campaign |
-| "Campaign not accepting activations" | Check status is Live (not Paused/Finished) |
+| "Cannot edit ACTIVE campaign" | Pause first: `tdx engage campaign pause "Name"` |
+| "Cannot launch PAUSED campaign" | Resume first: `tdx engage campaign resume "Name"` |
+| "Cannot change segment" | Segment locked after launch - create new campaign |
+| "Campaign not accepting activations" | Check status is ACTIVE (not PAUSED/COMPLETED) |
 
 ### Journey Integration
 | Error | TD-Specific Solution |
 |-------|---------------------|
-| "Campaign type mismatch" | Journeys require always-on campaigns (with `--parent-segment`) |
+| "Campaign type mismatch" | Journeys require always-on campaigns (with `--segment` pointing to parent segment) |
 | "Parent segment mismatch" | Journey and campaign must use same parent segment |
 | "Activation failed - campaign paused" | Resume campaign or update journey reference |
 
@@ -240,11 +240,11 @@ launch_drafts() {
 
 | Feature | Batch | Always-On |
 |---------|-------|-----------|
-| **Status Flow** | Draft → Active → Finished | Draft → Live → Paused → Finished |
-| **Journey Use** | ❌ | ✅ Required |
-| **Scheduling** | ✅ `--start-at` flag | ❌ Journey-triggered only |
-| **Parent Segment** | ❌ Uses `--segment` | ✅ Uses `--parent-segment` |
-| **Auto-Finish** | ✅ After delivery | ❌ Manual finish only |
+| **Status Flow** | DRAFT → ACTIVE → COMPLETED | DRAFT → ACTIVE → PAUSED → COMPLETED |
+| **Journey Use** | No | Yes (required) |
+| **Scheduling** | `--start-at` flag | Journey-triggered only |
+| **Segment** | `--segment` (child segment path) | `--segment` (parent segment name) |
+| **Auto-Complete** | Yes, after delivery | No, manual finish only |
 
 ## Pre-Launch Checklist
 
@@ -259,7 +259,7 @@ tdx engage campaign show "Campaign Name" --full
 tdx engage campaign show "Campaign Name" --full | \
   jq '.data.relationships.template'
 
-# 4. Check parent segment (always-on only)
+# 4. Check segment (always-on only)
 tdx ps view "Parent Segment Name"
 
 # 5. Test via web interface (no CLI test command)

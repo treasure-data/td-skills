@@ -13,7 +13,6 @@ Provides guidance for TD Engage's built-in UTM tracking functionality and analyt
 
 - TD Engage workspace access
 - Email campaigns created in Engage Studio
-- Understanding of UTM parameters for analytics
 
 ## UTM Configuration (UI Only)
 
@@ -43,6 +42,18 @@ TD Engage automatically sets these parameters (not configurable):
 
 **Important:** UTM parameters are appended to link URLs, not stored as separate columns.
 Use `click_link` to extract UTM values. Find your database with: `tdx databases "*delivery_email*"`
+
+### Discover Event Table Schema
+```bash
+# Find delivery email database
+tdx databases "*delivery_email*"
+
+# View events table schema to see available columns
+tdx describe events --in {delivery_email_database}
+
+# Preview sample event data
+tdx show events --in {delivery_email_database}
+```
 
 ### Email Click Analysis with UTM
 ```sql
@@ -105,16 +116,9 @@ GROUP BY 1, 2
 ## Best Practices
 
 ### UTM Naming Conventions
-- Use lowercase, descriptive campaign names: `newsletter_jan2024`, `spring_sale_2024`
-- Avoid spaces and special characters in UTM values
-- Include time periods for easier analysis: `welcome_series_q1`, `promo_march2024`
+- Use lowercase, no spaces: `newsletter_jan2024`, `spring_sale_2024`
+- Include time periods: `welcome_series_q1`, `promo_march2024`
 - Keep values under 40 characters (TD Engage limit)
-
-### Analytics Integration
-- UTM parameters automatically work with Google Analytics 4 (GA4)
-- Configure custom dimensions in GA4 for `utm_source_platform` and `utm_marketing_tactic`
-- Use TD event data for detailed email-specific analytics
-- Set up regular UTM performance review processes
 
 ## Important Notes
 

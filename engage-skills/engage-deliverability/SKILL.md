@@ -17,35 +17,30 @@ Provides guidance for TD Engage's built-in email deliverability features includi
 
 ## Domain Authentication (Automatic Setup)
 
-### TD Engage Automatic Features
-TD Engage Studio automatically handles email authentication:
-
-- **SPF Records**: Auto-generated when configuring domain
-- **DKIM Signing**: Automatic key generation and email signing
-- **DMARC Policies**: Recommended records provided during setup
-- **IP Warming**: Amazon SES manages IP allocation and warming automatically
+TD Engage Studio automatically handles SPF, DKIM, DMARC, and IP warming (via Amazon SES).
 
 ### Domain Configuration Process
 
-1. **Navigate to Engage Studio**: Go to **Engage > Sending Configurations > Create New**
-2. **Create Domain**: Enter domain name and Write-only API key
-3. **Deploy Domain**: Click "Start domain deployment" and wait for DNS record generation
-4. **Copy DNS Records**: Click "Verify DNS records" to get auto-generated records
-5. **Add to DNS**: Provide records to IT team for DNS configuration
-6. **Verify Setup**: Click "Verify Domain" - system polls automatically for 72 hours
-
-### DNS Records Provided by TD
-TD automatically generates these records for you:
-- **SPF (TXT)**: Authorizes TD to send emails for your domain
-- **DKIM (TXT)**: Cryptographic email signing verification
-- **DMARC (TXT)**: Policy for handling unauthenticated emails
-- **CNAME (Click Tracking)**: Link click tracking and rewriting
-- **CNAME (Image Hosting)**: CDN image delivery
-- **MX (Mail Exchange)**: Bounce and auto-reply processing
+1. **Engage > Sending Configurations > Create New** - Enter domain name and Write-only API key
+2. Click **"Start domain deployment"** (auto-generates all DNS records)
+3. Click **"Verify DNS records"** - copy generated zone file for IT team
+4. Click **"Verify Domain"** - system polls automatically for 72 hours
 
 ## Monitoring & Analytics
 
 **Note:** Find your database with: `tdx databases "*delivery_email*"`
+
+### Discover Event Table Schema
+```bash
+# Find delivery email database
+tdx databases "*delivery_email*"
+
+# View events table columns (event_type, to_plain_address, click_link, etc.)
+tdx describe events --in {delivery_email_database}
+
+# Preview sample event data
+tdx show events --in {delivery_email_database}
+```
 
 ### Delivery Performance Analysis
 ```sql
@@ -103,33 +98,13 @@ ORDER BY date DESC
 "
 ```
 
-## Best Practices
+## TD Target Metrics
 
-### List Management
-- **Remove hard bounces** immediately to protect sender reputation
-- **Implement double opt-in** to verify email addresses at signup
-- **Segment by engagement** - send to active subscribers first
-- **Regular list cleaning** - remove inactive subscribers (6+ months)
-
-### Content Optimization
-- **Avoid spam trigger words**: "FREE", "LIMITED TIME", "ACT NOW"
-- **Balance text/images** - don't send image-only emails
-- **Mobile-friendly design** with clear unsubscribe links
-- **Consistent sender names** and email addresses
-
-### Volume Management
-- **Gradual volume increases** - don't jump from 1K to 100K emails
-- **Consistent sending frequency** - regular schedule vs. sporadic bursts
-- **Start with engaged users** before expanding to full list
-- **Monitor bounce/complaint rates** during volume increases
-
-### Target Metrics
 | Metric | Good Target | Action Required |
 |--------|-------------|-----------------|
 | Bounce Rate | < 2% | Remove invalid addresses |
 | Complaint Rate | < 0.1% | Review content and targeting |
 | Delivery Rate | > 98% | Check authentication setup |
-| Open Rate | Industry average | Improve subject lines |
 
 ## Built-in Monitoring Tools
 
@@ -138,12 +113,6 @@ ORDER BY date DESC
 - **Email delivery events** tracking in campaigns
 - **Bounce/complaint reports** in campaign analytics
 - **Authentication record status** monitoring
-
-### External Monitoring
-- **Google Postmaster Tools** - Gmail reputation monitoring
-- **Microsoft SNDS** - Outlook/Hotmail IP reputation
-- **MXToolbox** - DNS record verification
-- **DMARC analyzers** - Authentication report parsing
 
 ## Troubleshooting
 

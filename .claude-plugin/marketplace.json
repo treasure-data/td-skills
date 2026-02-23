@@ -80,7 +80,7 @@
     },
     {
       "name": "engage-skills",
-      "description": "Customer engagement skills using tdx engage commands for email template creation, campaign management, journey building, testing, and basic template organization",
+      "description": "Use when managing TD Engage via tdx CLI: creating/updating email templates and campaigns, building email journey YAML, validating pre-launch configs, configuring sender domains, monitoring deliverability/UTM analytics, and managing Engage workspaces",
       "source": "./",
       "strict": false,
       "skills": [
@@ -88,7 +88,11 @@
         "./engage-skills/email-campaign-creator",
         "./engage-skills/email-template-manager",
         "./engage-skills/email-testing-validator",
-        "./engage-skills/email-journey-builder"
+        "./engage-skills/email-journey-builder",
+        "./engage-skills/engage-sender",
+        "./engage-skills/engage-deliverability",
+        "./engage-skills/engage-utm",
+        "./engage-skills/engage-workspace-advanced"
       ]
     },
     {

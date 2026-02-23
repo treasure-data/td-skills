@@ -40,6 +40,12 @@ tdx engage template create --name "Sales Email" \
   --subject "Product Demo Available" \
   --html "<h1>Ready for a demo?</h1>" \
   --workspace "Sales Team"
+
+# Choose editor type: beefree (Visual Editor, default) or grapesjs (HTML Editor)
+tdx engage template create --name "Custom HTML Email" \
+  --subject "Handcrafted Design" \
+  --html "$(cat custom.html)" \
+  --editor-type grapesjs
 ```
 
 ### File-Based Template
@@ -108,10 +114,8 @@ tdx engage template delete "Old Template" --yes
 
 ### Naming Conventions
 ```bash
-# Use descriptive, categorized names
+# Use "Category - Description" format
 tdx engage template create --name "Welcome - Day 1" --subject "Welcome!"
-tdx engage template create --name "Newsletter - Weekly" --subject "This Week's Updates"
-tdx engage template create --name "Promotion - Flash Sale" --subject "Limited Time Offer"
 ```
 
 ### Template Validation Function
@@ -157,6 +161,7 @@ validate_template() {
 | "HTML file too large" | TD limit: keep templates under 100KB |
 | "Template variable syntax error" | Use Liquid syntax: `{{variable_name}}` for merge tags |
 | "Merge tag not recognized" | Check TD Engage supported merge tags in documentation |
+| "Invalid editor type" | Use `beefree` (Visual Editor) or `grapesjs` (HTML Editor) |
 
 ## Related Skills
 
