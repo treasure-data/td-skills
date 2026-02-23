@@ -67,6 +67,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[tdx-skills/agent-test](./tdx-skills/agent-test)** - Run automated tests for LLM agents using `tdx agent test` with test.yml format and judge evaluation
 - **[tdx-skills/agent-prompt](./tdx-skills/agent-prompt)** - Write effective system prompts for TD AI agents with role definition, constraints, and output formatting
 - **[tdx-skills/workflow](./tdx-skills/workflow)** - Manage TD workflows via `tdx wf` commands: project sync, run, sessions, timeline, attempts, retry, and secrets
+- **[tdx-skills/audience-analyst](./tdx-skills/audience-analyst)** - Analyze CDP audience data, visualize insights with charts, and create segment YAML files from analysis results
 
 ### Field Agent Skills
 
@@ -148,6 +149,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the agent-test skill to run automated tests for my agent"
 "Use the agent-prompt skill to write an effective system prompt for my agent"
 "Use the workflow skill to debug a failing workflow session"
+"Use the audience-analyst skill to analyze customer data and create segments from insights"
 "Use the deployment skill to set up a production publishing workflow"
 "Use the documentation skill to create comprehensive Field Agent documentation"
 "Use the visualization skill to create a Plotly chart with TD colors"
