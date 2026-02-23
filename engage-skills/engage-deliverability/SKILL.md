@@ -45,22 +45,24 @@ TD automatically generates these records for you:
 
 ## Monitoring & Analytics
 
+**Note:** Find your database with: `tdx databases "*delivery_email*"`
+
 ### Delivery Performance Analysis
 ```sql
 -- Email delivery performance by campaign
 SELECT
   campaign_name,
-  COUNT(CASE WHEN event_type = 'delivered' THEN 1 END) as delivered,
-  COUNT(CASE WHEN event_type = 'opened' THEN 1 END) as opened,
-  COUNT(CASE WHEN event_type = 'clicked' THEN 1 END) as clicked,
-  COUNT(CASE WHEN event_type = 'bounced' THEN 1 END) as bounced,
-  COUNT(CASE WHEN event_type = 'complained' THEN 1 END) as complained,
-  COUNT(DISTINCT email) as unique_recipients,
-  ROUND(COUNT(CASE WHEN event_type = 'opened' THEN 1 END) * 100.0 /
-    NULLIF(COUNT(CASE WHEN event_type = 'delivered' THEN 1 END), 0), 2) as open_rate,
-  ROUND(COUNT(CASE WHEN event_type = 'bounced' THEN 1 END) * 100.0 /
+  COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END) as delivered,
+  COUNT(CASE WHEN event_type = 'Open' THEN 1 END) as opened,
+  COUNT(CASE WHEN event_type = 'Click' THEN 1 END) as clicked,
+  COUNT(CASE WHEN event_type = 'Bounce' THEN 1 END) as bounced,
+  COUNT(CASE WHEN event_type = 'Complaint' THEN 1 END) as complained,
+  COUNT(DISTINCT to_plain_address) as unique_recipients,
+  ROUND(COUNT(CASE WHEN event_type = 'Open' THEN 1 END) * 100.0 /
+    NULLIF(COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END), 0), 2) as open_rate,
+  ROUND(COUNT(CASE WHEN event_type = 'Bounce' THEN 1 END) * 100.0 /
     COUNT(*), 2) as bounce_rate
-FROM delivery_email_treasuredata_com.events
+FROM {delivery_email_database}.events
 WHERE td_interval(time, '-30d')
 GROUP BY campaign_name
 ORDER BY delivered DESC
@@ -68,19 +70,19 @@ ORDER BY delivered DESC
 
 ### Domain Reputation Monitoring
 ```sql
--- Domain authentication and reputation metrics
+-- Domain reputation metrics by sending domain
 SELECT
-  from_domain,
+  email_domain,
   COUNT(*) as total_emails,
-  COUNT(CASE WHEN event_type = 'delivered' THEN 1 END) as delivered,
-  COUNT(CASE WHEN event_type = 'bounced' THEN 1 END) as bounced,
-  COUNT(CASE WHEN event_type = 'complained' THEN 1 END) as complained,
-  ROUND(COUNT(CASE WHEN event_type = 'delivered' THEN 1 END) * 100.0 / COUNT(*), 2) as delivery_rate,
-  ROUND(COUNT(CASE WHEN event_type = 'bounced' THEN 1 END) * 100.0 / COUNT(*), 2) as bounce_rate,
-  ROUND(COUNT(CASE WHEN event_type = 'complained' THEN 1 END) * 100.0 / COUNT(*), 2) as complaint_rate
-FROM delivery_email_treasuredata_com.events
+  COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END) as delivered,
+  COUNT(CASE WHEN event_type = 'Bounce' THEN 1 END) as bounced,
+  COUNT(CASE WHEN event_type = 'Complaint' THEN 1 END) as complained,
+  ROUND(COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END) * 100.0 / COUNT(*), 2) as delivery_rate,
+  ROUND(COUNT(CASE WHEN event_type = 'Bounce' THEN 1 END) * 100.0 / COUNT(*), 2) as bounce_rate,
+  ROUND(COUNT(CASE WHEN event_type = 'Complaint' THEN 1 END) * 100.0 / COUNT(*), 2) as complaint_rate
+FROM {delivery_email_database}.events
 WHERE td_interval(time, '-7d')
-GROUP BY from_domain
+GROUP BY email_domain
 ORDER BY total_emails DESC
 ```
 
@@ -89,14 +91,14 @@ ORDER BY total_emails DESC
 # Query deliverability metrics for specific timeframe
 tdx query "
 SELECT
-  DATE(time) as date,
-  COUNT(CASE WHEN event_type = 'delivered' THEN 1 END) as delivered,
-  COUNT(CASE WHEN event_type = 'bounced' THEN 1 END) as bounced,
-  COUNT(CASE WHEN event_type = 'complained' THEN 1 END) as complained,
-  ROUND(COUNT(CASE WHEN event_type = 'delivered' THEN 1 END) * 100.0 / COUNT(*), 2) as delivery_rate
-FROM delivery_email_treasuredata_com.events
+  DATE(FROM_UNIXTIME(time)) as date,
+  COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END) as delivered,
+  COUNT(CASE WHEN event_type = 'Bounce' THEN 1 END) as bounced,
+  COUNT(CASE WHEN event_type = 'Complaint' THEN 1 END) as complained,
+  ROUND(COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END) * 100.0 / COUNT(*), 2) as delivery_rate
+FROM {delivery_email_database}.events
 WHERE td_interval(time, '-14d')
-GROUP BY DATE(time)
+GROUP BY DATE(FROM_UNIXTIME(time))
 ORDER BY date DESC
 "
 ```

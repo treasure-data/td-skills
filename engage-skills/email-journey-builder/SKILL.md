@@ -281,13 +281,15 @@ monitor_journey() {
 
 ### Email Step Performance
 ```sql
--- Query email delivery by journey step
+-- Note: Database name is derived from your Engage sending domain
+-- Format: delivery_email_<your_domain_with_underscores>
+-- Find yours with: tdx databases "*delivery_email*"
 SELECT
   custom_event_id as journey_step,
-  COUNT(CASE WHEN event_type = 'delivered' THEN 1 END) as delivered,
-  COUNT(CASE WHEN event_type = 'opened' THEN 1 END) as opened,
-  COUNT(CASE WHEN event_type = 'clicked' THEN 1 END) as clicked
-FROM delivery_email_treasuredata_com.events
+  COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END) as delivered,
+  COUNT(CASE WHEN event_type = 'Open' THEN 1 END) as opened,
+  COUNT(CASE WHEN event_type = 'Click' THEN 1 END) as clicked
+FROM {delivery_email_database}.events
 WHERE
   custom_event_id IN ('welcome_day_1', 'welcome_day_3', 'welcome_day_7')
   AND td_interval(time, '-30d')

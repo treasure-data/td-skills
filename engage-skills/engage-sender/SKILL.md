@@ -155,6 +155,7 @@ get_workspace_info() {
 ### Email Event Analysis
 ```bash
 # Monitor sender performance using verified tools
+# Find your database with: tdx databases "*delivery_email*"
 monitor_sender_performance() {
   local sender_email="$1"
   local days="$2"
@@ -164,18 +165,19 @@ monitor_sender_performance() {
   echo "================================"
 
   # Use tdx query for email event analysis
+  # Note: "from" is a reserved word in Trino, so it must be quoted
   tdx query <<EOF
 SELECT
-  from_email,
+  "from",
   event_type,
   COUNT(*) as events,
-  COUNT(DISTINCT email) as unique_recipients,
-  DATE(time) as date
-FROM delivery_email_treasuredata_com.events
+  COUNT(DISTINCT to_plain_address) as unique_recipients,
+  DATE(FROM_UNIXTIME(time)) as date
+FROM {delivery_email_database}.events
 WHERE
   td_interval(time, '-${days}d')
-  AND from_email = '$sender_email'
-GROUP BY from_email, event_type, DATE(time)
+  AND "from" = '$sender_email'
+GROUP BY "from", event_type, DATE(FROM_UNIXTIME(time))
 ORDER BY date DESC, event_type
 EOF
 

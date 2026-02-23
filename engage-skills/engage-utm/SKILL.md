@@ -41,61 +41,64 @@ TD Engage automatically sets these parameters (not configurable):
 
 ## Analytics & Performance Tracking
 
-### Email Event Analysis with UTM
+**Important:** UTM parameters are appended to link URLs, not stored as separate columns.
+Use `click_link` to extract UTM values. Find your database with: `tdx databases "*delivery_email*"`
+
+### Email Click Analysis with UTM
 ```sql
--- Analyze email clicks by UTM campaign
+-- Analyze email clicks by UTM campaign (extracted from click_link URL)
 SELECT
-  utm_campaign,
-  utm_marketing_tactic,
+  regexp_extract(click_link, 'utm_campaign=([^&]+)', 1) as utm_campaign,
+  regexp_extract(click_link, 'utm_marketing_tactic=([^&]+)', 1) as utm_marketing_tactic,
   COUNT(*) as total_clicks,
-  COUNT(DISTINCT email) as unique_clickers,
+  COUNT(DISTINCT to_plain_address) as unique_clickers,
   ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as click_percentage
-FROM delivery_email_treasuredata_com.events
+FROM {delivery_email_database}.events
 WHERE
-  event_type = 'clicked'
+  event_type = 'Click'
   AND td_interval(time, '-30d')
-  AND utm_campaign IS NOT NULL
-GROUP BY utm_campaign, utm_marketing_tactic
+  AND click_link LIKE '%utm_campaign=%'
+GROUP BY 1, 2
 ORDER BY total_clicks DESC
 ```
 
 ### Campaign Performance Analysis
 ```sql
--- Campaign attribution with open/click rates
+-- Campaign performance with open/click rates
+-- Note: UTM params only exist on Click events (in click_link)
+-- Use campaign_name for cross-event analysis
 SELECT
-  utm_campaign,
-  utm_marketing_tactic,
-  COUNT(CASE WHEN event_type = 'delivered' THEN 1 END) as delivered,
-  COUNT(CASE WHEN event_type = 'opened' THEN 1 END) as opened,
-  COUNT(CASE WHEN event_type = 'clicked' THEN 1 END) as clicked,
-  COUNT(DISTINCT email) as unique_recipients,
-  ROUND(COUNT(CASE WHEN event_type = 'opened' THEN 1 END) * 100.0 /
-    NULLIF(COUNT(CASE WHEN event_type = 'delivered' THEN 1 END), 0), 2) as open_rate,
-  ROUND(COUNT(CASE WHEN event_type = 'clicked' THEN 1 END) * 100.0 /
-    NULLIF(COUNT(CASE WHEN event_type = 'opened' THEN 1 END), 0), 2) as click_through_rate
-FROM delivery_email_treasuredata_com.events
+  campaign_name,
+  COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END) as delivered,
+  COUNT(CASE WHEN event_type = 'Open' THEN 1 END) as opened,
+  COUNT(CASE WHEN event_type = 'Click' THEN 1 END) as clicked,
+  COUNT(DISTINCT to_plain_address) as unique_recipients,
+  ROUND(COUNT(CASE WHEN event_type = 'Open' THEN 1 END) * 100.0 /
+    NULLIF(COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END), 0), 2) as open_rate,
+  ROUND(COUNT(CASE WHEN event_type = 'Click' THEN 1 END) * 100.0 /
+    NULLIF(COUNT(CASE WHEN event_type = 'Open' THEN 1 END), 0), 2) as click_through_rate
+FROM {delivery_email_database}.events
 WHERE
   td_interval(time, '-7d')
-  AND utm_campaign IS NOT NULL
-GROUP BY utm_campaign, utm_marketing_tactic
+  AND campaign_name IS NOT NULL
+GROUP BY campaign_name
 ORDER BY delivered DESC
 ```
 
 ### UTM Performance Query Helper
 ```bash
-# Query UTM performance for specific campaign
+# Query UTM click performance for a specific campaign
 tdx query "
 SELECT
-  utm_campaign,
-  utm_marketing_tactic,
-  COUNT(CASE WHEN event_type = 'delivered' THEN 1 END) as delivered,
-  COUNT(CASE WHEN event_type = 'opened' THEN 1 END) as opened,
-  COUNT(CASE WHEN event_type = 'clicked' THEN 1 END) as clicked
-FROM delivery_email_treasuredata_com.events
+  regexp_extract(click_link, 'utm_campaign=([^&]+)', 1) as utm_campaign,
+  regexp_extract(click_link, 'utm_marketing_tactic=([^&]+)', 1) as utm_marketing_tactic,
+  COUNT(*) as clicks
+FROM {delivery_email_database}.events
 WHERE
-  td_interval(time, '-7d')
-  AND utm_campaign = 'your_campaign_name'
-GROUP BY utm_campaign, utm_marketing_tactic
+  event_type = 'Click'
+  AND td_interval(time, '-7d')
+  AND click_link LIKE '%utm_campaign=your_campaign_name%'
+GROUP BY 1, 2
 "
 ```
 

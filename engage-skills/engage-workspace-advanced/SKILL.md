@@ -203,35 +203,37 @@ workspace_inventory() {
 
 ## Monitoring & Analytics
 
-### Workspace Usage Analysis
+**Note:** The events table does not contain a workspace column. Use `campaign_name` for
+campaign-level analytics. Find your database with: `tdx databases "*delivery_email*"`
+
+### Campaign Activity Analysis
 ```sql
--- Workspace activity and usage metrics
+-- Campaign activity and usage metrics
 SELECT
-  workspace_name,
-  COUNT(DISTINCT campaign_name) as total_campaigns,
-  COUNT(CASE WHEN event_type = 'delivered' THEN 1 END) as total_emails_sent,
-  COUNT(DISTINCT email) as unique_recipients,
-  DATE(MIN(time)) as first_activity,
-  DATE(MAX(time)) as last_activity
-FROM delivery_email_treasuredata_com.events
+  campaign_name,
+  COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END) as total_emails_sent,
+  COUNT(DISTINCT to_plain_address) as unique_recipients,
+  DATE(FROM_UNIXTIME(MIN(time))) as first_activity,
+  DATE(FROM_UNIXTIME(MAX(time))) as last_activity
+FROM {delivery_email_database}.events
 WHERE td_interval(time, '-30d')
-GROUP BY workspace_name
+GROUP BY campaign_name
 ORDER BY total_emails_sent DESC
 ```
 
-### Cross-Workspace Performance
+### Campaign Performance Comparison
 ```sql
--- Compare performance across workspaces
+-- Compare performance across campaigns
 SELECT
-  workspace_name,
-  COUNT(CASE WHEN event_type = 'delivered' THEN 1 END) as delivered,
-  COUNT(CASE WHEN event_type = 'opened' THEN 1 END) as opened,
-  COUNT(CASE WHEN event_type = 'clicked' THEN 1 END) as clicked,
-  ROUND(COUNT(CASE WHEN event_type = 'opened' THEN 1 END) * 100.0 /
-    NULLIF(COUNT(CASE WHEN event_type = 'delivered' THEN 1 END), 0), 2) as open_rate
-FROM delivery_email_treasuredata_com.events
+  campaign_name,
+  COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END) as delivered,
+  COUNT(CASE WHEN event_type = 'Open' THEN 1 END) as opened,
+  COUNT(CASE WHEN event_type = 'Click' THEN 1 END) as clicked,
+  ROUND(COUNT(CASE WHEN event_type = 'Open' THEN 1 END) * 100.0 /
+    NULLIF(COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END), 0), 2) as open_rate
+FROM {delivery_email_database}.events
 WHERE td_interval(time, '-7d')
-GROUP BY workspace_name
+GROUP BY campaign_name
 ORDER BY delivered DESC
 ```
 
