@@ -7,277 +7,169 @@ description: Basic email template management using tdx engage template commands 
 
 ## Purpose
 
-Basic template management using `tdx engage template` commands. Simple template discovery, updates, and cleanup operations.
+Template management using `tdx engage template` commands. Discovery, updates, and cleanup operations.
 
 ## Prerequisites
 
 - `tdx` CLI authenticated (`tdx auth status`)
 - TD Engage workspace access
 
-## Template Management Operations
+## Template Operations
 
-### List and Discover Templates
+### List & Discover
 ```bash
 # List templates in current workspace
 tdx engage template list
 
-# List templates in specific workspace
+# List in specific workspace
 tdx engage template list --workspace "Marketing Team"
 
-# Filter templates by pattern
+# Filter by pattern (glob-style)
 tdx engage template list "welcome*"
 tdx engage template list "*newsletter*"
 
 # View template details
 tdx engage template show "Template Name"
 tdx engage template show "Template Name" --full
+
+# Output formats
+tdx engage template list --format table
+tdx engage template list --format tsv
+tdx engage template list --format json
 ```
 
 ### Update Templates
 ```bash
-# Update template name
+# Update name
 tdx engage template update "Old Name" --name "New Name"
 
-# Update template subject
+# Update subject
 tdx engage template update "Template Name" --subject "New Subject Line"
 
-# Update template HTML
+# Update HTML from file
 tdx engage template update "Template Name" --html "$(cat updated-template.html)"
 
-# Update template plaintext
+# Update plaintext
 tdx engage template update "Template Name" --plaintext "Updated plaintext version"
 ```
 
-### Template Cleanup
+### Delete Templates
 ```bash
-# Delete unused templates
+# Delete with confirmation prompt
 tdx engage template delete "Old Template"
 
-# Delete with confirmation skip
+# Delete without prompt
 tdx engage template delete "Old Template" --yes
 
-# Delete by workspace
+# Delete from specific workspace
 tdx engage template delete "Template Name" --workspace "Old Workspace"
 ```
 
-### Basic Organization
-```bash
-# Check template naming patterns
-echo "Current templates:"
-tdx engage template list --format table
-
-# Look for specific template types
-tdx engage template list | grep -i "welcome"
-tdx engage template list | grep -i "newsletter"
-```
-
-## Simple Workflows
+## Template Management Functions
 
 ### Template Inventory
 ```bash
-# Get basic template count
+# Count templates in workspace
 template_count=$(tdx engage template list --format tsv | wc -l)
 echo "Total templates: $template_count"
 
-# List by workspace
+# Multi-workspace inventory
 for workspace in "Marketing" "Sales" "Support"; do
   echo "Templates in $workspace:"
-  tdx engage template list --workspace "$workspace" 2>/dev/null || echo "  No access or no templates"
+  tdx engage template list --workspace "$workspace" 2>/dev/null || echo "  No access"
 done
 ```
 
-### Template Maintenance
+### Template Validation
 ```bash
-# Basic template check
-check_template() {
-  local template_name="$1"
-  if tdx engage template show "$template_name" >/dev/null 2>&1; then
-    echo "✅ $template_name exists"
-  else
-    echo "❌ $template_name not found"
-  fi
-}
-
-# Usage: check_template "Welcome Email"
-```
-
-## Common Errors & Troubleshooting
-
-### Template Access Errors
-
-| Error | Solution |
-|-------|----------|
-| "Template not found" | Verify template name: `tdx engage template list` |
-| "Workspace context not set" | Run `tdx engage workspace use "Marketing Team"` |
-| "Permission denied" | Contact workspace admin for template management permissions |
-| "Template access restricted" | Verify user has access to template's workspace |
-| "Workspace not found" | Check available workspaces: `tdx engage workspace list` |
-
-### Template Update Errors
-
-| Error | Solution |
-|-------|----------|
-| "Template name already exists" | Use unique name or choose different naming pattern |
-| "Template in use by active campaign" | Pause campaigns using template before making major changes |
-| "Invalid HTML syntax" | Validate HTML content before updating |
-| "File not found for template content" | Verify file path exists: `ls -la template-file.html` |
-| "Template update permission denied" | Check user has edit permissions for workspace |
-| "Subject line too long" | Keep subject under 50 characters |
-
-### Template Deletion Errors
-
-| Error | Solution |
-|-------|----------|
-| "Cannot delete template" | Check if template is used in active campaigns |
-| "Template deletion permission denied" | Contact workspace admin for deletion permissions |
-| "Template not found for deletion" | Verify template exists: `tdx engage template show "Name"` |
-| "Workspace mismatch" | Ensure template exists in specified workspace |
-
-### Template Listing & Discovery Errors
-
-| Error | Solution |
-|-------|----------|
-| "No templates found" | Check workspace context and permissions |
-| "Template list empty" | Verify workspace has templates created |
-| "Search pattern no results" | Try broader search patterns or check spelling |
-| "Workspace filter invalid" | Verify workspace name: `tdx engage workspace list` |
-
-## Advanced Template Management
-
-### Bulk Template Operations
-```bash
-# Bulk template validation
+# Validate all templates in workspace
 validate_all_templates() {
   local workspace_name="$1"
 
-  echo "Validating all templates in: $workspace_name"
-
-  # Set workspace context
   tdx engage workspace use "$workspace_name"
+  templates=$(tdx engage template list --format tsv)
 
-  # Get template list
-  templates=$(tdx engage template list --format tsv 2>/dev/null)
-
-  if [ -z "$templates" ]; then
-    echo "❌ No templates found or no access to workspace"
-    return 1
-  fi
-
-  # Validate each template
   echo "$templates" | while IFS=$'\t' read -r uuid name; do
     if [ -n "$name" ]; then
-      echo "Checking: $name"
-
-      # Check template accessibility
-      if tdx engage template show "$name" >/dev/null 2>&1; then
-        echo "  ✅ $name - Accessible"
-
-        # Check for basic content
-        template_info=$(tdx engage template show "$name" --full)
-        subject=$(echo "$template_info" | jq -r '.data.attributes.subjectTemplate' 2>/dev/null)
+      if tdx engage template show "$name" --full >/dev/null 2>&1; then
+        subject=$(tdx engage template show "$name" --full | \
+          jq -r '.data.attributes.subjectTemplate')
 
         if [ -n "$subject" ] && [ "$subject" != "null" ]; then
-          echo "  ✅ $name - Has subject: $subject"
+          echo "✅ $name - Has subject: $subject"
         else
-          echo "  ⚠️  $name - Missing subject line"
+          echo "⚠️  $name - Missing subject"
         fi
       else
-        echo "  ❌ $name - Not accessible"
+        echo "❌ $name - Not accessible"
       fi
     fi
   done
-
-  echo "✅ Template validation completed"
 }
-
-# Usage: validate_all_templates "Marketing Team"
 ```
 
-### Template Usage Analysis
+### Template Usage Check
 ```bash
-# Check which campaigns use specific templates
+# Check which campaigns use a template
 check_template_usage() {
   local template_name="$1"
 
-  echo "Checking usage for template: $template_name"
-
-  # Verify template exists
   if ! tdx engage template show "$template_name" >/dev/null 2>&1; then
     echo "❌ Template not found: $template_name"
     return 1
   fi
 
-  # Check campaigns using this template
-  echo "Campaigns using this template:"
-  campaign_list=$(tdx engage campaign list --format tsv 2>/dev/null)
-
-  if [ -n "$campaign_list" ]; then
-    found_usage=false
-
-    echo "$campaign_list" | while IFS=$'\t' read -r uuid campaign_name status; do
-      if [ -n "$campaign_name" ]; then
-        # Check if campaign uses this template
-        campaign_template=$(tdx engage campaign show "$campaign_name" --full 2>/dev/null | jq '.data.relationships.template.data.attributes.name' -r 2>/dev/null)
-
-        if [ "$campaign_template" = "$template_name" ]; then
-          echo "  - $campaign_name (Status: $status)"
-          found_usage=true
-        fi
-      fi
-    done
-
-    if [ "$found_usage" != "true" ]; then
-      echo "  No campaigns currently using this template"
-      echo "  ✅ Safe to delete or modify"
-    fi
-  else
-    echo "  No campaigns found or no access"
-  fi
-}
-
-# Usage: check_template_usage "Newsletter Template"
-```
-
-### Template Cleanup & Organization
-```bash
-# Find and clean up unused templates
-cleanup_unused_templates() {
-  local workspace_name="$1"
-  local confirm_delete="$2"  # "yes" to auto-delete, anything else to list only
-
-  echo "Finding unused templates in: $workspace_name"
-
-  # Set workspace context
-  tdx engage workspace use "$workspace_name"
-
-  # Get all templates
-  templates=$(tdx engage template list --format tsv 2>/dev/null)
-
-  if [ -z "$templates" ]; then
-    echo "❌ No templates found"
-    return 1
-  fi
-
-  # Get all campaigns and their templates
-  campaigns=$(tdx engage campaign list --format tsv 2>/dev/null)
-  used_templates=()
+  echo "Campaigns using: $template_name"
+  campaigns=$(tdx engage campaign list --format tsv)
 
   if [ -n "$campaigns" ]; then
     echo "$campaigns" | while IFS=$'\t' read -r uuid campaign_name status; do
       if [ -n "$campaign_name" ]; then
-        template_name=$(tdx engage campaign show "$campaign_name" --full 2>/dev/null | jq '.data.relationships.template.data.attributes.name' -r 2>/dev/null)
-        if [ -n "$template_name" ] && [ "$template_name" != "null" ]; then
-          used_templates+=("$template_name")
+        # Extract template name from campaign
+        template=$(tdx engage campaign show "$campaign_name" --full 2>/dev/null | \
+          jq -r '.data.relationships.template.data.attributes.name' 2>/dev/null)
+
+        if [ "$template" = "$template_name" ]; then
+          echo "  - $campaign_name (Status: $status)"
         fi
       fi
     done
   fi
+}
+```
 
-  # Find unused templates
-  unused_count=0
+### Cleanup Unused Templates
+```bash
+# Find unused templates (list only or delete)
+cleanup_unused_templates() {
+  local workspace_name="$1"
+  local confirm_delete="$2"  # "yes" to delete
+
+  tdx engage workspace use "$workspace_name"
+
+  # Get all templates
+  templates=$(tdx engage template list --format tsv)
+
+  # Get templates used in campaigns
+  campaigns=$(tdx engage campaign list --format tsv)
+  used_templates=()
+
+  if [ -n "$campaigns" ]; then
+    while IFS=$'\t' read -r uuid campaign_name status; do
+      if [ -n "$campaign_name" ]; then
+        template=$(tdx engage campaign show "$campaign_name" --full 2>/dev/null | \
+          jq -r '.data.relationships.template.data.attributes.name' 2>/dev/null)
+
+        if [ -n "$template" ] && [ "$template" != "null" ]; then
+          used_templates+=("$template")
+        fi
+      fi
+    done <<< "$campaigns"
+  fi
+
+  # Find unused
   echo "Unused templates:"
-
-  echo "$templates" | while IFS=$'\t' read -r uuid template_name; do
+  while IFS=$'\t' read -r uuid template_name; do
     if [ -n "$template_name" ]; then
       is_used=false
 
@@ -290,91 +182,48 @@ cleanup_unused_templates() {
 
       if [ "$is_used" = "false" ]; then
         echo "  - $template_name"
-        ((unused_count++))
-
         if [ "$confirm_delete" = "yes" ]; then
-          echo "    Deleting..."
           tdx engage template delete "$template_name" --yes
+          echo "    ✅ Deleted"
         fi
       fi
     fi
-  done
-
-  if [ $unused_count -eq 0 ]; then
-    echo "  No unused templates found"
-  else
-    echo "Found $unused_count unused templates"
-    if [ "$confirm_delete" != "yes" ]; then
-      echo "Run with 'yes' parameter to delete unused templates"
-    fi
-  fi
+  done <<< "$templates"
 }
 
-# Usage: cleanup_unused_templates "Marketing Team"        # List only
-# Usage: cleanup_unused_templates "Marketing Team" "yes"  # Delete unused
+# Usage:
+# cleanup_unused_templates "Marketing Team"        # List only
+# cleanup_unused_templates "Marketing Team" "yes"  # Delete
 ```
 
-### Template Naming Standardization
+## TD-Specific Errors
+
+| Error | TD-Specific Solution |
+|-------|---------------------|
+| "Template not found" | Verify name: `tdx engage template list` |
+| "Workspace context not set" | `tdx engage workspace use "Marketing Team"` |
+| "Template name already exists" | Template names must be unique within workspace |
+| "Template in use by active campaign" | Cannot delete templates referenced by active campaigns |
+| "Subject line too long" | TD recommends ≤50 characters |
+| "Workspace mismatch" | Use `--workspace` flag or set context correctly |
+
+## Naming Conventions
+
 ```bash
-# Standardize template naming across workspace
-standardize_template_names() {
-  local workspace_name="$1"
+# TD recommended format: "Category - Description"
+tdx engage template update "welcome_email_1" --name "Welcome - Day 1"
+tdx engage template update "weekly_news" --name "Newsletter - Weekly"
+tdx engage template update "promo_flash" --name "Promotion - Flash Sale"
 
-  echo "Analyzing template naming in: $workspace_name"
-
-  # Set workspace context
-  tdx engage workspace use "$workspace_name"
-
-  # Get templates and analyze naming patterns
-  templates=$(tdx engage template list --format tsv 2>/dev/null)
-
-  if [ -z "$templates" ]; then
-    echo "❌ No templates found"
-    return 1
+# Check naming patterns
+tdx engage template list --format tsv | while IFS=$'\t' read -r uuid name; do
+  if echo "$name" | grep -q " - "; then
+    echo "✅ $name"
+  else
+    echo "⚠️  $name (consider 'Category - Description' format)"
   fi
-
-  echo "Current template naming patterns:"
-  echo "================================"
-
-  # Analyze naming patterns
-  echo "$templates" | while IFS=$'\t' read -r uuid template_name; do
-    if [ -n "$template_name" ]; then
-      # Check naming patterns
-      if echo "$template_name" | grep -q " - "; then
-        echo "✅ Standard format: $template_name"
-      elif echo "$template_name" | grep -q "_"; then
-        echo "⚠️  Underscore format: $template_name (consider using ' - ')"
-      elif echo "$template_name" | grep -q "\."; then
-        echo "⚠️  Dot format: $template_name (consider using ' - ')"
-      else
-        echo "⚠️  No delimiter: $template_name (consider adding category)"
-      fi
-    fi
-  done
-
-  echo ""
-  echo "Recommended naming convention:"
-  echo "  Category - Description"
-  echo "  Examples:"
-  echo "    Welcome - Day 1"
-  echo "    Newsletter - Weekly Summary"
-  echo "    Promotion - Flash Sale"
-}
-
-# Usage: standardize_template_names "Marketing Team"
+done
 ```
-
-## Best Practices
-
-### Template Naming
-- Use descriptive names: "Welcome - Day 1", "Newsletter - Weekly"
-- Include purpose: "Promotion - Flash Sale", "Transactional - Order Confirmation"
-- Be consistent across workspace
-
-### Template Maintenance
-- Regularly review and clean up unused templates
-- Update templates when content becomes outdated
-- Use clear naming conventions for easy discovery
 
 ## Related Skills
 

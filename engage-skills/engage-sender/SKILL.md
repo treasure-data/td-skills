@@ -7,28 +7,29 @@ description: Sender profile creation and domain setup for TD Engage using TD Con
 
 ## Purpose
 
-Provides guidance for TD Engage sender profiles and domain configuration using TD Console's **automatic DNS generation** and web interface sender management.
+TD Engage sender profiles and domain configuration using TD Console's **automatic DNS generation**. No manual DNS record creation needed.
 
 ## Prerequisites
 
 - `tdx` CLI authenticated (`tdx auth status`)
-- TD Engage workspace access with sender management permissions
-- Access to TD Console web interface (console.treasuredata.com)
+- TD Engage workspace access
+- TD Console access (console.treasuredata.com)
 - Domain ownership and DNS configuration access
 
 ## Domain Configuration (TD Console Only)
 
-### Automatic DNS Setup Process
-TD Engage automatically generates all required DNS records. **No manual DNS creation needed.**
+### Automatic DNS Setup
+
+**TD Engage automatically generates all DNS records - no manual creation needed.**
 
 **Step 1: Domain Provisioning**
-1. Navigate to **Engage > Sending Configurations > Create New**
+1. Navigate to: **Engage > Sending Configurations > Create New**
 2. Enter domain name and Write-only API key
-3. Click **"Start domain deployment"** (generates DNS records automatically)
+3. Click **"Start domain deployment"** (auto-generates DNS records)
 4. Click **"Verify DNS records"** (provides complete zone file)
 
 **Step 2: DNS Implementation**
-1. Copy the generated zone file from TD Console
+1. Copy generated zone file from TD Console
 2. Provide to IT team for DNS configuration
 3. TD automatically generates:
    - **SPF (TXT)** - Authorizes TD to send emails
@@ -40,132 +41,104 @@ TD Engage automatically generates all required DNS records. **No manual DNS crea
 
 **Step 3: Domain Verification**
 1. Click **"Verify Domain"** in TD Console
-2. TD automatically polls verification for 72 hours
-3. Status updates: SUSPENDED → DEPLOYING → ACTIVE
+2. TD polls verification automatically for 72 hours
+3. Status: `SUSPENDED → DEPLOYING → ACTIVE`
 
-## DNS Verification Tools
+## DNS Verification (CLI)
 
-### DNS Record Verification
+### Check DNS Records
 ```bash
 # Check SPF record
 check_spf_record() {
   local domain="$1"
+  spf=$(dig +short txt "$domain" | grep "v=spf1")
 
-  echo "Checking SPF record for: $domain"
-  spf_record=$(dig +short txt "$domain" | grep "v=spf1")
-
-  if [ -n "$spf_record" ]; then
-    echo "✅ SPF record found: $spf_record"
+  if [ -n "$spf" ]; then
+    echo "✅ SPF: $spf"
   else
-    echo "❌ No SPF record found"
+    echo "❌ SPF not found"
   fi
 }
 
 # Check DMARC record
 check_dmarc_record() {
   local domain="$1"
+  dmarc=$(dig +short txt "_dmarc.$domain" | grep "v=DMARC1")
 
-  echo "Checking DMARC record for: $domain"
-  dmarc_record=$(dig +short txt "_dmarc.$domain" | grep "v=DMARC1")
-
-  if [ -n "$dmarc_record" ]; then
-    echo "✅ DMARC record found: $dmarc_record"
+  if [ -n "$dmarc" ]; then
+    echo "✅ DMARC: $dmarc"
   else
-    echo "❌ No DMARC record found"
+    echo "❌ DMARC not found"
   fi
 }
 
-# Check DKIM record (selector provided by TD Console)
+# Check DKIM record (selector from TD Console)
 check_dkim_record() {
   local domain="$1"
-  local selector="$2"  # Provided by TD Console
+  local selector="$2"  # From TD Console
+  dkim=$(dig +short txt "$selector._domainkey.$domain")
 
-  echo "Checking DKIM record for: $selector._domainkey.$domain"
-  dkim_record=$(dig +short txt "$selector._domainkey.$domain")
-
-  if [ -n "$dkim_record" ]; then
-    echo "✅ DKIM record found: $dkim_record"
+  if [ -n "$dkim" ]; then
+    echo "✅ DKIM: $dkim"
   else
-    echo "❌ No DKIM record found"
+    echo "❌ DKIM not found"
   fi
 }
 
-# Usage: check_spf_record "company.com"
-# Usage: check_dmarc_record "company.com"
-# Usage: check_dkim_record "company.com" "td-selector"
+# Usage:
+# check_spf_record "company.com"
+# check_dmarc_record "company.com"
+# check_dkim_record "company.com" "td-selector"
 ```
 
 ## Sender Profile Management (TD Console Only)
 
-### Sender Profile Operations
-**Important**: Sender profiles are created and managed **only through TD Console web interface**.
+**Important**: No CLI sender profile management - use TD Console only.
 
-**Create Sender Profile:**
-1. Navigate to **Engage > Settings > Senders**
+### Create Sender Profile (Web UI)
+1. Navigate to: **Engage > Settings > Senders**
 2. Click **"Add Sender"** or **"Create Sender"**
-3. Configure sender details:
+3. Configure:
    - **Name**: "Marketing Team"
    - **Email**: marketing@company.com
    - **Display Name**: "Marketing Team"
    - **Reply-To**: noreply@company.com
 4. Save and verify via email confirmation
 
-**Verify Sender Profile:**
+### Verify Sender Profile (Web UI)
 1. Check email inbox for verification email
 2. Click verification link
-3. Confirm sender status shows "Verified" in TD Console
+3. Confirm status shows "Verified" in TD Console
 
-## Workspace Context Management
+## Workspace Context (CLI)
 
-### Workspace Operations (CLI)
 ```bash
-# Set workspace context for sender operations
-set_sender_workspace() {
-  local workspace_name="$1"
+# Set workspace for sender operations
+tdx use engage_workspace "Marketing Team"
 
-  echo "Setting workspace context for sender management..."
+# Check current context
+tdx use | grep engage_workspace
 
-  # Verify workspace exists
-  if tdx engage workspace show "$workspace_name" >/dev/null 2>&1; then
-    tdx use engage_workspace "$workspace_name"
-    echo "✅ Workspace context set: $workspace_name"
-    echo "Now use TD Console web interface for sender management"
-  else
-    echo "❌ Workspace not found: $workspace_name"
-    echo "Available workspaces:"
-    tdx engage workspace list
-    return 1
-  fi
-}
+# Verify workspace exists
+tdx engage workspace show "Marketing Team"
 
-# Get workspace information
-get_workspace_info() {
-  local workspace_name="$1"
-
-  echo "Workspace information for: $workspace_name"
-  tdx engage workspace show "$workspace_name"
-}
-
-# Usage: set_sender_workspace "Marketing Team"
-# Usage: get_workspace_info "Marketing Team"
+# List workspaces
+tdx engage workspace list
 ```
 
 ## Sender Performance Monitoring
 
-### Email Event Analysis
+### Email Event Analysis by Sender
 ```bash
-# Monitor sender performance using verified tools
-# Find your database with: tdx databases "*delivery_email*"
+# Monitor sender performance
+# Find database: tdx databases "*delivery_email*"
 monitor_sender_performance() {
   local sender_email="$1"
   local days="$2"
 
-  echo "Sender Performance Analysis: $sender_email"
-  echo "Period: Last $days days"
-  echo "================================"
+  echo "Sender: $sender_email (Last $days days)"
 
-  # Use tdx query for email event analysis
-  # Note: "from" is a reserved word in Trino, so it must be quoted
+  # Note: "from" is reserved word in Trino - must quote
   tdx query <<EOF
 SELECT
   "from",
@@ -180,8 +153,6 @@ WHERE
 GROUP BY "from", event_type, DATE(FROM_UNIXTIME(time))
 ORDER BY date DESC, event_type
 EOF
-
-  echo "Check TD Console for additional reputation metrics"
 }
 
 # Usage: monitor_sender_performance "marketing@company.com" "30"
@@ -195,9 +166,7 @@ EOF
 check_blacklist_status() {
   local domain="$1"
 
-  echo "Checking blacklist status for: $domain"
-
-  # Major blacklists to check
+  # Major blacklists
   blacklists=(
     "zen.spamhaus.org"
     "bl.spamcop.net"
@@ -229,87 +198,96 @@ check_blacklist_status() {
 # Usage: check_blacklist_status "company.com"
 ```
 
-## Complete Setup Validation
+## Complete Sender Validation
 
-### Sender Setup Validation
+### Validation Workflow
 ```bash
-# Comprehensive sender validation
-validate_complete_sender_setup() {
+validate_sender_setup() {
   local domain="$1"
   local sender_email="$2"
 
-  echo "Complete Sender Setup Validation"
+  echo "Sender Setup Validation"
   echo "Domain: $domain"
   echo "Sender: $sender_email"
-  echo "================================"
+  echo "======================="
 
-  # 1. DNS Authentication Check
-  echo "1. DNS Authentication:"
+  # DNS Authentication
+  echo "1. DNS Records:"
   check_spf_record "$domain"
   check_dmarc_record "$domain"
   echo "   DKIM: Check TD Console for verification status"
 
-  # 2. Blacklist Status
-  echo -e "\n2. Reputation Check:"
+  # Blacklist Status
+  echo ""
+  echo "2. Reputation:"
   check_blacklist_status "$domain"
 
-  # 3. Workspace Context
-  echo -e "\n3. Workspace Context:"
+  # Workspace Context
+  echo ""
+  echo "3. Workspace:"
   tdx use | grep engage_workspace || echo "⚠️  No workspace context set"
 
-  # 4. Manual verification steps
-  echo -e "\n4. Manual Verification Required:"
-  echo "   ✓ Check TD Console: Engage > Settings > Senders"
-  echo "   ✓ Verify sender email confirmation completed"
-  echo "   ✓ Confirm domain shows as 'Verified' in TD Console"
-  echo "   ✓ Test sender profile in a campaign"
-
-  echo -e "\n✅ Automated validation completed"
-  echo "Complete manual verification steps in TD Console"
+  # Manual Verification
+  echo ""
+  echo "4. Manual Steps (TD Console):"
+  echo "   [ ] Check Engage > Settings > Senders"
+  echo "   [ ] Verify sender email confirmation"
+  echo "   [ ] Confirm domain status: Verified"
+  echo "   [ ] Test sender in campaign"
 }
 
-# Usage: validate_complete_sender_setup "company.com" "marketing@company.com"
+# Usage: validate_sender_setup "company.com" "marketing@company.com"
 ```
 
-## Best Practices
+## TD-Specific Errors
 
-### Domain Setup
-- **Use TD Console automatic DNS generation** - no manual record creation needed
-- Use subdomains for email sending (mail.company.com) to avoid conflicts
-- Wait 24-48 hours for DNS propagation before verification
-- Test DNS records with multiple DNS servers for verification
+| Error | TD-Specific Solution |
+|-------|---------------------|
+| "Domain verification failed" | Wait 24-48 hours for DNS propagation |
+| "SPF record not found" | Copy SPF from TD Console zone file |
+| "DKIM verification failed" | Check DKIM selector and CNAME record |
+| "Sender profile not verified" | Check email inbox for verification link |
+| "No CLI sender management" | Use TD Console web interface only |
+| "Workspace context not set" | `tdx use engage_workspace "Marketing Team"` |
 
-### Sender Profile Management
-- **Use TD Console web interface** for all sender profile operations
-- Create descriptive sender names that recipients recognize
-- Configure reply-to addresses that are actively monitored
-- Verify sender profiles via email confirmation before campaigns
-- Separate transactional and marketing sender profiles
+## TD-Specific Patterns
 
-### Monitoring & Maintenance
-- Monitor blacklist status regularly using DNS tools
-- Track sender performance with TD event data queries
-- Check domain verification status in TD Console
-- Keep DNS records updated when changing TD regions
+### Domain Status Flow
+```
+SUSPENDED → DEPLOYING → ACTIVE
+```
+
+### Subdomain Recommendation
+```bash
+# Use subdomain for email sending (avoid conflicts)
+# Good: mail.company.com
+# Avoid: company.com (may conflict with existing email)
+```
+
+### DNS Propagation Check
+```bash
+# Check DNS propagation across multiple servers
+dig @8.8.8.8 txt company.com         # Google DNS
+dig @1.1.1.1 txt company.com         # Cloudflare DNS
+dig @208.67.222.222 txt company.com  # OpenDNS
+```
 
 ## Important Notes
 
-- **No manual DNS record creation needed** - TD automatically generates complete zone files
-- **No CLI commands for sender profiles** - use TD Console web interface only
-- **Domain verification handled automatically** - TD polls DNS for 72 hours
-- **DNS records auto-generated** - copy from TD Console, don't create manually
+- **No manual DNS record creation** - TD auto-generates zone files
+- **No CLI sender profile commands** - use TD Console only
+- **Domain verification automatic** - TD polls DNS for 72 hours
+- **DNS records auto-generated** - copy from TD Console
 - **Workspace context required** - set with `tdx use engage_workspace`
 
 ## Related Skills
 
 **Prerequisites:**
-- **email-template-creator** - Create templates that reference sender profiles
-- **email-campaign-creator** - Configure campaigns with verified sender profiles
+- **email-template-creator** - Create templates with sender profiles
+- **email-campaign-creator** - Configure campaigns with senders
 
 **Integration:**
-- **email-testing-validator** - Validate campaigns with sender configurations
-- **engage-deliverability** - Monitor deliverability with TD's automatic features
-
-**Advanced Features:**
+- **email-testing-validator** - Test campaigns with sender configs
+- **engage-deliverability** - Monitor deliverability with TD features
 - **engage-workspace-advanced** - Workspace-level sender management
-- **email-journey-builder** - Use sender profiles in journey email steps
+- **email-journey-builder** - Use sender profiles in journeys

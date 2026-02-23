@@ -7,218 +7,178 @@ description: Advanced TD Engage workspace management using verified tdx commands
 
 ## Purpose
 
-Provides guidance for TD Engage workspace management using verified CLI operations and TD Console web interface for advanced features like user management and permissions.
+TD Engage workspace management using CLI operations. User/permission management requires TD Console web interface.
 
 ## Prerequisites
 
 - `tdx` CLI authenticated (`tdx auth status`)
 - TD Engage workspace administrator permissions
-- Access to TD Console web interface for user/permission management
+- TD Console access for user management
 
-## Workspace Management (CLI)
+## Workspace Operations (CLI)
 
-### Basic Workspace Operations
+### Basic Commands
 ```bash
-# List all accessible workspaces
+# List workspaces
 tdx engage workspace list
 
 # Show workspace details
 tdx engage workspace show "Marketing Team"
-
-# Get full workspace information
 tdx engage workspace show "Marketing Team" --full
 
-# Create new workspace
+# Create workspace
 tdx engage workspace create --name "New Workspace" \
   --description "Workspace for marketing campaigns"
 
-# Update workspace description
+# Update workspace
 tdx engage workspace update "Marketing Team" \
   --description "Updated workspace description"
 
-# Set workspace context for subsequent commands
+# Set workspace context
 tdx use engage_workspace "Marketing Team"
 
-# Delete workspace (use with caution)
+# Check current context
+tdx use | grep engage_workspace
+
+# Delete workspace (caution)
 tdx engage workspace delete "Old Workspace"
+
+# Output formats
+tdx engage workspace list --format table
+tdx engage workspace list --format tsv
+tdx engage workspace list --format json
 ```
 
-### Workspace Information Gathering
+### Workspace Analysis
 ```bash
-# Get workspace details with campaigns and templates
+# Analyze workspace contents
 analyze_workspace() {
   local workspace_name="$1"
 
   echo "Workspace Analysis: $workspace_name"
-  echo "================================"
 
-  # Set workspace context
+  # Set context
   tdx use engage_workspace "$workspace_name"
 
-  # Campaign analysis
-  echo "1. Campaign Analysis:"
-  campaigns=$(tdx engage campaign list --format tsv)
+  # Count campaigns
+  campaigns=$(tdx engage campaign list --format tsv | wc -l)
+  active=$(tdx engage campaign list --status ACTIVE --format tsv 2>/dev/null | wc -l)
+  echo "Campaigns: $campaigns (Active: $active)"
 
-  if [ -n "$campaigns" ]; then
-    total_campaigns=$(echo "$campaigns" | wc -l)
-    active_campaigns=$(echo "$campaigns" | grep "ACTIVE" | wc -l)
-    echo "   Total campaigns: $total_campaigns"
-    echo "   Active campaigns: $active_campaigns"
-  else
-    echo "   No campaigns found"
-  fi
+  # Count templates
+  templates=$(tdx engage template list --format tsv | wc -l)
+  echo "Templates: $templates"
 
-  # Template analysis
-  echo ""
-  echo "2. Template Analysis:"
-  templates=$(tdx engage template list --format tsv)
-
-  if [ -n "$templates" ]; then
-    total_templates=$(echo "$templates" | wc -l)
-    echo "   Total templates: $total_templates"
-  else
-    echo "   No templates found"
-  fi
-
-  # Workspace configuration
-  echo ""
-  echo "3. Workspace Configuration:"
+  # Show config
   tdx engage workspace show "$workspace_name" --full
 }
 
 # Usage: analyze_workspace "Marketing Team"
 ```
 
-### Multi-Workspace Operations
+### Multi-Workspace Inventory
 ```bash
-# Compare workspace contents
+# List all workspace contents
+workspace_inventory() {
+  tdx engage workspace list --format tsv | \
+    while IFS=$'\t' read -r workspace_id workspace_name; do
+      echo "Workspace: $workspace_name"
+
+      if tdx use engage_workspace "$workspace_name" >/dev/null 2>&1; then
+        campaigns=$(tdx engage campaign list --format tsv 2>/dev/null | wc -l)
+        templates=$(tdx engage template list --format tsv 2>/dev/null | wc -l)
+        echo "  Campaigns: $campaigns"
+        echo "  Templates: $templates"
+        echo "  Status: Accessible"
+      else
+        echo "  Status: No access"
+      fi
+      echo ""
+    done
+}
+```
+
+### Workspace Comparison
+```bash
+# Compare two workspaces
 compare_workspaces() {
-  local workspace1="$1"
-  local workspace2="$2"
+  local ws1="$1"
+  local ws2="$2"
 
-  echo "Workspace Comparison: $workspace1 vs $workspace2"
-  echo "==============================================="
+  echo "Workspace Comparison: $ws1 vs $ws2"
 
-  # Workspace 1 analysis
-  echo "Workspace 1: $workspace1"
-  if tdx use engage_workspace "$workspace1" >/dev/null 2>&1; then
-    campaigns1=$(tdx engage campaign list --format tsv 2>/dev/null | wc -l)
-    templates1=$(tdx engage template list --format tsv 2>/dev/null | wc -l)
-    echo "  Campaigns: $campaigns1"
-    echo "  Templates: $templates1"
-  else
-    echo "  Status: No access"
-  fi
-
-  # Workspace 2 analysis
-  echo ""
-  echo "Workspace 2: $workspace2"
-  if tdx use engage_workspace "$workspace2" >/dev/null 2>&1; then
-    campaigns2=$(tdx engage campaign list --format tsv 2>/dev/null | wc -l)
-    templates2=$(tdx engage template list --format tsv 2>/dev/null | wc -l)
-    echo "  Campaigns: $campaigns2"
-    echo "  Templates: $templates2"
-  else
-    echo "  Status: No access"
-  fi
+  for ws in "$ws1" "$ws2"; do
+    echo "Workspace: $ws"
+    if tdx use engage_workspace "$ws" >/dev/null 2>&1; then
+      campaigns=$(tdx engage campaign list --format tsv 2>/dev/null | wc -l)
+      templates=$(tdx engage template list --format tsv 2>/dev/null | wc -l)
+      echo "  Campaigns: $campaigns"
+      echo "  Templates: $templates"
+    else
+      echo "  Status: No access"
+    fi
+  done
 }
 
 # Usage: compare_workspaces "Marketing Team" "Sales Team"
 ```
 
-### Workspace Inventory
-```bash
-# Generate inventory across all accessible workspaces
-workspace_inventory() {
-  echo "Workspace Inventory Report"
-  echo "========================="
+## User Management (TD Console Only)
 
-  # Get all workspaces
-  workspaces=$(tdx engage workspace list --format tsv)
-
-  if [ -z "$workspaces" ]; then
-    echo "No workspaces accessible"
-    return 1
-  fi
-
-  echo "$workspaces" | while read -r workspace_id workspace_name; do
-    echo ""
-    echo "Workspace: $workspace_name"
-    echo "------------------------"
-
-    # Set context and gather data
-    if tdx use engage_workspace "$workspace_name" >/dev/null 2>&1; then
-      campaigns=$(tdx engage campaign list --format tsv 2>/dev/null | wc -l)
-      templates=$(tdx engage template list --format tsv 2>/dev/null | wc -l)
-
-      echo "  Campaigns: $campaigns"
-      echo "  Templates: $templates"
-      echo "  Status: Accessible"
-    else
-      echo "  Status: Access denied"
-    fi
-  done
-}
-```
-
-## User Management & Permissions (TD Console Only)
+**Important**: No CLI user management - use TD Console web interface only.
 
 ### User Management Process
-**Important**: User and permission management is **not available via CLI** - use TD Console web interface only.
+1. Navigate to: https://console.treasuredata.com
+2. Go to: Engage > Workspace Settings
+3. Select workspace
+4. Manage Users & Permissions
 
-1. **Navigate to TD Console**: https://console.treasuredata.com
-2. **Go to Engage**: Select Engage from navigation menu
-3. **Workspace Settings**: Navigate to Engage > Workspace Settings
-4. **Select Workspace**: Choose the target workspace
-5. **User Management**: Go to Users & Permissions section
-
-### Available User Operations (Web Interface)
-- **Add users to workspace** - Invite by email address
-- **Assign user roles** - Admin, Editor, Viewer permissions
-- **Configure user permissions** - Granular access control
-- **Remove users** - Revoke workspace access
-- **View user activity** - Monitor user actions and login history
+### Available Operations (Web UI)
+- Add users (invite by email)
+- Assign roles (Admin, Editor, Viewer)
+- Configure permissions
+- Remove users
+- View user activity
 
 ### Permission Roles
-| Role | Permissions |
-|------|-------------|
-| **Admin** | Full workspace access, user management, settings |
-| **Editor** | Create/edit campaigns and templates, view analytics |
-| **Viewer** | Read-only access to campaigns and reports |
+| Role | Access |
+|------|--------|
+| **Admin** | Full access, user management, settings |
+| **Editor** | Create/edit campaigns and templates |
+| **Viewer** | Read-only access |
 
-## Workspace Policies & Configuration (TD Console Only)
+## Workspace Policies (TD Console Only)
 
-### Policy Configuration Process
-**Important**: Policy configuration is **not available via CLI** - use TD Console web interface only.
+**Important**: No CLI policy configuration - use TD Console only.
 
 **TD Console Path**: Engage > Workspace Settings > Policies
 
-### Available Policy Configurations
-- **Campaign creation permissions** - Who can create campaigns
-- **Template management permissions** - Template edit access
-- **Approval workflows** - Campaign approval requirements
-- **Data retention policies** - Data storage and cleanup rules
-- **API access controls** - External integration permissions
-- **Security & compliance policies** - Data protection settings
+### Available Policies
+- Campaign creation permissions
+- Template management permissions
+- Approval workflows
+- Data retention policies
+- API access controls
+- Security & compliance settings
 
-## Monitoring & Analytics
+## Workspace Analytics
 
-**Note:** The events table does not contain a workspace column. Use `campaign_name` for
-campaign-level analytics. Find your database with: `tdx databases "*delivery_email*"`
+**Note**: Events table has no workspace column. Use `campaign_name` for analytics.
+Find database: `tdx databases "*delivery_email*"`
 
-### Campaign Activity Analysis
+### Campaign Activity by Workspace
 ```sql
--- Campaign activity and usage metrics
+-- Campaign activity metrics
 SELECT
   campaign_name,
-  COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END) as total_emails_sent,
+  COUNT(CASE WHEN event_type = 'Delivery' THEN 1 END) as total_emails,
   COUNT(DISTINCT to_plain_address) as unique_recipients,
   DATE(FROM_UNIXTIME(MIN(time))) as first_activity,
   DATE(FROM_UNIXTIME(MAX(time))) as last_activity
 FROM {delivery_email_database}.events
 WHERE td_interval(time, '-30d')
 GROUP BY campaign_name
-ORDER BY total_emails_sent DESC
+ORDER BY total_emails DESC
 ```
 
 ### Campaign Performance Comparison
@@ -237,65 +197,71 @@ GROUP BY campaign_name
 ORDER BY delivered DESC
 ```
 
-## Best Practices
+## TD-Specific Errors
 
-### Workspace Organization
-- **Use consistent naming conventions**: "Department - Environment" format
-- **Separate production and development**: Avoid mixing environments
-- **Implement access controls**: Use TD Console for proper user permissions
-- **Regular monitoring**: Track workspace usage and performance
-- **Documentation**: Document workspace purposes and ownership
+| Error | TD-Specific Solution |
+|-------|---------------------|
+| "Workspace not found" | Verify name: `tdx engage workspace list` |
+| "Permission denied" | Contact workspace admin via TD Console |
+| "Context switching failed" | Verify workspace exists and accessible |
+| "Cannot create workspace" | Check unique name and admin permissions |
+| "User management failed" | No CLI support - use TD Console only |
+| "Policy configuration failed" | No CLI support - use TD Console only |
 
-### Multi-Workspace Management
-- **Centralized user management** via TD Console for consistency
-- **Cross-workspace reporting** using SQL queries for analytics
-- **Workspace-specific contexts** using `tdx use engage_workspace`
-- **Regular inventory audits** to track resources across workspaces
+## CLI vs. Web Interface
 
-### Security & Compliance
-- **Role-based access** through TD Console user management
-- **Regular access reviews** - audit user permissions quarterly
-- **Policy enforcement** via TD Console workspace policies
-- **Activity monitoring** using workspace analytics queries
-
-## Troubleshooting
-
-### Common Issues
-| Problem | Likely Cause | Solution |
-|---------|--------------|----------|
-| Workspace not found | Incorrect name or no access | Check `tdx engage workspace list` |
-| Permission denied | Insufficient user permissions | Contact workspace admin via TD Console |
-| Context switching failed | Workspace doesn't exist | Verify workspace exists and is accessible |
-| Cannot create workspace | Name conflict or permissions | Use unique name, check admin permissions |
-
-### CLI vs. Web Interface
-| Operation | CLI Available | Web Interface Required |
-|-----------|---------------|----------------------|
+| Operation | CLI | Web Interface |
+|-----------|-----|---------------|
 | List workspaces | ✅ `tdx engage workspace list` | ❌ |
 | Create workspace | ✅ `tdx engage workspace create` | ❌ |
 | Update workspace | ✅ `tdx engage workspace update` | ❌ |
-| User management | ❌ | ✅ TD Console only |
-| Permission policies | ❌ | ✅ TD Console only |
-| Analytics/reporting | ✅ SQL queries via tdx | ✅ Both available |
+| Delete workspace | ✅ `tdx engage workspace delete` | ❌ |
+| User management | ❌ | ✅ Required |
+| Permission policies | ❌ | ✅ Required |
+| Analytics | ✅ SQL via tdx | ✅ Both |
+
+## TD-Specific Patterns
+
+### Workspace Context
+```bash
+# Set workspace context for session
+tdx use engage_workspace "Marketing Team"
+
+# All subsequent commands use this context
+tdx engage campaign list
+tdx engage template list
+
+# Check current context
+tdx use | grep engage_workspace
+
+# Override context for single command
+tdx engage campaign list --workspace "Sales Team"
+```
+
+### Naming Conventions
+```bash
+# Recommended format: "Department - Environment"
+tdx engage workspace create --name "Marketing - Production"
+tdx engage workspace create --name "Marketing - Development"
+tdx engage workspace create --name "Sales - Production"
+```
 
 ## Important Notes
 
-- **No CLI user management** - all user operations require TD Console web interface
-- **No CLI policy configuration** - workspace policies managed via TD Console only
-- **Context persistence** - `tdx use engage_workspace` sets context for current session
-- **Permission inheritance** - workspace permissions apply to campaigns and templates
-- **Workspace isolation** - resources are scoped to individual workspaces
+- **No CLI user management** - all user operations require TD Console
+- **No CLI policy configuration** - workspace policies via TD Console only
+- **Context persistence** - `tdx use engage_workspace` affects current session
+- **Permission inheritance** - workspace permissions apply to all resources
+- **Workspace isolation** - campaigns/templates scoped to workspaces
 
 ## Related Skills
 
 **Workspace Operations:**
-- **email-campaign-creator** - Create campaigns within workspace context
-- **email-template-creator** - Create templates within workspace scope
-
-**Monitoring & Analytics:**
-- **sql-skills:trino** - Query workspace performance and usage data
-- **engage-deliverability** - Monitor deliverability across workspaces
-
-**Content Management:**
+- **email-campaign-creator** - Create campaigns in workspace context
+- **email-template-creator** - Create templates in workspace scope
 - **email-template-manager** - Organize templates across workspaces
-- **email-testing-validator** - Validate campaigns within workspace context
+
+**Monitoring:**
+- **sql-skills:trino** - Query workspace performance data
+- **engage-deliverability** - Monitor deliverability across workspaces
+- **email-testing-validator** - Validate campaigns in workspace context
