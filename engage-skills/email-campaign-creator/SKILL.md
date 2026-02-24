@@ -82,10 +82,8 @@ tdx engage campaign create --name "Product Updates" --type email \
 # List all campaigns
 tdx engage campaign list
 
-# List by status (valid: DRAFT, ACTIVE, PAUSED, COMPLETED)
-tdx engage campaign list --status DRAFT
-tdx engage campaign list --status ACTIVE
-tdx engage campaign list --status PAUSED
+# List by status
+tdx engage campaign list --status [DRAFT|ACTIVE|PAUSED|COMPLETED]
 
 # Show campaign details
 tdx engage campaign show "Campaign Name"
@@ -221,22 +219,7 @@ launch_drafts() {
 | "Parent segment mismatch" | Journey and campaign must use same parent segment |
 | "Activation failed - campaign paused" | Resume campaign or update journey reference |
 
-## Campaign Type Selection
-
-### Use Batch When:
-- One-time promotions or announcements
-- Scheduled newsletter broadcasts
-- Time-sensitive messages
-- Manual campaign execution
-
-### Use Always-On When:
-- Welcome email sequences
-- Cart abandonment recovery
-- Behavioral triggers
-- Journey-activated messaging
-- Continuous automated campaigns
-
-### Key Differences
+## Campaign Type Comparison
 
 | Feature | Batch | Always-On |
 |---------|-------|-----------|
@@ -271,7 +254,7 @@ tdx engage campaign launch "Campaign Name"
 ## Related Skills
 
 **Prerequisites:**
-- **email-template-creator** - Create templates for campaigns
+- **email-template** - Create templates for campaigns
 
 **Targeting:**
 - **tdx-skills:segment** - Create audience segments (batch campaigns)
@@ -283,4 +266,4 @@ tdx engage campaign launch "Campaign Name"
 - **tdx-skills:journey** - Advanced journey orchestration
 
 **Management:**
-- **email-template-manager** - Manage templates used in campaigns
+- **email-template** - Manage templates used in campaigns

@@ -333,7 +333,7 @@ parent_segment: "Marketing Master"    # ❌ Spaces may cause issues
 ## Related Skills
 
 **Prerequisites:**
-- **email-template-creator** - Create templates for journey
+- **email-template** - Create templates for journey
 - **email-campaign-creator** - Create always-on campaigns
 - **tdx-skills:parent-segment** - Configure parent segments
 

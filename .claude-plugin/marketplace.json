@@ -84,15 +84,13 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./engage-skills/email-template-creator",
+        "./engage-skills/email-template",
         "./engage-skills/email-campaign-creator",
-        "./engage-skills/email-template-manager",
         "./engage-skills/email-testing-validator",
         "./engage-skills/email-journey-builder",
         "./engage-skills/engage-sender",
         "./engage-skills/engage-deliverability",
-        "./engage-skills/engage-utm",
-        "./engage-skills/engage-workspace-advanced"
+        "./engage-skills/engage-utm"
       ]
     },
     {

@@ -1,22 +1,79 @@
 ---
-name: email-template-manager
-description: Basic email template management using tdx engage template commands for listing, updating, and organizing templates.
+name: email-template
+description: Complete email template lifecycle for TD Engage - create, manage, validate, and organize templates using tdx engage template commands.
 ---
 
-# Email Template Manager
+# Email Template
 
 ## Purpose
 
-Template management using `tdx engage template` commands. Discovery, updates, and cleanup operations.
+Complete email template operations in TD Engage: creation, management, validation, and cleanup using `tdx engage template` commands.
 
 ## Prerequisites
 
 - `tdx` CLI authenticated (`tdx auth status`)
 - TD Engage workspace access
 
-## Template Operations
+## Template Creation
 
-### List & Discover
+### Set Workspace Context
+```bash
+# Required before template operations
+tdx engage workspace use "Marketing Team"
+```
+
+### Basic Creation
+```bash
+# Inline HTML
+tdx engage template create --name "Welcome Email" \
+  --subject "Welcome to Treasure Data!" \
+  --html "<h1>Welcome!</h1><p>Thanks for joining us.</p>"
+
+# From file with plaintext
+tdx engage template create --name "Newsletter Template" \
+  --subject "Monthly Updates from TD" \
+  --html "$(cat newsletter.html)" \
+  --plaintext "$(cat newsletter.txt)"
+
+# Workspace override (skip workspace use)
+tdx engage template create --name "Sales Email" \
+  --subject "Product Demo Available" \
+  --html "<h1>Ready for a demo?</h1>" \
+  --workspace "Sales Team"
+
+# Choose editor type: beefree (Visual Editor, default) or grapesjs (HTML Editor)
+tdx engage template create --name "Custom HTML Email" \
+  --subject "Handcrafted Design" \
+  --html "$(cat custom.html)" \
+  --editor-type grapesjs
+```
+
+### File-Based Template
+```bash
+# Create HTML file
+cat > welcome-template.html << 'EOF'
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h1>Welcome!</h1>
+  <p>Thank you for joining Treasure Data.</p>
+  <p><a href="#" style="color: #007cba;">Get Started</a></p>
+</body>
+</html>
+EOF
+
+# Create template from file
+tdx engage template create --name "Welcome Series Day 1" \
+  --subject "Welcome to Treasure Data" \
+  --html "$(cat welcome-template.html)"
+```
+
+## Template Management
+
+### Discovery & Listing
 ```bash
 # List templates in current workspace
 tdx engage template list
@@ -36,6 +93,10 @@ tdx engage template show "Template Name" --full
 tdx engage template list --format table
 tdx engage template list --format tsv
 tdx engage template list --format json
+
+# Extract HTML to file for inspection
+tdx engage template show "Template Name" --full | \
+  jq -r '.data.attributes.htmlTemplate' > template.html
 ```
 
 ### Update Templates
@@ -47,7 +108,7 @@ tdx engage template update "Old Name" --name "New Name"
 tdx engage template update "Template Name" --subject "New Subject Line"
 
 # Update HTML from file
-tdx engage template update "Template Name" --html "$(cat updated-template.html)"
+tdx engage template update "Template Name" --html "$(cat updated.html)"
 
 # Update plaintext
 tdx engage template update "Template Name" --plaintext "Updated plaintext version"
@@ -55,7 +116,7 @@ tdx engage template update "Template Name" --plaintext "Updated plaintext versio
 
 ### Delete Templates
 ```bash
-# Delete with confirmation prompt
+# Delete with confirmation
 tdx engage template delete "Old Template"
 
 # Delete without prompt
@@ -65,9 +126,9 @@ tdx engage template delete "Old Template" --yes
 tdx engage template delete "Template Name" --workspace "Old Workspace"
 ```
 
-## Template Management Functions
+## Advanced Management
 
-### Template Inventory
+### Multi-Workspace Inventory
 ```bash
 # Count templates in workspace
 template_count=$(tdx engage template list --format tsv | wc -l)
@@ -82,6 +143,35 @@ done
 
 ### Template Validation
 ```bash
+# Validate template exists and has content
+validate_template() {
+  local template_name="$1"
+
+  if ! tdx engage template show "$template_name" --full >/dev/null 2>&1; then
+    echo "❌ Template not found: $template_name"
+    return 1
+  fi
+
+  # Check HTML content exists
+  html=$(tdx engage template show "$template_name" --full | \
+    jq -r '.data.attributes.htmlTemplate')
+
+  if [ "$html" = "null" ] || [ -z "$html" ]; then
+    echo "❌ No HTML content"
+    return 1
+  fi
+
+  # Check subject length (TD recommendation: ≤50 chars)
+  subject=$(tdx engage template show "$template_name" --full | \
+    jq -r '.data.attributes.subjectTemplate')
+
+  if [ ${#subject} -gt 50 ]; then
+    echo "⚠️  Subject too long: ${#subject} chars (recommended: ≤50)"
+  fi
+
+  echo "✅ Template valid"
+}
+
 # Validate all templates in workspace
 validate_all_templates() {
   local workspace_name="$1"
@@ -108,7 +198,7 @@ validate_all_templates() {
 }
 ```
 
-### Template Usage Check
+### Template Usage Analysis
 ```bash
 # Check which campaigns use a template
 check_template_usage() {
@@ -125,7 +215,6 @@ check_template_usage() {
   if [ -n "$campaigns" ]; then
     echo "$campaigns" | while IFS=$'\t' read -r uuid campaign_name status; do
       if [ -n "$campaign_name" ]; then
-        # Extract template name from campaign
         template=$(tdx engage campaign show "$campaign_name" --full 2>/dev/null | \
           jq -r '.data.relationships.template.data.attributes.name' 2>/dev/null)
 
@@ -196,24 +285,12 @@ cleanup_unused_templates() {
 # cleanup_unused_templates "Marketing Team" "yes"  # Delete
 ```
 
-## TD-Specific Errors
+## TD-Specific Patterns
 
-| Error | TD-Specific Solution |
-|-------|---------------------|
-| "Template not found" | Verify name: `tdx engage template list` |
-| "Workspace context not set" | `tdx engage workspace use "Marketing Team"` |
-| "Template name already exists" | Template names must be unique within workspace |
-| "Template in use by active campaign" | Cannot delete templates referenced by active campaigns |
-| "Subject line too long" | TD recommends ≤50 characters |
-| "Workspace mismatch" | Use `--workspace` flag or set context correctly |
-
-## Naming Conventions
-
+### Naming Conventions
 ```bash
-# TD recommended format: "Category - Description"
-tdx engage template update "welcome_email_1" --name "Welcome - Day 1"
-tdx engage template update "weekly_news" --name "Newsletter - Weekly"
-tdx engage template update "promo_flash" --name "Promotion - Flash Sale"
+# Use "Category - Description" format
+tdx engage template create --name "Welcome - Day 1" --subject "Welcome!"
 
 # Check naming patterns
 tdx engage template list --format tsv | while IFS=$'\t' read -r uuid name; do
@@ -225,8 +302,26 @@ tdx engage template list --format tsv | while IFS=$'\t' read -r uuid name; do
 done
 ```
 
+## TD-Specific Errors
+
+| Error | TD-Specific Solution |
+|-------|---------------------|
+| "Workspace context not set" | `tdx engage workspace use "Marketing Team"` or use `--workspace` flag |
+| "Template name already exists" | Template names must be unique within workspace |
+| "Subject line too long" | TD recommends ≤50 characters for mobile display |
+| "Workspace not found" | Verify workspace: `tdx engage workspace list` |
+| "HTML file too large" | TD limit: keep templates under 100KB |
+| "Template variable syntax error" | Use Liquid syntax: `{{variable_name}}` for merge tags |
+| "Merge tag not recognized" | Check TD Engage supported merge tags in documentation |
+| "Invalid editor type" | Use `beefree` (Visual Editor) or `grapesjs` (HTML Editor) |
+| "Template in use by active campaign" | Cannot delete templates referenced by active campaigns |
+
 ## Related Skills
 
-- **email-template-creator** - Create new templates
+**Next Steps:**
 - **email-campaign-creator** - Use templates in campaigns
-- **email-testing-validator** - Test templates before use
+- **email-testing-validator** - Test template rendering
+
+**Journey Integration:**
+- **email-journey-builder** - Use templates in email sequences
+- **tdx-skills:journey** - Reference templates in journey YAML (`template_id`)

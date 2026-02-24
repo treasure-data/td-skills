@@ -131,7 +131,7 @@ GROUP BY 1, 2
 
 **Campaign Management:**
 - **email-campaign-creator** - Create campaigns that support UTM tracking
-- **email-template-creator** - Create templates (UTM applied at campaign level)
+- **email-template** - Create templates (UTM applied at campaign level)
 
 **Analytics:**
 - **sql-skills:trino** - Query email event data with UTM parameters

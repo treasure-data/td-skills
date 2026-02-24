@@ -193,8 +193,6 @@ validate_journey_for_launch() {
 
 ## Manual Testing Process
 
-**CLI cannot send test emails.** Use TD Engage web interface for test sends.
-
 ### Pre-Launch Testing Steps
 
 1. **CLI Validation** (Automated)
@@ -277,10 +275,10 @@ tdx engage campaign launch "Campaign Name"
 ## Related Skills
 
 **Prerequisites:**
-- **email-template-creator** - Create templates to validate
+- **email-template** - Create templates to validate
 - **email-campaign-creator** - Create campaigns to validate
 
 **Integration:**
-- **email-template-manager** - Manage templates
+- **email-template** - Manage templates
 - **email-journey-builder** - Validate journey email components
 - **tdx-skills:validate-journey** - Full journey YAML validation

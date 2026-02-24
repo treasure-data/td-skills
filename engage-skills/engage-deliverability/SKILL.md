@@ -15,16 +15,11 @@ Provides guidance for TD Engage's built-in email deliverability features includi
 - Domain ownership and DNS configuration access
 - IT team coordination for DNS record updates
 
-## Domain Authentication (Automatic Setup)
+## Domain Authentication Setup
 
-TD Engage Studio automatically handles SPF, DKIM, DMARC, and IP warming (via Amazon SES).
+**For domain configuration steps, use the `engage-sender` skill.**
 
-### Domain Configuration Process
-
-1. **Engage > Sending Configurations > Create New** - Enter domain name and Write-only API key
-2. Click **"Start domain deployment"** (auto-generates all DNS records)
-3. Click **"Verify DNS records"** - copy generated zone file for IT team
-4. Click **"Verify Domain"** - system polls automatically for 72 hours
+TD Engage Studio automatically handles SPF, DKIM, DMARC, and IP warming (via Amazon SES) once domains are properly configured.
 
 ## Monitoring & Analytics
 
@@ -133,8 +128,10 @@ ORDER BY date DESC
 
 ## Related Skills
 
-**Domain & Sending:**
-- **engage-sender** - Configure sender profiles and unsubscribe settings
+**Domain Setup:**
+- **engage-sender** - Configure domains and verify DNS records (required first)
+
+**Email Operations:**
 - **email-campaign-creator** - Create campaigns with proper sender configuration
 
 **Monitoring & Analytics:**

@@ -295,11 +295,10 @@ dig @208.67.222.222 txt company.com  # OpenDNS
 ## Related Skills
 
 **Prerequisites:**
-- **email-template-creator** - Create templates with sender profiles
+- **email-template** - Create templates with sender profiles
 - **email-campaign-creator** - Configure campaigns with senders
 
 **Integration:**
 - **email-testing-validator** - Test campaigns with sender configs
-- **engage-deliverability** - Monitor deliverability with TD features
-- **engage-workspace-advanced** - Workspace-level sender management
+- **engage-deliverability** - Monitor email performance and domain reputation (after setup)
 - **email-journey-builder** - Use sender profiles in journeys
