@@ -135,11 +135,7 @@ Creates a draft version cloned from the current latest. Auto-named `"{name} vN+1
 ```bash
 tdx journey pull "<journey-name>"
 ```
-The pulled YAML is a complete copy of the current journey. Make only the specific changes suggested by the action report (Phase 4) — do NOT rebuild from scratch. Examples:
-- Change `duration: 7` → `duration: 3` in a wait step (reduce stuck time)
-- Add an `exit_criteria` segment to a stage
-- Change `ratio` values in an `ab_test` step
-- Add/remove an activation step
+The pulled YAML is a complete copy of the current journey. Make only the specific changes suggested by the action report (Phase 4) — do NOT rebuild from scratch.
 
 ### 3. Push changes
 ```bash
