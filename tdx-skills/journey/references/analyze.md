@@ -121,6 +121,8 @@ Generate prioritized action items based on Phase 2 findings.
 
 After presenting the dashboard and action report, **ask the client** whether they want to create a new journey version with optimizations applied.
 
+**Do NOT follow the Build Process (5-step template workflow) from the journey SKILL.** `version create` clones the entire existing journey — you already have a complete YAML. Only make targeted edits based on analysis findings.
+
 If yes:
 
 ### 1. Create a new draft version
@@ -129,15 +131,15 @@ tdx journey version create "<journey-name>" -y
 ```
 Creates a draft version cloned from the current latest. Auto-named `"{name} vN+1"`.
 
-### 2. Pull the draft and apply changes
+### 2. Pull the draft and make targeted edits
 ```bash
 tdx journey pull "<journey-name>"
 ```
-Edit the YAML based on the action report findings (Phase 4). Common optimizations:
-- Adjust wait durations for stages with high stuck rates
-- Add/modify exit criteria for stages with low progression
-- Reconfigure decision point conditions based on branch distribution
-- Tune A/B test variant ratios based on performance data
+The pulled YAML is a complete copy of the current journey. Make only the specific changes suggested by the action report (Phase 4) — do NOT rebuild from scratch. Examples:
+- Change `duration: 7` → `duration: 3` in a wait step (reduce stuck time)
+- Add an `exit_criteria` segment to a stage
+- Change `ratio` values in an `ab_test` step
+- Add/remove an activation step
 
 ### 3. Push changes
 ```bash
