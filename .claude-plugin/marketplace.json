@@ -25,10 +25,13 @@
     },
     {
       "name": "realtime-skills",
-      "description": "RT 2.0 (Real-Time Personalization) skills for configuring parent segments with event tables and RT attributes, creating personalization services for real-time API responses, managing real-time journeys with event-triggered activations, and querying activation/identity logs",
+      "description": "RT 2.0 (Real-Time Personalization) skills for configuring parent segments with event tables and RT attributes, creating personalization services for real-time API responses, managing real-time journeys with event-triggered activations, and querying activation/identity logs. Includes end-to-end orchestrator skills for complete RT setup workflows and validation tools for error-free personalization entity creation.",
       "source": "./",
       "strict": false,
       "skills": [
+        "./realtime-skills/rt-setup-personalization",
+        "./realtime-skills/rt-setup-triggers",
+        "./realtime-skills/rt-personalization-validation",
         "./realtime-skills/activations",
         "./realtime-skills/identity",
         "./realtime-skills/rt-config",
@@ -37,9 +40,6 @@
         "./realtime-skills/rt-config-attributes",
         "./realtime-skills/rt-config-id-stitching",
         "./realtime-skills/rt-personalization",
-        "./realtime-skills/rt-pz-service",
-        "./realtime-skills/rt-pz-sections",
-        "./realtime-skills/rt-pz-api",
         "./realtime-skills/rt-triggers",
         "./realtime-skills/rt-journey-create",
         "./realtime-skills/rt-journey-activations",
@@ -145,6 +145,15 @@
         "./aps-doc-skills/id-unification",
         "./aps-doc-skills/golden",
         "./aps-doc-skills/master-segment"
+      ]
+    },
+    {
+      "name": "email-campaign-skills",
+      "description": "Generate enterprise-grade HTML email campaigns with strategy briefs, live preview in Treasure Studio, iterative natural language editing, and push to Treasure Engage",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./email-campaign-skills/email-campaign"
       ]
     }
   ]
