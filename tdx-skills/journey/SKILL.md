@@ -23,7 +23,7 @@ description: Load when the client wants to create, edit, or manage a CDP custome
 
 ## Version Creation
 
-**You MUST read `references/version-create.md`** using the Read tool before doing anything else. Version creation clones the existing journey — do NOT use the Build Process.
+**You MUST read `references/version-create.md`** using the Read tool before doing anything else. Version creation clones the existing journey — do NOT rebuild from scratch, but refer to Build Process templates for correct YAML syntax.
 
 ## Build Process
 

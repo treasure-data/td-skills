@@ -2,7 +2,7 @@
 
 Create a new draft version of an existing journey and apply changes.
 
-**Do NOT follow the Build Process (5-step template workflow).** `version create` clones the entire existing journey — you already have a complete YAML. Only make targeted edits.
+`version create` clones the entire existing journey — you already have a complete YAML. Do NOT rebuild from scratch via the Build Process. Make targeted edits only, but refer to the Build Process templates (`templates/step1-criteria.yml`, etc.) for correct YAML syntax when adding or modifying steps, segments, or activations.
 
 ## Steps
 
