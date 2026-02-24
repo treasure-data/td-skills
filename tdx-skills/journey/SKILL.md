@@ -10,7 +10,15 @@ description: Load when the client wants to create, edit, or manage a CDP custome
 | Task | Guide |
 |------|-------|
 | Build journey YAML | Follow the [5 steps](#build-process) below |
-| Analyze journey performance | Read [references/analyze.md](references/analyze.md) |
+| Analyze journey performance | Follow the [analysis workflow](#analysis-workflow) below |
+
+## Analysis Workflow
+
+**You MUST read the reference files** using the Read tool before doing anything else. These contain domain-specific data models and workflows that are NOT guessable.
+
+1. **Read `references/analyze.md`** (MANDATORY) — 5-phase analysis workflow
+2. **Read `references/journey-table.md`** (MANDATORY) — journey table data model, column naming, state logic
+3. Follow the phases in `references/analyze.md` in order
 
 ## Build Process
 

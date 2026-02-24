@@ -6,6 +6,8 @@ Analyze journey performance and create visual dashboards with action reports.
 
 ## Phase 1: Schema Discovery
 
+**Prerequisite**: Read `references/journey-table.md` first. Journey tables use a state snapshot model with domain-specific column naming that is NOT guessable — skipping this will produce incorrect SQL in Phase 2.
+
 Run ALL discovery commands (do not skip any):
 
 ```bash
@@ -14,8 +16,6 @@ tdx journey columns "<journey-name>"
 tdx journey stats "<journey-name>"          # cumulative KPIs — REQUIRED for dashboard
 tdx journey activations "<journey-name>"
 ```
-
-Read `references/journey-table.md` to understand the journey table data model (state snapshot, column categories, key constraints).
 
 **Output of this phase:**
 - Database & table name
