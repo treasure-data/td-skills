@@ -121,35 +121,7 @@ Generate prioritized action items based on Phase 2 findings.
 
 After presenting the dashboard and action report, **ask the client** whether they want to create a new journey version with optimizations applied.
 
-**Do NOT follow the Build Process (5-step template workflow) from the journey SKILL.** `version create` clones the entire existing journey — you already have a complete YAML. Only make targeted edits based on analysis findings.
-
-If yes:
-
-### 1. Create a new draft version
-```bash
-tdx journey version create "<journey-name>" -y
-```
-Creates a draft version cloned from the current latest. Auto-named `"{name} vN+1"`.
-
-### 2. Pull the draft and make targeted edits
-```bash
-tdx journey pull "<journey-name>"
-```
-The pulled YAML is a complete copy of the current journey. Make only the specific changes suggested by the action report (Phase 4) — do NOT rebuild from scratch.
-
-### 3. Push changes
-```bash
-tdx journey push "<journey-name>" --dry-run   # preview
-tdx journey push "<journey-name>"              # apply
-```
-
-### 4. Verify
-```bash
-tdx journey versions "<journey-name>"          # confirm new version listed
-tdx journey version view "<journey-name>" --version <N>  # inspect details
-```
-
-The new version remains in **draft** state. The client launches it from the TD console when ready.
+If yes: **Read `references/version-create.md`** (MANDATORY) and follow the steps. Apply only the changes suggested by the action report (Phase 4).
 
 ## Related Skills
 

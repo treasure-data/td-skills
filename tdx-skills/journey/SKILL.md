@@ -11,6 +11,7 @@ description: Load when the client wants to create, edit, or manage a CDP custome
 |------|-------|
 | Build journey YAML | Follow the [5 steps](#build-process) below |
 | Analyze journey performance | Follow the [analysis workflow](#analysis-workflow) below |
+| Create a new journey version | Follow the [version creation](#version-creation) below |
 
 ## Analysis Workflow
 
@@ -19,6 +20,10 @@ description: Load when the client wants to create, edit, or manage a CDP custome
 1. **Read `references/analyze.md`** (MANDATORY) — 5-phase analysis workflow
 2. **Read `references/journey-table.md`** (MANDATORY) — journey table data model, column naming, state logic
 3. Follow the phases in `references/analyze.md` in order
+
+## Version Creation
+
+**You MUST read `references/version-create.md`** using the Read tool before doing anything else. Version creation clones the existing journey — do NOT use the Build Process.
 
 ## Build Process
 
