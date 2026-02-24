@@ -1,185 +1,149 @@
 ---
 name: journey
-description: Creates CDP journey definitions in YAML using `tdx journey` commands. Covers journey stages, steps (wait, activation, decision_point, ab_test, merge, jump, end), entry/exit criteria, goals, embedded segments, and versioning. Use when building customer journey orchestration workflows or managing journey YAML files.
+description: Load when the client wants to create, edit, or manage a CDP customer journey. Use for building journey YAML with segments, activations, and stage steps, modifying journey stages or flow logic (decision points, condition waits, A/B tests), or pushing journey changes to Treasure Data.
 ---
 
 # tdx Journey - CDP Journey Orchestration
 
-## Core Commands
+## Build Process
+
+Build journey YAML **incrementally** through 5 steps.
+
+**FIRST: Create a TODO list** with one task per step before starting any work. This ensures you follow the step-by-step process and do not skip ahead. Mark each task as in_progress when you start it and completed when done.
+
+**CRITICAL RULES:**
+- **You MUST read the template file** for each step using the Read tool before doing anything else. The templates contain required discovery commands and instructions. Do NOT write YAML from memory.
+- Complete steps in order, one at a time. NEVER skip or combine steps.
+
+**Workflow for EACH step:**
+1. **Read the template file** (MANDATORY — use Read tool on the template path)
+2. **Run the discovery commands** listed in the template (MANDATORY — do NOT guess values)
+3. Ask the client for the required information (if not already provided)
+4. **Show the design/plan and get client confirmation** — this is the ONE confirmation point per step
+5. Write the updated YAML to the journey file
+6. **Immediately proceed to the next step** — do NOT ask "shall we proceed?" or "please review". The client already confirmed in step 4.
+
+**File location**: `./segments/(parent-segment-name)/journey-name.yml`
+
+## Prerequisites
 
 ```bash
-tdx sg pull "Customer 360"                   # Pull all segments & journeys (sets context)
-tdx journey pull                             # Pull all journeys to YAML
-tdx journey pull path/to/journey.yml         # Pull specific journey
-tdx journey push --dry-run                   # Preview changes
-tdx journey push --yes                       # Push all journeys (skip confirmation)
-tdx journey push path/to/journey.yml --yes   # Push specific journey
-tdx journey pause "Journey Name"             # Pause
-tdx journey resume "Journey Name"            # Resume
+tdx sg pull "Parent Segment Name"   # Pull parent segment data (sets context)
+```
+
+## Commands
+
+```bash
+tdx journey validate path/to/journey.yml   # Validate YAML locally (offline)
+tdx journey push --dry-run                 # Preview changes against API
+tdx journey push --yes                     # Push journey
+tdx journey pause "Journey Name"           # Pause running journey
+tdx journey resume "Journey Name"          # Resume paused journey
 tdx journey view "Journey Name" --include-stats
 ```
 
-## File Structure
+## The 5 Steps
 
-Journey files stored in parent segment folder: `./segments/(parent-segment-name)/journey-name.yml`
+| Step | What to do | Template |
+|------|-----------|----------|
+| 1 | Criteria segments (goal, entry/exit, milestone) | `templates/step1-criteria.yml` |
+| 2 | Decision point branches + condition wait segments | `templates/step2-decisions.yml` |
+| 3 | Activations | `templates/step3-activations.yml` |
+| 4 | Journey structure + stage steps (one stage at a time) | `templates/step4-journey.yml` |
+| 5 | Validate and push | (see below) |
 
-## Basic Structure
+**Start with Step 1**: Read `templates/step1-criteria.yml` and follow the instructions inside.
 
-```yaml
-type: journey                # Required
-name: Onboarding Journey
+### Step 5: Validate and Push
 
-reentry: no_reentry          # no_reentry | reentry_unless_goal_achieved | reentry_always
+After completing Step 4, validate and iterate:
 
-goal:
-  name: Completed
-  segment: completed-users
-
-journeys:
-  - state: draft             # draft | launched
-    stages:
-      - name: Welcome
-        entry_criteria:      # Who enters this stage
-          name: New Users
-          segment: new-users
-        steps: [...]
+```bash
+tdx journey validate path/to/journey.yml   # Local validation
+tdx journey push --dry-run                 # API validation
 ```
 
-**Limits**: Max 8 stages, 120 events/journey, 70 events/stage, 30 versions
+Preview the journey with the YAML file path. Ask the client to verify the visual flow structure (branches, merge points, step connections) before pushing.
 
-## Step Types
+Fix errors, then push:
 
-| Type | `with` Parameters |
-|------|-------------------|
-| `wait` | `duration`, `unit` (day/week) or `condition` |
-| `activation` | `activation` (key from activations section) |
-| `decision_point` | `branches[]` with segment, next |
-| `ab_test` | `variants[]` with percentage, next (must sum to 100) |
-| `merge` | (none) |
-| `jump` | `target` with `journey`, `stage` |
-| `end` | (none, no next) |
-
-**Important**: `next:` is a direct field on step, not inside `with:`
-
-```yaml
-steps:
-  - type: wait
-    name: Wait 7 Days
-    next: send-email     # Direct field, not in with:
-    with:
-      duration: 7
-      unit: day          # day | week only
-
-  - type: wait
-    name: Wait for Purchase
-    with:
-      condition:
-        segment: made-purchase   # Wait until segment match
-        next: follow-up          # Optional: defaults to next sequential step
-        timeout:                 # Max wait duration
-          duration: 14
-          unit: day
-          next: timeout-path     # Step when max wait exceeded
-
-  - type: activation
-    name: Send Email
-    with:
-      activation: welcome-email  # Key from activations section
-
-  - type: decision_point
-    name: Check Tier
-    with:
-      branches:
-        - name: Premium
-          segment: premium-tier
-          next: premium-path
-        - name: Others
-          excluded: true         # Default branch
-          next: default-path
-
-  - type: jump
-    name: Go to Retention
-    with:
-      target:
-        journey: Retention Journey   # Target journey name
-        stage: Welcome Stage         # Target stage name
-
-  - type: end
-    name: Complete
+```bash
+tdx journey push path/to/journey.yml --yes
 ```
 
-## Activations
-
-```yaml
-activations:
-  welcome-email:                    # Key referenced in steps
-    name: Welcome Email Campaign
-    connection: My SFMC Connection  # Connection name from `tdx connection list`
-    all_columns: true
-    schedule:
-      type: none                    # none | daily | hourly
-      timezone: UTC
-    connector_config:               # Use `tdx connection schema <type>` for fields
-      de_name: WelcomeEmails
-      data_operation: upsert
-```
-
-See **connector-config** skill for `connector_config` details.
+Use TD Console "Simulation Mode" to validate before launching.
 
 ## Segment References
 
-- **Embedded**: `segment: my-segment` (defined in `segments:` section)
-- **External**: `segment: ref:Existing Segment` (use `ref:` prefix)
+- **Embedded** (recommended): `segment: my-segment` (defined in `segments:` section — always create new segments this way)
+- **External ref**: `segment: ref:Segment Name` (references a journey-type segment from another journey)
 
-## Embedded Segment with Behavior
+### `ref:` limitations
 
-Use behavior data from parent segment in journey segments:
+`ref:` can ONLY reference **journey-type segments (kind=3)** — segments that were created by another journey's push. It does NOT work with regular child segments created via `tdx sg push`.
+
+**Valid workflow for `ref:`:**
+1. `tdx journey pull "Existing Journey"` → segments appear as `ref:SegmentName`
+2. Create a new journey YAML referencing those same segments via `ref:`
+3. `tdx journey push` → works because the referenced segments are already journey-type
+
+**Do NOT** search for existing batch segments with `tdx sg list` and reference them with `ref:`. This will resolve the ID but the journey API will reject it.
+
+**When in doubt, use embedded segments.** They are always safe and give you full control over the rule definition.
+
+## Goal Target (Optional)
+
+When the journey goal is met, optionally route users to another journey:
 
 ```yaml
-segments:
-  active_website_visitors:
-    description: Users who visited website
-    rule:
-      type: And
-      conditions:
-        # Attribute condition
-        - type: Value
-          attribute: pv
-          operator:
-            type: GreaterEqual
-            value: 5
-        # Behavior aggregation condition
-        - type: And
-          conditions:
-            - type: Value
-              attribute: ""                    # Empty for behavior count
-              operator:
-                type: GreaterEqual
-                value: 1
-              aggregation:
-                type: Count
-              source: behavior_behv_website    # behavior_<table_name>
-          description: has visited website
+goal:
+  name: Made Purchase
+  segment: purchasers
+  target:                    # Optional: jump when goal met
+    journey: Post-Purchase Journey
+    stage: Thank You
 ```
 
-**Note**: Journey embedded segments use `source: behavior_<table_name>` (with `behavior_` prefix), unlike standalone segments which use `source: <behavior_name>`.
+## Wait Step Options
 
-## Simulation (Recommended)
+```yaml
+# Duration wait
+- type: wait
+  name: Wait 7 Days
+  next: Next Step
+  with:
+    duration: 7
+    unit: day                          # day | week
 
-Push as `draft` first, then use TD Console → "Simulation Mode" to validate before launching.
+# Condition wait (NO top-level next: — paths inside condition)
+- type: wait
+  name: Wait for Purchase
+  with:
+    condition:
+      segment: made-purchase
+      next: Thank You Path
+      timeout:
+        duration: 14
+        unit: day
+        next: Timeout Path
+```
 
-## Common Issues
+Other wait options: `wait_until: "2025-04-01"` | `days_of_week: ["monday", "wednesday", "friday"]`
 
-| Issue | Solution |
-|-------|----------|
-| Journey not processing | `tdx journey resume "Name"` |
-| Segment not found | Use `ref:` prefix for external segments |
-| Activation not triggering | `tdx connection list` to verify |
+**API constraint**: A wait step must follow every activation step (place after merge if activation → merge).
+
+**Limits**: Max 8 stages (local), 120 events/journey, 70 events/stage, 30 versions (API)
+
+## Best Practices
+
+- **Frequency capping**: Use wait steps between activations to control message frequency. Avoid sending more than 1 message per day per channel.
+- **Consent management**: Include opt-in/subscription status in entry_criteria or exit_criteria segments (e.g., `email_opt_in = true`).
+- **Suppression**: Use exit_criteria to remove users who should stop receiving messages (e.g., recent purchasers, open support tickets).
+- **Reentry mode**: Use `no_reentry` for one-time campaigns, `reentry_unless_goal_achieved` for ongoing programs, `reentry_always` for recurring triggers.
 
 ## Related Skills
 
-- **connector-config**, **validate-journey**, **segment**, **validate-segment**, **parent-segment**
-
-## Resources
-
-- https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration
+- **connector-config** - `connector_config` fields for activations
+- **validate-journey** - Validation rules reference
+- **segment** / **validate-segment** - Segment rule syntax
+- **parent-segment** - Parent segment management
