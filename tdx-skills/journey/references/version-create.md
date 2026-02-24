@@ -16,7 +16,7 @@ Creates a draft version cloned from the current latest. Auto-named `"{name} vN+1
 ```bash
 tdx journey pull "<journey-name>"
 ```
-The pulled YAML is a complete copy of the current journey. Make only the specific changes needed — do NOT rebuild from scratch.
+The pulled YAML contains the new draft version only. Edit this single version — do NOT add multiple versions to one YAML file. `tdx journey version create` already created the new version on the server; you are just editing it.
 
 ### 3. Push changes
 ```bash
