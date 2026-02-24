@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "sql-skills",
-      "description": "SQL query skills for Treasure Data including Trino and Hive query optimization, time-based filtering with td_interval, and TD MCP server for Claude Code integration with natural language data exploration",
+      "description": "SQL query skills for Treasure Data including Trino and Hive query optimization, time-based filtering with td_interval, and Trino-to-Hive migration",
       "source": "./",
       "strict": false,
       "skills": [
@@ -19,7 +19,6 @@
         "./sql-skills/hive",
         "./sql-skills/trino-optimizer",
         "./sql-skills/trino-to-hive-migration",
-        "./sql-skills/td-mcp",
         "./sql-skills/time-filtering"
       ]
     },
