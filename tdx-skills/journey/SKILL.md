@@ -1,9 +1,16 @@
 ---
 name: journey
-description: Load when the client wants to create, edit, or manage a CDP customer journey. Use for building journey YAML with segments, activations, and stage steps, modifying journey stages or flow logic (decision points, condition waits, A/B tests), or pushing journey changes to Treasure Data.
+description: Load when the client wants to create, edit, or manage a CDP customer journey. Use for building journey YAML with segments, activations, and stage steps, modifying journey stages or flow logic (decision points, condition waits, A/B tests), or pushing journey changes to Treasure Data. Also load when the client wants to analyze journey performance, query journey tables, create journey dashboards, or generate journey action reports.
 ---
 
 # tdx Journey - CDP Journey Orchestration
+
+## Quick Reference
+
+| Task | Guide |
+|------|-------|
+| Build journey YAML | Follow the [5 steps](#build-process) below |
+| Analyze journey performance | Read [references/analyze.md](references/analyze.md) |
 
 ## Build Process
 

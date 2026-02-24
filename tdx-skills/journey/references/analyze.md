@@ -1,0 +1,123 @@
+# Journey Analysis
+
+Analyze journey performance and create visual dashboards with action reports.
+
+**FIRST: Create a TODO list** (1 task per phase) before starting.
+
+## Phase 1: Schema Discovery
+
+Run discovery commands to understand the journey structure:
+
+```bash
+tdx journey view "<journey-name>" --include-stats
+tdx journey columns "<journey-name>"
+tdx journey stats "<journey-name>"
+tdx journey activations "<journey-name>"
+```
+
+Read `references/journey-table.md` to understand the journey table data model (state snapshot, column categories, key constraints).
+
+**Output of this phase:**
+- Database & table name
+- Stage names and their indices
+- Step ID to name mapping
+- Column categories present (milestone, exit_criteria, branch, variant)
+- Cumulative KPIs from `tdx journey stats` (entered, exit_or_jump, goal_achieved)
+
+## Phase 2: Data Collection
+
+Query the journey table. Read `references/journey-table.md` for column naming patterns and state determination logic.
+
+**Required queries (in order):**
+1. Table verification — `COUNT(*)`, `COUNT(DISTINCT cdp_customer_id)`, `COUNT(DISTINCT time)` (confirm snapshot behavior)
+2. Current stage distribution — CASE on `intime_stage_N IS NOT NULL AND outtime_stage_N IS NULL`
+3. Time-in-stage — avg/median/p90 days for each stage (currently in)
+4. Stage progression funnel — count of `intime_stage_N IS NOT NULL` for each stage
+5. Goal conversion — if goals exist, rate and avg days-to-goal
+
+**Conditional queries (based on schema):**
+- Milestone achievement — if `milestone` columns exist
+- Exit criteria breakdown — if `exit_criteria` columns exist
+- Branch distribution — if `branch` columns exist
+- A/B test variants — if `variant` columns exist
+- Activation completion rates — if activation step columns exist
+
+**Traffic data:**
+```bash
+tdx journey traffic "<journey-name>" --from <90-days-ago> --to <today>
+```
+
+Collect Sankey data for conversion flows and per-stage activation flows.
+
+## Phase 3: Dashboard
+
+**Read `grid-dashboard` SKILL.md** before writing any dashboard YAML.
+
+Build a grid dashboard with these pages:
+
+### Page 1: Journey Overview
+- KPIs: Entered (from stats), Currently In (from SQL), Exit/Jump (from stats), Exit/Jump Rate
+- Current Records by Stage (table)
+- Stage Distribution (gauge or scores)
+- Entry Cohort Trend (chart: line — monthly entries)
+- Key Insights (markdown)
+
+### Page 2-N: Stage Analysis (one page per stage)
+- Stage KPIs: Customers in stage, Median days, Milestone rate (if applicable)
+- Activation Sankey for this stage (chart: sankey from traffic data)
+- Time-in-Stage Distribution (chart: bar — histogram buckets)
+- Stuck Customer Detection (table: customers > p90 dwell time)
+- Stage Insights (markdown)
+
+### Sankey Data Classification
+
+**Conversion Sankey** — split `tdx journey traffic --type conversion` into 4 charts by target node type:
+
+| Chart | Source node type | Target node type |
+|-------|-----------------|-----------------|
+| Between Stages | stage | stage |
+| To Goal | stage | goal |
+| To Jumps | stage | jump |
+| To Exits | stage | exit |
+
+Filter: `link.value > 0`. Exit dedup: if duplicate exit labels, rename to `"{exit} ({source stage})"`.
+
+**Activation Sankey** (per stage) — from `tdx journey traffic --type activation`:
+- Main flow: exclude exit/jump target nodes
+- Aggregate exit/jump: sum values into single "Exit/Jump" node per source
+
+### Dashboard File Location
+```
+./analysis/{journey-name}-dashboard.yaml
+```
+
+**Build incrementally** per grid-dashboard skill instructions (one page at a time).
+
+## Phase 4: Action Report
+
+**Read `action-report` SKILL.md** before writing any action report YAML.
+
+Generate prioritized action items based on Phase 2 findings.
+
+### Categories
+- Journey Design / Journey Flow / Journey Configuration
+- Engagement Strategy / Data Quality / Monitoring
+
+### Priority Logic
+- **High**: Affects >50% customers OR blocks completion OR structural issue
+- **Medium**: Affects 10-50% OR suboptimal config
+- **Low**: Affects <10% OR needs more data
+
+### Action Report File Location
+```
+./analysis/{journey-name}-action-report.yaml
+```
+
+**Build incrementally** per action-report skill instructions (2-3 actions per edit).
+
+## Related Skills
+
+- **grid-dashboard** — Dashboard YAML format and cell types
+- **action-report** — Action report YAML format
+- **journey** — Journey YAML build workflow
+- **sql-skills:trino** — TD Trino SQL patterns
