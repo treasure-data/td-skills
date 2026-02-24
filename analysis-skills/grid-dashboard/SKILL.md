@@ -201,7 +201,12 @@ Pass standard Chart.js config (`type`, `data`, `options`).
 
 **Standard types**: `bar`, `line`, `pie`, `doughnut`, `radar`, `polarArea`, `bubble`, `scatter`
 
-**Plugin types** (also available): `sankey`, `treemap`, `matrix`, `wordcloud`, `candlestick`, `ohlc`
+**Plugin types** (also available): `sankey`, `treemap`, `matrix`, `wordCloud`, `candlestick`, `ohlc`
+
+**YAML constraint**: Never use JS function strings for callbacks or scriptable options — they are passed as plain strings and will be stripped. Use declarative alternatives:
+
+- **treemap**: Set `key` to specify the value field. Put `backgroundColor` and `label` inside each tree item (not at dataset level). Use `labels: { display: true }` to show labels.
+- **matrix**: Data uses `{x, y, v}`. Width, height, scales, and tooltip are auto-configured. For multi-color heatmaps, use `colorScale` on the dataset: `colorScale: [{limit: 20, color: "#3b82f6"}, {limit: 50, color: "#10b981"}, ...]`. Omit for single-color alpha gradient from `backgroundColor`.
 
 ```yaml
 - pos: "3-2"
