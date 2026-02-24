@@ -2,32 +2,43 @@
 
 Create a new draft version of an existing journey and apply changes.
 
-`version create` clones the entire existing journey — you already have a complete YAML. Do NOT rebuild from scratch via the Build Process. Make targeted edits only, but refer to the Build Process templates (`templates/step1-criteria.yml`, etc.) for correct YAML syntax when adding or modifying steps, segments, or activations.
+## How versioning works
+
+- `version create` creates a new **draft** on the server, cloned from the current latest. The launched version is preserved.
+- `pull` downloads a YAML with ALL versions in the `journeys` array. Each entry has `version`, `state`, and optionally `latest: true`.
+- `push` updates ONLY the `latest: true` entry on the server. It does NOT create versions — it updates the existing draft in place.
+
+You cannot skip `version create`. Without it, `push` would overwrite the launched version directly.
 
 ## Steps
 
-### 1. Create a new draft version
+### 1. Create draft on server
 ```bash
 tdx journey version create "<journey-name>" -y
 ```
-Creates a draft version cloned from the current latest. Auto-named `"{name} vN+1"`.
 
-### 2. Pull the draft and make targeted edits
+### 2. Pull and edit
 ```bash
 tdx journey pull "<journey-name>"
 ```
-The pulled YAML may contain multiple versions in the `journeys` array (one entry per version). Only edit the entry with `latest: true` — that is the new draft. Do NOT add or remove entries from the `journeys` array. Do NOT modify the `version` or `state` fields — these are managed by the server.
+The YAML contains a `journeys` array with all versions. Only edit the entry with `latest: true` (the new draft). Do NOT:
+- Add or remove entries in the `journeys` array
+- Modify `version`, `state`, or `latest` fields
+- Rebuild from scratch — make targeted edits only
 
-### 3. Push changes
+Refer to the Build Process templates (`templates/step1-criteria.yml`, etc.) for correct YAML syntax when adding or modifying steps, segments, or activations.
+
+### 3. Push
 ```bash
-tdx journey push "<journey-name>" --dry-run   # preview
-tdx journey push "<journey-name>"              # apply
+tdx journey push "<journey-name>" --dry-run   # preview diff
+tdx journey push "<journey-name>"              # apply to server
 ```
+This updates the draft version only. The launched version is untouched.
 
 ### 4. Verify
 ```bash
-tdx journey versions "<journey-name>"          # confirm new version listed
-tdx journey version view "<journey-name>" --version <N>  # inspect details
+tdx journey versions "<journey-name>"
+tdx journey version view "<journey-name>" --version <N>
 ```
 
 The new version remains in **draft** state. The client launches it from the TD console when ready.
