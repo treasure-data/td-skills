@@ -115,6 +115,42 @@ Generate prioritized action items based on Phase 2 findings.
 
 **Build incrementally** per action-report skill instructions (2-3 actions per edit).
 
+## Phase 5: Journey Optimization (Optional)
+
+After presenting the dashboard and action report, **ask the client** whether they want to create a new journey version with optimizations applied.
+
+If yes:
+
+### 1. Create a new draft version
+```bash
+tdx journey version create "<journey-name>" -y
+```
+Creates a draft version cloned from the current latest. Auto-named `"{name} vN+1"`.
+
+### 2. Pull the draft and apply changes
+```bash
+tdx journey pull "<journey-name>"
+```
+Edit the YAML based on the action report findings (Phase 4). Common optimizations:
+- Adjust wait durations for stages with high stuck rates
+- Add/modify exit criteria for stages with low progression
+- Reconfigure decision point conditions based on branch distribution
+- Tune A/B test variant ratios based on performance data
+
+### 3. Push changes
+```bash
+tdx journey push "<journey-name>" --dry-run   # preview
+tdx journey push "<journey-name>"              # apply
+```
+
+### 4. Verify
+```bash
+tdx journey versions "<journey-name>"          # confirm new version listed
+tdx journey version view "<journey-name>" --version <N>  # inspect details
+```
+
+The new version remains in **draft** state. The client launches it from the TD console when ready.
+
 ## Related Skills
 
 - **grid-dashboard** — Dashboard YAML format and cell types
