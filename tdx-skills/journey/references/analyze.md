@@ -6,12 +6,12 @@ Analyze journey performance and create visual dashboards with action reports.
 
 ## Phase 1: Schema Discovery
 
-Run discovery commands to understand the journey structure:
+Run ALL discovery commands (do not skip any):
 
 ```bash
 tdx journey view "<journey-name>" --include-stats
 tdx journey columns "<journey-name>"
-tdx journey stats "<journey-name>"
+tdx journey stats "<journey-name>"          # cumulative KPIs — REQUIRED for dashboard
 tdx journey activations "<journey-name>"
 ```
 
@@ -42,16 +42,18 @@ Query the journey table. Read `references/journey-table.md` for column naming pa
 - A/B test variants — if `variant` columns exist
 - Activation completion rates — if activation step columns exist
 
-**Traffic data** (max 90-day range — API returns empty if exceeded):
+**Traffic data** (REQUIRED — max 90-day range, API returns empty if exceeded):
 ```bash
 tdx journey traffic "<journey-name>" --from <90-days-ago> --to <today>
 ```
 
-Collect Sankey data for conversion flows and per-stage activation flows.
+Always run this. Collect Sankey data for conversion flows and per-stage activation flows. Dashboard Sankey charts depend on this data.
 
 ## Phase 3: Dashboard
 
 **Read `grid-dashboard` SKILL.md** before writing any dashboard YAML.
+
+The dashboard MUST incorporate data from all three sources: `tdx journey stats` (cumulative KPIs), `tdx journey traffic` (Sankey flows), and SQL queries (snapshot analysis). Do not omit any source.
 
 Build a grid dashboard with these pages:
 
