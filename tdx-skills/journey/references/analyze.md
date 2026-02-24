@@ -42,7 +42,7 @@ Query the journey table. Read `references/journey-table.md` for column naming pa
 - A/B test variants — if `variant` columns exist
 - Activation completion rates — if activation step columns exist
 
-**Traffic data:**
+**Traffic data** (max 90-day range — API returns empty if exceeded):
 ```bash
 tdx journey traffic "<journey-name>" --from <90-days-ago> --to <today>
 ```
