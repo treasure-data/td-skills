@@ -79,6 +79,21 @@
       ]
     },
     {
+      "name": "engage-skills",
+      "description": "Use when managing TD Engage via tdx CLI: creating/updating email templates and campaigns, building email journey YAML, validating pre-launch configs, configuring sender domains, monitoring deliverability/UTM analytics, and managing Engage workspaces",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./engage-skills/email-template",
+        "./engage-skills/email-campaign-creator",
+        "./engage-skills/email-testing-validator",
+        "./engage-skills/email-journey-builder",
+        "./engage-skills/engage-sender",
+        "./engage-skills/engage-deliverability",
+        "./engage-skills/engage-utm"
+      ]
+    },
+    {
       "name": "sdk-skills",
       "description": "Skills for using Treasure Data SDKs including JavaScript SDK for browser-based event tracking and pytd (Python SDK) for querying data, importing pandas DataFrames, and building analytical pipelines",
       "source": "./",
