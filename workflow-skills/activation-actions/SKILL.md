@@ -9,8 +9,6 @@ Custom digdag workflows that run automatically during TD activations to transfor
 
 ## Auto-Provided Parameters
 
-Every Activation Actions workflow receives these parameters automatically:
-
 ```yaml
 _export:
   segment_id: ${segment_id}
@@ -68,8 +66,6 @@ _error:
 ## Common Patterns
 
 ### Incremental/Delta Export
-
-Only export new or changed profiles using snapshot comparison:
 
 ```yaml
 +load_current:
@@ -147,23 +143,6 @@ Only export new or changed profiles using snapshot comparison:
       result_url: "google_ads://gads-auth"
 ```
 
-### Useful SQL Snippets
-
-```sql
--- Hash email for privacy-required platforms
-SHA256(LOWER(TRIM(email))) AS email_hash
-
--- Format US phone
-CONCAT('+1-',
-  SUBSTRING(REGEXP_REPLACE(phone,'[^0-9]',''),1,3), '-',
-  SUBSTRING(REGEXP_REPLACE(phone,'[^0-9]',''),4,3), '-',
-  SUBSTRING(REGEXP_REPLACE(phone,'[^0-9]',''),7,4)
-) AS phone_formatted
-
--- Profile change detection hash
-MD5(CONCAT(COALESCE(first_name,''), COALESCE(last_name,''), COALESCE(phone,''))) AS profile_hash
-```
-
 ## Setup
 
 1. Create workflow with `_export` parameters above
@@ -179,7 +158,6 @@ MD5(CONCAT(COALESCE(first_name,''), COALESCE(last_name,''), COALESCE(phone,'')))
 - Always clean up temp tables using `td_ddl>` with `${activation_id}` in table names
 - Snapshot tables for incremental export must be pre-created on first run (use `td_ddl>: create_tables`)
 
-## Reference Files
+## Examples
 
-- [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - cheat sheet with SQL snippets and checklist
-- [examples/](examples/) - production-ready .dig files (transformation, GDPR, multi-platform, email validation)
+See [examples/](examples/) for complete `.dig` files (transformation, GDPR compliance).
