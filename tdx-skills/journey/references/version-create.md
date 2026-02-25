@@ -28,14 +28,21 @@ The YAML contains a `journeys` array with all versions. Only edit the entry with
 
 Refer to the Build Process templates (`templates/step1-criteria.yml`, etc.) for correct YAML syntax when adding or modifying steps, segments, or activations.
 
-### 3. Push
+### 3. Preview
+
+Preview the journey with the YAML file path. Ask the client to verify the visual flow structure (stage names, branch paths, merge and end points) before pushing.
+
+### 4. Push
+
 ```bash
 tdx journey push "<journey-name>" --dry-run   # preview diff
 tdx journey push "<journey-name>"              # apply to server
 ```
+
 This updates the draft version only. The launched version is untouched.
 
-### 4. Verify
+### 5. Verify
+
 ```bash
 tdx journey versions "<journey-name>"
 tdx journey version view "<journey-name>" --version <N>
