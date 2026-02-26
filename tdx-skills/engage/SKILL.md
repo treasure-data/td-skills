@@ -24,7 +24,7 @@ tdx engage campaign launch "Name"              # Launch campaign
 tdx engage campaign pause "Name"               # Pause campaign
 
 # Email Senders
-tdx engage senders --workspace "Name"          # List senders in workspace
+tdx delivery senders --workspace "Name"          # List senders in workspace
 
 # Templates
 tdx engage templates                           # List email templates
@@ -74,7 +74,7 @@ tdx sg list "[1] Segments" -r                               # Browse available s
 ### Step 1.5: Get email sender ID (for email campaigns)
 
 ```bash
-tdx engage senders --workspace "Workspace Name"
+tdx delivery senders --workspace "Workspace Name"
 ```
 
 Note the `id` field for use as `connector.email_sender_id` in the campaign YAML.
