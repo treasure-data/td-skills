@@ -125,7 +125,7 @@ utm:
 
 ## Segment References
 
-Use `ref:` prefix to reference segments by name:
+The `ref:` prefix is **required** for `template`, `audience`, and `segment` fields. Raw IDs or plain names are rejected by the validator. Use `ref:` to reference by name:
 
 ```yaml
 # Simple name reference (most common)

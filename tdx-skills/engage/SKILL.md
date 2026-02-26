@@ -151,11 +151,11 @@ The push command matches campaigns by name — if a campaign with the same name 
 
 | Issue | Solution |
 |-------|----------|
+| `ref:` prefix missing | `template`, `audience`, and `segment` fields **must** use `ref:Name` format. Raw IDs or plain names will be rejected by the validator |
 | `ref:` template not found | Template does not exist on the server. Run `tdx engage templates` to check available templates, then create with `tdx engage template create` if needed |
 | Segment not found | Use `tdx sg list "[1] Segments" -r` to find exact name; try with folder path: `ref:[1] Segments/Behavioral/Segment Name` |
 | `sourceEmailTemplateName can't be blank` | tdx bug — use the create-then-update workaround above |
 | Cannot find applicable parent segments | `tdx engage workspace show "Name" --full --json` to check `applicableParentSegments` |
-| Push succeeds but HTML not showing | `html_file` is a campaign-level HTML override. If omitted, the template's HTML is used. Only set `html_file` when you want to override the template's HTML |
 
 ## Personalization
 
