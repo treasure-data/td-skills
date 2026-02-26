@@ -33,6 +33,8 @@
         "./realtime-skills/rt-personalization-validation",
         "./realtime-skills/activations",
         "./realtime-skills/identity",
+        "./realtime-skills/id-graph-ids-to-canonical-id",
+        "./realtime-skills/id-graph-canonical-id-size",
         "./realtime-skills/rt-config",
         "./realtime-skills/rt-config-setup",
         "./realtime-skills/rt-config-events",
