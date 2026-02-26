@@ -139,6 +139,15 @@
       "skills": [
         "./email-campaign-skills/email-campaign"
       ]
+    },
+    {
+      "name": "paid-media-skills",
+      "description": "Paid media channel strategy and budget optimization using TD CDP audience data and campaign performance analysis. Query historical campaign data, analyze audience segments, and recommend channel mix for Meta, Google, LinkedIn, TikTok, and other advertising platforms.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./paid-media-skills/channel-strategy"
+      ]
     }
   ]
 }
