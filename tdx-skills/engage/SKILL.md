@@ -58,6 +58,8 @@ See `references/campaign-yaml.md` for complete YAML schema and examples for both
 
 ## Workflow: Create a New Campaign
 
+**Before starting, create a task list with each step below using the TaskCreate tool.** Update task status as you progress.
+
 ### Step 1: Discover workspace and segments
 
 ```bash
@@ -127,6 +129,8 @@ tdx engage templates   # Check available templates
 ```
 
 ## Workflow: Modify an Existing Campaign
+
+**Before starting, create a task list with each step below using the TaskCreate tool.** Update task status as you progress.
 
 ### Step 1: Pull campaigns
 
