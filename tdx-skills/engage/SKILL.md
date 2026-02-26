@@ -23,6 +23,9 @@ tdx engage campaign create --name "Name" --type email --workspace "Name"  # Crea
 tdx engage campaign launch "Name"              # Launch campaign
 tdx engage campaign pause "Name"               # Pause campaign
 
+# Email Senders
+tdx engage senders --workspace "Name"          # List senders in workspace
+
 # Templates
 tdx engage templates                           # List email templates
 tdx engage template create --name "Name" --subject "Subject" --html "$(cat file.html)" --workspace "Name" --editor-type grapesjs
@@ -67,6 +70,14 @@ tdx engage workspace show "Workspace Name" --full --json   # Find applicable par
 tdx sg pull "parent_segment_name" --yes                     # Pull segments
 tdx sg list "[1] Segments" -r                               # Browse available segments
 ```
+
+### Step 1.5: Get email sender ID (for email campaigns)
+
+```bash
+tdx engage senders --workspace "Workspace Name"
+```
+
+Note the `id` field for use as `connector.email_sender_id` in the campaign YAML.
 
 ### Step 2: Confirm or create template
 
