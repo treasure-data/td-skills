@@ -89,7 +89,7 @@
     },
     {
       "name": "tdx-skills",
-      "description": "tdx CLI for managing Treasure Data from the command line including database management, table operations, queries, context configuration, CDP parent segments, child segments with activations, segment validation, journey orchestration, and workflow management",
+      "description": "tdx CLI for managing Treasure Data from the command line including database management, table operations, queries, context configuration, CDP parent segments, child segments with activations, segment validation, journey orchestration, consent management, and workflow management",
       "source": "./",
       "strict": false,
       "skills": [
@@ -104,7 +104,8 @@
         "./tdx-skills/agent-test",
         "./tdx-skills/agent-prompt",
         "./tdx-skills/workflow",
-        "./tdx-skills/parent-segment-analysis"
+        "./tdx-skills/parent-segment-analysis",
+        "./tdx-skills/consent-management"
       ]
     },
     {

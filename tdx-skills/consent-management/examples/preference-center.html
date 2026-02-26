@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy & Preference Center</title>
+
+  <!-- TD JS SDK Loader -->
+  <script type="text/javascript">
+  !function(t,e){if(void 0===e[t]){e[t]=function(){e[t].clients.push(this),this._init=[Array.prototype.slice.call(arguments)]},e[t].clients=[];for(var r=function(t){return function(){return this["_"+t]=this["_"+t]||[],this["_"+t].push(Array.prototype.slice.call(arguments)),this}},s=["addRecord","blockEvents","collectTags","consentManager","fetchGlobalID","ready","resetUUID","setAnonymousMode","setSignedMode","trackEvent","trackPageview","unblockEvents"],c=0;c<s.length;c++){var o=s[c];e[t].prototype[o]=r(o)}var n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src="https://cdn.treasuredata.com/sdk/4.4.1/td.min.js";var i=document.getElementsByTagName("script")[0];i.parentNode.insertBefore(n,i)}}("Treasure",this);
+  </script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 { color: #333; margin-bottom: 10px; }
+    .subtitle { color: #666; margin-bottom: 30px; }
+    .section {
+      margin-bottom: 30px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid #eee;
+    }
+    .section:last-child { border-bottom: none; }
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    .preference-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+    }
+    .preference-label {
+      flex: 1;
+    }
+    .preference-title {
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    .preference-description {
+      color: #666;
+      font-size: 14px;
+    }
+    .toggle {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #4CAF50;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    .select-wrapper {
+      margin-top: 10px;
+    }
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .checkbox-group {
+      margin-top: 10px;
+    }
+    .checkbox-item {
+      margin: 8px 0;
+    }
+    .checkbox-item input {
+      margin-right: 8px;
+    }
+    .btn-save {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+    }
+    .btn-save:hover {
+      background-color: #45a049;
+    }
+    .success-message {
+      display: none;
+      background-color: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+      text-align: center;
+    }
+    .last-updated {
+      color: #999;
+      font-size: 12px;
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Privacy & Preference Center</h1>
+    <p class="subtitle">Manage how we communicate with you and use your data</p>
+
+    <!-- Marketing Consent Section -->
+    <div class="section">
+      <div class="section-title">Marketing Communications</div>
+
+      <div class="preference-item">
+        <div class="preference-label">
+          <div class="preference-title">Email Marketing</div>
+          <div class="preference-description">Receive promotional emails, offers, and product updates</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="email_marketing_consent">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="select-wrapper" id="email_frequency_wrapper" style="display: none;">
+        <label for="email_frequency">Email Frequency:</label>
+        <select id="email_frequency">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+
+      <div class="checkbox-group" id="email_topics_wrapper" style="display: none;">
+        <label>Topics of Interest:</label>
+        <div class="checkbox-item">
+          <input type="checkbox" id="topic_offers" value="offers">
+          <label for="topic_offers">Special Offers & Discounts</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="topic_news" value="news">
+          <label for="topic_news">Company News & Updates</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="topic_events" value="events">
+          <label for="topic_events">Events & Webinars</label>
+        </div>
+      </div>
+
+      <div class="preference-item">
+        <div class="preference-label">
+          <div class="preference-title">SMS Marketing</div>
+          <div class="preference-description">Receive text messages about offers and updates</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="sms_consent">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Privacy Settings Section -->
+    <div class="section">
+      <div class="section-title">Privacy Settings</div>
+
+      <div class="preference-item">
+        <div class="preference-label">
+          <div class="preference-title">Personalization & Profiling</div>
+          <div class="preference-description">Allow us to personalize your experience based on your behavior</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="profiling_consent">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="preference-item">
+        <div class="preference-label">
+          <div class="preference-title">Data Sharing with Partners</div>
+          <div class="preference-description">Share your data with trusted partners for relevant offers</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="data_sharing_consent">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="preference-item">
+        <div class="preference-label">
+          <div class="preference-title">Do Not Sell My Data (CCPA)</div>
+          <div class="preference-description">Prevent the sale of your personal information to third parties</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="do_not_sell">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Save Button -->
+    <button class="btn-save" onclick="savePreferences()">Save Preferences</button>
+
+    <div class="success-message" id="successMessage">
+      ✓ Your preferences have been saved successfully
+    </div>
+
+    <div class="last-updated" id="lastUpdated"></div>
+  </div>
+
+  <script type="text/javascript">
+    // Initialize TD SDK
+    var td = new Treasure({
+      database: 'customer_db',
+      writeKey: '1234/xxxxxxxx',  // Replace with your write-only API key
+      host: 'us01.records.in.treasuredata.com'  // Replace with your region
+    });
+
+    // Initialize consent manager
+    td.consentManager.configure({
+      storageKey: 'td_consent',
+      defaultConsent: false
+    });
+
+    // User info (should be set server-side or from authenticated session)
+    var userId = 'USER_ID_PLACEHOLDER';  // Replace with actual user ID
+    var userEmail = 'USER_EMAIL_PLACEHOLDER';  // Replace with actual email
+
+    // Load existing preferences
+    window.onload = function() {
+      loadPreferences();
+
+      // Show/hide email frequency based on consent
+      document.getElementById('email_marketing_consent').addEventListener('change', function() {
+        var wrapper = document.getElementById('email_frequency_wrapper');
+        var topicsWrapper = document.getElementById('email_topics_wrapper');
+        if (this.checked) {
+          wrapper.style.display = 'block';
+          topicsWrapper.style.display = 'block';
+        } else {
+          wrapper.style.display = 'none';
+          topicsWrapper.style.display = 'none';
+        }
+      });
+    };
+
+    function loadPreferences() {
+      // In production, fetch from API or parent segment
+      // For now, load from localStorage as demo
+      var savedPrefs = localStorage.getItem('user_preferences');
+      if (savedPrefs) {
+        var prefs = JSON.parse(savedPrefs);
+
+        document.getElementById('email_marketing_consent').checked = prefs.email_marketing_consent === 'given';
+        document.getElementById('sms_consent').checked = prefs.sms_consent === 'given';
+        document.getElementById('profiling_consent').checked = prefs.profiling_consent === 'given';
+        document.getElementById('data_sharing_consent').checked = prefs.data_sharing_consent === 'given';
+        document.getElementById('do_not_sell').checked = prefs.do_not_sell === true;
+
+        if (prefs.email_frequency) {
+          document.getElementById('email_frequency').value = prefs.email_frequency;
+        }
+
+        if (prefs.topics_of_interest) {
+          prefs.topics_of_interest.forEach(function(topic) {
+            var checkbox = document.getElementById('topic_' + topic);
+            if (checkbox) checkbox.checked = true;
+          });
+        }
+
+        document.getElementById('lastUpdated').textContent =
+          'Last updated: ' + new Date(prefs.last_updated).toLocaleString();
+      }
+
+      // Trigger visibility for email options
+      if (document.getElementById('email_marketing_consent').checked) {
+        document.getElementById('email_frequency_wrapper').style.display = 'block';
+        document.getElementById('email_topics_wrapper').style.display = 'block';
+      }
+    }
+
+    function savePreferences() {
+      var timestamp = Date.now();
+
+      // Get consent values
+      var emailConsent = document.getElementById('email_marketing_consent').checked;
+      var smsConsent = document.getElementById('sms_consent').checked;
+      var profilingConsent = document.getElementById('profiling_consent').checked;
+      var dataSharingConsent = document.getElementById('data_sharing_consent').checked;
+      var doNotSell = document.getElementById('do_not_sell').checked;
+
+      // Get email preferences
+      var emailFrequency = document.getElementById('email_frequency').value;
+      var topicsOfInterest = [];
+      ['offers', 'news', 'events'].forEach(function(topic) {
+        if (document.getElementById('topic_' + topic).checked) {
+          topicsOfInterest.push(topic);
+        }
+      });
+
+      // Save consent events to TD
+      saveConsent('email_marketing', emailConsent, timestamp);
+      saveConsent('sms', smsConsent, timestamp);
+      saveConsent('profiling', profilingConsent, timestamp);
+      saveConsent('data_sharing', dataSharingConsent, timestamp);
+
+      // Save email preferences
+      if (emailConsent) {
+        td.addRecord('email_preferences', {
+          customer_id: userId,
+          email: userEmail,
+          email_frequency: emailFrequency,
+          topics_of_interest: JSON.stringify(topicsOfInterest),
+          last_updated: timestamp
+        });
+      }
+
+      // Save CCPA preference
+      td.addRecord('privacy_settings', {
+        customer_id: userId,
+        do_not_sell: doNotSell,
+        last_updated: timestamp
+      });
+
+      // Save to localStorage for demo (in production, this comes from backend)
+      var preferences = {
+        email_marketing_consent: emailConsent ? 'given' : 'refused',
+        sms_consent: smsConsent ? 'given' : 'refused',
+        profiling_consent: profilingConsent ? 'given' : 'refused',
+        data_sharing_consent: dataSharingConsent ? 'given' : 'refused',
+        do_not_sell: doNotSell,
+        email_frequency: emailFrequency,
+        topics_of_interest: topicsOfInterest,
+        last_updated: timestamp
+      };
+      localStorage.setItem('user_preferences', JSON.stringify(preferences));
+
+      // Show success message
+      var successMsg = document.getElementById('successMessage');
+      successMsg.style.display = 'block';
+      setTimeout(function() {
+        successMsg.style.display = 'none';
+      }, 3000);
+
+      // Update last updated text
+      document.getElementById('lastUpdated').textContent =
+        'Last updated: ' + new Date(timestamp).toLocaleString();
+    }
+
+    function saveConsent(consentType, isGranted, timestamp) {
+      var status = isGranted ? 'given' : 'refused';
+
+      // Save via Consent Manager API
+      td.consentManager.saveConsent(consentType, {
+        status: isGranted ? td.consentManager.states.GIVEN : td.consentManager.states.REFUSED,
+        datatype: consentType,
+        context: {
+          channel: 'preference_center',
+          version: 'v2'
+        }
+      });
+
+      // Also send to consent_tracking table
+      td.addRecord('consent_tracking', {
+        customer_id: userId,
+        email: userEmail,
+        consent_type: consentType,
+        consent_status: status,
+        consent_timestamp: timestamp,
+        consent_channel: 'web',
+        consent_version: 'v2',
+        consent_ip_address: window.clientIP || 'unknown',
+        consent_user_agent: navigator.userAgent
+      });
+    }
+  </script>
+</body>
+</html>

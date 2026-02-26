@@ -1,0 +1,265 @@
+# Privacy-Compliant Segment Rules Examples
+# Use these patterns to ensure GDPR/CCPA compliance
+
+# Example 1: Email Marketing - Basic Consent Filter
+---
+name: Email Marketing - Opted In
+kind: batch
+
+rule:
+  type: And
+  conditions:
+    # Email consent given
+    - type: Value
+      attribute: email_marketing_consent
+      operator:
+        type: Equal
+        value: "given"
+
+    # Consent not expired (GDPR: refresh every 24 months)
+    - type: Value
+      attribute: consent_updated_at
+      operator:
+        type: TimeWithinPast
+        value: 24
+        unit: month
+
+    # Email is valid
+    - type: Value
+      attribute: email
+      operator:
+        type: Regexp
+        value: "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+
+activations:
+  - name: SFMC Email Campaign
+    connection: salesforce-marketing
+    columns:
+      - email
+      - first_name
+    schedule:
+      type: daily
+    connector_config:
+      de_name: EmailMarketingOptedIn
+
+---
+# Example 2: SMS Marketing - Multi-Condition
+name: SMS - High Value Customers
+kind: batch
+
+rule:
+  type: And
+  conditions:
+    # SMS consent
+    - type: Value
+      attribute: sms_consent
+      operator:
+        type: Equal
+        value: "given"
+
+    # Consent recent
+    - type: Value
+      attribute: consent_updated_at
+      operator:
+        type: TimeWithinPast
+        value: 12
+        unit: month
+
+    # Phone number exists
+    - type: Value
+      attribute: phone
+      operator:
+        type: IsNull
+        not: true
+
+    # High value
+    - type: Value
+      attribute: lifetime_value
+      operator:
+        type: GreaterEqual
+        value: 500
+
+---
+# Example 3: Profiling Allowed - Analytics Segment
+name: Analytics - Profiling Consent
+kind: batch
+
+rule:
+  type: And
+  conditions:
+    # Profiling consent
+    - type: Value
+      attribute: profiling_consent
+      operator:
+        type: Equal
+        value: "given"
+
+    # Analytics allowed
+    - type: Value
+      attribute: analytics_allowed
+      operator:
+        type: Equal
+        value: true
+
+    # Active users only
+    - type: Value
+      attribute: last_login_date
+      operator:
+        type: TimeWithinPast
+        value: 30
+        unit: day
+
+---
+# Example 4: Multi-Channel Consent
+name: Multi-Channel - All Consents
+kind: batch
+
+rule:
+  type: And
+  conditions:
+    # Email consent
+    - type: Value
+      attribute: email_marketing_consent
+      operator:
+        type: Equal
+        value: "given"
+
+    # SMS consent
+    - type: Value
+      attribute: sms_consent
+      operator:
+        type: Equal
+        value: "given"
+
+    # Profiling consent
+    - type: Value
+      attribute: profiling_consent
+      operator:
+        type: Equal
+        value: "given"
+
+    # Recent consent (within 1 year)
+    - type: Value
+      attribute: consent_updated_at
+      operator:
+        type: TimeWithinPast
+        value: 12
+        unit: month
+
+---
+# Example 5: CCPA - Do Not Sell Exclusion
+name: Advertising - CCPA Compliant
+kind: batch
+
+rule:
+  type: And
+  conditions:
+    # Marketing consent
+    - type: Value
+      attribute: email_marketing_consent
+      operator:
+        type: Equal
+        value: "given"
+
+    # Third-party sharing allowed
+    - type: Value
+      attribute: third_party_sharing_allowed
+      operator:
+        type: Equal
+        value: true
+
+    # Do Not Sell = False (CCPA)
+    - type: Value
+      attribute: do_not_sell
+      operator:
+        type: Equal
+        value: false
+
+---
+# Example 6: Re-Engagement - Consent Expired
+name: Consent Renewal Needed
+kind: batch
+
+rule:
+  type: And
+  conditions:
+    # Previously opted in
+    - type: Value
+      attribute: email_marketing_consent
+      operator:
+        type: Equal
+        value: "given"
+
+    # Consent expired (older than 24 months)
+    - type: Value
+      attribute: consent_updated_at
+      operator:
+        type: Less
+        value: 63072000  # 24 months in seconds
+
+    # Still active user
+    - type: Value
+      attribute: last_login_date
+      operator:
+        type: TimeWithinPast
+        value: 60
+        unit: day
+
+---
+# Example 7: Preference-Based Segmentation
+name: Email - Weekly Newsletter Subscribers
+kind: batch
+
+rule:
+  type: And
+  conditions:
+    # Email consent
+    - type: Value
+      attribute: email_marketing_consent
+      operator:
+        type: Equal
+        value: "given"
+
+    # Prefers weekly frequency
+    - type: Value
+      attribute: email_frequency
+      operator:
+        type: Equal
+        value: "weekly"
+
+    # Interested in news topic
+    - type: Value
+      attribute: topics_of_interest
+      operator:
+        type: Contain
+        value: ["news"]
+
+---
+# Example 8: Exclude Withdrawn Consent
+name: Active Users - Email Allowed
+kind: batch
+
+rule:
+  type: And
+  conditions:
+    # Active in last 30 days
+    - type: Value
+      attribute: last_login_date
+      operator:
+        type: TimeWithinPast
+        value: 30
+        unit: day
+
+    # Email consent NOT refused or withdrawn
+    - type: Value
+      attribute: email_marketing_consent
+      operator:
+        type: NotIn
+        value: ["refused", "withdrawn"]
+
+    # Has valid email
+    - type: Value
+      attribute: email
+      operator:
+        type: IsNull
+        not: true
