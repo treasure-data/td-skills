@@ -105,7 +105,11 @@ tdx engage campaign push path/to/campaign.yaml --dry-run  # API validation
 
 Use the `mcp__tdx-studio__preview_engage_campaign` tool to render a 5-tab visual preview (audience, email content, delivery, activation, UTM).
 
-### Step 6: Push
+### Step 6: Confirm with client
+
+**Do not push without explicit client approval.** Present the preview results and dry-run output, then ask the client to confirm before proceeding.
+
+### Step 7: Push
 
 ```bash
 tdx engage campaign push path/to/campaign.yaml --yes
@@ -142,7 +146,11 @@ tdx engage campaign push path/to/campaign.yaml --dry-run
 
 Use `mcp__tdx-studio__preview_engage_campaign` for visual preview.
 
-### Step 4: Push changes
+### Step 4: Confirm with client
+
+**Do not push without explicit client approval.** Present the preview results and dry-run output, then ask the client to confirm before proceeding.
+
+### Step 5: Push changes
 
 ```bash
 tdx engage campaign push path/to/campaign.yaml --yes
