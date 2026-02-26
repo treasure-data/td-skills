@@ -103,10 +103,11 @@ Then `ref:` will resolve the new template name to its ID. If pull is not an opti
 
 Create campaign YAML in the pulled campaigns directory. See `references/campaign-yaml.md` for the full schema.
 
-### Step 5: Validate with dry-run
+### Step 5: Validate
 
 ```bash
-tdx engage campaign push path/to/campaign.yaml --dry-run
+tdx engage campaign validate path/to/campaign.yaml   # Local YAML validation
+tdx engage campaign push path/to/campaign.yaml --dry-run  # API validation
 ```
 
 ### Step 6: Preview in Treasure Studio
