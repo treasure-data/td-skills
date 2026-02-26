@@ -89,10 +89,16 @@ tdx engage template create \
 
 ### Step 3: Write YAML + HTML files
 
-Create campaign YAML. See `references/campaign-yaml.md` for the full schema.
+**You MUST read `references/campaign-yaml.md` before writing any YAML.** Do not guess the schema — fields, nesting, and naming differ from what you might expect. Common mistakes that the validator will reject:
+- Putting `html_file` or `template` at top level instead of inside `email:`
+- Using `from_email`/`from_name` instead of `connector.email_sender_id`
+- Using `utm_source` instead of `utm.source`
+- Omitting `ref:` prefix on `template`, `audience`, or `segment`
 
-- **`email.template`**: Use `ref:` + the **exact template name** from Step 2 (e.g., `ref:My Template`). Name must match exactly.
-- **`html_file`** is required — for new campaigns, reference the same HTML file you used to create the template.
+Key rules:
+- **`email.template`**: `ref:` + the **exact template name** from Step 2 (e.g., `ref:My Template`)
+- **`email.html_file`**: required — for new campaigns, use the same HTML file from template creation
+- **`audience`** and **`segment`**: must use `ref:` prefix
 
 ### Step 4: Validate
 
@@ -132,7 +138,7 @@ This exports each campaign to a YAML file + HTML file (if campaign has HTML over
 
 ### Step 2: Edit YAML and/or HTML
 
-Modify the pulled YAML file. Common edits:
+**Read `references/campaign-yaml.md` for the field reference before editing.** Modify the pulled YAML file. Common edits:
 - Change `subject`, `segment`, `description`
 - Edit the HTML file referenced by `html_file`
 - Update `utm` parameters or `connector` columns
