@@ -91,16 +91,17 @@ tdx engage template create \
   --editor-type grapesjs
 ```
 
-**Important**: After creating a template, `ref:` resolution may not find it immediately. Two workarounds:
+**Important**: `ref:` resolution depends on **local pull cache**, not the API server. Even if a template exists on the server, `ref:Template Name` will fail unless the template has been pulled locally. After creating a new template:
 
-1. **Recommended**: Use an existing template via `ref:` and override HTML with `html_file`
-2. **Alternative**: Create an empty campaign with `tdx engage campaign create`, pull it, then update via push
+```bash
+tdx engage campaign pull "Workspace Name" --yes   # Refresh local cache
+```
+
+Then `ref:` will resolve the new template name to its ID. If pull is not an option, use a previously pulled template (e.g., `ref:Existing_Template`) and override HTML with `html_file`.
 
 ### Step 4: Write YAML + HTML files
 
 Create campaign YAML in the pulled campaigns directory. See `references/campaign-yaml.md` for the full schema.
-
-For HTML email content, see `references/email-html.md` for design patterns.
 
 ### Step 5: Validate with dry-run
 
@@ -118,26 +119,18 @@ Use the `mcp__tdx-studio__preview_engage_campaign` tool to render a 5-tab visual
 tdx engage campaign push path/to/campaign.yaml --yes
 ```
 
-For new campaigns where `ref:` template resolution fails, use this fallback:
+If `ref:` resolution fails after push, ensure you have pulled recently:
 
 ```bash
-# 1. Create empty campaign
-tdx engage campaign create --name "Campaign Name" --type email --workspace "Workspace Name"
-
-# 2. Pull to get server-side YAML
-tdx engage campaign pull "Workspace Name" --yes
-
-# 3. Edit the pulled YAML (add template ref, html_file, segment, etc.)
-
-# 4. Push the update
-tdx engage campaign push path/to/updated-campaign.yaml --yes
+tdx engage campaign pull "Workspace Name" --yes   # Refresh local cache
+tdx engage campaign push path/to/campaign.yaml --yes
 ```
 
 ## Common Issues
 
 | Issue | Solution |
 |-------|----------|
-| `ref:` template not found for new templates | Create campaign with `create` command first, then update via `push` |
+| `ref:` template not found for new templates | `ref:` resolves from local pull cache. Run `tdx engage campaign pull` after creating a new template to refresh the cache |
 | Segment not found | Use `tdx sg list "[1] Segments" -r` to find exact name; try with folder path: `ref:[1] Segments/Behavioral/Segment Name` |
 | `sourceEmailTemplateName can't be blank` | tdx bug — use the create-then-update workaround above |
 | Cannot find applicable parent segments | `tdx engage workspace show "Name" --full --json` to check `applicableParentSegments` |
@@ -169,4 +162,3 @@ tdx sg fields    # After setting parent segment context
 ## Resources
 
 - [Campaign YAML reference](references/campaign-yaml.md)
-- [Email HTML patterns](references/email-html.md)
