@@ -99,6 +99,26 @@ outputs:
     json_schema: '{"type": "object", "properties": {"status": {"type": "string"}}}'
 ```
 
+### Segment Output
+
+When the user asks to add a segment output (for generating CDP segment rules), add the following output to agent.yml. Load the JSON schema content from `template/simplified_ion_rule.json` in the agent directory and embed it inline:
+
+```yaml
+outputs:
+  - name: ":segment:"
+    function_name: set_segment
+    function_description: Generate Segment rule json data
+    json_schema: <content of template/simplified_ion_rule.json>
+```
+
+The template file is at `template/simplified_ion_rule.json` relative to the agent directory. Read the file and set its full JSON content as the `json_schema` value.
+
+**IMPORTANT**: The `json_schema` value is a YAML string. Use YAML single-quoted string (`'...'`) and paste the JSON as-is without any escaping. Do NOT escape single quotes with `'\''` or backslashes — the JSON content only contains double quotes, so wrapping in single quotes works directly:
+
+```yaml
+    json_schema: '{"type":"object","properties":{"title":{"type":"string"}}}'
+```
+
 ## Reference Syntax
 
 All cross-resource references use `@ref(...)`. The `name` must exactly match the `name:` field in the target resource's YAML or frontmatter (NOT the folder name).
