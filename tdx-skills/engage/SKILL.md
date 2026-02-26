@@ -89,7 +89,7 @@ tdx engage template create \
 
 Create campaign YAML in the pulled campaigns directory. See `references/campaign-yaml.md` for the full schema.
 
-**Note on `html_file`**: This field is used in pull→push round-trips. When pulling an existing campaign, tdx exports the campaign-level HTML override to a file and sets `html_file` in the YAML. For **new campaigns**, `html_file` is optional — the template's HTML is automatically used. Only set `html_file` when you want to override the template's HTML at the campaign level.
+**`html_file` is required** — for new campaigns, reference the same HTML file you used to create the template. See `references/campaign-yaml.md` for details.
 
 ### Step 4: Validate
 
