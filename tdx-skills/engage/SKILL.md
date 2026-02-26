@@ -139,7 +139,11 @@ tdx engage campaign push path/to/campaign.yaml --yes
 
 ## Personalization
 
-Use Liquid syntax merge tags in subject lines and HTML:
+Use Liquid merge tags in subject lines and HTML. All tags must start with `profile.` and the attribute name must exist in the parent segment's output columns.
+
+```bash
+tdx sg fields    # Check available attributes (after setting parent segment context)
+```
 
 ```
 {{profile.first_name}}
@@ -147,10 +151,12 @@ Use Liquid syntax merge tags in subject lines and HTML:
 {{profile.lifetime_spend}}
 ```
 
-Available fields depend on the parent segment's output columns. Check with:
+Liquid conditionals are supported:
 
-```bash
-tdx sg fields    # After setting parent segment context
+```html
+{% if profile.customer_segment == 'Gold' %}
+  <p>Exclusive Gold member offer!</p>
+{% endif %}
 ```
 
 ## Related Skills
