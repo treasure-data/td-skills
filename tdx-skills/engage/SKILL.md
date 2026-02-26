@@ -66,15 +66,19 @@ tdx sg pull "parent_segment_name" --yes                     # Pull segments
 tdx sg list "[1] Segments" -r                               # Browse available segments
 ```
 
-### Step 2: Create template (if needed)
+### Step 2: Confirm or create template
 
-A template must exist before a campaign can reference it (`ref:Template_Name`). Either reuse an existing template or create a new one:
+**Always run this step** — a template must exist on the server before the campaign can reference it.
 
 ```bash
-# List existing templates
+# 1. Check existing templates
 tdx engage templates
+```
 
-# Create new template with HTML content
+If a suitable template already exists, note its **exact name** for use in the YAML. If not, create one:
+
+```bash
+# 2. Create new template with HTML content
 tdx engage template create \
   --name "My Template" \
   --subject "Subject line" \
@@ -83,13 +87,12 @@ tdx engage template create \
   --editor-type grapesjs
 ```
 
-**Note**: `ref:Template_Name` resolves the template name to its ID via the Engage API at push time. The template must exist on the server before push.
-
 ### Step 3: Write YAML + HTML files
 
-Create campaign YAML in the pulled campaigns directory. See `references/campaign-yaml.md` for the full schema.
+Create campaign YAML. See `references/campaign-yaml.md` for the full schema.
 
-**`html_file` is required** — for new campaigns, reference the same HTML file you used to create the template. See `references/campaign-yaml.md` for details.
+- **`email.template`**: Use `ref:` + the **exact template name** from Step 2 (e.g., `ref:My Template`). Name must match exactly.
+- **`html_file`** is required — for new campaigns, reference the same HTML file you used to create the template.
 
 ### Step 4: Validate
 
