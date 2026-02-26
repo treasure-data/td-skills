@@ -110,7 +110,7 @@ utm:
 |-------|----------|-------------|
 | `template` | Yes | `ref:<template_name>` — must exist in workspace |
 | `subject` | Yes | Email subject line (supports `{{profile.field}}`) |
-| `html_file` | Yes | Path to HTML file (relative to YAML file) |
+| `html_file` | No | Path to HTML file — overrides template HTML at campaign level. Used in pull→push round-trips. Omit for new campaigns to use the template's HTML. |
 | `variables` | No | Template variable definitions |
 
 ### Push section

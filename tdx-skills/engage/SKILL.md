@@ -66,17 +66,9 @@ tdx sg pull "parent_segment_name" --yes                     # Pull segments
 tdx sg list "[1] Segments" -r                               # Browse available segments
 ```
 
-### Step 2: Pull existing campaigns (for template references)
+### Step 2: Create template (if needed)
 
-```bash
-tdx engage campaign pull "Workspace Name" --yes
-```
-
-This creates YAML+HTML files under `campaigns/<workspace-slug>/` and is **required** before push — the `ref:` resolution for templates depends on previously pulled data.
-
-### Step 3: Create template first (for new campaigns)
-
-A template must exist before a campaign can reference it. Either reuse an existing template or create a new one:
+A template must exist before a campaign can reference it (`ref:Template_Name`). Either reuse an existing template or create a new one:
 
 ```bash
 # List existing templates
@@ -91,51 +83,79 @@ tdx engage template create \
   --editor-type grapesjs
 ```
 
-**Important**: `ref:` resolution depends on **local pull cache**, not the API server. Even if a template exists on the server, `ref:Template Name` will fail unless the template has been pulled locally. After creating a new template:
+**Note**: `ref:Template_Name` resolves the template name to its ID via the Engage API at push time. The template must exist on the server before push.
 
-```bash
-tdx engage campaign pull "Workspace Name" --yes   # Refresh local cache
-```
-
-Then `ref:` will resolve the new template name to its ID. If pull is not an option, use a previously pulled template (e.g., `ref:Existing_Template`) and override HTML with `html_file`.
-
-### Step 4: Write YAML + HTML files
+### Step 3: Write YAML + HTML files
 
 Create campaign YAML in the pulled campaigns directory. See `references/campaign-yaml.md` for the full schema.
 
-### Step 5: Validate
+**Note on `html_file`**: This field is used in pull→push round-trips. When pulling an existing campaign, tdx exports the campaign-level HTML override to a file and sets `html_file` in the YAML. For **new campaigns**, `html_file` is optional — the template's HTML is automatically used. Only set `html_file` when you want to override the template's HTML at the campaign level.
+
+### Step 4: Validate
 
 ```bash
 tdx engage campaign validate path/to/campaign.yaml   # Local YAML validation
 tdx engage campaign push path/to/campaign.yaml --dry-run  # API validation
 ```
 
-### Step 6: Preview in Treasure Studio
+### Step 5: Preview in Treasure Studio
 
 Use the `mcp__tdx-studio__preview_engage_campaign` tool to render a 5-tab visual preview (audience, email content, delivery, activation, UTM).
 
-### Step 7: Push
+### Step 6: Push
 
 ```bash
 tdx engage campaign push path/to/campaign.yaml --yes
 ```
 
-If `ref:` resolution fails after push, ensure you have pulled recently:
+If `ref:` resolution fails, verify that the referenced template exists on the server:
+```bash
+tdx engage templates   # Check available templates
+```
+
+## Workflow: Modify an Existing Campaign
+
+### Step 1: Pull campaigns
 
 ```bash
-tdx engage campaign pull "Workspace Name" --yes   # Refresh local cache
+tdx engage campaign pull "Workspace Name" --yes
+```
+
+This exports each campaign to a YAML file + HTML file (if campaign has HTML override) under `campaigns/<workspace-slug>/`.
+
+### Step 2: Edit YAML and/or HTML
+
+Modify the pulled YAML file. Common edits:
+- Change `subject`, `segment`, `description`
+- Edit the HTML file referenced by `html_file`
+- Update `utm` parameters or `connector` columns
+
+### Step 3: Validate and preview
+
+```bash
+tdx engage campaign validate path/to/campaign.yaml
+tdx engage campaign push path/to/campaign.yaml --dry-run
+```
+
+Use `mcp__tdx-studio__preview_engage_campaign` for visual preview.
+
+### Step 4: Push changes
+
+```bash
 tdx engage campaign push path/to/campaign.yaml --yes
 ```
+
+The push command matches campaigns by name — if a campaign with the same name exists, it updates; otherwise it creates.
 
 ## Common Issues
 
 | Issue | Solution |
 |-------|----------|
-| `ref:` template not found for new templates | `ref:` resolves from local pull cache. Run `tdx engage campaign pull` after creating a new template to refresh the cache |
+| `ref:` template not found | Template does not exist on the server. Run `tdx engage templates` to check available templates, then create with `tdx engage template create` if needed |
 | Segment not found | Use `tdx sg list "[1] Segments" -r` to find exact name; try with folder path: `ref:[1] Segments/Behavioral/Segment Name` |
 | `sourceEmailTemplateName can't be blank` | tdx bug — use the create-then-update workaround above |
 | Cannot find applicable parent segments | `tdx engage workspace show "Name" --full --json` to check `applicableParentSegments` |
-| Push succeeds but HTML not showing | Ensure `html_file` field points to an HTML file in the same directory as the YAML |
+| Push succeeds but HTML not showing | `html_file` is a campaign-level HTML override. If omitted, the template's HTML is used. Only set `html_file` when you want to override the template's HTML |
 
 ## Personalization
 
