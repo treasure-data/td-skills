@@ -35,6 +35,7 @@
         "./realtime-skills/identity",
         "./realtime-skills/id-graph-ids-to-canonical-id",
         "./realtime-skills/id-graph-canonical-id-size",
+        "./realtime-skills/identify-top-key-values",
         "./realtime-skills/rt-config",
         "./realtime-skills/rt-config-setup",
         "./realtime-skills/rt-config-events",

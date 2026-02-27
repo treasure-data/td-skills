@@ -5,7 +5,7 @@ description: Query ID graph tables to identify how individual IDs map to canonic
 
 # ID Graph - IDs to Canonical ID
 
-This skill is used to debug the id graph upload process. We want to know if overstitching is occuring, one way is if individual ids map to many canonical ids. It involves querying the standard ID graph table (typically `ids_updated`) to find cases where individual IDs appear across multiple canonical ID groups. Use when user asks if ids in id graph belong to many canonical ids.
+This skill is used to debug the id graph being uploaded. We want to know if overstitching is occuring, one way is if individual ids map to many canonical ids. It involves querying the standard ID graph table (typically `ids_updated`) to find cases where individual IDs appear across multiple canonical ID groups. Use when user asks if ids in id graph belong to many canonical ids.
 
 ## Requirements
 
