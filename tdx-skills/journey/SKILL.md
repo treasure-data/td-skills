@@ -199,7 +199,7 @@ segments:
 
 ## Validation and Preview
 
-1. **Local validation**: Run `tdx journey validate` to catch structural errors before pushing (no API call needed)
+1. **Local validation**: Run `tdx journey validate` to catch structural errors before pushing (no API call needed). See **validate-journey** skill for full validation rules.
 2. **Studio preview**: In Treasure Studio, use "Preview Journey" to visualize and verify local journey YAML before pushing
 3. **Dry run**: `tdx journey push --dry-run` to preview what will change on the server
 4. **Simulation**: Push as `draft` first, then use TD Console → "Simulation Mode" to validate before launching

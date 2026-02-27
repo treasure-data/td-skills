@@ -41,7 +41,7 @@ journeys:
 | `jump` | `target` with `journey`, `stage` | target is an object |
 | `end` | (none) | no `next` or `with` |
 
-**Important**: `next:` is a direct field on step, not inside `with:`
+**Important**: `next:` is a direct field on step, not inside `with:`. The value must be the **exact step name** as written (e.g., `Send Email`), not a slugified version (e.g., ~~`send-email`~~).
 
 ## Wait Condition Format
 
@@ -52,11 +52,11 @@ journeys:
   with:
     condition:
       segment: made-purchase    # Wait until segment match
-      next: follow-up           # Optional: defaults to next sequential step
+      next: Follow Up           # Optional: exact step name, defaults to next sequential step
       timeout:                  # Max wait duration
         duration: 14
         unit: day
-        next: timeout-path      # Required when using different paths
+        next: Timeout Path      # Required when using different paths
 ```
 
 ## Segment References
