@@ -49,19 +49,39 @@ year | quarter | month | week | day | hour | minute | second
 
 ## Behavior Aggregation Structure
 
+Behavior conditions require a nested `filter` block with `type: Column` conditions. Without this structure, the server ignores `source` and queries the master table instead.
+
 ```yaml
-# Behavior condition with aggregation
+# Behavior condition — correct structure
 - type: Value
-  attribute: field_name          # Or "" for pure count
+  attribute: ""                            # "" for Count; column name for Sum/Avg/Min/Max
   operator:
     type: GreaterEqual
     value: 1
   aggregation:
-    type: Count                  # Count | Sum | Avg | Min | Max
-  source: behavior_name          # Behavior from parent segment
+    type: Count                            # Count | Sum | Avg | Min | Max
+  source: behavior_customer_activity       # Actual table name (behavior_<source>)
+  filter:
+    type: And
+    conditions:
+      - type: Column                       # Column, not Value
+        column: total_price                # Behavior table column
+        operator:
+          type: Greater
+          value: 10
 ```
 
-**Required fields**: `aggregation.type` and `source` must both be present
+**Required fields**: `aggregation.type`, `source`, and `filter` must all be present
+
+**`source` naming**: Must be the actual table name in the `cdp_audience_<id>` database (`behavior_<source_table>`), not the display name shown by `tdx sg fields`
+
+### Condition Types
+
+| Type | Context |
+|------|---------|
+| `type: Value` | Top-level conditions on master table attributes |
+| `type: Column` | Inside `filter.conditions` for behavior table columns |
+| `type: include` / `type: exclude` | Reference another segment |
 
 ## Related Skills
 
