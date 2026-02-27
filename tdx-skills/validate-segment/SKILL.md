@@ -1,6 +1,6 @@
 ---
 name: validate-segment
-description: Validates CDP segment YAML configurations against the TD CDP API specification. Use when reviewing segment rules for correctness, checking operator types and values, or troubleshooting segment configuration errors before pushing to Treasure Data.
+description: Validation reference for CDP segment YAML. Lists all 18 operator types, required fields, and error codes. Use alongside the **segment** skill when troubleshooting validation errors from `tdx sg validate` or `tdx sg push --dry-run`, checking operator syntax, or verifying behavior condition structure.
 ---
 
 # Segment YAML Validation
@@ -14,32 +14,43 @@ tdx sg push --dry-run                     # Preview changes before push
 ## Required Structure
 
 ```yaml
-name: string
-kind: batch                    # batch | realtime | funnel_stage
+name: string                       # Required (MISSING_NAME)
+kind: batch                        # batch | realtime | funnel_stage
 rule:
-  type: And                    # And | Or
-  conditions:
+  type: And                        # And | Or (INVALID_RULE_TYPE)
+  conditions:                      # Required array (MISSING_CONDITIONS)
     - type: Value
-      attribute: field_name
+      attribute: field_name        # Required non-empty (EMPTY_ATTRIBUTE)
       operator:
         type: OperatorType
         value: ...
 ```
 
-## Operators Quick Reference
+## Condition Types
 
-| Type | Value | Notes |
-|------|-------|-------|
-| `Equal`, `NotEqual` | single value | |
-| `Greater`, `GreaterEqual`, `Less`, `LessEqual` | number | |
-| `In`, `NotIn` | array | `["US", "CA"]` |
-| `Contain`, `StartWith`, `EndWith` | array | `["@gmail.com"]` |
-| `Regexp` | string | regex pattern |
-| `IsNull` | (none) | |
-| `TimeWithinPast`, `TimeWithinNext` | number + unit | `value: 30, unit: day` |
-| `include`, `exclude` | segment name | reuse existing segment |
+| Type | Required Fields | Error Codes |
+|------|----------------|-------------|
+| `Value` | `attribute`, `operator` | `EMPTY_ATTRIBUTE`, `INVALID_OPERATOR_TYPE` |
+| `Behavior` | `attribute`, `operator`, `source`, `aggregation` | `EMPTY_ATTRIBUTE` |
+| `include` / `exclude` | `segment` | `MISSING_SEGMENT_REFERENCE` |
+| `And` / `Or` | `conditions` | `MISSING_CONDITIONS`, `INVALID_RULE_TYPE` |
 
-## Time Units (Singular Form Only)
+## Operators
+
+**18 valid types** — any other value triggers `INVALID_OPERATOR_TYPE`:
+
+| Category | Types | Required | Error |
+|----------|-------|----------|-------|
+| Comparison | `Equal`, `NotEqual`, `Greater`, `GreaterEqual`, `Less`, `LessEqual` | `value` | `MISSING_OPERATOR_VALUE` |
+| Range | `Between` | `min` and/or `max` | `MISSING_BETWEEN_BOUNDS` |
+| Set | `In`, `NotIn` | `value` (array) | `MISSING_OPERATOR_VALUE` |
+| Text | `Contain`, `StartWith`, `EndWith` | `value` (string array) | `MISSING_OPERATOR_VALUE` |
+| Pattern | `Regexp` | `value` (string) | `MISSING_OPERATOR_VALUE` |
+| Null | `IsNull` | (none) | — |
+| Time | `TimeWithinPast`, `TimeWithinNext` | `value` + `unit` | `MISSING_OPERATOR_VALUE`, `MISSING_TIME_UNIT` |
+| Time | `TimeRange`, `TimeToday` | (special) | — |
+
+### Time Units (Singular Form Only)
 
 ```
 year | quarter | month | week | day | hour | minute | second
@@ -47,42 +58,59 @@ year | quarter | month | week | day | hour | minute | second
 
 **Common mistake**: `days` → `day`, `months` → `month`
 
-## Behavior Aggregation Structure
+### Operator Negation
+
+Any operator supports `not: true` for negation. This is separate from `NotEqual`/`NotIn` which are standalone types.
+
+## Behavior Conditions
 
 Behavior conditions require a nested `filter` block with `type: Column` conditions. Without this structure, the server ignores `source` and queries the master table instead.
 
 ```yaml
-# Behavior condition — correct structure
-- type: Value
-  attribute: ""                            # "" for Count; column name for Sum/Avg/Min/Max
+- type: Behavior
+  attribute: purchase_event        # Event or column name (required by CDP API)
+  source: behavior_purchase_history
+  aggregation:
+    type: Count                    # Count | Sum | Average | Min | Max
   operator:
     type: GreaterEqual
     value: 1
-  aggregation:
-    type: Count                            # Count | Sum | Avg | Min | Max
-  source: behavior_customer_activity       # Actual table name (behavior_<source>)
-  filter:
+  timeWindow:                      # Optional
+    duration: 30
+    unit: day
+  filter:                          # Optional (same rules as top-level rule)
     type: And
     conditions:
-      - type: Column                       # Column, not Value
-        column: total_price                # Behavior table column
-        operator:
-          type: Greater
-          value: 10
+      - type: Value
+        attribute: timestamp
+        operator: { type: TimeWithinPast, value: 90, unit: day }
 ```
 
-**Required fields**: `aggregation.type`, `source`, and `filter` must all be present
+## Array Matching
 
-**`source` naming**: Must be the actual table name in the `cdp_audience_<id>` database (`behavior_<source_table>`), not the display name shown by `tdx sg fields`
+Optional field on Value/Behavior conditions:
 
-### Condition Types
+```yaml
+arrayMatching: any                 # any | all | { atLeast: N } | { atMost: N } | { exactly: N }
+```
 
-| Type | Context |
-|------|---------|
-| `type: Value` | Top-level conditions on master table attributes |
-| `type: Column` | Inside `filter.conditions` for behavior table columns |
-| `type: include` / `type: exclude` | Reference another segment |
+Invalid keys trigger `INVALID_ARRAY_MATCHING`.
+
+## Error Code Reference
+
+| Code | Cause |
+|------|-------|
+| `MISSING_NAME` | Segment name is empty or missing |
+| `INVALID_RULE_TYPE` | Rule type is not `And` or `Or` |
+| `MISSING_CONDITIONS` | Rule or group has no `conditions` array |
+| `EMPTY_ATTRIBUTE` | Attribute is empty |
+| `INVALID_OPERATOR_TYPE` | Operator type not in the 18 valid types |
+| `MISSING_OPERATOR_VALUE` | Operator requires `value` but it is missing |
+| `MISSING_BETWEEN_BOUNDS` | `Between` has neither `min` nor `max` |
+| `MISSING_TIME_UNIT` | `TimeWithinPast`/`TimeWithinNext` missing `unit` |
+| `INVALID_ARRAY_MATCHING` | `arrayMatching` has invalid format |
+| `MISSING_SEGMENT_REFERENCE` | `include`/`exclude` missing `segment` field |
 
 ## Related Skills
 
-- **segment** - Full segment management
+- **segment** - Full segment rule syntax and examples
