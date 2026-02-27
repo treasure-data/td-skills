@@ -121,23 +121,6 @@ Query behavior table data with aggregations. Use `type: Behavior` (not `Value`).
 
 `filter` supports the same operators as top-level Value conditions.
 
-### Behavior Condition Structure
-
-| Field | Description |
-|-------|-------------|
-| `attribute` | `""` for Count; column name for Sum/Avg/Min/Max |
-| `aggregation.type` | Aggregation function (`Count`, `Sum`, etc.) |
-| `source` | Actual table name: `behavior_<source_table>` |
-| `filter.conditions` | Array of `type: Column` conditions on behavior fields |
-
-### Condition Types
-
-| Type | Usage |
-|------|-------|
-| `type: Value` | Filter on master table attributes (default) |
-| `type: Column` | Filter on behavior table columns (inside `filter` block) |
-| `type: include` / `type: exclude` | Reference another segment |
-
 ## Segment References (Include/Exclude)
 
 ```yaml

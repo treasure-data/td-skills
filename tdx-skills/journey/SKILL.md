@@ -1,9 +1,30 @@
 ---
 name: journey
-description: Load when the client wants to create, edit, or manage a CDP customer journey. Use for building journey YAML with segments, activations, and stage steps, modifying journey stages or flow logic (decision points, condition waits, A/B tests), or pushing journey changes to Treasure Data.
+description: Load when the client wants to create, edit, or manage a CDP customer journey. Use for building journey YAML with segments, activations, and stage steps, modifying journey stages or flow logic (decision points, condition waits, A/B tests), or pushing journey changes to Treasure Data. Also load when the client wants to analyze journey performance, query journey tables, create journey dashboards, or generate journey action reports.
 ---
 
 # tdx Journey - CDP Journey Orchestration
+
+## Quick Reference
+
+| Task | Guide |
+|------|-------|
+| Build journey YAML | Follow the [5 steps](#build-process) below |
+| Analyze journey performance | Follow the [analysis workflow](#analysis-workflow) below |
+| Create a new journey version | Follow the [version creation](#version-creation) below |
+
+## Analysis Workflow
+
+**You MUST read the reference files** using the Read tool before doing anything else. These contain domain-specific data models and workflows that are NOT guessable.
+
+1. **Read `references/analyze.md`** (MANDATORY) — 5-phase analysis workflow
+2. **Read `references/journey-table.md`** (MANDATORY) — journey table data model, column naming, state logic
+3. Follow the phases in `references/analyze.md` in order
+
+## Version Creation
+
+**You MUST read `references/version-create.md`** using the Read tool before doing anything else. Version creation clones the existing journey — do NOT rebuild from scratch, but refer to Build Process templates for correct YAML syntax.
+
 
 ## Build Process
 
@@ -26,6 +47,7 @@ Build journey YAML **incrementally** through 5 steps.
 **File location**: `./segments/(parent-segment-name)/journey-name.yml`
 
 ## Prerequisites
+
 
 ```bash
 tdx sg pull "Parent Segment Name"   # Pull parent segment data (sets context)
