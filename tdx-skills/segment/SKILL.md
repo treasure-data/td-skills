@@ -111,23 +111,24 @@ rule:
               type: Equal
               value: "add_to_cart"
 
-    # Filter on a numeric behavior column
+    # Sum a behavior column (e.g., total spend > 500)
     - type: Value
-      attribute: ""
+      attribute: order_total                 # Column to aggregate (for Sum/Avg/Min/Max)
       operator:
-        type: GreaterEqual
-        value: 1
+        type: Greater
+        value: 500
       aggregation:
-        type: Count
+        type: Sum
       source: behavior_purchase_history
       filter:
         type: And
         conditions:
           - type: Column
-            column: order_total
+            column: purchase_date
             operator:
-              type: Greater
-              value: 500
+              type: TimeWithinPast
+              value: 90
+              unit: day
 
     # Multiple filter conditions on behavior
     - type: Value
@@ -160,7 +161,7 @@ rule:
 
 | Field | Description |
 |-------|-------------|
-| `attribute` | Use `""` (empty string) for behavior conditions |
+| `attribute` | `""` for Count; column name for Sum/Avg/Min/Max |
 | `aggregation.type` | Aggregation function (`Count`, `Sum`, etc.) |
 | `source` | Actual table name: `behavior_<source_table>` |
 | `filter.conditions` | Array of `type: Column` conditions on behavior fields |

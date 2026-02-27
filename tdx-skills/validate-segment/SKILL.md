@@ -54,7 +54,7 @@ Behavior conditions require a nested `filter` block with `type: Column` conditio
 ```yaml
 # Behavior condition — correct structure
 - type: Value
-  attribute: ""                            # Must be empty for behavior conditions
+  attribute: ""                            # "" for Count; column name for Sum/Avg/Min/Max
   operator:
     type: GreaterEqual
     value: 1
