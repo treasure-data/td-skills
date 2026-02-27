@@ -85,45 +85,93 @@ See **connector-config** skill for `connector_config` details.
 
 ## Behavior Conditions (Aggregations)
 
-Query behavior data from parent segment with aggregations:
+Query behavior data from parent segment with aggregations. Behavior conditions require a nested `filter` block with `type: Column` conditions — without this structure, the server ignores the `source` field and queries the master table instead.
+
+**Important**: The `source` value must be the actual table name in the `cdp_audience_<id>` database, which follows the `behavior_<source_table>` naming convention. Use `tdx db tables <cdp_audience_db>` to find exact table names. Note that `tdx sg fields` shows behavior display names (e.g., `pet_Activity`), but `source` requires the actual table name (e.g., `behavior_customer_activity`).
 
 ```yaml
 rule:
   type: And
   conditions:
-    # Count behavior occurrences
+    # Count behavior occurrences (e.g., customers with at least 1 event)
     - type: Value
-      attribute: add_to_cart_event
+      attribute: ""                          # Empty for behavior conditions
       operator:
         type: GreaterEqual
         value: 1
       aggregation:
-        type: Count              # Count | Sum | Avg | Min | Max
-      source: cart_abandonment   # Behavior name from parent segment
+        type: Count                          # Count | Sum | Avg | Min | Max
+      source: behavior_customer_activity     # Actual table name (behavior_<source>)
+      filter:
+        type: And
+        conditions:
+          - type: Column
+            column: event_type
+            operator:
+              type: Equal
+              value: "add_to_cart"
 
-    # Sum behavior values
+    # Filter on a numeric behavior column
     - type: Value
-      attribute: order_total
-      operator:
-        type: Greater
-        value: 500
-      aggregation:
-        type: Sum
-      source: purchase_history
-
-    # Time-based behavior filtering
-    - type: Value
-      attribute: timestamp
+      attribute: ""
       operator:
         type: GreaterEqual
-        value: 30
-        unit: days               # Filter to last 30 days
+        value: 1
       aggregation:
-        type: Max
-      source: purchase_history
+        type: Count
+      source: behavior_purchase_history
+      filter:
+        type: And
+        conditions:
+          - type: Column
+            column: order_total
+            operator:
+              type: Greater
+              value: 500
+
+    # Multiple filter conditions on behavior
+    - type: Value
+      attribute: ""
+      operator:
+        type: GreaterEqual
+        value: 1
+      aggregation:
+        type: Count
+      source: behavior_purchase_history
+      filter:
+        type: And
+        conditions:
+          - type: Column
+            column: order_total
+            operator:
+              type: Greater
+              value: 100
+          - type: Column
+            column: purchase_date
+            operator:
+              type: TimeWithinPast
+              value: 30
+              unit: day
 ```
 
 **Aggregation types**: `Count`, `Sum`, `Avg`, `Min`, `Max`
+
+### Behavior Condition Structure
+
+| Field | Description |
+|-------|-------------|
+| `attribute` | Use `""` (empty string) for behavior conditions |
+| `aggregation.type` | Aggregation function (`Count`, `Sum`, etc.) |
+| `source` | Actual table name: `behavior_<source_table>` |
+| `filter.conditions` | Array of `type: Column` conditions on behavior fields |
+
+### Condition Types
+
+| Type | Usage |
+|------|-------|
+| `type: Value` | Filter on master table attributes (default) |
+| `type: Column` | Filter on behavior table columns (inside `filter` block) |
+| `type: include` / `type: exclude` | Reference another segment |
 
 ## Segment References (Include/Exclude)
 
