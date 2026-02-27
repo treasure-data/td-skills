@@ -1,19 +1,15 @@
 ---
 name: id-graph-ids-to-canonical-id
-description: Query ID graph tables to identify how individual IDs map to canonical IDs. Ids with many canonical ids may lead to overstiching.
+description: Query ID graph tables to identify how individual IDs map to canonical IDs. IDs with many canonical IDs may lead to over-stitching.
 ---
 
 # ID Graph - IDs to Canonical ID
 
-This skill is used to debug the id graph being uploaded. We want to know if overstitching is occuring, one way is if individual ids map to many canonical ids. It involves querying the standard ID graph table (typically `ids_updated`) to find cases where individual IDs appear across multiple canonical ID groups. Use when user asks if ids in id graph belong to many canonical ids.
+Detect over-stitching by finding individual IDs that appear across multiple canonical ID groups.
 
 ## Requirements
 
-In order to query the ID graph we must know the parent segment the customer is interested in. A customer may have a number of parent segments so we must ask them to provide the one they are interested in before making a query. A segment ID will be a numeric value like 411671.
-
-The user must also have a correctly configured tdx-skill or the Treasure Data mcp server (@treasuredata/mcp-server) to enable the database lookup.
-
-In addition the api key with appropriate access to the database table should be available and configured.
+- Parent segment ID with RT 2.0 enabled
 
 ## Database
 
@@ -38,8 +34,9 @@ WITH flattened_ids AS (
     SELECT
         canonical_id,
         individual_id
-    FROM ids_updated
+    FROM cdp_audience_<parent_segment_id>.ids_updated
     CROSS JOIN UNNEST(id_set) AS t(individual_id)
+    WHERE td_interval(time, '-7d')  -- Avoid full table scan
 ),
 id_counts AS (
     SELECT
@@ -54,6 +51,7 @@ SELECT
     canonical_count,
     canonical_ids
 FROM id_counts
+WHERE canonical_count > 1  -- Only show over-stitching cases
 ORDER BY canonical_count DESC, individual_id
 LIMIT 100;
 ```

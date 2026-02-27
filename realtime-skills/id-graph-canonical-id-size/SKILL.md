@@ -1,19 +1,15 @@
 ---
 name: id-graph-canonical-id-size
-description: Query ID graph tables to identify how many individual IDs are stitched to each canonical ID. Canonical Ids with many ids may lead to overstitching.
+description: Query ID graph tables to identify how many individual IDs are stitched to each canonical ID. Canonical IDs with many IDs may lead to over-stitching.
 ---
 
 # ID Graph - Canonical ID Size Analysis
 
-This skill is used to debug the id graph being uploaded. We want to know if overstitching is occuring, one way is if there are too many ids mapped to a canonical id. It involves querying the standard ID graph table (typically `ids_updated`) to find cases where canonical ids have an excessive number of ids attached to it. Use when user asks if what are the sizes of the canonical ids.
+Analyze canonical ID group sizes to identify over-stitching patterns where too many individual IDs are mapped to a single canonical ID.
 
 ## Requirements
 
-In order to query the ID graph we must know the parent segment the customer is interested in. A customer may have a number of parent segments so we must ask them to provide the one they are interested in before making a query. A segment ID will be a numeric value like 273509.
-
-The user must also have a correctly configured tdx-skill or the Treasure Data mcp server (@treasuredata/mcp-server) to enable the database lookup.
-
-In addition the api key with appropriate access to the database table should be available and configured.
+- Parent segment ID with RT 2.0 enabled
 
 ## Database
 
@@ -38,16 +34,17 @@ WITH flattened AS (
     SELECT
         canonical_id,
         id_value
-    FROM ids_updated
+    FROM cdp_audience_<parent_segment_id>.ids_updated
     CROSS JOIN UNNEST(id_set) AS t(id_value)
+    WHERE td_interval(time, '-7d')  -- Avoid full table scan
 )
 SELECT
     canonical_id,
-    count(DISTINCT id_value) as unique_id_count,
-    array_agg(DISTINCT id_value) as all_ids
+    count(DISTINCT id_value) as unique_id_count
 FROM flattened
 GROUP BY canonical_id
-ORDER BY unique_id_count DESC;
+ORDER BY unique_id_count DESC
+LIMIT 100;
 ```
 
 ## Troubleshooting

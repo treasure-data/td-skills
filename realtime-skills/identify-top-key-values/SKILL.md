@@ -35,6 +35,17 @@ First, inspect the current RT configuration to understand what to analyze:
 ```bash
 # Get RT configuration via CDP API
 tdx api "/audiences/<parent_segment_id>/realtime_setting" --type cdp --method GET
+
+# Example response:
+# {
+#   "keyColumns": [
+#     { "name": "td_client_id" }
+#   ],
+#   "eventTables": [
+#     { "database": "engage_in_app_message", "table": "be_users" }
+#   ],
+#   "status": "ok"
+# }
 ```
 
 ## Core Query Template
@@ -59,38 +70,6 @@ FROM (
 )
 ORDER BY event_count DESC
 LIMIT 100;
-```
-
-## Dynamic Query Generation
-
-For each event table and stitching key combination, add a UNION ALL clause:
-
-```sql
-SELECT '<key_name>' as key_name, <key_name> as value, COUNT(*) as event_count
-FROM <database>.<table>
-WHERE td_interval(time, '-3h/now')
-GROUP BY <key_name>
-```
-
-## Analysis Variations
-
-### 1. Null/Empty Value Analysis
-Focus on missing or invalid values:
-
-```sql
-SELECT
-  key_name,
-  CASE
-    WHEN value IS NULL THEN '[NULL]'
-    WHEN value = '' THEN '[EMPTY]'
-    ELSE value
-  END as display_value,
-  event_count
-FROM (
-  -- Your UNION ALL queries here
-)
-WHERE value IS NULL OR value = '' OR value = 'null' OR value = 'undefined'
-ORDER BY event_count DESC;
 ```
 
 ## Related Skills
