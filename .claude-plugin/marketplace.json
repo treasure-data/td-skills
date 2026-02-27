@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "sql-skills",
-      "description": "SQL query skills for Treasure Data including Trino and Hive query optimization, time-based filtering with td_interval, and TD MCP server for Claude Code integration with natural language data exploration",
+      "description": "SQL query skills for Treasure Data including Trino and Hive query optimization, time-based filtering with td_interval, and Trino-to-Hive migration",
       "source": "./",
       "strict": false,
       "skills": [
@@ -19,16 +19,18 @@
         "./sql-skills/hive",
         "./sql-skills/trino-optimizer",
         "./sql-skills/trino-to-hive-migration",
-        "./sql-skills/td-mcp",
         "./sql-skills/time-filtering"
       ]
     },
     {
       "name": "realtime-skills",
-      "description": "RT 2.0 (Real-Time Personalization) skills for configuring parent segments with event tables and RT attributes, creating personalization services for real-time API responses, managing real-time journeys with event-triggered activations, and querying activation/identity logs",
+      "description": "RT 2.0 (Real-Time Personalization) skills for configuring parent segments with event tables and RT attributes, creating personalization services for real-time API responses, managing real-time journeys with event-triggered activations, and querying activation/identity logs. Includes end-to-end orchestrator skills for complete RT setup workflows and validation tools for error-free personalization entity creation.",
       "source": "./",
       "strict": false,
       "skills": [
+        "./realtime-skills/rt-setup-personalization",
+        "./realtime-skills/rt-setup-triggers",
+        "./realtime-skills/rt-personalization-validation",
         "./realtime-skills/activations",
         "./realtime-skills/identity",
         "./realtime-skills/rt-config",
@@ -138,6 +140,15 @@
         "./aps-doc-skills/id-unification",
         "./aps-doc-skills/golden",
         "./aps-doc-skills/master-segment"
+      ]
+    },
+    {
+      "name": "email-campaign-skills",
+      "description": "Generate enterprise-grade HTML email campaigns with strategy briefs, live preview in Treasure Studio, iterative natural language editing, and push to Treasure Engage",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./email-campaign-skills/email-campaign"
       ]
     }
   ]

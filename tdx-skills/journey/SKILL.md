@@ -25,6 +25,7 @@ description: Load when the client wants to create, edit, or manage a CDP custome
 
 **You MUST read `references/version-create.md`** using the Read tool before doing anything else. Version creation clones the existing journey — do NOT rebuild from scratch, but refer to Build Process templates for correct YAML syntax.
 
+
 ## Build Process
 
 Build journey YAML **incrementally** through 5 steps.
@@ -47,6 +48,7 @@ Build journey YAML **incrementally** through 5 steps.
 
 ## Prerequisites
 
+
 ```bash
 tdx sg pull "Parent Segment Name"   # Pull parent segment data (sets context)
 ```
@@ -54,11 +56,14 @@ tdx sg pull "Parent Segment Name"   # Pull parent segment data (sets context)
 ## Commands
 
 ```bash
-tdx journey validate path/to/journey.yml   # Validate YAML locally (offline)
-tdx journey push --dry-run                 # Preview changes against API
-tdx journey push --yes                     # Push journey
-tdx journey pause "Journey Name"           # Pause running journey
-tdx journey resume "Journey Name"          # Resume paused journey
+tdx journey pull                             # Pull all journeys to YAML
+tdx journey pull path/to/journey.yml         # Pull specific journey
+tdx journey validate path/to/journey.yml     # Validate YAML locally (offline)
+tdx journey push --dry-run                   # Preview changes against API
+tdx journey push --yes                       # Push journey
+tdx journey push path/to/journey.yml --yes   # Push specific journey
+tdx journey pause "Journey Name"             # Pause running journey
+tdx journey resume "Journey Name"            # Resume paused journey
 tdx journey view "Journey Name" --include-stats
 ```
 
