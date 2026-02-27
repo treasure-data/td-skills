@@ -64,6 +64,8 @@ Any operator supports `not: true` for negation. This is separate from `NotEqual`
 
 ## Behavior Conditions
 
+Behavior conditions require a nested `filter` block with `type: Column` conditions. Without this structure, the server ignores `source` and queries the master table instead.
+
 ```yaml
 - type: Behavior
   attribute: purchase_event        # Event or column name (required by CDP API)

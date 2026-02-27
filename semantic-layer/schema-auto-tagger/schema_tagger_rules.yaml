@@ -1,0 +1,450 @@
+# Treasure Data Schema Auto-Tagger - Sample Tagging Rules
+# Customize these rules for your organization's tagging standards
+
+# Pattern-based rules for columns matching specific name patterns
+pattern_rules:
+  # PII Detection Rules
+  - name: "Email Columns"
+    pattern: "^email|email_addr|email_address"
+    tags:
+      - "data_classification:pii"
+      - "compliance:gdpr"
+      - "compliance:ccpa"
+    confidence: "HIGH"
+
+  - name: "Phone Numbers"
+    pattern: "^phone|phone_num|phone_number"
+    tags:
+      - "data_classification:pii"
+      - "compliance:gdpr"
+      - "compliance:ccpa"
+    confidence: "HIGH"
+
+  - name: "SSN/Social Security"
+    pattern: "^ssn|social_security|ss_number"
+    tags:
+      - "data_classification:pii"
+      - "compliance:gdpr"
+      - "compliance:ccpa"
+      - "governance:monitored"
+    confidence: "HIGH"
+
+  - name: "Credit Card Data"
+    pattern: "^cc_|^card_|credit_card|card_number"
+    tags:
+      - "data_classification:sensitive"
+      - "compliance:pci-dss"
+      - "governance:monitored"
+    confidence: "HIGH"
+
+  - name: "Auth Tokens & Secrets"
+    pattern: "^token|^auth|_token$|_secret$|api_key|password_hash"
+    tags:
+      - "data_classification:sensitive"
+      - "technical:deprecated"
+    confidence: "HIGH"
+
+  # Financial Data Rules
+  - name: "Transaction Amounts"
+    pattern: "^amount|^price|transaction_amount|purchase_amount"
+    tags:
+      - "business_domain:financial"
+      - "data_classification:sensitive"
+      - "compliance:sox"
+    confidence: "HIGH"
+
+  - name: "Revenue Data"
+    pattern: "^revenue|gross_revenue|net_revenue"
+    tags:
+      - "business_domain:financial"
+      - "data_classification:sensitive"
+      - "compliance:sox"
+    confidence: "HIGH"
+
+  - name: "Account Balance"
+    pattern: "^balance|account_balance|current_balance"
+    tags:
+      - "business_domain:financial"
+      - "data_classification:sensitive"
+    confidence: "HIGH"
+
+  # Timestamp Rules
+  - name: "Created At Timestamps"
+    pattern: "^created_at|^date_created|^creation_date"
+    tags:
+      - "technical:production"
+      - "governance:validated"
+    confidence: "MEDIUM"
+
+  - name: "Updated At Timestamps"
+    pattern: "^updated_at|^date_updated|^modification_date"
+    tags:
+      - "technical:production"
+    confidence: "MEDIUM"
+
+  - name: "Generic Timestamps"
+    pattern: "^timestamp|^ts_|_timestamp|_ts$"
+    tags:
+      - "technical:production"
+    confidence: "MEDIUM"
+
+  # Marketing/Campaign Rules
+  - name: "UTM Campaign Source"
+    pattern: "^utm_source|^source$"
+    tags:
+      - "business_domain:marketing"
+      - "technical:production"
+    confidence: "HIGH"
+
+  - name: "UTM Medium"
+    pattern: "^utm_medium|^medium$"
+    tags:
+      - "business_domain:marketing"
+      - "technical:production"
+    confidence: "HIGH"
+
+  - name: "Campaign ID"
+    pattern: "^campaign|campaign_id|campaign_name"
+    tags:
+      - "business_domain:marketing"
+      - "technical:production"
+    confidence: "HIGH"
+
+  - name: "Email Campaign"
+    pattern: "email_campaign|email_list|subscriber"
+    tags:
+      - "business_domain:marketing"
+      - "compliance:gdpr"
+    confidence: "MEDIUM"
+
+  # Customer/User Rules
+  - name: "Customer ID"
+    pattern: "^customer_id|^cust_id|^customer_key"
+    tags:
+      - "business_domain:customer"
+      - "technical:production"
+      - "governance:validated"
+    confidence: "HIGH"
+
+  - name: "User ID"
+    pattern: "^user_id|^userid|^user_key"
+    tags:
+      - "business_domain:customer"
+      - "technical:production"
+    confidence: "HIGH"
+
+  - name: "Account ID"
+    pattern: "^account_id|^account_key"
+    tags:
+      - "business_domain:customer"
+      - "technical:production"
+    confidence: "HIGH"
+
+  - name: "Customer Name"
+    pattern: "customer_name|customer_full_name"
+    tags:
+      - "business_domain:customer"
+      - "data_classification:pii"
+      - "compliance:gdpr"
+    confidence: "HIGH"
+
+  # Product/Catalog Rules
+  - name: "Product ID"
+    pattern: "^product_id|^prod_id|^product_key|^sku$"
+    tags:
+      - "business_domain:product"
+      - "technical:production"
+      - "governance:validated"
+    confidence: "HIGH"
+
+  - name: "Product Name"
+    pattern: "product_name|product_title"
+    tags:
+      - "business_domain:product"
+      - "technical:production"
+    confidence: "HIGH"
+
+  - name: "Product Category"
+    pattern: "product_category|category_name|category_id"
+    tags:
+      - "business_domain:product"
+      - "technical:production"
+    confidence: "MEDIUM"
+
+  # Order/Transaction Rules
+  - name: "Order ID"
+    pattern: "^order_id|^order_key|^purchase_id"
+    tags:
+      - "business_domain:product"
+      - "business_domain:financial"
+      - "technical:production"
+    confidence: "HIGH"
+
+  - name: "Transaction ID"
+    pattern: "^transaction_id|^txn_id|^trans_id"
+    tags:
+      - "business_domain:financial"
+      - "technical:production"
+      - "governance:validated"
+    confidence: "HIGH"
+
+  # Address Data Rules
+  - name: "Street Address"
+    pattern: "street|address|^address_line|addr"
+    tags:
+      - "data_classification:pii"
+      - "compliance:gdpr"
+      - "compliance:ccpa"
+    confidence: "HIGH"
+
+  - name: "City"
+    pattern: "^city$|city_name"
+    tags:
+      - "data_classification:pii"
+      - "compliance:gdpr"
+    confidence: "MEDIUM"
+
+  - name: "Zip Code"
+    pattern: "^zip|^postal|zip_code"
+    tags:
+      - "data_classification:pii"
+      - "compliance:gdpr"
+    confidence: "MEDIUM"
+
+  - name: "Country"
+    pattern: "^country$|country_code|country_name"
+    tags:
+      - "data_classification:internal"
+    confidence: "LOW"
+
+  # Event/Behavioral Rules
+  - name: "Event Type"
+    pattern: "^event_type|^event_name|event$"
+    tags:
+      - "business_domain:customer"
+      - "technical:production"
+    confidence: "MEDIUM"
+
+  - name: "Event Action"
+    pattern: "^action$|action_type|action_name"
+    tags:
+      - "business_domain:customer"
+      - "technical:production"
+    confidence: "MEDIUM"
+
+  - name: "Event Property"
+    pattern: "event_property|event_value|event_label"
+    tags:
+      - "business_domain:customer"
+      - "technical:production"
+    confidence: "LOW"
+
+  # Session/User Behavior Rules
+  - name: "Session ID"
+    pattern: "^session_id|^session_key"
+    tags:
+      - "business_domain:customer"
+      - "technical:production"
+    confidence: "HIGH"
+
+  - name: "Device ID"
+    pattern: "^device_id|^device_key|device_uuid"
+    tags:
+      - "data_classification:pii"
+      - "compliance:gdpr"
+      - "technical:production"
+    confidence: "HIGH"
+
+  - name: "IP Address"
+    pattern: "^ip_|^ip_address|^ipv4|^ipv6"
+    tags:
+      - "data_classification:pii"
+      - "compliance:gdpr"
+    confidence: "HIGH"
+
+  # Data Quality Rules
+  - name: "Null/Empty Flag"
+    pattern: "is_null|is_empty|null_flag|_flag$"
+    tags:
+      - "governance:validated"
+      - "technical:production"
+    confidence: "MEDIUM"
+
+  - name: "Hash/MD5 Fields"
+    pattern: "_hash$|_md5|_sha|_checksum"
+    tags:
+      - "technical:production"
+      - "data_classification:internal"
+    confidence: "MEDIUM"
+
+  - name: "Deduplication Fields"
+    pattern: "_dedupe|dedupe_id|dedupe_key"
+    tags:
+      - "technical:staging"
+      - "governance:raw_data"
+    confidence: "HIGH"
+
+# Table-based rules applied to all columns in matching tables
+table_rules:
+  - name: "Staging Tables"
+    table_pattern: "^stg_|_staging|^staging_|^raw_"
+    tags:
+      - "technical:staging"
+      - "governance:raw_data"
+    confidence: "HIGH"
+
+  - name: "Production Tables"
+    table_pattern: "^prod_|_production$"
+    tags:
+      - "technical:production"
+      - "governance:validated"
+    confidence: "HIGH"
+
+  - name: "Testing Tables"
+    table_pattern: "^test_|_test$|^tmp_|_tmp$"
+    tags:
+      - "technical:experimental"
+    confidence: "HIGH"
+
+  - name: "Customer Master"
+    table_pattern: "customer|^cust_|customers_master"
+    tags:
+      - "business_domain:customer"
+      - "technical:production"
+    confidence: "MEDIUM"
+
+  - name: "Product Catalog"
+    table_pattern: "product|catalog|^prod_"
+    tags:
+      - "business_domain:product"
+      - "technical:production"
+    confidence: "MEDIUM"
+
+  - name: "Events Table"
+    table_pattern: "^events|_events$|event_log"
+    tags:
+      - "business_domain:customer"
+      - "technical:production"
+    confidence: "MEDIUM"
+
+  - name: "Transactions"
+    table_pattern: "transaction|order|purchase"
+    tags:
+      - "business_domain:financial"
+      - "technical:production"
+      - "compliance:sox"
+    confidence: "MEDIUM"
+
+  - name: "Marketing Data"
+    table_pattern: "marketing|campaign|utm|attribution"
+    tags:
+      - "business_domain:marketing"
+      - "technical:production"
+    confidence: "MEDIUM"
+
+  - name: "Deprecated Tables"
+    table_pattern: "_deprecated|_old$|_legacy|_v1$"
+    tags:
+      - "technical:deprecated"
+      - "governance:archived"
+    confidence: "HIGH"
+
+# Compliance and Industry-specific Rules
+compliance_rules:
+  healthcare:
+    - name: "PHI Detection"
+      pattern: "patient|medical|diagnosis|health_condition|prescription"
+      tags:
+        - "data_classification:sensitive"
+        - "compliance:hipaa"
+        - "governance:monitored"
+      confidence: "HIGH"
+
+  financial:
+    - name: "Regulatory Reporting"
+      pattern: "regulatory|reporting|audit|reconciliation"
+      tags:
+        - "compliance:sox"
+        - "governance:monitored"
+      confidence: "MEDIUM"
+
+  gdpr:
+    - name: "Right to be Forgotten"
+      pattern: "right_to_forget|deletion_requested|deletion_date"
+      tags:
+        - "compliance:gdpr"
+        - "governance:monitored"
+      confidence: "HIGH"
+
+  ccpa:
+    - name: "CCPA Opt Out"
+      pattern: "ccpa_opted_out|do_not_sell|ccpa_sale_opted_out"
+      tags:
+        - "compliance:ccpa"
+        - "governance:monitored"
+      confidence: "HIGH"
+
+# Data quality and governance rules
+quality_rules:
+  - name: "High Cardinality ID"
+    pattern: "_id$|^id$"
+    tags:
+      - "technical:production"
+    confidence: "LOW"
+
+  - name: "Validity Flag"
+    pattern: "is_valid|valid_flag|validation_status"
+    tags:
+      - "governance:validated"
+    confidence: "MEDIUM"
+
+  - name: "Quality Score"
+    pattern: "quality_score|confidence_score|match_score"
+    tags:
+      - "governance:monitored"
+    confidence: "MEDIUM"
+
+  - name: "Data Freshness"
+    pattern: "last_updated|freshness|stale"
+    tags:
+      - "governance:monitored"
+    confidence: "MEDIUM"
+
+# Custom organization-specific rules
+# Modify these for your specific business needs
+custom_organization_rules:
+  - name: "Internal Employee Data"
+    pattern: "employee|staff|personnel"
+    tags:
+      - "data_classification:confidential"
+      - "governance:monitored"
+    confidence: "MEDIUM"
+
+  - name: "Cost Center"
+    pattern: "cost_center|cost_unit|department_code"
+    tags:
+      - "business_domain:financial"
+      - "data_classification:sensitive"
+    confidence: "MEDIUM"
+
+  - name: "Budget Allocation"
+    pattern: "budget|allocation|spend_limit"
+    tags:
+      - "business_domain:financial"
+      - "compliance:sox"
+    confidence: "MEDIUM"
+
+# Experimental/Research Tags
+experimental_rules:
+  - name: "A/B Test Data"
+    pattern: "ab_test|experiment|test_group|variant"
+    tags:
+      - "technical:experimental"
+      - "business_domain:marketing"
+    confidence: "MEDIUM"
+
+  - name: "ML Feature"
+    pattern: "feature_|^feature$|ml_score"
+    tags:
+      - "technical:experimental"
+    confidence: "LOW"

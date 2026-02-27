@@ -1,0 +1,85 @@
+# User Profile API Personalization Service
+# Returns comprehensive user profile data for application personalization
+#
+# Use this template for:
+# - User profile enrichment APIs
+# - Real-time user data fetching
+# - Dashboard personalization
+# - Customer 360 views
+#
+# IMPORTANT: Replace <parent_segment_id> with actual ID from `tdx ps rt list --json`
+# IMPORTANT: Verify attributes exist using `tdx ps fields <parent_segment_name> --json`
+
+parent_segment_id: "<parent_segment_id>"  # REPLACE: Get from tdx ps rt list
+service_name: "user_profile"
+description: "Real-time user profile data API"
+
+# Input parameters from API request
+input_params:
+  - name: "user_id"
+    type: "string"
+    required: true
+  - name: "include_pii"           # Optional: control PII data return
+    type: "boolean"
+    required: false
+
+# Targeting sections
+sections:
+  # Single ALWAYS section - return all available user data
+  - name: "user_profile"
+    criteria:
+      operator: "ALWAYS"
+    outputs:
+      # Identity attributes
+      - attribute: "email"
+      - attribute: "customer_tier"
+      - attribute: "account_status"
+      - attribute: "account_created_date"
+      - attribute: "account_age_days"
+
+      # Behavioral attributes (RT)
+      - attribute: "last_product_viewed"
+      - attribute: "viewed_products_30d"
+      - attribute: "viewed_categories"
+      - attribute: "favorite_category"
+      - attribute: "last_page_visited"
+      - attribute: "last_visit_date"
+
+      # Purchase behavior (RT counters)
+      - attribute: "purchase_count_7d"
+      - attribute: "purchase_count_30d"
+      - attribute: "purchase_count_90d"
+      - attribute: "last_purchase_date"
+      - attribute: "last_purchase_value"
+      - attribute: "average_order_value"
+
+      # Lifetime value (batch attributes)
+      - attribute: "total_lifetime_value"
+      - attribute: "total_lifetime_purchases"
+      - attribute: "first_purchase_date"
+      - attribute: "days_since_first_purchase"
+
+      # Engagement metrics (RT)
+      - attribute: "login_count_7d"
+      - attribute: "login_count_30d"
+      - attribute: "last_login_time"
+      - attribute: "session_count_30d"
+      - attribute: "total_time_on_site_30d"
+
+      # Cart and wishlist (RT)
+      - attribute: "cart_items"
+      - attribute: "cart_value"
+      - attribute: "cart_updated_date"
+      - attribute: "wishlist_items"
+      - attribute: "wishlist_count"
+
+      # Preferences (batch)
+      - attribute: "communication_preferences"
+      - attribute: "preferred_language"
+      - attribute: "preferred_currency"
+
+      # Segments and scores
+      - attribute: "customer_segments"
+      - attribute: "engagement_score"
+      - attribute: "churn_risk_score"
+      - attribute: "propensity_to_buy_score"

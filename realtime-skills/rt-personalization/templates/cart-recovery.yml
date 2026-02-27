@@ -1,0 +1,97 @@
+# Cart Recovery Personalization Service
+# Returns cart information and recovery offers for abandoned cart scenarios
+#
+# Use this template for:
+# - Abandoned cart recovery
+# - Cart reminder notifications
+# - Dynamic discount offers based on cart value
+#
+# IMPORTANT: Replace <parent_segment_id> with actual ID from `tdx ps rt list --json`
+# IMPORTANT: Verify attributes exist using `tdx ps fields <parent_segment_name> --json`
+
+parent_segment_id: "<parent_segment_id>"  # REPLACE: Get from tdx ps rt list
+service_name: "cart_recovery"
+description: "Abandoned cart recovery with personalized offers"
+
+# Input parameters from API request
+input_params:
+  - name: "user_id"
+    type: "string"
+    required: true
+  - name: "session_id"            # Optional: track specific session
+    type: "string"
+    required: false
+
+# Targeting sections (evaluated in order)
+sections:
+  # Section 1: High-value abandoned carts
+  - name: "high_value_cart"
+    criteria:
+      operator: "AND"
+      conditions:
+        - attribute: "cart_value"
+          operator: "greater_than"
+          value: 200
+        - attribute: "purchase_count_7d"
+          operator: "equals"
+          value: 0
+        - attribute: "cart_updated_date"
+          operator: "within_days"
+          value: 3
+    outputs:
+      - attribute: "cart_items"                # Items in cart
+      - attribute: "cart_value"                # Total cart value
+      - attribute: "premium_discount_offer"    # Higher discount for high value
+      - attribute: "free_shipping_eligible"    # Free shipping threshold met
+      - attribute: "estimated_savings"         # Total savings with discount
+
+  # Section 2: Active cart with no recent purchase
+  - name: "active_cart_recovery"
+    criteria:
+      operator: "AND"
+      conditions:
+        - attribute: "cart_value"
+          operator: "greater_than"
+          value: 0
+        - attribute: "purchase_count_7d"
+          operator: "equals"
+          value: 0
+        - attribute: "cart_updated_date"
+          operator: "within_days"
+          value: 7
+    outputs:
+      - attribute: "cart_items"
+      - attribute: "cart_value"
+      - attribute: "discount_offer"            # Standard discount
+      - attribute: "cart_reminder_message"
+      - attribute: "similar_products"          # Alternative suggestions
+
+  # Section 3: First-time cart abandoners
+  - name: "first_time_abandoner"
+    criteria:
+      operator: "AND"
+      conditions:
+        - attribute: "cart_value"
+          operator: "greater_than"
+          value: 0
+        - attribute: "total_lifetime_purchases"
+          operator: "equals"
+          value: 0
+        - attribute: "account_age_days"
+          operator: "less_than"
+          value: 30
+    outputs:
+      - attribute: "cart_items"
+      - attribute: "cart_value"
+      - attribute: "first_time_offer"          # Special first purchase discount
+      - attribute: "welcome_message"
+      - attribute: "trust_signals"             # Reviews, guarantees, etc.
+
+  # Section 4: No active cart
+  - name: "no_cart"
+    criteria:
+      operator: "ALWAYS"
+    outputs:
+      - attribute: "popular_products"          # Trending items
+      - attribute: "last_viewed_products"      # Recently browsed
+      - attribute: "personalized_recommendations"

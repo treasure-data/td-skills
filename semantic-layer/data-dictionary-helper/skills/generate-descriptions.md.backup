@@ -1,0 +1,105 @@
+# Data Dictionary: Generate Descriptions
+
+Generate AI-powered column descriptions for TD Parent Segment schemas using Claude Code.
+
+## Usage
+
+```
+/data-dictionary:generate [segment-name]
+```
+
+## Process
+
+1. **Load Schema**: Read schema JSON from `./schemas/{segment}.json`
+2. **Gather Context**: Ask user for business context (industry, company type, segment purpose)
+3. **Generate Descriptions**: Create business-friendly descriptions for each column
+4. **Save Output**: Write descriptions to `./descriptions/{segment}-descriptions.json`
+
+## Context Questions
+
+Ask ONE question at a time:
+1. What industry is this data from? (e.g., e-commerce, SaaS, healthcare)
+2. Describe your company/business model briefly
+3. What is this segment used for? (default: customer segmentation)
+4. Primary use cases? (e.g., marketing campaigns, analytics, personalization)
+
+## Description Requirements
+
+For each column, generate:
+- **description**: 2-3 sentences covering purpose, typical values, and AI-relevant context
+- **classification**: "attribute" (static profile data) or "behavior" (event-based)
+- **usage_hint**: Only for non-obvious columns (e.g., "Use for age-based segmentation")
+
+### Style Guidelines
+- Business-first language (marketing analysts should understand without asking engineering)
+- Be explicit about what values mean, valid ranges, and how to use for segmentation
+- Skip usage hints for self-explanatory columns like "email" or "first_name"
+
+### Classification Rules
+- **Attribute**: Static or semi-static profile data (demographics, preferences, IDs)
+- **Behavior**: Event-based data tracking actions over time (purchases, clicks, visits)
+- For behavior tables: all columns are behaviors
+- For attribute tables: all columns are attributes
+- For master tables: use heuristics based on column name patterns
+
+## Output Format
+
+```json
+{
+  "segment_name": "Segment Name",
+  "generated_at": "2026-01-29T12:00:00.000Z",
+  "context": {
+    "industry": "...",
+    "companyType": "...",
+    "segmentPurpose": "...",
+    "primaryUseCases": "..."
+  },
+  "tables": [
+    {
+      "table_type": "master|attribute|behavior",
+      "database": "db_name",
+      "table": "table_name",
+      "columns": [
+        {
+          "column_name": "column_name",
+          "description": "Business-friendly description...",
+          "classification": "attribute|behavior",
+          "usage_hint": "Use for... (optional)"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Execution Steps
+
+When this skill is invoked:
+
+1. **List available schemas** if no segment specified:
+   ```bash
+   ls ./schemas/*.json
+   ```
+
+2. **Read the schema file**:
+   ```bash
+   cat "./schemas/{segment}.json"
+   ```
+
+3. **Ask context questions** using AskUserQuestion (one at a time)
+
+4. **Generate descriptions** for each table:
+   - Process master table first
+   - Then attribute tables
+   - Then behavior tables
+
+5. **Save output**:
+   ```bash
+   mkdir -p ./descriptions
+   ```
+   Write JSON to `./descriptions/{segment}-descriptions.json`
+
+6. **Report summary**:
+   - Number of tables processed
+   - Number of columns described
+   - Output file location

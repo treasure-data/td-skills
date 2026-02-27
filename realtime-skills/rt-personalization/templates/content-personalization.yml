@@ -1,0 +1,130 @@
+# Content Personalization Service
+# Returns personalized content recommendations for media, publishing, and content sites
+#
+# Use this template for:
+# - Article/blog recommendations
+# - Video content suggestions
+# - Personalized news feeds
+# - Learning path recommendations
+#
+# IMPORTANT: Replace <parent_segment_id> with actual ID from `tdx ps rt list --json`
+# IMPORTANT: Verify attributes exist using `tdx ps fields <parent_segment_name> --json`
+
+parent_segment_id: "<parent_segment_id>"  # REPLACE: Get from tdx ps rt list
+service_name: "content_recommendations"
+description: "Personalized content recommendations based on reading history and engagement"
+
+# Input parameters from API request
+input_params:
+  - name: "user_id"
+    type: "string"
+    required: true
+  - name: "page_type"             # Optional: article, video, homepage
+    type: "string"
+    required: false
+  - name: "current_article_id"    # Optional: for related content
+    type: "string"
+    required: false
+  - name: "content_category"      # Optional: filter by category
+    type: "string"
+    required: false
+
+# Targeting sections (evaluated in order)
+sections:
+  # Section 1: Highly engaged readers
+  - name: "engaged_readers"
+    criteria:
+      operator: "AND"
+      conditions:
+        - attribute: "viewed_content_ids"
+          operator: "exists"
+        - attribute: "articles_read_7d"
+          operator: "greater_than"
+          value: 5
+        - attribute: "avg_time_on_content"
+          operator: "greater_than"
+          value: 120  # seconds
+    outputs:
+      - attribute: "viewed_content_ids"
+      - attribute: "favorite_category"
+      - attribute: "favorite_authors"
+      - attribute: "recommended_content"       # ML-based recommendations
+      - attribute: "premium_content_suggestions"
+      - attribute: "similar_articles"
+
+  # Section 2: Category enthusiasts
+  - name: "category_enthusiasts"
+    criteria:
+      operator: "AND"
+      conditions:
+        - attribute: "favorite_category"
+          operator: "exists"
+        - attribute: "articles_read_30d"
+          operator: "greater_than"
+          value: 10
+    outputs:
+      - attribute: "favorite_category"
+      - attribute: "viewed_content_ids"
+      - attribute: "category_trending_content"  # Popular in favorite category
+      - attribute: "category_experts"           # Top authors in category
+      - attribute: "new_in_category"            # Recently published
+
+  # Section 3: Video consumers
+  - name: "video_consumers"
+    criteria:
+      operator: "AND"
+      conditions:
+        - attribute: "videos_watched_30d"
+          operator: "greater_than"
+          value: 3
+        - attribute: "total_video_watch_time"
+          operator: "greater_than"
+          value: 600  # 10 minutes
+    outputs:
+      - attribute: "videos_watched_30d"
+      - attribute: "favorite_video_category"
+      - attribute: "recommended_videos"
+      - attribute: "video_playlists"
+      - attribute: "live_streams_available"
+
+  # Section 4: Returning visitors with some history
+  - name: "returning_visitors"
+    criteria:
+      operator: "AND"
+      conditions:
+        - attribute: "viewed_content_ids"
+          operator: "exists"
+        - attribute: "visit_count_30d"
+          operator: "greater_than"
+          value: 2
+    outputs:
+      - attribute: "viewed_content_ids"
+      - attribute: "last_read_articles"
+      - attribute: "personalized_content"
+      - attribute: "continue_reading"          # Resume where they left off
+
+  # Section 5: New visitors or minimal history
+  - name: "new_visitors"
+    criteria:
+      operator: "OR"
+      conditions:
+        - attribute: "viewed_content_ids"
+          operator: "not_exists"
+        - attribute: "articles_read_30d"
+          operator: "less_than"
+          value: 3
+    outputs:
+      - attribute: "trending_content"          # Popular articles
+      - attribute: "featured_articles"
+      - attribute: "top_categories"
+      - attribute: "editor_picks"
+
+  # Section 6: Default fallback
+  - name: "default"
+    criteria:
+      operator: "ALWAYS"
+    outputs:
+      - attribute: "trending_content"
+      - attribute: "popular_categories"
+      - attribute: "featured_content"
+      - attribute: "latest_articles"

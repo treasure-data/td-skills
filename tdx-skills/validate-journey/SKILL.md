@@ -118,7 +118,7 @@ journeys:
 | `jump` | `target` with `journey`, `stage` | target is an object |
 | `end` | (none) | no `next` or `with` allowed |
 
-**Important**: `next:` is a direct field on step, not inside `with:`
+**Important**: `next:` is a direct field on step, not inside `with:`. The value must be the **exact step name** as written (e.g., `Send Email`), not a slugified version (e.g., ~~`send-email`~~).
 
 ## Design Rules (not caught by validator)
 
