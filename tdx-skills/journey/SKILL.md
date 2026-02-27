@@ -11,6 +11,8 @@ description: Creates CDP journey definitions in YAML using `tdx journey` command
 tdx sg pull "Customer 360"                   # Pull all segments & journeys (sets context)
 tdx journey pull                             # Pull all journeys to YAML
 tdx journey pull path/to/journey.yml         # Pull specific journey
+tdx journey validate                         # Validate all journeys locally (no API call)
+tdx journey validate path/to/journey.yml     # Validate specific journey file
 tdx journey push --dry-run                   # Preview changes
 tdx journey push --yes                       # Push all journeys (skip confirmation)
 tdx journey push path/to/journey.yml --yes   # Push specific journey
@@ -59,13 +61,13 @@ journeys:
 | `jump` | `target` with `journey`, `stage` |
 | `end` | (none, no next) |
 
-**Important**: `next:` is a direct field on step, not inside `with:`
+**Important**: `next:` is a direct field on step, not inside `with:`. The value must be the **exact step name** as written (e.g., `Send Email`), not a slugified version (e.g., ~~`send-email`~~).
 
 ```yaml
 steps:
   - type: wait
     name: Wait 7 Days
-    next: send-email     # Direct field, not in with:
+    next: Send Email     # Exact step name, not slugified
     with:
       duration: 7
       unit: day          # day | week only
@@ -75,11 +77,11 @@ steps:
     with:
       condition:
         segment: made-purchase   # Wait until segment match
-        next: follow-up          # Optional: defaults to next sequential step
+        next: Follow Up          # Optional: defaults to next sequential step
         timeout:                 # Max wait duration
           duration: 14
           unit: day
-          next: timeout-path     # Step when max wait exceeded
+          next: Timeout Path     # Step when max wait exceeded
 
   - type: activation
     name: Send Email
@@ -92,10 +94,10 @@ steps:
       branches:
         - name: Premium
           segment: premium-tier
-          next: premium-path
+          next: Premium Path
         - name: Others
           excluded: true         # Default branch
-          next: default-path
+          next: Default Path
 
   - type: jump
     name: Go to Retention
@@ -195,9 +197,12 @@ segments:
 
 **Note**: Journey embedded segments use `source: behavior_<table_name>` (with `behavior_` prefix), unlike standalone segments which use `source: <behavior_name>`.
 
-## Simulation (Recommended)
+## Validation and Preview
 
-Push as `draft` first, then use TD Console → "Simulation Mode" to validate before launching.
+1. **Local validation**: Run `tdx journey validate` to catch structural errors before pushing (no API call needed). See **validate-journey** skill for full validation rules.
+2. **Studio preview**: In Treasure Studio, use "Preview Journey" to visualize and verify local journey YAML before pushing
+3. **Dry run**: `tdx journey push --dry-run` to preview what will change on the server
+4. **Simulation**: Push as `draft` first, then use TD Console → "Simulation Mode" to validate before launching
 
 ## Common Issues
 

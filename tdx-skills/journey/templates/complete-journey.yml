@@ -120,11 +120,11 @@ journeys:
             with:
               condition:
                 segment: engaged-users       # Wait until segment match
-                next: premium-path           # Step when condition matched
+                next: Premium Wait           # Exact step name (not slugified)
                 timeout:
                   duration: 7
                   unit: day
-                  next: reminder-path        # Step when max wait exceeded
+                  next: Send Reminder        # Exact step name (not slugified)
 
           # Activation step - send to external system
           - type: activation
@@ -134,27 +134,27 @@ journeys:
 
           # Decision point - branch based on segment
           - type: decision_point
-            name: check-engagement
+            name: Check Engagement
             with:
               branches:
                 - name: Engaged
                   segment: engaged-users
-                  next: premium-path
+                  next: Premium Wait
                 - name: Not Engaged
                   segment: ref:Non-Engaged
                   excluded: true  # Else/default branch
-                  next: reminder-path
+                  next: Send Reminder
 
           # Branch A: Premium path
           - type: wait
-            name: premium-path
+            name: Premium Wait
             with:
               duration: 3
               unit: day
 
           # Branch B: Reminder path
           - type: activation
-            name: reminder-path
+            name: Send Reminder
             with:
               activation: reminder-email
 
@@ -164,7 +164,7 @@ journeys:
 
           # End step - terminate stage
           - type: end
-            name: final-check
+            name: Final Check
 
       # Stage 2: Conversion Stage
       - name: Conversion Stage
@@ -181,18 +181,18 @@ journeys:
               variants:
                 - name: Discount Offer
                   percentage: 50
-                  next: discount-path
+                  next: Send Discount
                 - name: Free Trial
                   percentage: 50
-                  next: trial-path
+                  next: Send Trial
 
           - type: activation
-            name: discount-path
+            name: Send Discount
             with:
               activation: discount-email
 
           - type: activation
-            name: trial-path
+            name: Send Trial
             with:
               activation: trial-email
 
