@@ -148,7 +148,7 @@ segments:
           operator:
             type: GreaterEqual
             value: 5
-        # Behavior aggregation condition
+        # Behavior aggregation condition (count all behavior rows)
         - type: And
           conditions:
             - type: Value
@@ -161,6 +161,37 @@ segments:
               source: behavior_behv_website    # behavior_<table_name>
           description: has visited website
 ```
+
+### Filtering Behavior Rows
+
+To filter which behavior rows are counted, add a `filter` with `type: Column` conditions:
+
+```yaml
+segments:
+  checkout_visitors:
+    description: Users who visited checkout page at least once
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: ""                        # Empty for behavior aggregation
+          operator:
+            type: GreaterEqual
+            value: 1
+          aggregation:
+            type: Count
+          source: behavior_behv_website
+          filter:                              # Filter behavior rows before aggregation
+            type: And
+            conditions:
+              - type: Column
+                attribute: page_url            # Column from behavior table
+                operator:
+                  type: Contain
+                  value: /checkout
+```
+
+**Important**: When using `source` (behavior table), always use `attribute: ""` with a `filter` containing `type: Column` conditions. Using a non-empty `attribute` with `source` but without `filter` will cause the source to be silently ignored.
 
 **Note**: Journey embedded segments use `source: behavior_<table_name>` (with `behavior_` prefix), unlike standalone segments which use `source: <behavior_name>`.
 
