@@ -32,7 +32,7 @@ rule:
 |------|----------------|-------------|
 | `Value` | `attribute`, `operator` | `EMPTY_ATTRIBUTE`, `INVALID_OPERATOR_TYPE` |
 | `Behavior` | `attribute`, `operator`, `source`, `aggregation` | `EMPTY_ATTRIBUTE` |
-| `Column` | `column`, `operator` | Used inside behavior `filter:` blocks only |
+| `Column` | `column`, `operator` | — |
 | `include` / `exclude` | `segment` | `MISSING_SEGMENT_REFERENCE` |
 | `And` / `Or` | `conditions` | `MISSING_CONDITIONS`, `INVALID_RULE_TYPE` |
 
