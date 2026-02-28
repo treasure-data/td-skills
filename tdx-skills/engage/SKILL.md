@@ -122,7 +122,7 @@ tdx engage campaign push path/to/campaign.yaml --dry-run  # API validation
 
 ### Step 5: Preview in Treasure Studio
 
-Use the `mcp__tdx-studio__preview_engage_campaign` tool to render a 5-tab visual preview (audience, email content, delivery, activation, UTM).
+Use the `preview_engage_campaign` tool to render a 5-tab visual preview (audience, email content, delivery, activation, UTM).
 
 ### Step 6: Confirm with client
 
@@ -165,7 +165,7 @@ tdx engage campaign validate path/to/campaign.yaml
 tdx engage campaign push path/to/campaign.yaml --dry-run
 ```
 
-Use `mcp__tdx-studio__preview_engage_campaign` for visual preview.
+Use `preview_engage_campaign` for visual preview.
 
 ### Step 4: Confirm with client
 

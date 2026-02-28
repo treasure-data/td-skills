@@ -79,19 +79,22 @@ tdx journey view "Journey Name" --include-stats
 
 **Start with Step 1**: Read `templates/step1-criteria.yml` and follow the instructions inside.
 
-### Step 5: Validate and Push
+### Step 5: Validate, Preview, and Push
 
-After completing Step 4, validate and iterate:
+After completing Step 4:
 
+**1. Validate**
 ```bash
 tdx journey validate path/to/journey.yml   # Local validation
 tdx journey push --dry-run                 # API validation
 ```
+Fix any errors before proceeding.
 
-Preview the journey with the YAML file path. Ask the client to verify the visual flow structure (branches, merge points, step connections) before pushing.
+**2. Preview (MANDATORY before push)**
 
-Fix errors, then push:
+Call `preview_journey` with the YAML file path. Ask the client to verify the visual flow structure (stage names, branch paths, merge and end points) before pushing. Do NOT skip this step.
 
+**3. Push**
 ```bash
 tdx journey push path/to/journey.yml --yes
 ```

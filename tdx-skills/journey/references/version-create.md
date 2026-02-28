@@ -30,7 +30,7 @@ Refer to the Build Process templates (`templates/step1-criteria.yml`, etc.) for 
 
 ### 3. Preview
 
-Preview the journey with the YAML file path. Ask the client to verify the visual flow structure (stage names, branch paths, merge and end points) before pushing.
+Call `preview_journey` with the YAML file path. Ask the client to verify the visual flow structure (stage names, branch paths, merge and end points) before pushing.
 
 ### 4. Push
 
