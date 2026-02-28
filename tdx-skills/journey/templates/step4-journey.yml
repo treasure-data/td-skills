@@ -83,12 +83,11 @@ segments:
 activations:
   # (from Step 3 — do not modify)
 
-goal:
-  name: Onboarding Complete
-  segment: onboarding_completed
-
 journeys:
   - state: draft
+    goal:
+      name: Onboarding Complete
+      segment: onboarding_completed
     stages:
       # ---
       # Pattern A: Simple branch with Merge

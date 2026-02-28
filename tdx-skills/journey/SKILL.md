@@ -121,15 +121,19 @@ Use TD Console "Simulation Mode" to validate before launching.
 
 ## Goal Target (Optional)
 
-When the journey goal is met, optionally route users to another journey:
+Goal is defined per version entry inside `journeys`. When met, optionally route users to another journey:
 
 ```yaml
-goal:
-  name: Made Purchase
-  segment: purchasers
-  target:                    # Optional: jump when goal met
-    journey: Post-Purchase Journey
-    stage: Thank You
+journeys:
+  - state: draft
+    goal:
+      name: Made Purchase
+      segment: purchasers
+      target:                    # Optional: jump when goal met
+        journey: Post-Purchase Journey
+        stage: Thank You
+    stages:
+      # ...
 ```
 
 ## Wait Step Options
