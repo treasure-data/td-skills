@@ -43,6 +43,11 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[realtime-skills/activations](./realtime-skills/activations)** - Query activation logs to check for errors and view volume for digital marketing activations
 - **[realtime-skills/identity](./realtime-skills/identity)** - Query id change logs to get information about new, updated and merged realtime profiles
 
+#### RT ID Analysis & Debugging
+- **[realtime-skills/identify-top-key-values](./realtime-skills/identify-top-key-values)** - Analyze RT event tables to identify most common stitching key values, debug data quality and distribution issues
+- **[realtime-skills/id-graph-canonical-id-size](./realtime-skills/id-graph-canonical-id-size)** - Query ID graph to analyze canonical ID group sizes and identify over-stitching patterns
+- **[realtime-skills/id-graph-ids-to-canonical-id](./realtime-skills/id-graph-ids-to-canonical-id)** - Detect individual IDs mapping to multiple canonical IDs (over-stitching detection)
+
 ### Workflow Skills
 
 - **[workflow-skills/digdag](./workflow-skills/digdag)** - Design and implement Treasure Workflow with proper error handling
@@ -132,6 +137,9 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the rt-journey-monitor skill to debug activation failures"
 "Use the activations skill to query activation logs for parent segment 394649"
 "Use the identity skill to check recent profile merges for parent segment 394649"
+"Use the identify-top-key-values skill to debug stitching key distributions for parent segment 394649"
+"Use the id-graph-canonical-id-size skill to analyze canonical ID group sizes for parent segment 394649"
+"Use the id-graph-ids-to-canonical-id skill to detect over-stitching issues for parent segment 394649"
 "Use the digdag skill to create a workflow that runs every morning"
 "Use the workflow-management skill to debug this failing workflow"
 "Use the dbt skill to create an incremental model for user events"
@@ -154,7 +162,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, identify-top-key-values, id-graph-canonical-id-size, id-graph-ids-to-canonical-id, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 

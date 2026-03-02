@@ -39,6 +39,9 @@ These skills guide Claude Code through the complete RT 2.0 setup workflow, from 
 - **`rt-journey-monitor`** - Monitor journey execution
 - **`activations`** - Query activation logs
 - **`identity`** - Query identity change logs
+- **`identify-top-key-values`** - Analyze stitching key value distributions
+- **`id-graph-canonical-id-size`** - Analyze canonical ID group sizes
+- **`id-graph-ids-to-canonical-id`** - Detect over-stitching issues
 
 ## Workflow Comparison
 
