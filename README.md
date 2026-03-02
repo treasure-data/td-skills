@@ -74,6 +74,10 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[field-agent-skills/documentation](./field-agent-skills/documentation)** - Comprehensive templates and guidelines for documenting Field Agents with standardized structure, system prompts, and tool specifications
 - **[field-agent-skills/visualization](./field-agent-skills/visualization)** - Professional Plotly visualization best practices with TD color palette, chart specifications, and formatting standards for executive-ready visualizations
 
+### Paid Media Skills
+
+- **[paid-media-skills/channel-strategy](./paid-media-skills/channel-strategy)** - Recommend optimal paid media channel mix and budget allocation using TD CDP audience data and campaign performance analysis. Query historical campaign data by channel (Meta, Google, LinkedIn, TikTok), analyze audience segments, and optimize budget distribution based on ROAS, conversion rates, and audience demographics.
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
@@ -96,6 +100,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `tdx-skills` - tdx CLI for managing TD from command line
    - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
+   - `paid-media-skills` - Paid media channel strategy and budget optimization using CDP and campaign data
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -106,6 +111,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    /plugin install sdk-skills@td-skills
    /plugin install tdx-skills@td-skills
    /plugin install field-agent-skills@td-skills
+   /plugin install paid-media-skills@td-skills
    ```
 
 ### Invoking Skills
@@ -151,6 +157,8 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the deployment skill to set up a production publishing workflow"
 "Use the documentation skill to create comprehensive Field Agent documentation"
 "Use the visualization skill to create a Plotly chart with TD colors"
+"Use the channel-strategy skill to recommend optimal channel mix for my B2B campaign"
+"Use the channel-strategy skill to analyze paid media performance by channel"
 ```
 
 Tips for triggering skills:
