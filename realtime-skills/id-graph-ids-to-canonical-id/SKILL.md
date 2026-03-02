@@ -1,6 +1,6 @@
 ---
 name: id-graph-ids-to-canonical-id
-description: Query ID graph tables to identify how individual IDs map to canonical IDs. IDs with many canonical IDs may lead to over-stitching.
+description: Query ID graph to find individual IDs appearing in multiple canonical ID groups. Use when debugging over-stitching by checking whether a single ID has been stitched to more than one canonical ID.
 ---
 
 # ID Graph - IDs to Canonical ID

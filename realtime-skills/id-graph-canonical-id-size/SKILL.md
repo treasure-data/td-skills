@@ -1,6 +1,6 @@
 ---
 name: id-graph-canonical-id-size
-description: Query ID graph tables to identify how many individual IDs are stitched to each canonical ID. Canonical IDs with many IDs may lead to over-stitching.
+description: Query ID graph to analyze canonical ID group sizes. Use when debugging over-stitching by checking how many individual IDs are mapped to each canonical ID, or when canonical ID groups seem too large.
 ---
 
 # ID Graph - Canonical ID Size Analysis

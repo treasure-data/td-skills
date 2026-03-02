@@ -1,6 +1,6 @@
 ---
 name: identify-top-key-values
-description: Analyze RT event tables to identify the most common values for stitching keys, helping debug ID distribution and data quality issues
+description: Analyze RT event tables to identify the most common values for stitching keys. Use when inspecting what ID values are actually flowing into RT 2.0, debugging unexpected stitching behavior, or checking for data quality issues like nulls or empty stitching keys.
 ---
 
 # Identify Top Key Values
