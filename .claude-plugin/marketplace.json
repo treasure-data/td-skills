@@ -154,6 +154,15 @@
       "skills": [
         "./email-campaign-skills/email-campaign"
       ]
+    },
+    {
+      "name": "ucv-skills",
+      "description": "Unified Customer View dashboards — look up customer profiles from any CDP parent segment and render interactive pure CSS/SVG tabbed dashboards in Treasure Studio",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./ucv-skills/ucv"
+      ]
     }
   ]
 }

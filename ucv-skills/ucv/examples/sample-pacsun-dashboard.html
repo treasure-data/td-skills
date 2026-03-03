@@ -1,0 +1,449 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f1f5f9;color:#1e293b;padding:20px}
+.wrap{max-width:1200px;margin:0 auto}
+.header{background:linear-gradient(135deg,#1E3A5F 0%,#2563EB 100%);border-radius:16px;padding:28px 32px;color:#fff;display:flex;align-items:center;gap:24px;margin-bottom:20px;box-shadow:0 4px 12px rgba(37,99,235,0.3)}
+.avatar{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;border:3px solid rgba(255,255,255,0.4);flex-shrink:0}
+.hdr-info h1{font-size:22px;font-weight:700;margin-bottom:4px}
+.hdr-info p{font-size:13px;opacity:0.85;margin-bottom:6px}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.b-silver{background:rgba(148,163,184,0.3);color:#e2e8f0}
+.b-churn{background:rgba(239,68,68,0.3);color:#fca5a5}
+.b-csat{background:rgba(251,191,36,0.3);color:#fde68a}
+.b-web{background:rgba(59,130,246,0.3);color:#bfdbfe}
+.b-app{background:rgba(16,185,129,0.3);color:#a7f3d0}
+.card{background:#fff;border-radius:10px;padding:20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.card h3{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #f1f5f9}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:#f8fafc;border-radius:10px;padding:14px;text-align:center}
+.kpi .val{font-size:28px;font-weight:700;color:#2563EB}
+.kpi .lbl{font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+.kpi .val.green{color:#10B981}.kpi .val.red{color:#EF4444}.kpi .val.amber{color:#F59E0B}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f1f5f9;padding:10px 12px;text-align:left;font-weight:600;color:#475569;font-size:12px;text-transform:uppercase;letter-spacing:0.3px}
+td{padding:10px 12px;border-bottom:1px solid #f1f5f9}
+tr:nth-child(even){background:#f8fafc}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tabs input[type="radio"]{display:none;position:absolute}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:#fff;border-radius:10px;padding:6px;box-shadow:0 1px 3px rgba(0,0,0,0.06);margin-bottom:20px}
+.tabs label{padding:10px 4px;border-radius:8px;cursor:pointer;font-size:12px;color:#64748b;transition:all 0.2s;text-align:center;display:block}
+.tabs label:hover{background:#f1f5f9}
+.tabs input:checked+label{background:#2563EB;color:#fff;font-weight:600}
+.wrap-c{grid-column:1/-1;padding-top:16px}
+.tc{display:none}
+#t-ov:checked~.wrap-c .c-ov,#t-attr:checked~.wrap-c .c-attr,#t-beh:checked~.wrap-c .c-beh,#t-act:checked~.wrap-c .c-act,#t-eng:checked~.wrap-c .c-eng,#t-loy:checked~.wrap-c .c-loy,#t-seg:checked~.wrap-c .c-seg,#t-clus:checked~.wrap-c .c-clus,#t-stitch:checked~.wrap-c .c-stitch,#t-comp:checked~.wrap-c .c-comp{display:block}
+.bar-chart{display:flex;align-items:flex-end;gap:16px;height:180px;padding:20px 10px 0}
+.bar-w{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar-v{font-size:12px;font-weight:600;color:#64748b}
+.bar{width:100%;border-radius:6px 6px 0 0;min-height:4px;transition:height 0.3s}
+.bar-lbl{font-size:11px;color:#64748b;text-align:center}
+.progress{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin:4px 0}
+.progress-fill{height:100%;border-radius:4px}
+.gauge-wrap{position:relative;width:140px;height:80px;margin:0 auto 8px}
+.gauge-bg{position:absolute;width:140px;height:70px;border-radius:70px 70px 0 0;background:#e2e8f0;overflow:hidden}
+.gauge-fill{position:absolute;width:140px;height:70px;border-radius:70px 70px 0 0;transform-origin:center bottom;background:linear-gradient(90deg,#FEE2E2,#D1FAE5)}
+.gauge-cover{position:absolute;width:108px;height:54px;background:#fff;border-radius:54px 54px 0 0;top:16px;left:16px}
+.gauge-val{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:22px;font-weight:700;color:#1e293b}
+.insight{border-left:4px solid #3B82F6;padding:12px 16px;background:#f0f7ff;border-radius:0 8px 8px 0;margin-bottom:10px}
+.insight .ttl{font-weight:600;font-size:13px;color:#1e293b;margin-bottom:4px}
+.insight .desc{font-size:12px;color:#64748b}
+.timeline-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+.tl-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.tl-content .tl-title{font-size:13px;font-weight:600;color:#1e293b}
+.tl-content .tl-date{font-size:11px;color:#94a3b8}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.tag-green{background:#D1FAE5;color:#065F46}
+.tag-amber{background:#FEF3C7;color:#92400E}
+.tag-red{background:#FEE2E2;color:#991B1B}
+.tag-blue{background:#DBEAFE;color:#1E40AF}
+.tag-gray{background:#F1F5F9;color:#475569}
+</style></head><body>
+<div class="wrap">
+<div class="header">
+<div class="avatar">PS</div>
+<div class="hdr-info">
+<h1>PacSun Customer — u27772</h1>
+<p>brian76@example.net · Miramar, Florida · Female, 35-50 · CDP ID: 98c0f2e2...fd00709b</p>
+<div class="badges">
+<span class="badge b-silver">Silver Tier</span>
+<span class="badge b-churn">High Churn Risk</span>
+<span class="badge b-csat">Medium CSAT</span>
+<span class="badge b-web">Web Preferred</span>
+<span class="badge b-app">App User</span>
+</div></div></div>
+<div class="tabs">
+<input type="radio" name="tab" id="t-ov"><label for="t-ov">📊 Overview</label>
+<input type="radio" name="tab" id="t-attr"><label for="t-attr">👤 Attributes</label>
+<input type="radio" name="tab" id="t-beh"><label for="t-beh">🛒 Behaviors</label>
+<input type="radio" name="tab" id="t-act"><label for="t-act">⚡ Actions</label>
+<input type="radio" name="tab" id="t-eng"><label for="t-eng">📱 Engagement</label>
+<input type="radio" name="tab" id="t-loy"><label for="t-loy">⭐ Loyalty</label>
+<input type="radio" name="tab" id="t-seg" checked><label for="t-seg">🎯 Segments</label>
+<input type="radio" name="tab" id="t-clus"><label for="t-clus">🔗 Cluster</label>
+<input type="radio" name="tab" id="t-stitch"><label for="t-stitch">🧩 Stitched</label>
+<input type="radio" name="tab" id="t-comp"><label for="t-comp">📈 Compare</label>
+<div class="wrap-c">
+
+<!-- SEGMENTS TAB (DEFAULT) -->
+<div class="tc c-seg">
+<div class="kpi-row">
+<div class="kpi"><div class="val">Silver</div><div class="lbl">Loyalty Tier</div></div>
+<div class="kpi"><div class="val amber">High</div><div class="lbl">Churn Risk</div></div>
+<div class="kpi"><div class="val">Medium</div><div class="lbl">Frequency</div></div>
+<div class="kpi"><div class="val green">$2,141</div><div class="lbl">Predicted LTV</div></div>
+</div>
+<div class="grid-2">
+<div class="card"><h3>Segment Membership</h3>
+<table><tr><th>Segment</th><th>Value</th><th>Status</th></tr>
+<tr><td>Loyalty Tier</td><td>Silver</td><td><span class="tag tag-blue">Active</span></td></tr>
+<tr><td>Churn Prediction</td><td>4- High</td><td><span class="tag tag-red">At Risk</span></td></tr>
+<tr><td>Frequency</td><td>3- Medium</td><td><span class="tag tag-amber">Medium</span></td></tr>
+<tr><td>Monetary</td><td>3- Medium</td><td><span class="tag tag-amber">Medium</span></td></tr>
+<tr><td>Recency</td><td>1- Very Low</td><td><span class="tag tag-red">Lapsed</span></td></tr>
+<tr><td>Customer Satisfaction</td><td>3- Medium</td><td><span class="tag tag-amber">Neutral</span></td></tr>
+<tr><td>Spend Decile</td><td>7</td><td><span class="tag tag-green">Above Avg</span></td></tr>
+</table></div>
+<div class="card"><h3>Next Best Actions</h3>
+<table><tr><th>Dimension</th><th>Recommendation</th></tr>
+<tr><td>Next Best Action</td><td><strong>Cart Recovery</strong></td></tr>
+<tr><td>Next Best Channel</td><td><strong>Email</strong></td></tr>
+<tr><td>Next Best Offer</td><td><strong>Gift with Purchase</strong></td></tr>
+<tr><td>Next Best Product</td><td><strong>RSQ Slim Taper Jeans</strong></td></tr>
+<tr><td>Next Best Category</td><td><strong>Footwear</strong></td></tr>
+<tr><td>Category Affinity</td><td><strong>Sneakers</strong></td></tr>
+<tr><td>Affinity Score</td><td><strong>0.53</strong></td></tr>
+<tr><td>Purchase Propensity</td><td><strong>0.45</strong></td></tr>
+</table></div></div></div>
+
+<!-- OVERVIEW TAB -->
+<div class="tc c-ov">
+<div class="kpi-row">
+<div class="kpi"><div class="val">$2,141</div><div class="lbl">Predicted LTV</div></div>
+<div class="kpi"><div class="val green">$115</div><div class="lbl">Realised LTV</div></div>
+<div class="kpi"><div class="val">66,025</div><div class="lbl">Reward Points</div></div>
+<div class="kpi"><div class="val amber">0.45</div><div class="lbl">Propensity</div></div>
+</div>
+<div class="grid-2">
+<div class="card"><h3>CSAT Gauge</h3>
+<div class="gauge-wrap"><div class="gauge-bg"></div><div class="gauge-fill" style="transform:rotate(-90deg) rotate(108deg);background:linear-gradient(90deg,#FEE2E2,#FEF3C7,#D1FAE5)"></div><div class="gauge-cover"></div><div class="gauge-val">3.0</div></div>
+<p style="text-align:center;font-size:12px;color:#64748b">Customer Satisfaction (1-5 Scale)</p>
+</div>
+<div class="card"><h3>Key Insights</h3>
+<div class="insight"><div class="ttl">⚠️ High Churn Risk</div><div class="desc">Customer flagged as high churn risk with very low recency. Cart Recovery action recommended via Email.</div></div>
+<div class="insight"><div class="ttl">🛍️ Sneaker Aficionado</div><div class="desc">Strong affinity for Sneakers category (0.53). Next best product: RSQ Slim Taper Jeans in Footwear.</div></div>
+<div class="insight"><div class="ttl">📱 Active App User</div><div class="desc">25 app sessions (avg 24.8 min), 5 logins on Android. Downloads app and makes in-app purchases.</div></div>
+</div></div>
+<div class="card"><h3>Recent Activity Timeline</h3>
+<div class="timeline-item"><div class="tl-dot" style="background:#3B82F6"></div><div class="tl-content"><div class="tl-title">Email Opened — Melt the Ice Campaign</div><div class="tl-date">Mar 18, 2023</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#10B981"></div><div class="tl-content"><div class="tl-title">Ad Click — Part of Summer Campaign</div><div class="tl-date">Jan 27, 2023</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#F59E0B"></div><div class="tl-content"><div class="tl-title">Email Opened — BatKid Campaign</div><div class="tl-date">Feb 10, 2023</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#8B5CF6"></div><div class="tl-content"><div class="tl-title">Product Review — Givenchy L'Interdit (4★)</div><div class="tl-date">May 23, 2023</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#EF4444"></div><div class="tl-content"><div class="tl-title">Email Unsubscribed — Melt the Ice Campaign</div><div class="tl-date">Mar 18, 2023</div></div></div>
+</div></div>
+<!-- ATTRIBUTES TAB -->
+<div class="tc c-attr">
+<div class="grid-2">
+<div class="card"><h3>Demographics</h3>
+<table><tr><th>Attribute</th><th>Value</th></tr>
+<tr><td>Age Range</td><td>35-50</td></tr>
+<tr><td>Gender</td><td>Female</td></tr>
+<tr><td>City</td><td>Miramar</td></tr>
+<tr><td>State</td><td>Florida</td></tr>
+<tr><td>Region</td><td>Midwest</td></tr>
+<tr><td>Email</td><td>brian76@example.net</td></tr>
+<tr><td>Account ID</td><td>13241562477279094</td></tr>
+<tr><td>TD ID</td><td>27772</td></tr>
+</table></div>
+<div class="card"><h3>Preferences & Consent</h3>
+<table><tr><th>Preference</th><th>Value</th></tr>
+<tr><td>Channel Preference</td><td><strong>Web</strong></td></tr>
+<tr><td>Email Opt-In</td><td><span class="tag tag-green">Yes</span></td></tr>
+<tr><td>SMS Opt-In</td><td><span class="tag tag-red">No</span></td></tr>
+<tr><td>Call Consent</td><td><span class="tag tag-green">Yes</span></td></tr>
+<tr><td>Direct Mail Opt-In</td><td><span class="tag tag-green">Yes</span></td></tr>
+<tr><td>Download App</td><td><span class="tag tag-green">Yes</span></td></tr>
+<tr><td>App Purchase</td><td><span class="tag tag-green">Yes</span></td></tr>
+<tr><td>Control Group</td><td>Control</td></tr>
+</table></div></div>
+<div class="card"><h3>Predictive Scores</h3>
+<table><tr><th>Model</th><th>Score</th><th>Level</th></tr>
+<tr><td>Purchase Propensity</td><td>0.45</td><td><div class="progress"><div class="progress-fill" style="width:45%;background:#F59E0B"></div></div></td></tr>
+<tr><td>Affinity Score</td><td>0.53</td><td><div class="progress"><div class="progress-fill" style="width:53%;background:#3B82F6"></div></div></td></tr>
+<tr><td>Discount Model</td><td>0.30</td><td><div class="progress"><div class="progress-fill" style="width:30%;background:#10B981"></div></div></td></tr>
+<tr><td>Assigned Offer</td><td colspan="2">Ineligible</td></tr>
+</table></div></div>
+
+<!-- BEHAVIORS TAB -->
+<div class="tc c-beh">
+<div class="kpi-row">
+<div class="kpi"><div class="val">28</div><div class="lbl">Total Orders</div></div>
+<div class="kpi"><div class="val green">$115</div><div class="lbl">Realised LTV</div></div>
+<div class="kpi"><div class="val">7</div><div class="lbl">Spend Decile</div></div>
+<div class="kpi"><div class="val">4</div><div class="lbl">Reviews</div></div>
+</div>
+<div class="grid-2">
+<div class="card"><h3>Recent Ecommerce Orders</h3>
+<table><tr><th>Order ID</th><th>Amount</th><th>Delivery</th><th>Status</th></tr>
+<tr><td>#8729852</td><td>142 DKK</td><td>Home Delivery</td><td><span class="tag tag-amber">Partial</span></td></tr>
+<tr><td>#7878742</td><td>199.41 DKK</td><td>Home Delivery</td><td><span class="tag tag-gray">Pending</span></td></tr>
+</table></div>
+<div class="card"><h3>Recent Store Orders</h3>
+<table><tr><th>Store</th><th>Amount</th><th>Payment</th></tr>
+<tr><td>#2505257</td><td>1,062.18 DKK</td><td>Debit Card</td></tr>
+<tr><td>#3255291</td><td>63.60 DKK</td><td>Cash</td></tr>
+<tr><td>#3837590</td><td>660.00 DKK</td><td>Credit Card</td></tr>
+<tr><td>#5679072</td><td>9,237.20 DKK</td><td>Credit Card</td></tr>
+<tr><td>#4660520</td><td>3,239.98 DKK</td><td>Debit Card</td></tr>
+</table></div></div>
+<div class="card"><h3>Recent Purchases (Line Items)</h3>
+<table><tr><th>Product</th><th>Category</th><th>Qty</th><th>Price</th><th>Coupon</th></tr>
+<tr><td>Givenchy L'Interdit EDP</td><td>Womens Perfume</td><td>3</td><td>$62.47</td><td>—</td></tr>
+<tr><td>Charbonnel et Walker Truffles</td><td>Chocolate</td><td>1</td><td>$15.00</td><td><span class="tag tag-green">$3</span></td></tr>
+<tr><td>Girls Straight Leg Jeans</td><td>Childrens Jeans</td><td>2</td><td>$16.00</td><td>—</td></tr>
+<tr><td>Geox Suzzie Trainers</td><td>Womens Trainers</td><td>1</td><td>$110.00</td><td>—</td></tr>
+</table></div>
+<div class="card"><h3>Product Reviews</h3>
+<table><tr><th>Product</th><th>Rating</th></tr>
+<tr><td>Givenchy L'Interdit EDP</td><td>⭐⭐⭐⭐ (4/5)</td></tr>
+<tr><td>Charbonnel et Walker Truffles</td><td>⭐ (1/5)</td></tr>
+<tr><td>Girls Straight Leg Jeans</td><td>⭐⭐⭐ (3/5)</td></tr>
+<tr><td>Geox Suzzie Trainers</td><td>⭐⭐⭐ (3/5)</td></tr>
+</table></div></div>
+<!-- ACTIONS TAB -->
+<div class="tc c-act">
+<div class="kpi-row">
+<div class="kpi"><div class="val">4</div><div class="lbl">Email Sends</div></div>
+<div class="kpi"><div class="val green">3</div><div class="lbl">Email Opens</div></div>
+<div class="kpi"><div class="val red">2</div><div class="lbl">Unsubscribes</div></div>
+<div class="kpi"><div class="val">4</div><div class="lbl">Ad Clicks</div></div>
+</div>
+<div class="card"><h3>Activity Timeline</h3>
+<div class="timeline-item"><div class="tl-dot" style="background:#EF4444"></div><div class="tl-content"><div class="tl-title">Unsubscribed — Melt the Ice Campaign</div><div class="tl-date">Mar 18, 2023</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#3B82F6"></div><div class="tl-content"><div class="tl-title">Email Opened — Melt the Ice Campaign</div><div class="tl-date">Mar 18, 2023</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#10B981"></div><div class="tl-content"><div class="tl-title">Ad Click — Part of Summer Campaign</div><div class="tl-date">Jan 27, 2023</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#3B82F6"></div><div class="tl-content"><div class="tl-title">Email Opened — BatKid Campaign</div><div class="tl-date">Feb 10, 2023</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#EF4444"></div><div class="tl-content"><div class="tl-title">Unsubscribed — BatKid Campaign</div><div class="tl-date">Nov 1, 2022</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#3B82F6"></div><div class="tl-content"><div class="tl-title">Email Opened — BatKid Campaign</div><div class="tl-date">Nov 1, 2022</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#10B981"></div><div class="tl-content"><div class="tl-title">Ad Click — Part of Winter Campaign</div><div class="tl-date">Mar 16, 2022</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#10B981"></div><div class="tl-content"><div class="tl-title">Ad Click — Part of Spring Campaign</div><div class="tl-date">Sep 12, 2022</div></div></div>
+<div class="timeline-item"><div class="tl-dot" style="background:#10B981"></div><div class="tl-content"><div class="tl-title">Ad Click — Part of Spring Campaign</div><div class="tl-date">Feb 25, 2022</div></div></div>
+</div>
+<div class="card"><h3>Campaign Channels</h3>
+<div class="bar-chart" style="height:150px">
+<div class="bar-w"><div class="bar-v">4</div><div class="bar" style="height:80%;background:#3B82F6"></div><div class="bar-lbl">Email</div></div>
+<div class="bar-w"><div class="bar-v">4</div><div class="bar" style="height:80%;background:#10B981"></div><div class="bar-lbl">Ads</div></div>
+<div class="bar-w"><div class="bar-v">25</div><div class="bar" style="height:100%;background:#8B5CF6"></div><div class="bar-lbl">App Sessions</div></div>
+<div class="bar-w"><div class="bar-v">5</div><div class="bar" style="height:40%;background:#F59E0B"></div><div class="bar-lbl">App Logins</div></div>
+</div></div></div>
+
+<!-- ENGAGEMENT TAB -->
+<div class="tc c-eng">
+<div class="kpi-row">
+<div class="kpi"><div class="val">25</div><div class="lbl">App Sessions</div></div>
+<div class="kpi"><div class="val green">24.8m</div><div class="lbl">Avg Session</div></div>
+<div class="kpi"><div class="val">5</div><div class="lbl">App Logins</div></div>
+<div class="kpi"><div class="val">75%</div><div class="lbl">Email Open Rate</div></div>
+</div>
+<div class="grid-2">
+<div class="card"><h3>Engagement Tiers Over Time</h3>
+<table><tr><th>Period</th><th>Tier</th><th>Channel</th></tr>
+<tr><td>Latest</td><td><span class="tag tag-amber">3- Medium</span></td><td>Email</td></tr>
+<tr><td>Previous</td><td><span class="tag tag-green">5- Very High</span></td><td>Web</td></tr>
+<tr><td>Earlier</td><td><span class="tag tag-blue">4- High</span></td><td>Email</td></tr>
+<tr><td>Earliest</td><td><span class="tag tag-amber">3- Medium</span></td><td>Mobile</td></tr>
+</table></div>
+<div class="card"><h3>App Usage</h3>
+<table><tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Platform</td><td>Android</td></tr>
+<tr><td>Device</td><td>LG K52/K62</td></tr>
+<tr><td>Total Sessions</td><td>25</td></tr>
+<tr><td>Total Logins</td><td>5</td></tr>
+<tr><td>Avg Session Duration</td><td>24.8 min</td></tr>
+<tr><td>App Installed</td><td><span class="tag tag-green">Yes</span></td></tr>
+<tr><td>In-App Purchases</td><td><span class="tag tag-green">Yes</span></td></tr>
+</table></div></div>
+<div class="card"><h3>Channel Performance</h3>
+<table><tr><th>Channel</th><th>Metric</th><th>Count</th><th>Rate</th></tr>
+<tr><td>Email</td><td>Sent → Opened</td><td>4 → 3</td><td><div class="progress" style="width:120px;display:inline-block"><div class="progress-fill" style="width:75%;background:#3B82F6"></div></div> 75%</td></tr>
+<tr><td>Email</td><td>Unsubscribed</td><td>2</td><td><div class="progress" style="width:120px;display:inline-block"><div class="progress-fill" style="width:50%;background:#EF4444"></div></div> 50%</td></tr>
+<tr><td>Ads</td><td>Clicks</td><td>4</td><td><span class="tag tag-blue">Active</span></td></tr>
+<tr><td>App</td><td>Sessions</td><td>25</td><td><span class="tag tag-green">High</span></td></tr>
+</table></div>
+<div class="card"><h3>Nearest Stores</h3>
+<table><tr><th>Store</th><th>Distance</th></tr>
+<tr><td>Organicum</td><td>5 mi</td></tr>
+<tr><td>The Authentic Corner</td><td>14 mi</td></tr>
+<tr><td>Get More</td><td>22 mi</td></tr>
+<tr><td>Fuller Shelf</td><td>38 mi</td></tr>
+<tr><td>DollarSmart</td><td>38 mi</td></tr>
+</table></div></div>
+<!-- LOYALTY TAB -->
+<div class="tc c-loy">
+<div class="kpi-row">
+<div class="kpi"><div class="val" style="color:#94A3B8">Silver</div><div class="lbl">Current Tier</div></div>
+<div class="kpi"><div class="val green">66,025</div><div class="lbl">Reward Points</div></div>
+<div class="kpi"><div class="val">Medium</div><div class="lbl">Frequency</div></div>
+<div class="kpi"><div class="val amber">Very Low</div><div class="lbl">Recency</div></div>
+</div>
+<div class="grid-2">
+<div class="card"><h3>Tier Progress — Silver → Gold</h3>
+<div class="gauge-wrap"><div class="gauge-bg"></div><div class="gauge-fill" style="transform:rotate(-90deg) rotate(118.8deg);background:linear-gradient(90deg,#CBD5E1,#94A3B8,#F59E0B)"></div><div class="gauge-cover"></div><div class="gauge-val">66%</div></div>
+<p style="text-align:center;font-size:12px;color:#64748b;margin-bottom:12px">66,025 / ~100,000 points to Gold</p>
+<div class="progress" style="height:12px"><div class="progress-fill" style="width:66%;background:linear-gradient(90deg,#94A3B8,#F59E0B)"></div></div>
+<div style="display:flex;justify-content:space-between;font-size:11px;color:#94a3b8;margin-top:4px"><span>Silver</span><span>33,975 pts to Gold</span><span>Gold</span></div>
+</div>
+<div class="card"><h3>Loyalty Details</h3>
+<table><tr><th>Attribute</th><th>Value</th></tr>
+<tr><td>Loyalty Tier</td><td><span class="tag tag-blue">Silver</span></td></tr>
+<tr><td>Rewards Points</td><td>66,025</td></tr>
+<tr><td>Frequency</td><td>3- Medium</td></tr>
+<tr><td>Monetary</td><td>3- Medium</td></tr>
+<tr><td>Recency</td><td>1- Very Low</td></tr>
+<tr><td>Spend Decile</td><td>7 / 10</td></tr>
+<tr><td>Predicted LTV</td><td>$2,141</td></tr>
+<tr><td>Realised LTV</td><td>$115</td></tr>
+</table></div></div>
+<div class="card"><h3>Recommendations</h3>
+<div class="insight"><div class="ttl">🎯 Cart Recovery Priority</div><div class="desc">Customer's next best action is Cart Recovery via Email. With 0.45 purchase propensity and high churn risk, a timely "Gift with Purchase" offer could re-engage.</div></div>
+<div class="insight"><div class="ttl">👟 Sneaker-Focused Offers</div><div class="desc">Category affinity for Sneakers (0.53). Next best product: RSQ Slim Taper Jeans. Consider bundling footwear with denim for cross-sell.</div></div>
+<div class="insight"><div class="ttl">📱 Leverage App Engagement</div><div class="desc">25 app sessions averaging 24.8 min — strong app user. Push notifications may be more effective than email given 2 unsubscribes.</div></div>
+</div></div>
+
+<!-- CLUSTER TAB -->
+<div class="tc c-clus">
+<div class="card"><h3>Identity Cluster Graph</h3>
+<svg viewBox="0 0 600 360" style="width:100%;max-width:600px;margin:0 auto;display:block">
+<!-- Edges -->
+<line x1="150" y1="90" x2="450" y2="90" stroke="#94A3B8" stroke-width="3" opacity="0.5"/>
+<line x1="150" y1="90" x2="150" y2="270" stroke="#94A3B8" stroke-width="3" opacity="0.5"/>
+<line x1="150" y1="90" x2="450" y2="270" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="6,4" opacity="0.5"/>
+<line x1="450" y1="90" x2="450" y2="270" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="6,4" opacity="0.5"/>
+<!-- Score badges -->
+<rect x="254" y="62" width="92" height="20" rx="10" fill="#D1FAE5"/>
+<text x="300" y="76" text-anchor="middle" font-size="11" font-weight="600" fill="#065F46">99% email</text>
+<rect x="122" y="164" width="56" height="20" rx="10" fill="#D1FAE5"/>
+<text x="150" y="178" text-anchor="middle" font-size="11" font-weight="600" fill="#065F46">99% ID</text>
+<rect x="264" y="164" width="72" height="20" rx="10" fill="#FEF3C7"/>
+<text x="300" y="178" text-anchor="middle" font-size="11" font-weight="600" fill="#92400E">78% device</text>
+<rect x="422" y="164" width="56" height="20" rx="10" fill="#FEF3C7"/>
+<text x="450" y="178" text-anchor="middle" font-size="11" font-weight="600" fill="#92400E">72% IP</text>
+<!-- Node 1: Web (email) -->
+<circle cx="150" cy="90" r="36" fill="#3B82F6" opacity="0.15"/>
+<circle cx="150" cy="90" r="28" fill="#3B82F6"/>
+<text x="150" y="86" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">WEB</text>
+<text x="150" y="100" text-anchor="middle" font-size="9" fill="#bfdbfe">brian76</text>
+<text x="150" y="132" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F">Web Profile</text>
+<text x="150" y="146" text-anchor="middle" font-size="10" fill="#64748b">brian76@example.net</text>
+<!-- Node 2: App -->
+<circle cx="450" cy="90" r="36" fill="#10B981" opacity="0.15"/>
+<circle cx="450" cy="90" r="28" fill="#10B981"/>
+<text x="450" y="86" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">APP</text>
+<text x="450" y="100" text-anchor="middle" font-size="9" fill="#a7f3d0">LG K52</text>
+<text x="450" y="132" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F">App Profile</text>
+<text x="450" y="146" text-anchor="middle" font-size="10" fill="#64748b">Android · Device 444170</text>
+<!-- Node 3: Store -->
+<circle cx="150" cy="270" r="36" fill="#F59E0B" opacity="0.15"/>
+<circle cx="150" cy="270" r="28" fill="#F59E0B"/>
+<text x="150" y="266" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">POS</text>
+<text x="150" y="280" text-anchor="middle" font-size="9" fill="#fde68a">Store</text>
+<text x="150" y="312" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F">Store Profile</text>
+<text x="150" y="326" text-anchor="middle" font-size="10" fill="#64748b">Acct: 132415...79094</text>
+<!-- Node 4: Email -->
+<circle cx="450" cy="270" r="36" fill="#8B5CF6" opacity="0.15"/>
+<circle cx="450" cy="270" r="28" fill="#8B5CF6"/>
+<text x="450" y="266" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">CRM</text>
+<text x="450" y="280" text-anchor="middle" font-size="9" fill="#ddd6fe">u27772</text>
+<text x="450" y="312" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F">CRM Profile</text>
+<text x="450" y="326" text-anchor="middle" font-size="10" fill="#64748b">u27772@x.com</text>
+<!-- Legend -->
+<line x1="160" y1="350" x2="180" y2="350" stroke="#10B981" stroke-width="3"/>
+<text x="184" y="354" font-size="10" fill="#64748b">Deterministic</text>
+<line x1="270" y1="350" x2="290" y2="350" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6,4"/>
+<text x="294" y="354" font-size="10" fill="#64748b">Probabilistic</text>
+</svg></div>
+<div class="grid-2">
+<div class="card"><h3>Identity Records</h3>
+<table><tr><th>Source</th><th>Identifier</th><th>Type</th></tr>
+<tr><td>Web</td><td>brian76@example.net</td><td>Email</td></tr>
+<tr><td>App</td><td>Device 444170 (LG K52/K62)</td><td>Device ID</td></tr>
+<tr><td>CRM</td><td>u27772@x.com</td><td>Email</td></tr>
+<tr><td>Store</td><td>13241562477279094</td><td>Account ID</td></tr>
+<tr><td>CDP</td><td>98c0f2e2...fd00709b</td><td>CDP Customer ID</td></tr>
+</table></div>
+<div class="card"><h3>Match Confidence</h3>
+<table><tr><th>Pair</th><th>Method</th><th>Confidence</th></tr>
+<tr><td>Web ↔ CRM</td><td>Email match</td><td><div class="progress" style="width:80px;display:inline-block"><div class="progress-fill" style="width:99%;background:#10B981"></div></div> 99%</td></tr>
+<tr><td>Web ↔ Store</td><td>Account ID</td><td><div class="progress" style="width:80px;display:inline-block"><div class="progress-fill" style="width:99%;background:#10B981"></div></div> 99%</td></tr>
+<tr><td>Web ↔ App</td><td>Device fingerprint</td><td><div class="progress" style="width:80px;display:inline-block"><div class="progress-fill" style="width:78%;background:#F59E0B"></div></div> 78%</td></tr>
+<tr><td>App ↔ CRM</td><td>IP correlation</td><td><div class="progress" style="width:80px;display:inline-block"><div class="progress-fill" style="width:72%;background:#F59E0B"></div></div> 72%</td></tr>
+</table></div></div></div>
+<!-- STITCHED TAB -->
+<div class="tc c-stitch">
+<div class="kpi-row">
+<div class="kpi"><div class="val">4</div><div class="lbl">Sources Stitched</div></div>
+<div class="kpi"><div class="val green">87%</div><div class="lbl">Avg Match Rate</div></div>
+<div class="kpi"><div class="val">5</div><div class="lbl">Identity Records</div></div>
+<div class="kpi"><div class="val green">Unified</div><div class="lbl">Resolution Status</div></div>
+</div>
+<div class="card"><h3>Source Match Rate</h3>
+<div class="bar-chart" style="height:160px">
+<div class="bar-w"><div class="bar-v" style="color:#10B981">99%</div><div class="bar" style="height:99%;background:#10B981"></div><div class="bar-lbl">Web</div></div>
+<div class="bar-w"><div class="bar-v" style="color:#10B981">99%</div><div class="bar" style="height:99%;background:#10B981"></div><div class="bar-lbl">Store</div></div>
+<div class="bar-w"><div class="bar-v" style="color:#F59E0B">78%</div><div class="bar" style="height:78%;background:#F59E0B"></div><div class="bar-lbl">App</div></div>
+<div class="bar-w"><div class="bar-v" style="color:#F59E0B">72%</div><div class="bar" style="height:72%;background:#F59E0B"></div><div class="bar-lbl">CRM</div></div>
+</div></div>
+<div class="card"><h3>Stitched Sources</h3>
+<table><tr><th>Source</th><th>Match Key</th><th>Method</th><th>Confidence</th><th>Status</th></tr>
+<tr><td>Web (brian76@example.net)</td><td>Email</td><td>Deterministic</td><td>99%</td><td><span class="tag tag-green">Verified</span></td></tr>
+<tr><td>Store (Acct: 132415...)</td><td>Account ID</td><td>Deterministic</td><td>99%</td><td><span class="tag tag-green">Verified</span></td></tr>
+<tr><td>App (Device 444170)</td><td>Device FP</td><td>Probabilistic</td><td>78%</td><td><span class="tag tag-amber">Likely</span></td></tr>
+<tr><td>CRM (u27772@x.com)</td><td>IP Correlation</td><td>Probabilistic</td><td>72%</td><td><span class="tag tag-amber">Likely</span></td></tr>
+</table></div>
+<div class="card"><h3>Resolution Summary</h3>
+<table><tr><th>Metric</th><th>Value</th></tr>
+<tr><td>CDP Customer ID</td><td><code>98c0f2e205fc3b812aac8d5eb27ae6fefd00709b</code></td></tr>
+<tr><td>TD ID</td><td>27772</td></tr>
+<tr><td>Deterministic Links</td><td>2 (Web, Store)</td></tr>
+<tr><td>Probabilistic Links</td><td>2 (App, CRM)</td></tr>
+<tr><td>Total Behavior Tables</td><td>10 tables with data</td></tr>
+<tr><td>Total Events</td><td>76 behavioral events</td></tr>
+</table></div></div>
+
+<!-- COMPARISON TAB -->
+<div class="tc c-comp">
+<div class="card"><h3>Customer vs Tier Averages — Predicted LTV</h3>
+<div class="bar-chart">
+<div class="bar-w"><div class="bar-v">$50,014</div><div class="bar" style="height:90%;background:#CBD5E1"></div><div class="bar-lbl">Bronze</div></div>
+<div class="bar-w"><div class="bar-v" style="color:#3B82F6;font-weight:700">$2,141</div><div class="bar" style="height:4%;background:#3B82F6"></div><div class="bar-lbl" style="font-weight:700">Customer</div></div>
+<div class="bar-w"><div class="bar-v">$49,990</div><div class="bar" style="height:90%;background:#CBD5E1"></div><div class="bar-lbl">Silver Avg</div></div>
+<div class="bar-w"><div class="bar-v">$50,026</div><div class="bar" style="height:90%;background:#CBD5E1"></div><div class="bar-lbl">Gold</div></div>
+<div class="bar-w"><div class="bar-v">$49,897</div><div class="bar" style="height:90%;background:#CBD5E1"></div><div class="bar-lbl">Platinum</div></div>
+</div></div>
+<div class="card"><h3>Customer vs Tier Averages — Rewards Points</h3>
+<div class="bar-chart">
+<div class="bar-w"><div class="bar-v">49,960</div><div class="bar" style="height:75%;background:#CBD5E1"></div><div class="bar-lbl">Bronze</div></div>
+<div class="bar-w"><div class="bar-v" style="color:#3B82F6;font-weight:700">66,025</div><div class="bar" style="height:99%;background:#3B82F6"></div><div class="bar-lbl" style="font-weight:700">Customer</div></div>
+<div class="bar-w"><div class="bar-v">49,938</div><div class="bar" style="height:75%;background:#CBD5E1"></div><div class="bar-lbl">Silver Avg</div></div>
+<div class="bar-w"><div class="bar-v">50,079</div><div class="bar" style="height:75%;background:#CBD5E1"></div><div class="bar-lbl">Gold</div></div>
+<div class="bar-w"><div class="bar-v">50,056</div><div class="bar" style="height:75%;background:#CBD5E1"></div><div class="bar-lbl">Platinum</div></div>
+</div></div>
+<div class="card"><h3>Full Tier Comparison</h3>
+<table>
+<tr><th>Metric</th><th>Customer</th><th>Bronze Avg</th><th>Silver Avg</th><th>Gold Avg</th><th>Platinum Avg</th></tr>
+<tr><td>Predicted LTV</td><td style="font-weight:700;color:#3B82F6">$2,141</td><td>$50,014</td><td>$49,990</td><td>$50,026</td><td>$49,897</td></tr>
+<tr><td>Realised LTV</td><td style="font-weight:700;color:#3B82F6">$115</td><td>$5,003</td><td>$4,998</td><td>$4,998</td><td>$5,007</td></tr>
+<tr><td>Rewards Points</td><td style="font-weight:700;color:#3B82F6">66,025</td><td>49,960</td><td>49,938</td><td>50,079</td><td>50,056</td></tr>
+<tr><td>Purchase Propensity</td><td style="font-weight:700;color:#3B82F6">0.45</td><td>0.55</td><td>0.55</td><td>0.55</td><td>0.55</td></tr>
+<tr><td>Affinity Score</td><td style="font-weight:700;color:#3B82F6">0.53</td><td>0.57</td><td>0.56</td><td>0.57</td><td>0.56</td></tr>
+<tr><td>Discount Score</td><td style="font-weight:700;color:#3B82F6">0.30</td><td>0.75</td><td>0.75</td><td>0.75</td><td>0.75</td></tr>
+<tr><td>Spend Decile</td><td style="font-weight:700;color:#3B82F6">7</td><td>5.5</td><td>5.5</td><td>5.5</td><td>5.5</td></tr>
+<tr><td>Churn Risk</td><td style="font-weight:700;color:#EF4444">4- High</td><td>3.4</td><td>3.4</td><td>3.4</td><td>3.4</td></tr>
+<tr><td>CSAT</td><td style="font-weight:700;color:#F59E0B">3- Medium</td><td>3.4</td><td>3.4</td><td>3.4</td><td>3.4</td></tr>
+</table></div></div>
+
+</div><!-- end wrap-c -->
+</div><!-- end tabs -->
+</div><!-- end wrap -->
+</body></html>
