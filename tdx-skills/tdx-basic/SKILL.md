@@ -132,7 +132,6 @@ tdx databases --output out.json  # Save to file
 ```bash
 tdx <command> --help             # Command help
 --profile <name>                 # Use specific profile
---site <site>                    # us01, jp01, eu01, ap02
 --json / --jsonl / --tsv         # Output format
 --output <file>                  # Save to file
 --dry-run                        # Preview without executing
