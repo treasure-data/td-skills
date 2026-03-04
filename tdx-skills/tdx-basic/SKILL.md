@@ -105,7 +105,7 @@ Use `tdx describe` (or `tdx desc`) to check table schema:
 
 ```bash
 tdx describe mydb.users              # Fully-qualified
-tdx desc mydb.users                  # Short alias
+tdx desc users                       # Omit database if session database is set
 tdx describe mydb.users --json       # JSON output
 tdx show mydb.users --limit 10       # Preview actual data (not schema)
 ```
