@@ -26,12 +26,22 @@ tdx auth
 Context priority: CLI flags > session > project `tdx.json` > profile > global config
 
 ```bash
-# Session context
+# Session context (scoped to current shell, expires after 24h)
 tdx use database mydb
 tdx use site jp01
 tdx profile use production   # Switch profile
 tdx status                   # View current context and auth
-tdx use --clear              # Clear session
+tdx unset database           # Clear specific context
+tdx use --clear              # Clear all session context
+```
+
+Session database eliminates the need for fully-qualified table names across commands:
+
+```bash
+tdx use database mydb
+tdx tables                   # Lists mydb tables
+tdx describe users           # Describes mydb.users
+tdx query "select * from users limit 10"  # Queries mydb.users
 ```
 
 ### Profile Management
@@ -97,7 +107,13 @@ Avoid `tdx tables "*.table_name"` — cross-database wildcard search is expensiv
 ### Queries
 
 ```bash
+# With session database set, use unqualified table names
+tdx use database mydb
+tdx query "select * from users limit 10"
+
+# Or use fully-qualified names without session context
 tdx query "select * from mydb.users limit 10"
+
 tdx query -f query.sql           # From file
 tdx query -                      # From stdin
 echo "select 1" | tdx query -
