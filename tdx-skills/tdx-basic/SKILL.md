@@ -39,7 +39,6 @@ Session database eliminates the need for fully-qualified table names across comm
 ```bash
 tdx use database mydb
 tdx tables                   # Lists mydb tables
-tdx describe users           # Describes mydb.users
 tdx query "select * from users limit 10"  # Queries mydb.users
 ```
 
@@ -102,25 +101,14 @@ Avoid `tdx tables "*.table_name"` — cross-database wildcard search is expensiv
 
 ### Schema Inspection
 
-**Use `tdx describe` (or `tdx desc`) to check table schema** — column names, types, and partition info:
+Use `tdx describe` (or `tdx desc`) to check table schema:
 
 ```bash
-# Fully-qualified (works without session context)
-tdx describe mydb.users
-tdx desc mydb.users              # Short alias
-
-# With session database set
-tdx use database mydb
-tdx describe users
-
-# JSON output for programmatic use
-tdx describe mydb.users --json
-
-# Preview actual data (not schema)
-tdx show mydb.users --limit 10
+tdx describe mydb.users              # Fully-qualified
+tdx desc mydb.users                  # Short alias
+tdx describe mydb.users --json       # JSON output
+tdx show mydb.users --limit 10       # Preview actual data (not schema)
 ```
-
-When exploring an unfamiliar table, run `tdx describe` first to understand columns before writing queries.
 
 ### Queries
 
