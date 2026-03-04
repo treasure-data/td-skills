@@ -81,7 +81,6 @@ tdx --profile staging query "..." # One-off with different profile
 ```bash
 tdx databases                    # List all
 tdx databases "prod_*"           # Filter with pattern
-tdx databases --site jp01        # Specify site
 tdx databases --json             # JSON output
 ```
 
