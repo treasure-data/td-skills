@@ -108,7 +108,7 @@ Invalid keys trigger `INVALID_ARRAY_MATCHING`.
 | YAML syntax | Yes | Yes |
 | Operator types | Yes | Yes |
 | Required fields | Yes | Yes |
-| Nested groups limit | No | Yes |
+| Nested groups limit | Yes | Yes |
 | Segment references | No | Yes |
 | Behavior schema | Partial | Yes |
 | Field availability | No | Yes |

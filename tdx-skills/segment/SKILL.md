@@ -77,7 +77,7 @@ Five condition types can be used inside `conditions:`:
 |------|---------|
 | `Value` | Filter by attribute column (also used for behavior with `source`) |
 | `include` / `exclude` | Reference another segment |
-| `And` / `Or` | Nested condition group (max 1 level deep) |
+| `And` / `Or` | Condition group (nesting not supported — see below) |
 
 ## Operators
 
@@ -217,7 +217,7 @@ segments/customer-360/
 | Field not available | `tdx sg fields` or run parent workflow |
 | Between missing bounds | At least one of `min` or `max` required |
 | Behavior source unknown | Check parent segment behavior table names |
-| NESTED_CONDITION_GROUP | Flatten to one level of nesting only |
+| NESTED_CONDITION_GROUP | Use `In` operator or flatten; all nesting is rejected |
 | Segment reference not found | Segment must exist on server; use exact name from Console |
 | Non-interactive mode error | Add `-y` flag: `tdx sg push -y "<file>"` |
 
