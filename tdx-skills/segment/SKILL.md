@@ -161,14 +161,14 @@ rule:
 
 ## Nested Condition Groups
 
-**Warning**: Nested Or/And groups have a known bug in Console. The Console UI and SQL preview **ignore nested condition groups entirely**. The conditions are stored correctly, but Console cannot display or process them properly.
+**Not supported.** Console UI silently ignores nested Or/And groups, causing local/server discrepancy. `tdx sg validate` rejects all nested condition groups with `NESTED_CONDITION_GROUP` error.
 
 ### Workaround: Use `In` operator instead of nested Or
 
 When you need "value A OR value B" on the **same attribute**, use the `In` operator:
 
 ```yaml
-# Instead of nested Or (broken in Console):
+# Instead of nested Or (rejected by validator):
 - type: Or
   conditions:
     - type: Value
@@ -188,36 +188,13 @@ When you need "value A OR value B" on the **same attribute**, use the `In` opera
 
 ### Limitation
 
-Or conditions across **different attributes** cannot be worked around:
+Or conditions across **different attributes** cannot be expressed without nested Or:
 ```yaml
 # This CANNOT be expressed without nested Or:
 # (country = "US") OR (age > 30)
 ```
 
 For such cases, consider creating separate segments and using `include` references, or restructuring the business logic.
-
-### Nesting depth limit
-
-Even without the Console bug, nesting is limited to **one level deep**:
-
-```yaml
-# Valid structure (but affected by Console bug):
-rule:
-  type: And
-  conditions:
-    - type: Or
-      conditions:
-        - type: Value ...
-        - type: Value ...
-
-# Invalid: Two levels deep
-rule:
-  type: Or
-  conditions:
-    - type: And           # Error: NESTED_CONDITION_GROUP
-      conditions:
-        - type: Value ...
-```
 
 ## Array Matching
 

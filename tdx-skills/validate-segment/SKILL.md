@@ -66,57 +66,13 @@ year | quarter | month | week | day | hour | minute | second
 
 Any operator supports `not: true` for negation. This is separate from `NotEqual`/`NotIn` which are standalone types.
 
-## Behavior Conditions (Correct Pattern)
+## Behavior Conditions
 
-Use `type: Value` with behavior-specific fields. Inside `filter`, use `type: Column`:
-
-```yaml
-- type: Value                      # Use Value, not Behavior
-  attribute: ""                    # Empty string for aggregations
-  source: behavior_purchase_history
-  aggregation:
-    type: Count                    # Count | Sum | Average | Min | Max
-  operator:
-    type: GreaterEqual
-    not: false
-    value: 1
-  timeWindow:                      # Optional
-    duration: 30
-    unit: day
-  filter:                          # Required when using source
-    type: And
-    conditions:
-      - type: Column               # Use Column inside filter (not Value)
-        column: category           # Use column field (not attribute)
-        operator:
-          type: Equal
-          not: false
-          value: "Electronics"
-```
+Use `type: Value` with `source`, `aggregation`, and `filter`. Inside `filter`, use `type: Column` with `column` field (not `type: Value` with `attribute`). See **segment** skill for full examples.
 
 ## Nested Condition Groups
 
-**Nested condition groups are not supported.** Console UI silently ignores nested Or/And groups, causing local/server discrepancy. Use the `In` operator for same-attribute Or conditions instead.
-
-```yaml
-# Invalid: Any nested condition group triggers NESTED_CONDITION_GROUP error
-rule:
-  type: And
-  conditions:
-    - type: Or                     # NESTED_CONDITION_GROUP error
-      conditions:
-        - type: Value ...
-
-# Valid alternative: use In operator for multi-value matching
-rule:
-  type: And
-  conditions:
-    - type: Value
-      attribute: country
-      operator:
-        type: In
-        value: [US, JP]
-```
+**Not supported.** Console UI silently ignores nested Or/And groups, causing local/server discrepancy. All nesting triggers `NESTED_CONDITION_GROUP` error. Use `In` operator instead. See **segment** skill for details and workarounds.
 
 ## Array Matching
 
@@ -142,7 +98,7 @@ Invalid keys trigger `INVALID_ARRAY_MATCHING`.
 | `MISSING_TIME_UNIT` | Time operator missing `unit` | Add `unit: day` (singular) |
 | `INVALID_ARRAY_MATCHING` | `arrayMatching` has invalid format | Use `any`, `all`, or object form |
 | `MISSING_SEGMENT_REFERENCE` | `include`/`exclude` missing `segment` field | Add `segment:` with exact name |
-| `NESTED_CONDITION_GROUP` | More than one level of And/Or nesting | Flatten condition structure |
+| `NESTED_CONDITION_GROUP` | Any nested Or/And condition group | Use `In` operator or flatten |
 | `SEGMENT_SCHEMA_ERROR` | Server rejected the schema | Check field names (`column` vs `attribute` in filter) |
 
 ## Local vs Server Validation
