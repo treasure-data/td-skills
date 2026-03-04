@@ -37,8 +37,10 @@ tdx sg list -r                        # Recursive tree view
 tdx sg fields                         # List available fields
 tdx sg show "Segment Name"            # Preview segment data
 tdx sg sql "Segment Name" | tdx query -  # Pipe segment SQL to query
-tdx sg sql --path <file>              # Get SQL from local YAML (before push)
+tdx sg sql --path <file>              # Get SQL from local YAML (requires tdx.json)
 ```
+
+**Note**: `--path` requires a project directory created by `tdx sg pull`. The file must be inside a folder with `tdx.json`.
 
 ## YAML Configuration
 
