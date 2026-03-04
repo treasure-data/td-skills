@@ -28,7 +28,6 @@ Context priority: CLI flags > session > project `tdx.json` > profile > global co
 ```bash
 # Session context (scoped to current shell, expires after 24h)
 tdx use database mydb
-tdx use site jp01
 tdx profile use production   # Switch profile
 tdx status                   # View current context and auth
 tdx unset database           # Clear specific context
