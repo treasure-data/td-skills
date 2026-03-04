@@ -79,17 +79,20 @@ Sites: `us01` (default), `jp01`, `eu01`, `ap02`
 
 ### Tables
 
+When the target database is known, set context first:
+
 ```bash
 tdx use database mydb            # Set context first
-tdx tables                       # List tables
-tdx tables "user_*"              # Filter
+tdx tables                       # List tables in context database
+tdx tables "user_*"              # Filter by pattern within context database
 tdx describe users               # Schema
 tdx show users --limit 10        # Preview data
 
 # Pattern syntax
 tdx tables "mydb.*"              # All tables from mydb
-tdx tables "*.users"             # users table from all databases
 ```
+
+Avoid `tdx tables "*.table_name"` — cross-database wildcard search is expensive. Set the database context instead.
 
 ### Queries
 
