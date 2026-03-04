@@ -11,8 +11,10 @@ description: Manages CDP child segments using `tdx sg` commands with YAML rule c
 
 1. **Create** the YAML file
 2. **Validate** with `tdx sg validate <file>`
-3. **Preview** with `preview_segment` tool — get user approval before proceeding
-4. **Push** with `tdx sg push -y "<file>"` — always specify the file path explicitly
+3. **Count check** — run `tdx sg sql --path <file> | tdx query -` and verify count > 0
+   - If count is 0, the rule is too restrictive — revise before proceeding
+4. **Preview** with `preview_segment` tool — get user approval before proceeding
+5. **Push** with `tdx sg push -y "<file>"` — always specify the file path explicitly
 
 Never batch multiple segments in validate or push operations.
 
