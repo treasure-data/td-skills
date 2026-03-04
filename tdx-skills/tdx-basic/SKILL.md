@@ -148,13 +148,6 @@ tdx <command> --help             # Command help
 select time, from_unixtime(time) as datetime from mydb.events limit 1
 ```
 
-## Common Issues
-
-| Issue | Solution |
-|-------|----------|
-| TDX_API_KEY not found | `tdx auth setup` or create `~/.config/tdx/.env` |
-| Database not found | Check site: `tdx databases --site jp01` |
-| Pattern not working | Quote patterns: `tdx tables "prod_*"` |
 
 ## Project Folder Structure
 
