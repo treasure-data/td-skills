@@ -1,6 +1,6 @@
 ---
 name: tdx-basic
-description: Executes tdx CLI commands for Treasure Data. Covers `tdx databases`, `tdx tables`, `tdx query`, `tdx auth setup`, context management with profiles/sessions, and output formats (JSON/TSV/table). Use when users need tdx command syntax, authentication setup, database/table exploration, or query execution.
+description: Executes tdx CLI commands for Treasure Data. Covers `tdx databases`, `tdx tables`, `tdx describe`, `tdx query`, `tdx auth setup`, context management with profiles/sessions, and output formats (JSON/TSV/table). Use when users need tdx command syntax, authentication setup, database/table exploration, schema inspection, or query execution.
 ---
 
 # tdx CLI - Basic Operations
@@ -93,14 +93,34 @@ When the target database is known, set context first:
 tdx use database mydb            # Set context first
 tdx tables                       # List tables in context database
 tdx tables "user_*"              # Filter by pattern within context database
-tdx describe users               # Schema
-tdx show users --limit 10        # Preview data
 
 # Pattern syntax
 tdx tables "mydb.*"              # All tables from mydb
 ```
 
 Avoid `tdx tables "*.table_name"` — cross-database wildcard search is expensive. Set the database context instead.
+
+### Schema Inspection
+
+**Use `tdx describe` (or `tdx desc`) to check table schema** — column names, types, and partition info:
+
+```bash
+# Fully-qualified (works without session context)
+tdx describe mydb.users
+tdx desc mydb.users              # Short alias
+
+# With session database set
+tdx use database mydb
+tdx describe users
+
+# JSON output for programmatic use
+tdx describe mydb.users --json
+
+# Preview actual data (not schema)
+tdx show mydb.users --limit 10
+```
+
+When exploring an unfamiliar table, run `tdx describe` first to understand columns before writing queries.
 
 ### Queries
 
