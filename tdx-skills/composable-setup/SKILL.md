@@ -138,9 +138,11 @@ After saving, note the `federatedQueryConfigId` — used in every parent segment
 | `keyColumn` | Primary key on master table |
 | `tableKey` | Foreign key on attribute/behavior table |
 | `masterKey` | Primary key on master table (for join) |
-| `type` | `string`, `number`, `boolean`, or `date` |
+| `type` | `string` or `number` (use `string` for dates) |
 | `timeColumn` | Required for behavior tables only |
 | `columnMapping` | Additional columns to expose from behavior table |
+
+> **CRITICAL: All schema, table, column, and key names must be lowercase.** The Trino Snowflake connector lowercases all identifiers. Using uppercase (e.g., `EMAIL`, `ASH_COMPOSABLE`) will cause "Column not found" errors with empty "Available columns" responses.
 
 > **Current limitation**: Behaviors are configurable but not yet usable in segment builder rule conditions.
 
@@ -183,10 +185,26 @@ Your parent segment will appear with a **Composable** tag. You can:
 
 | Issue | Solution |
 |-------|---------|
-| Zero-Copy connection fails | Verify private key is PKCS#8 format; check Snowflake role has SELECT on database/schema |
-| Parent segment upload fails | Validate JSON format; confirm `federatedQueryConfigId` matches; verify all tables/columns exist |
+| "Column not found, Available columns: " (empty) | **Use all lowercase** for schema, table, column, and key names in JSON. Trino Snowflake connector lowercases all identifiers |
+| "Column not found, Available columns: " (empty) after key update | Trino catalog caches credentials; create a **new** Zero-Copy config instead of updating existing |
+| "Catalog does not exist" | New federated query configs need 15-30 min for Trino catalog provisioning; create via Data Workbench UI for faster provisioning |
+| Zero-Copy connection fails | Verify private key is PKCS#8 format with proper line breaks (not one long line); check Snowflake role has SELECT on database/schema |
+| `ALTER USER` permission denied | Requires `SECURITYADMIN` or `ACCOUNTADMIN` role to set RSA public key |
+| `federatedQueryConfigId` vs connection ID | The URL `authentications/snowflake/<id>` shows the **connection** ID; get the **config** ID from `GET /v4/federated_query_configs` |
+| Parent segment name "already taken" | Use a unique name; check existing with `GET /composable_audiences` |
+| `type` "not included in the list" | Use `string` or `number` only; for date columns use `string` |
 | CAS UI not visible | Confirm all 3 feature flags are enabled; use preview URL |
 | Segment counts show 0 | Check join keys (`masterKey` ↔ `tableKey`) match; verify master table has data |
+
+### Finding the federatedQueryConfigId
+
+```bash
+# List all federated query configs
+curl -s https://api.treasuredata.com/v4/federated_query_configs \
+  -H "Authorization: TD1 <api_key>" | python3 -m json.tool
+
+# The `id` field is the federatedQueryConfigId (NOT the connection_id)
+```
 
 ---
 
