@@ -32,6 +32,7 @@ rule:
 |------|----------------|-------------|
 | `Value` | `attribute`, `operator` | `EMPTY_ATTRIBUTE`, `INVALID_OPERATOR_TYPE` |
 | `Behavior` | `attribute`, `operator`, `source`, `aggregation` | `EMPTY_ATTRIBUTE` |
+| `Column` | `column`, `operator` | — |
 | `include` / `exclude` | `segment` | `MISSING_SEGMENT_REFERENCE` |
 | `And` / `Or` | `conditions` | `MISSING_CONDITIONS`, `INVALID_RULE_TYPE` |
 
@@ -76,11 +77,11 @@ Any operator supports `not: true` for negation. This is separate from `NotEqual`
   timeWindow:                      # Optional
     duration: 30
     unit: day
-  filter:                          # Optional (same rules as top-level rule)
+  filter:                          # Optional: use Column conditions (not Value)
     type: And
     conditions:
-      - type: Value
-        attribute: timestamp
+      - type: Column
+        column: timestamp
         operator: { type: TimeWithinPast, value: 90, unit: day }
 ```
 

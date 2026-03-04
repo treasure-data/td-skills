@@ -50,12 +50,13 @@ rule:
 
 ## Condition Types
 
-Four condition types can be used inside `conditions:`:
+Five condition types can be used inside `conditions:`:
 
 | Type | Purpose |
 |------|---------|
 | `Value` | Filter by attribute column |
 | `Behavior` | Aggregate behavior table data |
+| `Column` | Filter by column inside behavior `filter:` blocks |
 | `include` / `exclude` | Reference another segment |
 | `And` / `Or` | Nested condition group |
 
@@ -112,14 +113,14 @@ Query behavior table data with aggregations. Use `type: Behavior` (not `Value`).
   filter:                            # Optional: filter rows before aggregation
     type: And
     conditions:
-      - type: Value
-        attribute: category
+      - type: Column               # MUST use Column (not Value) inside filter
+        column: category            # Use column: (not attribute:)
         operator:
           type: Equal
           value: "Electronics"
 ```
 
-`filter` supports the same operators as top-level Value conditions.
+**Important**: Inside behavior `filter:`, conditions must use `type: Column` with `column:` field (not `type: Value` with `attribute:`). The API rejects `Value` conditions inside filter blocks.
 
 ## Segment References (Include/Exclude)
 
