@@ -161,34 +161,61 @@ rule:
 
 ## Nested Condition Groups
 
-Nesting is limited to **one level deep** due to Console display constraints.
+**Warning**: Nested Or/And groups have a known bug in Console. The Console UI and SQL preview **ignore nested condition groups entirely**. The conditions are stored correctly, but Console cannot display or process them properly.
+
+### Workaround: Use `In` operator instead of nested Or
+
+When you need "value A OR value B" on the **same attribute**, use the `In` operator:
 
 ```yaml
-# Valid: One level of nesting
+# Instead of nested Or (broken in Console):
+- type: Or
+  conditions:
+    - type: Value
+      attribute: activities
+      operator: { type: Equal, value: "Intermediate" }
+    - type: Value
+      attribute: activities
+      operator: { type: Equal, value: "Advanced" }
+
+# Use In operator (works correctly):
+- type: Value
+  attribute: activities
+  operator:
+    type: In
+    value: ["Intermediate", "Advanced"]
+```
+
+### Limitation
+
+Or conditions across **different attributes** cannot be worked around:
+```yaml
+# This CANNOT be expressed without nested Or:
+# (country = "US") OR (age > 30)
+```
+
+For such cases, consider creating separate segments and using `include` references, or restructuring the business logic.
+
+### Nesting depth limit
+
+Even without the Console bug, nesting is limited to **one level deep**:
+
+```yaml
+# Valid structure (but affected by Console bug):
 rule:
   type: And
   conditions:
     - type: Or
       conditions:
-        - type: Value
-          attribute: country
-          operator: { type: Equal, value: "US" }
-        - type: Value
-          attribute: country
-          operator: { type: Equal, value: "CA" }
-    - type: Value
-      attribute: ltv
-      operator: { type: Greater, value: 1000 }
-```
+        - type: Value ...
+        - type: Value ...
 
-```yaml
-# Invalid: Two levels of nesting (Or > And > conditions)
+# Invalid: Two levels deep
 rule:
   type: Or
   conditions:
     - type: And           # Error: NESTED_CONDITION_GROUP
       conditions:
-        - type: Value ...
         - type: Value ...
 ```
 
