@@ -154,6 +154,15 @@
       "skills": [
         "./email-campaign-skills/email-campaign"
       ]
+    },
+    {
+      "name": "studio-skills",
+      "description": "Treasure Studio-specific skills including skill creation guidance",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./studio-skills/skill-creator"
+      ]
     }
   ]
 }

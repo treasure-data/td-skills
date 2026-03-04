@@ -79,6 +79,10 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[field-agent-skills/documentation](./field-agent-skills/documentation)** - Comprehensive templates and guidelines for documenting Field Agents with standardized structure, system prompts, and tool specifications
 - **[field-agent-skills/visualization](./field-agent-skills/visualization)** - Professional Plotly visualization best practices with TD color palette, chart specifications, and formatting standards for executive-ready visualizations
 
+### Studio Skills
+
+- **[studio-skills/skill-creator](./studio-skills/skill-creator)** - Guidance for writing effective custom skills (SKILL.md files) in Treasure Studio, covering description triggers, progressive disclosure, writing patterns, and examples
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
@@ -101,6 +105,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `tdx-skills` - tdx CLI for managing TD from command line
    - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
+   - `studio-skills` - Treasure Studio-specific skills including skill creation guidance
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -111,6 +116,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    /plugin install sdk-skills@td-skills
    /plugin install tdx-skills@td-skills
    /plugin install field-agent-skills@td-skills
+   /plugin install studio-skills@td-skills
    ```
 
 ### Invoking Skills
