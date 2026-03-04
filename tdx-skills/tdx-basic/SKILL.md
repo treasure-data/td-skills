@@ -141,7 +141,7 @@ tdx <command> --help             # Command help
 
 - **Table naming**: `database_name.table_name`
 - **Time column**: Unix timestamp (seconds since epoch), not datetime
-- **Time filtering**: Use `td_interval(time, '-1d')` or `td_time_range(time, 'start', 'end')` for partition pruning
+- **Time filtering**: Use `td_interval(time, '-1d/now')` or `td_time_range(time, 'start', 'end')` for partition pruning
 - **Timezone**: UTC default; use `td_interval(time, '-1d', 'JST')` for Japan
 
 ```sql
