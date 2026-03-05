@@ -91,38 +91,91 @@ cmd_default() {
 # --- ./scripts/release.sh promote ---
 cmd_promote() {
   check_maintainer
-  ensure_main
 
+  # Clean worktree required — promote temporarily switches to the release branch
+  [[ -z "$(git status --porcelain)" ]] || die "Uncommitted changes found. Commit or stash first."
+
+  # Verify release branch exists
+  git fetch origin release --quiet 2>/dev/null \
+    || die "Release branch not found."
+
+  log "Checking latest prerelease..."
   local next; next="$(latest_next)"
   [[ -n "$next" ]] || die "No prerelease found. Run ./scripts/release.sh first."
 
-  echo ""
-  echo "  promote: $next -> stable"
-  echo ""
-  confirm "Promote $next to stable?"
+  local branch="promote/${next}"
 
-  # Restore to main branch on failure
-  trap 'git checkout main 2>/dev/null' EXIT
-
-  log "Switching to release branch..."
-  # Ensure release branch exists
-  if ! git ls-remote --exit-code origin release &>/dev/null; then
-    run git checkout -b release
-    run git push -u origin release
-  else
-    run git checkout -B release origin/release
+  # Check for existing branch or open PR
+  if git ls-remote --exit-code --heads origin "$branch" &>/dev/null; then
+    local existing_pr
+    existing_pr="$(gh pr list --head "$branch" --json url -q '.[0].url' 2>/dev/null)"
+    if [[ -n "$existing_pr" ]]; then
+      die "A promotion PR already exists for ${next}: $existing_pr"
+    else
+      die "Branch '$branch' already exists on remote. Delete it first: git push origin --delete $branch"
+    fi
   fi
 
-  echo "$next" > "$REPO_ROOT/.stable-version"
-  run git add .stable-version
-  run git commit -m "promote: ${next} to stable"
-  run git push origin release
+  # Read previous stable version from release branch
+  local previous
+  previous="$(git show origin/release:.stable-version 2>/dev/null | tr -d '[:space:]')"
+
+  local repo_url
+  repo_url="$(gh repo view --json url -q '.url')"
 
   echo ""
-  echo "Done! GitHub Action will promote $next to stable."
+  echo "  promote: $next -> stable"
+  [[ -n "$previous" && "$previous" != "none" ]] && echo "  current stable: $previous"
+  echo ""
+  confirm "Create release PR to promote $next?"
 
-  run git checkout main
-  trap - EXIT
+  local original_branch
+  original_branch="$(git branch --show-current)"
+
+  log "Creating branch $branch from origin/release..."
+  run git switch -c "$branch" origin/release
+
+  echo "$next" > .stable-version
+  run git add .stable-version
+  run git commit -m "promote: ${next} to stable"
+  run git push -u origin "$branch"
+
+  log "Creating PR..."
+  local body
+  body="## Promote ${next} to stable
+
+Merging this PR promotes **${next}** from prerelease to stable.
+
+### Changes since last stable${previous:+" ($previous)"}
+
+[Compare changes](${repo_url}/compare/${previous:-$(git rev-list --max-parents=0 HEAD | head -1)}...${next})
+
+### Verification checklist
+
+- [ ] Tested key skills with the prerelease version
+- [ ] Checked GitHub prerelease notes for ${next}
+- [ ] No blocking issues reported
+
+| | |
+|---|---|
+| **Version** | ${next} |
+| **Previous stable** | ${previous:-"(none)"} |
+| **Release** | [${next}](${repo_url}/releases/tag/${next}) |"
+
+  local pr_url
+  pr_url="$(gh pr create \
+    --title "promote: ${next} to stable" \
+    --body "$body" \
+    --base release \
+    --head "$branch")"
+
+  echo ""
+  echo "PR created: $pr_url"
+  echo "An engineer must review and merge this PR to complete the promotion."
+
+  # Switch back and clean up local branch
+  run git switch "$original_branch"
+  run git branch -D "$branch"
 }
 
 # --- ./scripts/release.sh status ---
@@ -151,7 +204,7 @@ case "${1:-}" in
   -h|--help)
     echo "Usage: $0 [promote|status]"
     echo "  (no args)  Tag a next prerelease on main"
-    echo "  promote    Promote latest next release to stable"
+    echo "  promote    Create PR to promote next -> stable"
     echo "  status     Show channel info"
     ;;
   "") cmd_default ;;
