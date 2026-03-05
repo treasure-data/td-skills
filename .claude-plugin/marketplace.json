@@ -156,6 +156,15 @@
       ]
     },
     {
+      "name": "sandbox-skills",
+      "description": "Sandbox execution skill for Treasure Studio. Routes Python, Node.js, Playwright, and LibreOffice commands through the isolated sandbox_exec container environment.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./sandbox-skills/sandbox"
+      ]
+    },
+    {
       "name": "studio-skills",
       "description": "Treasure Studio-specific skills including skill creation guidance",
       "source": "./",
