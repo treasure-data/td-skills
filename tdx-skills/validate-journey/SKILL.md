@@ -19,7 +19,8 @@ tdx journey push --dry-run                # Preview changes before push
 |------|-------|-------------|
 | `MISSING_NAME` | error | Journey missing `name` field |
 | `MISSING_STAGES` | error | Journey has no `stages` defined |
-| `MISSING_GOAL` | error | Journey has no `goal` defined |
+| `MISSING_GOAL` | warning | Journey has no `goal` defined |
+| `DUPLICATE_LATEST` | error | Multiple versions/journeys have `latest: true` |
 | `TOO_MANY_STAGES` | error | More than 8 stages |
 | `MISSING_ENTRY_CRITERIA` | error | Stage missing `entry_criteria` |
 | `MISSING_MILESTONE` | error | Non-last stage missing `milestone` |
@@ -63,6 +64,13 @@ tdx journey push --dry-run                # Preview changes before push
 | Branch must have activation | Every decision_point/ab_test/condition wait branch MUST have an activation step before merge |
 | Wait after activation | A wait step must follow every activation step. If activation → merge, place wait after merge |
 
+### Schema Validation (Zod)
+
+| Code | Level | Description |
+|------|-------|-------------|
+| `JOURNEY_SCHEMA_ERROR` | error | Journey YAML structure doesn't match expected schema (invalid types, missing required fields, unknown enum values) |
+| `ACTIVATION_SCHEMA_ERROR` | error | Activation definition has invalid structure (missing `name` or `connection`, invalid schedule type, etc.) |
+
 ### Reference Validation
 
 | Code | Level | Description |
@@ -77,7 +85,7 @@ type: journey              # Required
 name: Journey Name
 reentry: no_reentry        # no_reentry | reentry_unless_goal_achieved | reentry_always
 
-goal:                      # Required
+goal:                      # Recommended (warning if missing)
   name: Goal Name
   segment: goal-segment    # Embedded segment (defined in segments: section)
 
