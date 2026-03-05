@@ -1,25 +1,46 @@
 ---
 name: segment
-description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers Value/Behavior condition types, all operators (Equal, In, Between, TimeWithinPast, etc.), behavior aggregations with filters, and nested condition groups. Use when creating audience segments with filtering rules, configuring behavior-based conditions, managing segment hierarchies, or exploring available fields with `tdx sg fields`.
+description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers Value/Behavior condition types, all operators (Equal, In, Between, TimeWithinPast, etc.), behavior aggregations with filters, and nested condition group restrictions. Use when creating audience segments with filtering rules, configuring behavior-based conditions, managing segment hierarchies, or exploring available fields with `tdx sg fields`.
 ---
 
 # tdx Segment - CDP Child Segment Management
+
+## Segment Creation Workflow
+
+**Process one segment at a time.** For each segment:
+
+1. **Create** the YAML file
+2. **Validate** with `tdx sg validate <file>`
+3. **Count check** — run `tdx sg sql --path <file> | tdx query -` and verify count > 0
+   - If count is 0, the rule is too restrictive — revise before proceeding
+4. **Preview** with `preview_segment` tool — get user approval before proceeding
+5. **Push** with `tdx sg push -y "<file>"` — always specify the file path explicitly
+
+Never batch multiple segments in validate or push operations.
+
+After push succeeds, display the Console link:
+```
+https://console.treasuredata.com/app/audiences/<parent_id>/segments/<segment_id>
+```
 
 ## Core Commands
 
 ```bash
 tdx sg use "Customer 360"             # Set parent segment context
 tdx sg pull "Customer 360"            # Pull to YAML (creates segments/customer-360/*.yml)
-tdx sg push --dry-run                 # Preview changes
-tdx sg push                           # Push to TD
-tdx sg push --delete                  # Delete segments not in local files
+tdx sg validate <file>                # Validate specific file locally
+tdx sg push --dry-run "<file>"        # Server-side validation (quote paths with special chars)
+tdx sg push -y "<file>"               # Push specific file (-y for non-interactive)
 
 tdx sg list                           # List segments
 tdx sg list -r                        # Recursive tree view
 tdx sg fields                         # List available fields
 tdx sg show "Segment Name"            # Preview segment data
 tdx sg sql "Segment Name" | tdx query -  # Pipe segment SQL to query
+tdx sg sql --path <file>              # Get SQL from local YAML (requires tdx.json)
 ```
+
+**Note**: `--path` requires a project directory created by `tdx sg pull`. The file must be inside a folder with `tdx.json`.
 
 ## YAML Configuration
 
@@ -54,11 +75,9 @@ Five condition types can be used inside `conditions:`:
 
 | Type | Purpose |
 |------|---------|
-| `Value` | Filter by attribute column |
-| `Behavior` | Aggregate behavior table data |
-| `Column` | Filter by column inside behavior `filter:` blocks |
+| `Value` | Filter by attribute column (also used for behavior with `source`) |
 | `include` / `exclude` | Reference another segment |
-| `And` / `Or` | Nested condition group |
+| `And` / `Or` | Condition group (nesting not supported — see below) |
 
 ## Operators
 
@@ -94,72 +113,92 @@ operator:
 
 ## Behavior Conditions
 
-Query behavior table data with aggregations. Use `type: Behavior` (not `Value`). `attribute` should be the event/column name from the behavior table (run `tdx sg fields` to list). Always provide a concrete name — the CDP API rejects empty attribute.
+Query behavior table data with aggregations. Use `type: Value` with `source` and `aggregation` fields.
 
 ```yaml
 # Sum order_total for Electronics purchases in last 90 days
-- type: Behavior
-  attribute: order_total             # Event or column name from behavior table
+- type: Value
+  attribute: ""                      # Empty string for behavior aggregations
   source: behavior_purchase_history  # behavior_<table_name> (prefix required)
   aggregation:
     type: Sum                        # Count | Sum | Average | Min | Max
     column: order_total              # Required for Sum/Average/Min/Max (not Count)
   operator:
     type: Greater
+    not: false
     value: 500
   timeWindow:                        # Optional: restrict to recent window
     duration: 90
     unit: day
-  filter:                            # Optional: filter rows before aggregation
+  filter:                            # Required when using source
     type: And
     conditions:
-      - type: Column               # MUST use Column (not Value) inside filter
-        column: category            # Use column: (not attribute:)
+      - type: Column                 # Use Column (not Value) inside filter
+        column: category             # Use column (not attribute) field
         operator:
           type: Equal
+          not: false
           value: "Electronics"
 ```
 
-**Important**: Inside behavior `filter:`, conditions must use `type: Column` with `column:` field (not `type: Value` with `attribute:`). The API rejects `Value` conditions inside filter blocks.
+**Important**: Inside `filter.conditions`, use `type: Column` with `column` field (not `type: Value` with `attribute`).
 
 ## Segment References (Include/Exclude)
 
+Reference segments that already exist on the server by their exact name.
+
 ```yaml
 rule:
   type: And
   conditions:
-    - type: include              # Include members of another segment
-      segment: high-value-users
-    - type: exclude              # Exclude members of another segment
-      segment: churned-users
     - type: include
-      segment: "Existing Segment Name" # Use the segment name as it appears in TD
+      segment: "Existing Segment Name"  # Must match name exactly as shown in TD Console
+    - type: exclude
+      segment: "Churned Users"
 ```
+
+**Limitation**: Cannot reference unpushed local segments. The segment must already exist on the server.
 
 ## Nested Condition Groups
 
-Combine And/Or logic with nesting:
+**Not supported.** Console UI silently ignores nested Or/And groups, causing local/server discrepancy. `tdx sg validate` rejects all nested condition groups with `NESTED_CONDITION_GROUP` error.
+
+### Workaround: Use `In` operator instead of nested Or
+
+When you need "value A OR value B" on the **same attribute**, use the `In` operator:
 
 ```yaml
-rule:
-  type: And
+# Instead of nested Or (rejected by validator):
+- type: Or
   conditions:
-    - type: Or
-      conditions:
-        - type: Value
-          attribute: country
-          operator: { type: Equal, value: "US" }
-        - type: Value
-          attribute: country
-          operator: { type: Equal, value: "CA" }
     - type: Value
-      attribute: ltv
-      operator: { type: Greater, value: 1000 }
+      attribute: activities
+      operator: { type: Equal, value: "Intermediate" }
+    - type: Value
+      attribute: activities
+      operator: { type: Equal, value: "Advanced" }
+
+# Use In operator (works correctly):
+- type: Value
+  attribute: activities
+  operator:
+    type: In
+    value: ["Intermediate", "Advanced"]
 ```
+
+### Limitation
+
+Or conditions across **different attributes** cannot be expressed without nested Or:
+```yaml
+# This CANNOT be expressed without nested Or:
+# (country = "US") OR (age > 30)
+```
+
+For such cases, consider creating separate segments and using `include` references, or restructuring the business logic.
 
 ## Array Matching
 
-Add `arrayMatching` to Value/Behavior conditions: `any | all | { atLeast: N } | { atMost: N } | { exactly: N }`
+Add `arrayMatching` to Value conditions: `any | all | { atLeast: N } | { atMost: N } | { exactly: N }`
 
 ## Folder Structure
 
@@ -178,12 +217,15 @@ segments/customer-360/
 | Field not available | `tdx sg fields` or run parent workflow |
 | Between missing bounds | At least one of `min` or `max` required |
 | Behavior source unknown | Check parent segment behavior table names |
+| NESTED_CONDITION_GROUP | Use `In` operator or flatten; all nesting is rejected |
+| Segment reference not found | Segment must exist on server; use exact name from Console |
+| Non-interactive mode error | Add `-y` flag: `tdx sg push -y "<file>"` |
 
 ## Related Skills
 
 - **activation** - Configure activations (connections, schedule, columns)
 - **connector-config** - `connector_config` fields per connector type
-- **validate-segment** - Validate segment YAML syntax
+- **validate-segment** - Validate segment YAML syntax and error codes
 - **parent-segment** - Manage parent segments
 
 ## Resources

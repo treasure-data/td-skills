@@ -5,10 +5,11 @@ description: Validation reference for CDP segment YAML. Lists all 18 operator ty
 
 # Segment YAML Validation
 
+**Validate one segment at a time.** Always specify the file path explicitly:
+
 ```bash
-tdx sg validate                           # Validate all YAML files locally
-tdx sg validate path/to/segment.yml       # Validate specific file
-tdx sg push --dry-run                     # Preview changes before push
+tdx sg validate path/to/segment.yml       # Local validation (fast, catches syntax errors)
+tdx sg push --dry-run "path/to/segment.yml"  # Server validation (catches schema/reference errors)
 ```
 
 ## Required Structure
@@ -20,9 +21,10 @@ rule:
   type: And                        # And | Or (INVALID_RULE_TYPE)
   conditions:                      # Required array (MISSING_CONDITIONS)
     - type: Value
-      attribute: field_name        # Required non-empty (EMPTY_ATTRIBUTE)
+      attribute: field_name        # Required non-empty for Value (EMPTY_ATTRIBUTE)
       operator:
         type: OperatorType
+        not: false                 # Optional negation
         value: ...
 ```
 
@@ -31,10 +33,11 @@ rule:
 | Type | Required Fields | Error Codes |
 |------|----------------|-------------|
 | `Value` | `attribute`, `operator` | `EMPTY_ATTRIBUTE`, `INVALID_OPERATOR_TYPE` |
-| `Behavior` | `attribute`, `operator`, `source`, `aggregation` | `EMPTY_ATTRIBUTE` |
-| `Column` | `column`, `operator` | — |
+| `Value` (with behavior) | `attribute: ""`, `operator`, `source`, `aggregation`, `filter` | Server-side validation |
 | `include` / `exclude` | `segment` | `MISSING_SEGMENT_REFERENCE` |
-| `And` / `Or` | `conditions` | `MISSING_CONDITIONS`, `INVALID_RULE_TYPE` |
+| `And` / `Or` | `conditions` | `MISSING_CONDITIONS`, `NESTED_CONDITION_GROUP` |
+
+**Note**: For behavior queries, use `type: Value` with `source`, `aggregation`, and `filter` fields. The `type: Behavior` may pass local validation but fail server-side.
 
 ## Operators
 
@@ -65,29 +68,15 @@ Any operator supports `not: true` for negation. This is separate from `NotEqual`
 
 ## Behavior Conditions
 
-```yaml
-- type: Behavior
-  attribute: purchase_event        # Event or column name (required by CDP API)
-  source: behavior_purchase_history
-  aggregation:
-    type: Count                    # Count | Sum | Average | Min | Max
-  operator:
-    type: GreaterEqual
-    value: 1
-  timeWindow:                      # Optional
-    duration: 30
-    unit: day
-  filter:                          # Optional: use Column conditions (not Value)
-    type: And
-    conditions:
-      - type: Column
-        column: timestamp
-        operator: { type: TimeWithinPast, value: 90, unit: day }
-```
+Use `type: Value` with `source`, `aggregation`, and `filter`. Inside `filter`, use `type: Column` with `column` field (not `type: Value` with `attribute`). See **segment** skill for full examples.
+
+## Nested Condition Groups
+
+**Not supported.** Console UI silently ignores nested Or/And groups, causing local/server discrepancy. All nesting triggers `NESTED_CONDITION_GROUP` error. Use `In` operator instead. See **segment** skill for details and workarounds.
 
 ## Array Matching
 
-Optional field on Value/Behavior conditions:
+Optional field on Value conditions:
 
 ```yaml
 arrayMatching: any                 # any | all | { atLeast: N } | { atMost: N } | { exactly: N }
@@ -97,19 +86,35 @@ Invalid keys trigger `INVALID_ARRAY_MATCHING`.
 
 ## Error Code Reference
 
-| Code | Cause |
-|------|-------|
-| `MISSING_NAME` | Segment name is empty or missing |
-| `INVALID_RULE_TYPE` | Rule type is not `And` or `Or` |
-| `MISSING_CONDITIONS` | Rule or group has no `conditions` array |
-| `EMPTY_ATTRIBUTE` | Attribute is empty |
-| `INVALID_OPERATOR_TYPE` | Operator type not in the 18 valid types |
-| `MISSING_OPERATOR_VALUE` | Operator requires `value` but it is missing |
-| `MISSING_BETWEEN_BOUNDS` | `Between` has neither `min` nor `max` |
-| `MISSING_TIME_UNIT` | `TimeWithinPast`/`TimeWithinNext` missing `unit` |
-| `INVALID_ARRAY_MATCHING` | `arrayMatching` has invalid format |
-| `MISSING_SEGMENT_REFERENCE` | `include`/`exclude` missing `segment` field |
+| Code | Cause | Solution |
+|------|-------|----------|
+| `MISSING_NAME` | Segment name is empty or missing | Add `name:` field |
+| `INVALID_RULE_TYPE` | Rule type is not `And` or `Or` | Check `type:` spelling |
+| `MISSING_CONDITIONS` | Rule or group has no `conditions` array | Add conditions array |
+| `EMPTY_ATTRIBUTE` | Attribute is empty | Provide attribute name (or `""` for behavior) |
+| `INVALID_OPERATOR_TYPE` | Operator type not in the 18 valid types | Check operator spelling |
+| `MISSING_OPERATOR_VALUE` | Operator requires `value` but it is missing | Add `value:` field |
+| `MISSING_BETWEEN_BOUNDS` | `Between` has neither `min` nor `max` | Add `min:` and/or `max:` |
+| `MISSING_TIME_UNIT` | Time operator missing `unit` | Add `unit: day` (singular) |
+| `INVALID_ARRAY_MATCHING` | `arrayMatching` has invalid format | Use `any`, `all`, or object form |
+| `MISSING_SEGMENT_REFERENCE` | `include`/`exclude` missing `segment` field | Add `segment:` with exact name |
+| `NESTED_CONDITION_GROUP` | Any nested Or/And condition group | Use `In` operator or flatten |
+| `SEGMENT_SCHEMA_ERROR` | Server rejected the schema | Check field names (`column` vs `attribute` in filter) |
+
+## Local vs Server Validation
+
+| Check | `tdx sg validate` | `tdx sg push --dry-run` |
+|-------|-------------------|-------------------------|
+| YAML syntax | Yes | Yes |
+| Operator types | Yes | Yes |
+| Required fields | Yes | Yes |
+| Nested groups rejected | Yes | Yes |
+| Segment references | No | Yes |
+| Behavior schema | Partial | Yes |
+| Field availability | No | Yes |
+
+Always run both validations before pushing.
 
 ## Related Skills
 
-- **segment** - Full segment rule syntax and examples
+- **segment** - Full segment rule syntax and workflow
