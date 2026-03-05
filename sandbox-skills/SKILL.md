@@ -1,6 +1,6 @@
 ---
 name: sandbox
-description: Use when the Sandbox working folder is selected. Routes all command execution through sandbox_exec by default, keeping work inside the isolated container.
+description: REQUIRED when the Sandbox working folder is active. Defines how to use sandbox_exec for Python, Node.js, shell commands, Playwright, and LibreOffice in the isolated container.
 ---
 
 # Sandbox Execution
