@@ -38,25 +38,25 @@ latest_next() {
   gh release list --json tagName,isPrerelease --jq '[.[] | select(.isPrerelease == true)] | .[0].tagName // empty' 2>/dev/null
 }
 
-next_version() {
-  local ym; ym="$(date +%Y.%-m)"
-  # Find the latest tag for this month
-  local latest; latest="$(git tag -l "v${ym}.*" --sort=-v:refname | head -1)"
-  if [[ -n "$latest" ]]; then
-    local patch; patch="$(echo "$latest" | sed -E 's/^v[0-9]+\.[0-9]+\.([0-9]+)$/\1/')"
-    echo "v${ym}.$((patch + 1))"
-  else
-    echo "v${ym}.0"
-  fi
-}
-
 # --- ./scripts/release.sh — tag next prerelease ---
 cmd_default() {
   check_maintainer
   ensure_main
 
-  local version; version="$(next_version)"
-  local prev; prev="$(git tag -l 'v*' --sort=-v:refname | head -1)"
+  local all_tags; all_tags="$(git tag -l 'v*' --sort=-v:refname)"
+  local ym; ym="$(date +%Y.%-m)"
+
+  # Compute next version from tags for this month
+  local latest_month_tag; latest_month_tag="$(echo "$all_tags" | grep "^v${ym}\." | head -1)"
+  local version
+  if [[ -n "$latest_month_tag" ]]; then
+    local patch; patch="$(echo "$latest_month_tag" | sed -E 's/^v[0-9]+\.[0-9]+\.([0-9]+)$/\1/')"
+    version="v${ym}.$((patch + 1))"
+  else
+    version="v${ym}.0"
+  fi
+
+  local prev; prev="$(echo "$all_tags" | head -1)"
 
   echo "Tagging: $version"
   [[ -n "$prev" ]] && echo "  Previous: $prev"
@@ -78,6 +78,9 @@ cmd_promote() {
   [[ -n "$next" ]] || die "No prerelease found. Run ./scripts/release.sh first."
 
   echo "Promoting $next to stable"
+
+  # Restore to main branch on failure
+  trap 'git checkout main 2>/dev/null' EXIT
 
   # Ensure release branch exists
   if ! git ls-remote --exit-code origin release &>/dev/null; then
@@ -101,13 +104,17 @@ EOF
   echo "Pushed to release branch. GitHub Action will promote $next to stable."
 
   git checkout main
+  trap - EXIT
 }
 
 # --- ./scripts/release.sh status ---
 cmd_status() {
   git fetch origin --tags 2>/dev/null
-  local stable; stable="$(latest_stable)"
-  local next; next="$(latest_next)"
+
+  # Single API call for all releases
+  local releases; releases="$(gh release list --json tagName,isPrerelease 2>/dev/null)"
+  local stable; stable="$(echo "$releases" | jq -r '[.[] | select(.isPrerelease == false)] | .[0].tagName // empty')"
+  local next; next="$(echo "$releases" | jq -r '[.[] | select(.isPrerelease == true)] | .[0].tagName // empty')"
 
   echo "stable: ${stable:-"(none)"}"
   echo "next:   ${next:-"(none)"}"

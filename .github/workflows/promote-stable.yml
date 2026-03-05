@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          ref: release
 
       - name: Read version from .stable-version
         id: version
@@ -29,18 +31,20 @@ jobs:
 
       - name: Verify author is maintainer
         run: |
-          AUTHOR=$(gh api repos/${{ github.repository }}/commits/${{ github.sha }} --jq '.author.login')
+          AUTHOR=$(gh api "repos/${REPO}/commits/${SHA}" --jq '.author.login')
           if ! grep -qE "^\s*-\s*${AUTHOR}\s*$" .github/maintainers.yml; then
             echo "::error::Author '$AUTHOR' is not a maintainer"
             exit 1
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
 
       - name: Promote GitHub release
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
           echo "Removing prerelease flag from $VERSION"
           gh release edit "$VERSION" --prerelease=false --latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
