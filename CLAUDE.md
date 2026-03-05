@@ -170,7 +170,7 @@ gh pr create --title "Add [feature]" --body "Description of changes"
 
 Skills are published through two channels:
 
-- **next** — prerelease tags on `main` (`vYYYY.MM.patch`). Created by maintainers, available for early testing.
+- **next** — prerelease tags on `main` (`vYYYY.M.patch`). Created by maintainers, available for early testing.
 - **stable** — promoted GitHub releases (prerelease flag removed). Used by tdx and Treasure Studio.
 
 ### Release Workflow
@@ -188,12 +188,12 @@ Only maintainers listed in `.github/maintainers.yml` can create releases.
 ./scripts/release.sh status
 ```
 
-- `release.sh` (no args) computes the next `vYYYY.MM.patch` version, tags `main`, and pushes. The `release-notes.yml` GitHub Action auto-creates a GitHub prerelease.
+- `release.sh` (no args) computes the next `vYYYY.M.patch` version, tags `main`, and pushes. The `release-notes.yml` GitHub Action auto-creates a GitHub prerelease.
 - `release.sh promote` writes the version to `.stable-version` on the `release` branch. The `promote-stable.yml` GitHub Action removes the prerelease flag, making it the latest stable release.
 
 ### Versioning
 
-Format: `vYYYY.MM.patch` (e.g., `v2026.03.0`)
+Format: `vYYYY.M.patch` (e.g., `v2026.3.0`)
 
 - New month resets patch to `0`
-- Multiple releases in the same month increment patch (`v2026.03.0`, `v2026.03.1`, ...)
+- Multiple releases in the same month increment patch (`v2026.3.0`, `v2026.3.1`, ...)

@@ -206,13 +206,13 @@ Skills are published through two release channels:
 
 | Channel | Source | Consumer |
 |---------|--------|----------|
-| **next** | Prerelease tags on `main` | Early testing |
+| **next** | Prerelease tags on `main` (`vYYYY.M.patch`) | Early testing |
 | **stable** | Promoted GitHub releases | tdx, Treasure Studio |
 
 Maintainers (`.github/maintainers.yml`) manage releases with:
 
 ```bash
-./scripts/release.sh            # Tag a next prerelease (vYYYY.MM.patch)
+./scripts/release.sh            # Tag a next prerelease (vYYYY.M.patch)
 ./scripts/release.sh promote    # Promote next -> stable
 ./scripts/release.sh status     # Show channel info
 ```

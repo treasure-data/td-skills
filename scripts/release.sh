@@ -8,7 +8,7 @@ set -euo pipefail
 #   ./scripts/release.sh status     Show channel info
 #
 # Channels:
-#   next   = prerelease tags on main (vYYYY.MM.patch), auto-creates GitHub prerelease
+#   next   = prerelease tags on main (vYYYY.M.patch), auto-creates GitHub prerelease
 #   stable = promoted releases (prerelease flag removed via release branch)
 #
 # Requires: gh CLI, maintainer listed in .github/maintainers.yml
@@ -39,11 +39,11 @@ latest_next() {
 }
 
 next_version() {
-  local ym; ym="$(date +%Y.%m)"
+  local ym; ym="$(date +%Y.%-m)"
   # Find the latest tag for this month
   local latest; latest="$(git tag -l "v${ym}.*" --sort=-v:refname | head -1)"
   if [[ -n "$latest" ]]; then
-    local patch; patch="$(echo "$latest" | sed -E 's/^v[0-9]{4}\.[0-9]{2}\.([0-9]+)$/\1/')"
+    local patch; patch="$(echo "$latest" | sed -E 's/^v[0-9]+\.[0-9]+\.([0-9]+)$/\1/')"
     echo "v${ym}.$((patch + 1))"
   else
     echo "v${ym}.0"
