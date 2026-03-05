@@ -181,7 +181,7 @@ Only maintainers listed in `.github/maintainers.yml` can create releases.
 # 1. Tag a new prerelease on main (next channel)
 ./scripts/release.sh
 
-# 2. Promote the latest next release to stable
+# 2. Create a PR to promote the latest next release to stable
 ./scripts/release.sh promote
 
 # 3. Check current channel status
@@ -189,7 +189,7 @@ Only maintainers listed in `.github/maintainers.yml` can create releases.
 ```
 
 - `release.sh` (no args) computes the next `vYYYY.M.patch` version, tags `main`, and pushes. The `release-notes.yml` GitHub Action auto-creates a GitHub prerelease.
-- `release.sh promote` writes the version to `.stable-version` on the `release` branch. The `promote-stable.yml` GitHub Action removes the prerelease flag, making it the latest stable release.
+- `release.sh promote` creates a PR that updates `.stable-version` on the orphan `release` branch. An engineer must review and merge the PR. The `promote-stable.yml` GitHub Action then removes the prerelease flag, making it the latest stable release.
 
 ### Versioning
 

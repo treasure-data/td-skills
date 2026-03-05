@@ -209,15 +209,19 @@ Skills are published through two release channels:
 | **next** | Prerelease tags on `main` (`vYYYY.M.patch`) | Early testing |
 | **stable** | Promoted GitHub releases | tdx, Treasure Studio |
 
-Maintainers (`.github/maintainers.yml`) manage releases with:
+### Workflow
+
+1. **Tag a prerelease** — maintainer runs `./scripts/release.sh` on `main`, which tags and pushes. A GitHub Action auto-creates a prerelease.
+2. **Promote to stable** — maintainer runs `./scripts/release.sh promote`, which creates a PR targeting the `release` branch (an orphan branch containing only `.stable-version`).
+3. **Approve and merge** — an engineer reviews and merges the PR. A GitHub Action removes the prerelease flag, making it the latest stable release.
 
 ```bash
-./scripts/release.sh            # Tag a next prerelease (vYYYY.M.patch)
-./scripts/release.sh promote    # Promote next -> stable
+./scripts/release.sh            # Tag a next prerelease
+./scripts/release.sh promote    # Create PR to promote next -> stable
 ./scripts/release.sh status     # Show channel info
 ```
 
-See [CLAUDE.md](./CLAUDE.md#release-channels) for details.
+Only maintainers listed in `.github/maintainers.yml` can run these commands.
 
 ## Contributing
 
