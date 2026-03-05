@@ -17,17 +17,29 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MAINTAINERS_FILE="$REPO_ROOT/.github/maintainers.yml"
 
 die() { echo "error: $*" >&2; exit 1; }
+log() { echo ":: $*"; }
+run() { echo "\$ $*"; "$@"; }
+
+confirm() {
+  printf "%s [y/N] " "$1"
+  read -r answer
+  [[ "$answer" =~ ^[Yy]$ ]] || die "Aborted"
+}
 
 check_maintainer() {
+  log "Checking maintainer access..."
   local user
   user="$(gh api user --jq '.login' 2>/dev/null)" || die "Not authenticated. Run: gh auth login"
   grep -qE "^\s*-\s*${user}\s*$" "$MAINTAINERS_FILE" || die "'$user' is not a maintainer"
+  log "Authenticated as $user"
 }
 
 ensure_main() {
   [[ "$(git branch --show-current)" == "main" ]] || die "Must be on main branch"
+  log "Fetching origin..."
   git fetch origin --tags
   git diff --quiet origin/main..HEAD || die "Local main diverges from origin. Push or reset first."
+  log "Main is up to date"
 }
 
 latest_stable() {
@@ -43,11 +55,12 @@ cmd_default() {
   check_maintainer
   ensure_main
 
+  log "Computing next version..."
   local all_tags; all_tags="$(git tag -l 'v*' --sort=-v:refname)"
   local ym; ym="$(date +%Y.%-m)"
 
   # Compute next version from tags for this month
-  local latest_month_tag; latest_month_tag="$(echo "$all_tags" | grep "^v${ym}\." | head -1)"
+  local latest_month_tag; latest_month_tag="$(echo "$all_tags" | grep "^v${ym}\." | head -1 || true)"
   local version
   if [[ -n "$latest_month_tag" ]]; then
     local patch; patch="$(echo "$latest_month_tag" | sed -E 's/^v[0-9]+\.[0-9]+\.([0-9]+)$/\1/')"
@@ -58,15 +71,21 @@ cmd_default() {
 
   local prev; prev="$(echo "$all_tags" | head -1)"
 
-  echo "Tagging: $version"
-  [[ -n "$prev" ]] && echo "  Previous: $prev"
   echo ""
+  echo "  version:  $version"
+  [[ -n "$prev" ]] && echo "  previous: $prev"
+  echo ""
+  confirm "Tag and push $version?"
 
-  git tag -a "$version" -m "$version"
-  git push origin "$version"
+  run git tag -a "$version" -m "$version"
+  run git push origin "$version"
 
-  echo "Tag pushed. GitHub Action will create the prerelease."
+  echo ""
+  echo "Done! GitHub Action will create the prerelease."
   echo "  https://github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner)/releases/tag/$version"
+  echo ""
+  echo "After validation, promote to stable:"
+  echo "  ./scripts/release.sh promote"
 }
 
 # --- ./scripts/release.sh promote ---
@@ -77,38 +96,38 @@ cmd_promote() {
   local next; next="$(latest_next)"
   [[ -n "$next" ]] || die "No prerelease found. Run ./scripts/release.sh first."
 
-  echo "Promoting $next to stable"
+  echo ""
+  echo "  promote: $next -> stable"
+  echo ""
+  confirm "Promote $next to stable?"
 
   # Restore to main branch on failure
   trap 'git checkout main 2>/dev/null' EXIT
 
+  log "Switching to release branch..."
   # Ensure release branch exists
   if ! git ls-remote --exit-code origin release &>/dev/null; then
-    git checkout -b release
-    git push -u origin release
+    run git checkout -b release
+    run git push -u origin release
   else
-    git checkout -B release origin/release
+    run git checkout -B release origin/release
   fi
 
   echo "$next" > "$REPO_ROOT/.stable-version"
-  git add .stable-version
-  git commit -m "$(cat <<EOF
-promote: ${next} to stable
-
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
-EOF
-)"
-  git push origin release
+  run git add .stable-version
+  run git commit -m "promote: ${next} to stable"
+  run git push origin release
 
   echo ""
-  echo "Pushed to release branch. GitHub Action will promote $next to stable."
+  echo "Done! GitHub Action will promote $next to stable."
 
-  git checkout main
+  run git checkout main
   trap - EXIT
 }
 
 # --- ./scripts/release.sh status ---
 cmd_status() {
+  log "Fetching latest..."
   git fetch origin --tags 2>/dev/null
 
   # Single API call for all releases
