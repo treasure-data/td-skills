@@ -25,9 +25,8 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const yaml = require('js-yaml');
-            const config = yaml.load(fs.readFileSync('.github/maintainers.yml', 'utf8'));
-            const maintainers = config.maintainers || [];
+            const content = fs.readFileSync('.github/maintainers.yml', 'utf8');
+            const maintainers = content.match(/^\s*-\s+(.+)$/gm)?.map(l => l.replace(/^\s*-\s+/, '').trim()) || [];
             const author = context.payload.pull_request.user.login;
             if (maintainers.includes(author)) {
               await github.rest.issues.addLabels({

@@ -1,0 +1,50 @@
+name: Promote to Stable
+
+on:
+  push:
+    branches: [release]
+    paths: ['.stable-version']
+
+jobs:
+  promote:
+    name: Promote to Stable
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: release
+
+      - name: Read version from .stable-version
+        id: version
+        run: |
+          VERSION=$(cat .stable-version | tr -d '[:space:]')
+          if [[ -z "$VERSION" ]]; then
+            echo "Error: .stable-version file is empty"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Promoting version: $VERSION"
+
+      - name: Verify author is maintainer
+        run: |
+          AUTHOR=$(gh api "repos/${REPO}/commits/${SHA}" --jq '.author.login')
+          if ! grep -qE "^\s*-\s*${AUTHOR}\s*$" .github/maintainers.yml; then
+            echo "::error::Author '$AUTHOR' is not a maintainer"
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+
+      - name: Promote GitHub release
+        run: |
+          echo "Removing prerelease flag from $VERSION"
+          gh release edit "$VERSION" --prerelease=false --latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}

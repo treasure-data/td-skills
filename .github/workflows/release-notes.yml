@@ -1,0 +1,42 @@
+name: Create Release Notes
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to create release for (e.g., v2026.3.0)'
+        required: true
+
+jobs:
+  release:
+    name: Create GitHub Release
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Resolve tag
+        id: tag
+        run: echo "name=${TAG_FROM_INPUT:-$TAG_FROM_REF}" >> "$GITHUB_OUTPUT"
+        env:
+          TAG_FROM_INPUT: ${{ github.event.inputs.tag }}
+          TAG_FROM_REF: ${{ github.ref_name }}
+
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.tag.outputs.name }}
+
+      - name: Create a release note
+        run: |
+          echo "Checking if release exists for tag: $TAG"
+          # Check if release already exists, create only if it doesn't
+          gh release view "$TAG" --repo="$GITHUB_REPOSITORY" || \
+            gh release create "$TAG" --repo="$GITHUB_REPOSITORY" --generate-notes --prerelease
+        env:
+          TAG: ${{ steps.tag.outputs.name }}
