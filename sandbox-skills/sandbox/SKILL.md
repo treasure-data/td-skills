@@ -13,11 +13,10 @@ When the Sandbox working folder is active, **use `sandbox_exec` for all command 
 - If a library or tool is missing, install it inside the sandbox (`pip install`, `npm install`, etc.) — the container persists, so installed packages remain available in subsequent calls
 - Only fall back to host execution for the exceptions listed below
 
-## Exceptions — Use Host Tools For
+## Exceptions — Run Directly on Host
 
-- `tdx` commands (only available on the host)
-- File operations (Read/Write/Edit tools)
-- Simple file listing (`ls`, `cat`) when no processing is needed
+- `tdx` commands — run via Bash as usual (tdx is only available on the host)
+- File operations — use Read/Write/Edit tools
 
 ## Pre-installed Tools
 
