@@ -17,6 +17,7 @@ When the Sandbox working folder is active, **use `sandbox_exec` for all command 
 
 - `tdx` commands — run via Bash as usual (tdx is only available on the host)
 - File operations — use Read/Write/Edit tools
+- Simple file listing (`ls`, `cat`) when no processing is needed
 
 ## Pre-installed Tools
 
