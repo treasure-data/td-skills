@@ -200,6 +200,25 @@ To add a new TD-specific skill:
 
    ```
 
+## Release Channels
+
+Skills are published through two release channels:
+
+| Channel | Source | Consumer |
+|---------|--------|----------|
+| **next** | Prerelease tags on `main` | Early testing |
+| **stable** | Promoted GitHub releases | tdx, Treasure Studio |
+
+Maintainers (`.github/maintainers.yml`) manage releases with:
+
+```bash
+./scripts/release.sh            # Tag a next prerelease (vYYYY.MM.patch)
+./scripts/release.sh promote    # Promote next -> stable
+./scripts/release.sh status     # Show channel info
+```
+
+See [CLAUDE.md](./CLAUDE.md#release-channels) for details.
+
 ## Contributing
 
 To contribute a new skill or improve an existing one:

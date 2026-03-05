@@ -1,0 +1,30 @@
+name: Create Release Notes
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Create GitHub Release
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Create a release note
+        run: |
+          TAG="${{ github.ref_name }}"
+          echo "Checking if release exists for tag: $TAG"
+          # Check if release already exists, create only if it doesn't
+          gh release view "$TAG" --repo="$GITHUB_REPOSITORY" || \
+            gh release create "$TAG" --repo="$GITHUB_REPOSITORY" --generate-notes --prerelease
