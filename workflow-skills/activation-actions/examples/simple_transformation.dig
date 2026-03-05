@@ -1,0 +1,42 @@
+# Data transformation: clean emails, format phones, capitalize names
+timezone: UTC
+
+_export:
+  segment_id: ${segment_id}
+  activation_id: ${activation_id}
+  activation_output_database: ${activation_output_database}
+  activation_output_table: ${activation_output_table}
+  td:
+    database: ${activation_output_database}
+
++transform_data:
+  td>: |
+    SELECT
+      customer_id,
+      LOWER(TRIM(email)) AS email,
+      INITCAP(TRIM(first_name)) AS first_name,
+      INITCAP(TRIM(last_name)) AS last_name,
+      CONCAT('+1-',
+        SUBSTRING(REGEXP_REPLACE(phone, '[^0-9]', ''), 1, 3), '-',
+        SUBSTRING(REGEXP_REPLACE(phone, '[^0-9]', ''), 4, 3), '-',
+        SUBSTRING(REGEXP_REPLACE(phone, '[^0-9]', ''), 7, 4)
+      ) AS phone_formatted,
+      country, city, postal_code
+    FROM ${activation_output_database}.${activation_output_table}
+    WHERE email IS NOT NULL
+      AND LENGTH(REGEXP_REPLACE(phone, '[^0-9]', '')) = 10
+  create_table: transformed_profiles_${activation_id}
+
++export:
+  td_result_export>:
+    database: ${activation_output_database}
+    table: transformed_profiles_${activation_id}
+    result_url: "twilio://your-auth-name"
+
++cleanup:
+  td_ddl>:
+  drop_tables:
+    - ${activation_output_database}.transformed_profiles_${activation_id}
+
+_error:
+  echo>: "Transformation failed for activation ${activation_id}"
