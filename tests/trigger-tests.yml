@@ -1,0 +1,45 @@
+# Skill trigger test cases
+# Format: prompt -> expected skill name
+# Run with: ./tests/run-tests.sh
+
+tests:
+  # SQL skills
+  - prompt: "Optimize my Trino query for better performance"
+    expected: trino-optimizer
+
+  - prompt: "Write a Trino query to count users by country"
+    expected: trino
+
+  - prompt: "Write a Hive query with lateral view explode"
+    expected: hive
+
+  - prompt: "Convert this Trino query to Hive"
+    expected: trino-to-hive-migration
+
+  - prompt: "Use td_interval and td_time_range for time-based filtering"
+    expected: time-filtering
+
+  # tdx skills
+  - prompt: "Create a segment for users who purchased in the last 30 days"
+    expected: segment
+
+  - prompt: "Create a parent segment with customer attributes"
+    expected: parent-segment
+
+  - prompt: "Validate my segment YAML configuration"
+    expected: validate-segment
+
+  - prompt: "Create a journey YAML with tdx journey commands"
+    expected: journey
+
+  - prompt: "Validate my journey YAML file"
+    expected: validate-journey
+
+  - prompt: "Run a tdx query to list databases"
+    expected: tdx-basic
+
+  - prompt: "Build an AI agent with tools using tdx"
+    expected: agent
+
+  - prompt: "Write tests for my TD AI agent"
+    expected: agent-test

@@ -58,12 +58,46 @@ When adding a new skill:
 
 5. **Update marketplace.json**: Add the new skill path (with `./` prefix) to the appropriate plugin's `skills` array
 
+6. **Add trigger test**: Add at least one test case to `tests/trigger-tests.yml`:
+   ```yaml
+   - prompt: "A realistic user prompt that should trigger your skill"
+     expected: your-skill-name
+   ```
+
 ## TD-Specific Conventions
 
 - Always include time filters using `td_interval(time, '(relative time range)')`  (e.g., `td_interval(time, '-1d')` for yesterday) to avoid unnecessary full table scans.
 - Use `approx_*` functions for large-scale aggregations in Trino
 
 ## Testing Skills
+
+### Trigger Tests (Required)
+
+Every skill must have at least one trigger test in `tests/trigger-tests.yml`. These tests verify that realistic user prompts correctly trigger the intended skill.
+
+```bash
+# Run all trigger tests
+./tests/run-tests.sh
+
+# Run with verbose output
+./tests/run-tests.sh --verbose
+```
+
+**Adding tests for a new skill:**
+
+```yaml
+# tests/trigger-tests.yml
+tests:
+  - prompt: "Write a Trino query to count users"
+    expected: trino
+```
+
+**Test philosophy:**
+- Prompts should be realistic (what a real user would say)
+- If a test fails, consider updating the skill description to be more distinctive
+- Don't make prompts artificially specific just to pass tests
+
+### Manual Testing
 
 1. Install the marketplace locally:
    ```
@@ -87,6 +121,7 @@ When adding a new skill:
 - YAML frontmatter must include both `name` and `description`
 - Examples should use TD-specific patterns and conventions
 - Include error handling and troubleshooting sections
+- **Every skill must have at least one trigger test in `tests/trigger-tests.yml`**
 
 ## Claude Code Skills Best Practices
 
