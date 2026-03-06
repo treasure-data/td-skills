@@ -11,6 +11,8 @@ set -euo pipefail
 #   next   = prerelease tags on main (vYYYY.M.patch), auto-creates GitHub prerelease
 #   stable = promoted releases (prerelease flag removed via release branch)
 #
+# Before tagging, trigger tests are run to verify all skills trigger correctly.
+#
 # Requires: gh CLI, maintainer listed in .github/maintainers.yml
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -34,6 +36,21 @@ check_maintainer() {
   log "Authenticated as $user"
 }
 
+run_trigger_tests() {
+  local test_script="$REPO_ROOT/tests/run-tests.sh"
+  if [[ ! -x "$test_script" ]]; then
+    log "Skipping trigger tests (script not found)"
+    return 0
+  fi
+
+  log "Running skill trigger tests..."
+  if ! "$test_script"; then
+    echo ""
+    die "Trigger tests failed. Fix skill descriptions before releasing."
+  fi
+  log "All trigger tests passed"
+}
+
 ensure_main() {
   [[ "$(git branch --show-current)" == "main" ]] || die "Must be on main branch"
   log "Fetching origin..."
@@ -54,6 +71,7 @@ latest_next() {
 cmd_default() {
   check_maintainer
   ensure_main
+  run_trigger_tests
 
   log "Computing next version..."
   local all_tags; all_tags="$(git tag -l 'v*' --sort=-v:refname)"

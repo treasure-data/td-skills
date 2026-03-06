@@ -1,6 +1,6 @@
 ---
 name: aps-doc-master-segment
-description: Expert documentation generation for CDP Master Segment (Parent Segment) configurations. Analyzes master segment tables using TD MCP, extracts attribute and behavior schemas, documents star schema relationships, and creates comprehensive segment documentation. Use when documenting CDP parent segments.
+description: Generate Confluence-ready technical documentation for CDP Parent Segments. Produces structured docs covering attribute schemas, behavior definitions, star schema relationships, and data lineage. Use when you need to write docs, create specs, or explain parent segment architecture.
 ---
 
 # APS Master Segment Documentation Expert
