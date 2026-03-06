@@ -168,7 +168,7 @@ connector:
       source: first_name
 ```
 
-The `email_sender_id` is workspace-specific. Find it by pulling an existing campaign in the same workspace.
+The `email_sender_id` is workspace-specific. Find it with `tdx delivery senders --workspace "Name"`.
 
 ## Notifications
 

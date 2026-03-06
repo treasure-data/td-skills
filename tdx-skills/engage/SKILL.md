@@ -1,209 +1,163 @@
 ---
 name: engage
-description: Manage Treasure Engage campaigns (email/push) using `tdx engage` commands with YAML+HTML configs. Covers workspaces, campaigns, templates, pull/push workflow, audience/segment references, UTM tracking, and Treasure Studio preview. Use when creating, editing, or deploying Engage email or push campaigns, managing Engage workspaces, or working with email templates.
+description: Manage Treasure Engage email templates and campaigns using `tdx engage` commands with YAML+HTML configs. Use when creating, editing, previewing, validating, or deploying email templates, email/push campaigns, managing workspaces, or any task involving Engage email content — even if the user only mentions "create an email" or "build an HTML email". Always write YAML definition files alongside HTML — never push raw HTML without a YAML wrapper.
 ---
 
-# tdx Engage - Campaign Management
+# tdx Engage
 
-## Core Commands
+## First: What Are You Building?
+
+| User says... | Write this | Reference to read first |
+|---|---|---|
+| "create an email template", "build an email" | `type: template` YAML + HTML | `references/template-yaml.md` |
+| "create a campaign", "set up an email send" | `type: campaign` YAML + HTML | `references/campaign-yaml.md` |
+
+Always produce **YAML + HTML together**. The YAML is what `tdx engage template push` or `tdx engage campaign push` consumes — HTML alone can't be pushed. This is the most common mistake: generating beautiful HTML, then realizing there's no YAML to push it with.
+
+## After writing YAML+HTML, execute the full pipeline yourself
+
+Do not stop after writing files and tell the user what to run. Immediately proceed: validate → fix errors → push `--dry-run` → push `--yes`. If workspace is missing from the YAML, add it yourself before validating.
+
+## Commands
 
 ```bash
 # Workspace
-tdx engage workspaces                          # List workspaces
-tdx engage workspace show "Name" --full --json  # Show workspace details + applicable parent segments
-tdx engage workspace use "Name"                 # Set workspace context
+tdx engage workspaces
+tdx engage workspace show "Name" --full --json  # Shows applicable parent segments
+tdx engage workspace use "Name"
 
-# Campaigns
-tdx engage campaigns                           # List campaigns (uses workspace context)
-tdx engage campaign show "Name"                # Show campaign details
-tdx engage campaign pull "Workspace Name" --yes # Pull all campaigns to YAML+HTML
-tdx engage campaign push path/to/campaign.yaml --dry-run  # Validate without pushing
-tdx engage campaign push path/to/campaign.yaml --yes      # Push to Engage
-tdx engage campaign create --name "Name" --type email --workspace "Name"  # Create empty campaign
-tdx engage campaign launch "Name"              # Launch campaign
-tdx engage campaign pause "Name"               # Pause campaign
+# Templates — YAML-based workflow
+tdx engage template pull "Workspace" --yes      # Pull to YAML+HTML
+tdx engage template validate path/to.yaml       # Local schema check
+tdx engage template push path/to.yaml --dry-run # API validation
+tdx engage template push path/to.yaml --yes     # Push
 
-# Email Senders
-tdx delivery senders --workspace "Name"          # List senders in workspace
+# Campaigns — YAML-based workflow
+tdx engage campaign pull "Workspace" --yes
+tdx engage campaign validate path/to.yaml
+tdx engage campaign push path/to.yaml --dry-run
+tdx engage campaign push path/to.yaml --yes
+tdx engage campaign launch "Name"
+tdx engage campaign pause "Name"
 
-# Templates
-tdx engage templates                           # List email templates
-tdx engage template create --name "Name" --subject "Subject" --html "$(cat file.html)" --workspace "Name" --editor-type grapesjs
-tdx engage template show "Name"                # Show template details
+# Discovery
+tdx engage templates                            # List templates
+tdx engage campaigns                            # List campaigns
+tdx delivery senders --workspace "Name"          # List email senders
 ```
 
 ## Workspace Discovery
-
-Identify which parent segments a workspace can use:
 
 ```bash
 tdx engage workspace show "Marketing Team" --full --json
 ```
 
-Look for `workspaceConfig.applicableParentSegments`:
-```json
-{
-  "applicableParentSegments": [
-    { "parentSegmentId": "1027645", "name": "engage_retail" }
-  ]
-}
-```
-
-Then list available segments under that parent segment:
-```bash
-tdx sg pull "engage_retail" --yes
-tdx sg list "[1] Segments" -r    # Recursive tree view
-```
-
-## Campaign YAML Structure
-
-See `references/campaign-yaml.md` for complete YAML schema and examples for both email and push campaigns.
-
-## Workflow: Create a New Campaign
-
-**Before starting, create a task list with each step below using the TaskCreate tool.** Update task status as you progress.
-
-### Step 1: Discover workspace and segments
+The `applicableParentSegments` field tells you which parent segments (and therefore which audience attributes) are available:
 
 ```bash
-tdx engage workspace show "Workspace Name" --full --json   # Find applicable parent segments
-tdx sg pull "parent_segment_name" --yes                     # Pull segments
-tdx sg list "[1] Segments" -r                               # Browse available segments
+tdx ps desc <parent_segment> -o   # Output columns + non-null rates
 ```
 
-### Step 1.5: Get email sender ID (for email campaigns)
+Non-null rates matter because they determine whether template variables need `default_value` — see the template workflow below.
+
+## Template Workflow
+
+Read `references/template-yaml.md` before writing template YAML.
+
+### 1. Check parent segment attributes
 
 ```bash
-tdx delivery senders --workspace "Workspace Name"
+tdx ps desc <parent_segment> -o
 ```
 
-Note the `id` field for use as `connector.email_sender_id` in the campaign YAML.
+This shows output columns and non-null rates. You need this to write correct `variables`.
 
-### Step 2: Confirm or create template
+### 2. Write YAML + HTML
 
-**Always run this step** — a template must exist on the server before the campaign can reference it.
+```
+my-template.yaml    # type: template
+my-template.html    # HTML content
+```
+
+Always set `editor_type: grapesjs`. The `beefree` editor uses a proprietary JSON format that can't be generated from HTML — `grapesjs` works directly with the HTML you write.
+
+**Variables:** every `{{profile.<name>}}` in HTML or subject needs a `variables` entry.
+
+- `preview_value`: set to the Liquid tag itself (`"{{profile.first_name}}"`)
+- `default_value`: set this when the attribute's non-null rate is below 100% — without it, recipients with null values see blank text
+- `{{sender.email}}` is special (comes from workspace sender, not parent segment) and doesn't need a variable entry
+
+### 3. Validate, preview, push
+
+Execute these yourself immediately after writing the files — don't ask the user to run them:
 
 ```bash
-# 1. Check existing templates
+tdx engage template validate path/to/template.yaml
+tdx engage template push path/to/template.yaml --dry-run
+```
+
+Use `preview_engage_template` (with `file_path` for local YAML, or template name after push) to visually check the email. Then push:
+
+```bash
+tdx engage template push path/to/template.yaml --yes
+```
+
+## Campaign Workflow
+
+Read `references/campaign-yaml.md` before writing campaign YAML.
+
+### 1. Discover workspace, segments, and sender
+
+```bash
+tdx engage workspace show "Workspace" --full --json
+tdx sg pull "parent_segment_name" --yes
+tdx sg list "[1] Segments" -r
+tdx delivery senders --workspace "Workspace"     # Note sender id
+```
+
+### 2. Create template (if needed)
+
+A campaign references a template by name. Check existing templates:
+
+```bash
 tdx engage templates
 ```
 
-If a suitable template already exists, note its **exact name** for use in the YAML. If not, create one:
+If you need a new template rather than reusing an existing one, create it using the **Template Workflow** above (write YAML+HTML → validate → preview → push). The template must exist on the server before the campaign can reference it.
 
-```bash
-# 2. Create new template with HTML content
-tdx engage template create \
-  --name "My Template" \
-  --subject "Subject line" \
-  --html "$(cat my-email.html)" \
-  --workspace "Workspace Name" \
-  --editor-type grapesjs
-```
+### 3. Write campaign YAML
 
-### Step 3: Write YAML + HTML files
+Read `references/campaign-yaml.md` first. The schema has non-obvious nesting — common mistakes:
+- `template`, `subject`, `html_file`, `variables` go inside `email:`, not top level
+- `connector.email_sender_id`, not `from_email` / `from_name`
+- `utm.source`, not `utm_source`
+- `ref:` prefix required on `template`, `audience`, `segment`
+- `email.template` must be `ref:` + the exact template name on the server
 
-**You MUST read `references/campaign-yaml.md` before writing any YAML.** Do not guess the schema — fields, nesting, and naming differ from what you might expect. Common mistakes that the validator will reject:
-- Putting `html_file` or `template` at top level instead of inside `email:`
-- Using `from_email`/`from_name` instead of `connector.email_sender_id`
-- Using `utm_source` instead of `utm.source`
-- Omitting `ref:` prefix on `template`, `audience`, or `segment`
+### 4. Validate, preview, push
 
-Key rules:
-- **`email.template`**: `ref:` + the **exact template name** from Step 2 (e.g., `ref:My Template`)
-- **`email.html_file`**: required — for new campaigns, use the same HTML file from template creation
-- **`audience`** and **`segment`**: must use `ref:` prefix
-
-### Step 4: Validate
-
-```bash
-tdx engage campaign validate path/to/campaign.yaml   # Local YAML validation
-tdx engage campaign push path/to/campaign.yaml --dry-run  # API validation
-```
-
-### Step 5: Preview in Treasure Studio
-
-Use the `preview_engage_campaign` tool to render a 5-tab visual preview (audience, email content, delivery, activation, UTM).
-
-### Step 6: Confirm with client
-
-**Do not push without explicit client approval.** Present the preview results and dry-run output, then ask the client to confirm before proceeding.
-
-### Step 7: Push
-
-```bash
-tdx engage campaign push path/to/campaign.yaml --yes
-```
-
-If `ref:` resolution fails, verify that the referenced template exists on the server:
-```bash
-tdx engage templates   # Check available templates
-```
-
-## Workflow: Modify an Existing Campaign
-
-**Before starting, create a task list with each step below using the TaskCreate tool.** Update task status as you progress.
-
-### Step 1: Pull campaigns
-
-```bash
-tdx engage campaign pull "Workspace Name" --yes
-```
-
-This exports each campaign to a YAML file + HTML file (if campaign has HTML override) under `campaigns/<workspace-slug>/`.
-
-### Step 2: Edit YAML and/or HTML
-
-**Read `references/campaign-yaml.md` for the field reference before editing.** Modify the pulled YAML file. Common edits:
-- Change `subject`, `segment`, `description`
-- Edit the HTML file referenced by `html_file`
-- Update `utm` parameters or `connector` columns
-
-### Step 3: Validate and preview
+Execute these yourself immediately — don't ask the user to run them:
 
 ```bash
 tdx engage campaign validate path/to/campaign.yaml
 tdx engage campaign push path/to/campaign.yaml --dry-run
 ```
 
-Use `preview_engage_campaign` for visual preview.
-
-### Step 4: Confirm with client
-
-**Do not push without explicit client approval.** Present the preview results and dry-run output, then ask the client to confirm before proceeding.
-
-### Step 5: Push changes
+Use `preview_engage_campaign` for visual preview. Then push:
 
 ```bash
 tdx engage campaign push path/to/campaign.yaml --yes
 ```
 
-The push command matches campaigns by name — if a campaign with the same name exists, it updates; otherwise it creates.
-
-## Common Issues
-
-| Issue | Solution |
-|-------|----------|
-| `ref:` prefix missing | `template`, `audience`, and `segment` fields **must** use `ref:Name` format. Raw IDs or plain names will be rejected by the validator |
-| `ref:` template not found | Template does not exist on the server. Run `tdx engage templates` to check available templates, then create with `tdx engage template create` if needed |
-| Segment not found | Use `tdx sg list "[1] Segments" -r` to find exact name; try with folder path: `ref:[1] Segments/Behavioral/Segment Name` |
-| `sourceEmailTemplateName can't be blank` | tdx bug — use the create-then-update workaround above |
-| Cannot find applicable parent segments | `tdx engage workspace show "Name" --full --json` to check `applicableParentSegments` |
-
 ## Personalization
 
-Use Liquid merge tags in subject lines and HTML. All tags must start with `profile.` and the attribute name must exist in the parent segment's output columns.
-
-```bash
-tdx sg fields    # Check available attributes (after setting parent segment context)
-```
+Liquid merge tags reference parent segment output columns:
 
 ```
-{{profile.first_name}}
+{{profile.first_name}}         # Parent segment attribute
 {{profile.customer_segment}}
-{{profile.lifetime_spend}}
+{{sender.email}}               # Special: workspace email sender
 ```
-
-Liquid conditionals are supported:
 
 ```html
 {% if profile.customer_segment == 'Gold' %}
@@ -211,13 +165,26 @@ Liquid conditionals are supported:
 {% endif %}
 ```
 
+Check available attributes: `tdx ps desc <parent_segment> -o`
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| HTML created but can't push | Write a YAML file (`type: template` or `type: campaign`) — push consumes YAML, not raw HTML |
+| Blank merge tag in sent email | Attribute has nulls — add `default_value` to the variable |
+| `ref:` template not found | Template must exist on server first. `tdx engage templates` to check |
+| Segment not found | Try full path: `ref:[1] Segments/Behavioral/Name` |
+| `ref:` prefix missing | `template`, `audience`, `segment` fields require `ref:Name` format |
+
 ## Related Skills
 
-- **segment** — Manage child segments used as campaign targets
-- **parent-segment** — Configure parent segments that provide audience data
-- **connector-config** — Configure activation connectors
-- **journey** — Orchestrate multi-step customer journeys with activations
+- **segment** — Child segments used as campaign targets
+- **parent-segment** — Parent segments that provide audience attributes
+- **connector-config** — Activation connectors
+- **journey** — Multi-step customer journeys
 
 ## Resources
 
+- [Template YAML reference](references/template-yaml.md)
 - [Campaign YAML reference](references/campaign-yaml.md)
