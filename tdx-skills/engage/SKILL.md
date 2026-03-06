@@ -14,6 +14,16 @@ description: Manage Treasure Engage email templates and campaigns using `tdx eng
 
 Always produce **YAML + HTML together**. The YAML is what `tdx engage template push` or `tdx engage campaign push` consumes — HTML alone can't be pushed. This is the most common mistake: generating beautiful HTML, then realizing there's no YAML to push it with.
 
+## MANDATORY: validate → preview → push
+
+**NEVER skip validation.** After writing or editing any YAML+HTML, you MUST follow this exact sequence:
+
+1. **`validate`** — Run `tdx engage template validate` or `tdx engage campaign validate` first. Fix ALL errors before proceeding.
+2. **`preview`** — Use `preview_engage_template` or `preview_engage_campaign` for visual confirmation.
+3. **`push`** — Only after validation passes and the user approves the preview.
+
+Pushing without validation causes silent deployment of broken templates/campaigns. This sequence is non-negotiable.
+
 ## Commands
 
 ```bash
@@ -75,18 +85,22 @@ my-template.yaml    # type: template
 my-template.html    # HTML content
 ```
 
+Always set `editor_type: grapesjs`. The `beefree` editor uses a proprietary JSON format that can't be generated from HTML — `grapesjs` works directly with the HTML you write.
+
 **Variables:** every `{{profile.<name>}}` in HTML or subject needs a `variables` entry.
 
 - `preview_value`: set to the Liquid tag itself (`"{{profile.first_name}}"`)
 - `default_value`: set this when the attribute's non-null rate is below 100% — without it, recipients with null values see blank text
 - `{{sender.email}}` is special (comes from workspace sender, not parent segment) and doesn't need a variable entry
 
-### 3. Validate and push
+### 3. Validate and push (MANDATORY — do not skip)
+
+You MUST run validate before pushing. Do not proceed to push if validate reports errors.
 
 ```bash
-tdx engage template validate path/to/template.yaml
+tdx engage template validate path/to/template.yaml   # MUST run — fix all errors
 tdx engage template push path/to/template.yaml --dry-run
-tdx engage template push path/to/template.yaml --yes
+tdx engage template push path/to/template.yaml --yes  # Only after validation passes
 ```
 
 ## Campaign Workflow
@@ -118,10 +132,12 @@ Read `references/campaign-yaml.md` first. The schema has non-obvious nesting —
 - `utm.source`, not `utm_source`
 - `ref:` prefix required on `template`, `audience`, `segment`
 
-### 4. Validate, preview, push
+### 4. Validate, preview, push (MANDATORY — do not skip)
+
+You MUST run validate before pushing. Do not proceed if validate reports errors.
 
 ```bash
-tdx engage campaign validate path/to/campaign.yaml
+tdx engage campaign validate path/to/campaign.yaml    # MUST run — fix all errors
 tdx engage campaign push path/to/campaign.yaml --dry-run
 ```
 
@@ -130,7 +146,7 @@ Use `preview_engage_campaign` for visual preview (5-tab: audience, email, delive
 **Do not push without client approval.** Present preview and dry-run output first.
 
 ```bash
-tdx engage campaign push path/to/campaign.yaml --yes
+tdx engage campaign push path/to/campaign.yaml --yes  # Only after validation passes + user approval
 ```
 
 ## Personalization

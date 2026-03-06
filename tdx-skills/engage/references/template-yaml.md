@@ -7,7 +7,7 @@ type: template
 name: "Spring Promotion 2026"
 subject: "{{profile.first_name}}, 20% OFF this week only!"
 workspace: Marketing Team
-editor_type: beefree
+editor_type: grapesjs
 html_file: "spring-promotion-2026.html"
 
 variables:
@@ -33,7 +33,7 @@ variables:
 | `name` | Yes | Template display name |
 | `subject` | No | Supports `{{profile.<name>}}` Liquid tags |
 | `workspace` | No | Can use `--workspace` flag or `tdx.json` instead |
-| `editor_type` | No | `beefree` or `grapesjs` |
+| `editor_type` | Yes | Always `grapesjs` — `beefree` uses proprietary JSON, not compatible with raw HTML |
 | `html_file` | No | Relative path to companion HTML |
 | `plaintext_file` | No | Relative path to companion plaintext |
 | `variables` | No | Defaults to `[]` |
