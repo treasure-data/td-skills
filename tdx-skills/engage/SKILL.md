@@ -87,13 +87,18 @@ Always set `editor_type: grapesjs`. The `beefree` editor uses a proprietary JSON
 - `default_value`: set this when the attribute's non-null rate is below 100% — without it, recipients with null values see blank text
 - `{{sender.email}}` is special (comes from workspace sender, not parent segment) and doesn't need a variable entry
 
-### 3. Validate and push
+### 3. Validate, preview, push
 
 Execute these yourself immediately after writing the files — don't ask the user to run them:
 
 ```bash
 tdx engage template validate path/to/template.yaml
 tdx engage template push path/to/template.yaml --dry-run
+```
+
+Use `preview_engage_template` (with `file_path` for local YAML, or template name after push) to visually check the email. Then push:
+
+```bash
 tdx engage template push path/to/template.yaml --yes
 ```
 
@@ -110,21 +115,24 @@ tdx sg list "[1] Segments" -r
 tdx delivery senders --workspace "Workspace"     # Note sender id
 ```
 
-### 2. Ensure template exists
+### 2. Create template (if needed)
 
-A campaign references a template by name. Check existing templates or create one using the template workflow above:
+A campaign references a template by name. Check existing templates:
 
 ```bash
 tdx engage templates
 ```
 
-### 3. Write YAML + HTML
+If you need a new template rather than reusing an existing one, create it using the **Template Workflow** above (write YAML+HTML → validate → preview → push). The template must exist on the server before the campaign can reference it.
+
+### 3. Write campaign YAML
 
 Read `references/campaign-yaml.md` first. The schema has non-obvious nesting — common mistakes:
-- `html_file` / `template` go inside `email:`, not top level
+- `template`, `subject`, `html_file`, `variables` go inside `email:`, not top level
 - `connector.email_sender_id`, not `from_email` / `from_name`
 - `utm.source`, not `utm_source`
 - `ref:` prefix required on `template`, `audience`, `segment`
+- `email.template` must be `ref:` + the exact template name on the server
 
 ### 4. Validate, preview, push
 
