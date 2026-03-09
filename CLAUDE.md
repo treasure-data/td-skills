@@ -165,3 +165,35 @@ git push -u origin descriptive-branch-name
 # Create PR
 gh pr create --title "Add [feature]" --body "Description of changes"
 ```
+
+### Release Channels
+
+Skills are published through two channels:
+
+- **next** — prerelease tags on `main` (`vYYYY.M.patch`). Created by maintainers, available for early testing.
+- **stable** — promoted GitHub releases (prerelease flag removed). Used by tdx and Treasure Studio.
+
+### Release Workflow
+
+Only maintainers listed in `.github/maintainers.yml` can create releases.
+
+```bash
+# 1. Tag a new prerelease on main (next channel)
+./scripts/release.sh
+
+# 2. Create a PR to promote the latest next release to stable
+./scripts/release.sh promote
+
+# 3. Check current channel status
+./scripts/release.sh status
+```
+
+- `release.sh` (no args) computes the next `vYYYY.M.patch` version, tags `main`, and pushes. The `release-notes.yml` GitHub Action auto-creates a GitHub prerelease.
+- `release.sh promote` creates a PR that updates `.stable-version` on the orphan `release` branch. An engineer must review and merge the PR. The `promote-stable.yml` GitHub Action then removes the prerelease flag, making it the latest stable release.
+
+### Versioning
+
+Format: `vYYYY.M.patch` (e.g., `v2026.3.0`)
+
+- New month resets patch to `0`
+- Multiple releases in the same month increment patch (`v2026.3.0`, `v2026.3.1`, ...)
