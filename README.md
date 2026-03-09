@@ -26,7 +26,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 **Analytical & Data Exploration Suite:**
 
-- **[sql-skills/analytical-query](./sql-skills/analytical-query)** - Natural language to SQL analytics for summarizing, aggregating, analyzing trends, metrics, and KPIs. Generates optimized queries, executes automatically, and creates professional Plotly visualizations. **Also uses smart-sampler for sampling/data preview requests.**
+- **[sql-skills/analytical-query](./sql-skills/analytical-query)** - Natural language to SQL analytics for summarizing, aggregating, analyzing trends, metrics, and KPIs. Generates optimized queries, executes them, and creates professional Plotly visualizations. **Also uses smart-sampler for sampling/data preview requests.**
 
 - **[sql-skills/smart-sampler](./sql-skills/smart-sampler)** - Intelligent data sampling with multiple strategies (random, time-based, stratified, edge-case) for exploring data and finding examples without full scans.
 
@@ -154,23 +154,28 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ### Invoking Skills
 
-Once installed, explicitly reference skills using the `skill` keyword to trigger them:
+Once installed, skills are triggered based on their description fields matching your question. Examples:
 
 ```
-"Show me the top 10 products by revenue last 30 days" → analytical-query (auto)
-"Sample 100 recent orders from the sales table" → smart-sampler (auto)
-"Give me examples of null email addresses" → smart-sampler (auto)
-"Analyze the revenue trend by month" → analytical-query (auto)
-"Profile the customers table for data quality" → data-profiler (auto)
-"What tables are available in my database?" → schema-explorer (auto)
-"Show me the schema for the orders table" → schema-explorer (auto)
-"Find tables with PII columns" → schema-explorer (auto)
-"What columns does the sales table have?" → schema-explorer (auto)
-"Explain this query: SELECT * FROM orders WHERE time > now() - 7d" → query-explainer (auto)
-"What does this SQL do? [paste query]" → query-explainer (auto)
-"Break down this complex query step by step" → query-explainer (auto)
-"Profile the events table for null values and distribution" → data-profiler (auto)
-"Show me data quality metrics for the users table" → data-profiler (auto)
+"Show me the top 10 products by revenue last 30 days" → analytical-query
+"Sample 100 recent orders from the sales table" → smart-sampler
+"Give me examples of null email addresses" → smart-sampler
+"Analyze the revenue trend by month" → analytical-query
+"Profile the customers table for data quality" → data-profiler
+"What tables are available in my database?" → schema-explorer
+"Show me the schema for the orders table" → schema-explorer
+"Find tables with PII columns" → schema-explorer
+"What columns does the sales table have?" → schema-explorer
+"Explain this query: SELECT * FROM orders WHERE time > now() - 7d" → query-explainer
+"What does this SQL do? [paste query]" → query-explainer
+"Break down this complex query step by step" → query-explainer
+"Profile the events table for null values and distribution" → data-profiler
+"Show me data quality metrics for the users table" → data-profiler
+```
+
+You can also explicitly reference skills:
+
+```
 "Use the Trino skill to extract data from sample_datasets.nasdaq table"
 "Use the Hive skill to write a query for daily user aggregation"
 "Use the time-filtering skill to add partition pruning to my query"
@@ -283,7 +288,6 @@ To contribute a new skill or improve an existing one:
 For detailed documentation on individual skills, each skill contains a `SKILL.md` file with comprehensive information:
 
 - **SQL Skills Documentation**: See individual `SKILL.md` files in each skill directory (e.g., `./sql-skills/analytical-query/SKILL.md`)
-- **Architecture & Development Guides**: See `./sql-skills/docs/` for detailed guides and blueprints
 
 ## Support
 
@@ -296,6 +300,5 @@ For questions or issues:
 **Note:** These skills are for internal TD use only.
 
 **Latest Updates:**
-- Analytical-Query and Smart-Sampler skills now available with auto-invocation
+- Analytical-Query and Smart-Sampler skills now available
 - Comprehensive SQL analyst suite for data analysis and exploration
-- Detailed documentation available in `sql-skills/docs/` directory
