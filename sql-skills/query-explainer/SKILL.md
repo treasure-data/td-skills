@@ -7,18 +7,11 @@ description: Converts SQL to natural language explanations with step-by-step bre
 
 Transform SQL queries into clear explanations.
 
-## When to Use
+## Workflow
 
-**DEFAULT for:**
-- "Explain this query: [SQL]"
-- "What does this do?"
-- "Why is this slow?"
-- "Analyze job: job_id_12345"
-
-**Workflow:**
 1. Explain query (what it does, step-by-step)
 2. Detect performance issues
-3. If CRITICAL → Auto-invoke trino-optimizer
+3. If CRITICAL issues found → Apply trino-optimizer recommendations
 4. Return: Explanation + Issues + Optimized Query
 
 **Job ID Analysis:**
@@ -76,7 +69,7 @@ Extract: SQL, engine, time, data scanned, errors → Explain + optimize
 6. ❌ LIMIT without ORDER BY
 7. ❌ UNION without ALL
 
-**If CRITICAL/HIGH issues → Auto-invoke trino-optimizer**
+**If CRITICAL/HIGH issues found → Apply trino-optimizer recommendations**
 
 ## Example Explanation
 

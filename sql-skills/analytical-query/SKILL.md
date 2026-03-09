@@ -1,31 +1,26 @@
 ---
 name: analytical-query
-description: Converts natural language to TD-optimized Trino SQL with auto schema discovery, optimization, execution, and Plotly visualization. Auto-invokes on analytical keywords (summarize, aggregate, top N, trends, metrics) and sampling keywords (show records, sample, preview).
+description: Converts natural language to TD-optimized Trino SQL with auto schema discovery, optimization, execution, and Plotly visualization. Triggers on analytical keywords (summarize, aggregate, top N, trends, metrics) and sampling keywords (show records, sample, preview).
 ---
 
 # SQL Analytical Query
 
 Natural language → Trino SQL → Execution → Visualization
 
-## Auto-Invocation
-
-**Analytical:** summarize, aggregate, analyze, top N, trends, breakdown, metrics, KPI
-**Sampling:** sample, show records, preview data (auto-invokes smart-sampler)
-
 ## Workflow
 
 1. **Parse** - Extract table, fields, time range
-2. **Optimize** - Auto-invoke trino-optimizer
+2. **Optimize** - Apply trino-optimizer best practices
 3. **Execute** - Run via `tdx query --json`
 4. **Visualize** - Table + 2-3 Plotly charts
 
-**For sampling:** Auto-invoke smart-sampler
+**For sampling:** Apply smart-sampler strategies
 
 ## Requirements
 
 Always include:
 - Time filters (`td_interval` or `td_time_range`)
-- Trino-optimizer invocation before execution
+- Trino-optimizer best practices before execution
 - `approx_distinct()` for large datasets
 - TD color palette for visualizations
 
@@ -45,9 +40,9 @@ Always include:
 ## Smart Workflow
 
 1. Parse question → Extract intent, tables, fields, time
-2. If no table → Invoke schema-explorer
+2. If no table → Use schema-explorer to find tables
 3. Generate SQL → TD-optimized with time filters
-4. Optimize → Auto-invoke trino-optimizer
+4. Optimize → Apply trino-optimizer best practices
 5. Execute → `tdx query --json`
 6. Visualize → Table + Plotly charts
 

@@ -7,16 +7,6 @@ description: Automated data quality and distribution analysis with Plotly visual
 
 Comprehensive data profiling with data type detection, distribution visualizations, and quality insights.
 
-## When to Use
-
-**AUTO-INVOKES for:**
-- "Profile [table]" / "Analyze [table]"
-- "Show stats for [table]"
-- "Data quality check"
-- "What's in [table]?"
-
-**Examples:** "Profile orders table", "Show data quality for user_events last 7 days", "Distribution of revenue"
-
 ---
 
 ## Workflow
@@ -249,108 +239,16 @@ Validity = % columns passing validation rules
 
 ## Output Format
 
-```markdown
-# Data Profiling Report: [database.table]
+Generate a profiling report with these sections:
 
-## Overview
-- **Total Records:** 10,000 (Last 30 days)
-- **Columns:** 15
-- **Date Range:** 2024-11-20 to 2024-12-20
-- **Quality Score:** 85/100 (Good)
-- **PII Columns:** 3 (email, phone, address)
-
-## Data Type Detection
-
-| Column | Schema Type | Detected Type | Notes |
-|--------|-------------|---------------|-------|
-| order_id | bigint | Numeric | Primary key |
-| metadata | varchar | JSON Object | 5 keys detected |
-| tags | varchar | ARRAY<string> | Avg 3 elements |
-
-## Column Statistics
-
-| Column | Type | Total | Non-Null | Unique | Completeness | Samples |
-|--------|------|-------|----------|--------|--------------|---------|
-| order_id | Numeric | 10,000 | 10,000 | 10,000 | 100% | 12345, 12346 |
-| email | Categorical | 10,000 | 9,500 | 9,500 | 95% | user@example.com |
-
-## JSON Key Profiling: metadata
-
-**Discovered Keys:** 5
-- `$.customer_id` (100% present, 8,500 unique)
-- `$.source` (98% present, 3 unique: "web", "mobile", "api")
-- `$.campaign_id` (45% present, 120 unique)
-- `$.tags` (30% present, ARRAY<string>)
-- `$.preferences.theme` (85% present, 2 unique: "light", "dark")
-
-## PII Analysis
-
-**Detected PII Columns:** 3
-
-| Column | PII Type | Sensitivity | Completeness | Unique Values | Format Valid |
-|--------|----------|-------------|--------------|---------------|--------------|
-| email | EMAIL | HIGH | 95% | 9,500 | 98% |
-| phone | PHONE | HIGH | 80% | 8,000 | 85% |
-| address | ADDRESS | HIGH | 70% | 7,000 | N/A |
-
-**Compliance Status:**
-- Masking: Not detected
-- Encryption: Not detected
-- Access Control: Review needed
-
-## NULL/NOT NULL Breakdown
-
-### PII Columns
-
-| Column | Total | NOT NULL | NULL | NOT NULL % | NULL % |
-|--------|-------|----------|------|------------|--------|
-| email | 10,000 | 9,500 | 500 | 95.0% | 5.0% |
-| phone | 10,000 | 8,000 | 2,000 | 80.0% | 20.0% |
-| address | 10,000 | 7,000 | 3,000 | 70.0% | 30.0% |
-
-### All Data Types
-
-| Column | Type | NOT NULL | NULL | NOT NULL % | NULL % |
-|--------|------|----------|------|------------|--------|
-| order_id | Numeric | 10,000 | 0 | 100% | 0% |
-| email | Categorical | 9,500 | 500 | 95% | 5% |
-| metadata | JSON | 9,800 | 200 | 98% | 2% |
-
-## Data Quality Analysis
-
-**Completeness:** 92% (Excellent)
-**Uniqueness:** 85% (Good)
-**Validity:** 78% (Good)
-
-**Issues:**
-- Email: 5% NULL values
-- Phone: 20% NULL, 15% invalid format
-- Address: 30% NULL values
-
-## Visualizations
-
-[Completeness Chart]
-[Distribution Chart - Amount]
-[PII Completeness Chart]
-
-## Key Findings
-
-**Strengths:**
-- High completeness (92% overall)
-- Good primary key uniqueness
-- Clean numeric data
-
-**Issues:**
-- PII columns have NULL values (5-30%)
-- Phone format validation issues (15%)
-- No PII masking detected
-
-## Recommendations
-
-1. Implement PII masking for dev/test environments
-2. Add phone format validation
-3. Investigate NULL values in PII columns
-4. Implement encryption for PII columns
-5. Add access controls for PII data
-```
+1. **Overview** - Total records, columns, date range, quality score, PII count
+2. **Data Type Detection** - Table showing detected types (JSON, Array, Numeric, etc.)
+3. **Column Statistics** - Completeness, unique values, sample values per column
+4. **JSON Key Profiling** - For JSON columns, list discovered keys with completeness
+5. **PII Analysis** - PII columns with type, sensitivity, completeness, format validation
+6. **NULL/NOT NULL Breakdown** - Separate tables for PII and all columns
+7. **Data Quality Analysis** - Scores and identified issues
+8. **Visualizations** - 2-3 Plotly charts (completeness, distributions, PII)
+9. **Key Findings** - Strengths and issues
+10. **Recommendations** - Prioritized action items
 

@@ -6,17 +6,17 @@ Treasure Data skills for [Claude Code](https://claude.com/claude-code) to enhanc
 
 Skills are folders of instructions and resources that Claude loads dynamically to improve performance on specialized tasks. These TD skills teach Claude how to use our tools and follow our best practices.
 
-## SQL Analyst Suite - Auto-Invocation
+## SQL Analyst Suite
 
-**Five core SQL skills automatically activate based on your questions:**
+**Five core SQL skills for data analysis:**
 
-| Skill | Activates When | Examples |
+| Skill | Triggers For | Examples |
 |-------|------------------|----------|
-| **analytical-query** | Asking for analysis/metrics/trends | "Top 10 products by revenue", "Count daily signups", "Show revenue trends" |
-| **smart-sampler** | Asking for data samples/records | "Show 100 sample orders", "Give me examples of null emails", "Preview recent data" |
-| **schema-explorer** | Asking about schema/structure/PII | "What tables are available?", "Show me the schema for orders", "Find PII columns" |
-| **data-profiler** | Asking for data quality/distributions | "Profile the orders table", "Analyze data quality", "What's the distribution of revenue?" |
-| **query-explainer** | Sharing SQL queries to understand | "Explain this query: [SQL]", "What does this do?", "Break down this query" |
+| **analytical-query** | Analysis/metrics/trends queries | "Top 10 products by revenue", "Count daily signups", "Show revenue trends" |
+| **smart-sampler** | Data samples/records | "Show 100 sample orders", "Give me examples of null emails", "Preview recent data" |
+| **schema-explorer** | Schema/structure/PII discovery | "What tables are available?", "Show me the schema for orders", "Find PII columns" |
+| **data-profiler** | Data quality/distributions | "Profile the orders table", "Analyze data quality", "What's the distribution of revenue?" |
+| **query-explainer** | SQL query explanations | "Explain this query: [SQL]", "What does this do?", "Break down this query" |
 
 ## Available Skills
 
@@ -45,7 +45,6 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[sql-skills/time-filtering](./sql-skills/time-filtering)** - Advanced time-based filtering with td_interval() and td_time_range() for partition pruning and query performance
 - **[sql-skills/trino-optimizer](./sql-skills/trino-optimizer)** - Optimize slow Trino queries, fix timeouts and memory errors, reduce costs with execution log analysis
 - **[sql-skills/trino-to-hive-migration](./sql-skills/trino-to-hive-migration)** - Convert Trino queries to Hive to resolve memory errors and handle large datasets
-- **[sql-skills/td-mcp](./sql-skills/td-mcp)** - Connect Claude Code to TD via MCP server for natural language data exploration and queries
 
 #### Data Discovery & Profiling
 
@@ -133,7 +132,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 2. **Browse and install plugins:**
 
    Select "Browse and install plugins" from the menu, then choose from:
-   - `sql-skills` - Analyst suite (analytical-query, smart-sampler, data-profiler), Trino and Hive query assistance, query optimization, and TD MCP server
+   - `sql-skills` - Analyst suite (analytical-query, smart-sampler, data-profiler), Trino and Hive query assistance, and query optimization
    - `realtime-skills` - RT 2.0 end-to-end orchestrators, configuration, personalization services, real-time journeys, and activation/identity log monitoring
    - `workflow-skills` - Treasure Workflow creation, management, and dbt transformations
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK

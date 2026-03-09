@@ -1,5 +1,4 @@
-# Local documentation only
-sql-skills/docs/
+# (Removed sql-skills/docs/ exclusion - these are committed docs)
 
 # IDE and OS files
 .vscode/

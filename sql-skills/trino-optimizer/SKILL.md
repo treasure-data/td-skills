@@ -9,14 +9,12 @@ Automatic query optimization for Treasure Data with execution log analysis and p
 
 ## When to Use
 
-**AUTO-INVOKED BY:**
-- `analytical-query` - Before executing generated queries (mandatory)
-- `query-explainer` - When CRITICAL issues detected
-
-**USER INVOKES DIRECTLY:**
+**Common scenarios:**
 - "Optimize this query: [SQL]"
 - "Why is my query timing out?"
 - "Here's my query and execution log"
+- Before executing analytical queries
+- When CRITICAL performance issues are detected
 
 ---
 
@@ -145,6 +143,33 @@ Fast ID lookups on tables >100M rows:
 create table customer_events with (
   bucketed_on = array['customer_id'], bucket_count = 512
 ) as select * from raw_events where td_interval(time, '-30d', 'JST')
+```
+
+### Magic Comments for JOIN Distribution
+
+Control how Trino distributes JOINs:
+```sql
+-- Force broadcast join (small table to all nodes)
+select /*+ BROADCAST(s) */ l.*, s.*
+from large_table l join small_table s on l.id = s.id
+where td_interval(l.time, '-1d', 'JST')
+
+-- Force partitioned join (repartition both tables)
+select /*+ PARTITIONED(o, c) */ o.*, c.*
+from orders o join customers c on o.customer_id = c.customer_id
+where td_interval(o.time, '-7d', 'JST')
+```
+
+### Colocated Joins
+
+For UDP tables bucketed on same key with same bucket count:
+```sql
+-- Both tables bucketed on customer_id with bucket_count=512
+-- Trino performs local join without shuffling (10-100x faster)
+select e.*, a.*
+from customer_events e join customer_attributes a
+  on e.customer_id = a.customer_id
+where td_interval(e.time, '-1d', 'JST')
 ```
 
 ## Engine Migration

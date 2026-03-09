@@ -7,15 +7,6 @@ description: Intelligent data sampling - representative sampling, time-based (re
 
 Intelligent sampling strategies for fast data exploration.
 
-## When to Use
-
-- Preview data quickly
-- Find edge cases (nulls, outliers, duplicates)
-- Sample by segments or time periods
-- Validate data quality
-
-**Examples:** "Show 100 samples from orders", "Sample high-value transactions", "Find null emails", "Sample 50 per category"
-
 ## Sampling Strategies
 
 ### 1. Random Sample

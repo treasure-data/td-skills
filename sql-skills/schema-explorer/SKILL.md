@@ -1,21 +1,11 @@
 ---
 name: schema-explorer
-description: Database schema discovery - lists databases, explores table schemas, searches tables/columns by keyword, discovers PII fields. Auto-invokes for "what tables", "find tables", "show schema", "describe table", "list databases", "find PII", or any schema query.
+description: Database schema discovery - lists databases, explores table schemas, searches tables/columns by keyword, discovers PII fields. Triggers for "what tables", "find tables", "show schema", "describe table", "list databases", "find PII", or any schema query.
 ---
 
 # Schema Explorer
 
 Database and table discovery for data analysts.
-
-## When to Use
-
-**AUTO-INVOKES for:**
-- "What databases/tables are available?"
-- "Describe [table]" / "Show schema"
-- "Find tables with [keyword]"
-- "Which tables have PII?"
-
-**Examples:** "List databases", "Show tables in sales_db", "Find email columns", "Describe users table"
 
 ## Core Commands
 
