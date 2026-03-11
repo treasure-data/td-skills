@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "sql-skills",
-      "description": "SQL query skills for Treasure Data including Trino and Hive query optimization, time-based filtering with td_interval, and TD MCP server for Claude Code integration with natural language data exploration",
+      "description": "SQL query skills for Treasure Data including Trino and Hive query optimization, time-based filtering with td_interval, and Trino-to-Hive migration",
       "source": "./",
       "strict": false,
       "skills": [
@@ -19,7 +19,6 @@
         "./sql-skills/hive",
         "./sql-skills/trino-optimizer",
         "./sql-skills/trino-to-hive-migration",
-        "./sql-skills/td-mcp",
         "./sql-skills/time-filtering"
       ]
     },
@@ -34,6 +33,9 @@
         "./realtime-skills/rt-personalization-validation",
         "./realtime-skills/activations",
         "./realtime-skills/identity",
+        "./realtime-skills/id-graph-ids-to-canonical-id",
+        "./realtime-skills/id-graph-canonical-id-size",
+        "./realtime-skills/identify-top-key-values",
         "./realtime-skills/rt-config",
         "./realtime-skills/rt-config-setup",
         "./realtime-skills/rt-config-events",
@@ -120,7 +122,8 @@
         "./tdx-skills/agent-test",
         "./tdx-skills/agent-prompt",
         "./tdx-skills/workflow",
-        "./tdx-skills/parent-segment-analysis"
+        "./tdx-skills/parent-segment-analysis",
+        "./tdx-skills/engage"
       ]
     },
     {
@@ -130,6 +133,17 @@
       "strict": false,
       "skills": [
         "./template-skill"
+      ]
+    },
+    {
+      "name": "analysis-skills",
+      "description": "SEO and AEO analysis skills with visual dashboards and action reports. Includes: (1) grid-dashboard — generic grid dashboard YAML format for visual reports, (2) action-report — generic action report YAML format for prioritized recommendations with as-is/to-be diffs, (3) seo-analysis — unified SEO/AEO audit using GSC, SerpAPI, GA4, and Playwright.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./analysis-skills/grid-dashboard",
+        "./analysis-skills/action-report",
+        "./analysis-skills/seo-analysis"
       ]
     },
     {
@@ -154,6 +168,15 @@
       "strict": false,
       "skills": [
         "./email-campaign-skills/email-campaign"
+      ]
+    },
+    {
+      "name": "studio-skills",
+      "description": "Treasure Studio-specific skills including skill creation guidance",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./studio-skills/skill-creator"
       ]
     }
   ]

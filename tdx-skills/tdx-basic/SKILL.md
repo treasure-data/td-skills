@@ -1,6 +1,6 @@
 ---
 name: tdx-basic
-description: Executes tdx CLI commands for Treasure Data. Covers `tdx databases`, `tdx tables`, `tdx query`, `tdx auth setup`, context management with profiles/sessions, and output formats (JSON/TSV/table). Use when users need tdx command syntax, authentication setup, database/table exploration, or query execution.
+description: Executes tdx CLI commands for Treasure Data. Covers `tdx databases`, `tdx tables`, `tdx describe`, `tdx query`, `tdx auth setup`, context management with profiles/sessions, and output formats (JSON/TSV/table). Use when users need tdx command syntax, authentication setup, database/table exploration, schema inspection, or query execution.
 ---
 
 # tdx CLI - Basic Operations
@@ -26,12 +26,20 @@ tdx auth
 Context priority: CLI flags > session > project `tdx.json` > profile > global config
 
 ```bash
-# Session context
+# Session context (scoped to current shell, expires after 24h)
 tdx use database mydb
-tdx use site jp01
 tdx profile use production   # Switch profile
 tdx status                   # View current context and auth
-tdx use --clear              # Clear session
+tdx unset database           # Clear specific context
+tdx use --clear              # Clear all session context
+```
+
+Session database eliminates the need for fully-qualified table names across commands:
+
+```bash
+tdx use database mydb
+tdx tables                   # Lists mydb tables
+tdx query "select * from users limit 10"  # Queries mydb.users
 ```
 
 ### Profile Management
@@ -71,7 +79,6 @@ tdx --profile staging query "..." # One-off with different profile
 ```bash
 tdx databases                    # List all
 tdx databases "prod_*"           # Filter with pattern
-tdx databases --site jp01        # Specify site
 tdx databases --json             # JSON output
 ```
 
@@ -79,22 +86,40 @@ Sites: `us01` (default), `jp01`, `eu01`, `ap02`
 
 ### Tables
 
+When the target database is known, set context first:
+
 ```bash
 tdx use database mydb            # Set context first
-tdx tables                       # List tables
-tdx tables "user_*"              # Filter
-tdx describe users               # Schema
-tdx show users --limit 10        # Preview data
+tdx tables                       # List tables in context database
+tdx tables "user_*"              # Filter by pattern within context database
 
 # Pattern syntax
 tdx tables "mydb.*"              # All tables from mydb
-tdx tables "*.users"             # users table from all databases
+```
+
+Avoid `tdx tables "*.table_name"` — cross-database wildcard search is expensive. Set the database context instead.
+
+### Schema Inspection
+
+Use `tdx describe` (or `tdx desc`) to check table schema:
+
+```bash
+tdx describe mydb.users              # Fully-qualified
+tdx desc users                       # Omit database if session database is set
+tdx describe mydb.users --json       # JSON output
+tdx show mydb.users --limit 10       # Preview actual data (not schema)
 ```
 
 ### Queries
 
 ```bash
+# With session database set, use unqualified table names
+tdx use database mydb
+tdx query "select * from users limit 10"
+
+# Or use fully-qualified names without session context
 tdx query "select * from mydb.users limit 10"
+
 tdx query -f query.sql           # From file
 tdx query -                      # From stdin
 echo "select 1" | tdx query -
@@ -115,7 +140,6 @@ tdx databases --output out.json  # Save to file
 ```bash
 tdx <command> --help             # Command help
 --profile <name>                 # Use specific profile
---site <site>                    # us01, jp01, eu01, ap02
 --json / --jsonl / --tsv         # Output format
 --output <file>                  # Save to file
 --dry-run                        # Preview without executing
@@ -125,20 +149,13 @@ tdx <command> --help             # Command help
 
 - **Table naming**: `database_name.table_name`
 - **Time column**: Unix timestamp (seconds since epoch), not datetime
-- **Time filtering**: Use `td_interval(time, '-1d')` or `td_time_range(time, 'start', 'end')` for partition pruning
+- **Time filtering**: Use `td_interval(time, '-1d/now')` or `td_time_range(time, 'start', 'end')` for partition pruning
 - **Timezone**: UTC default; use `td_interval(time, '-1d', 'JST')` for Japan
 
 ```sql
 select time, from_unixtime(time) as datetime from mydb.events limit 1
 ```
 
-## Common Issues
-
-| Issue | Solution |
-|-------|----------|
-| TDX_API_KEY not found | `tdx auth setup` or create `~/.config/tdx/.env` |
-| Database not found | Check site: `tdx databases --site jp01` |
-| Pattern not working | Quote patterns: `tdx tables "prod_*"` |
 
 ## Project Folder Structure
 

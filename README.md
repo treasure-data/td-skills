@@ -43,6 +43,11 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[realtime-skills/activations](./realtime-skills/activations)** - Query activation logs to check for errors and view volume for digital marketing activations
 - **[realtime-skills/identity](./realtime-skills/identity)** - Query id change logs to get information about new, updated and merged realtime profiles
 
+#### RT ID Analysis & Debugging
+- **[realtime-skills/identify-top-key-values](./realtime-skills/identify-top-key-values)** - Analyze RT event tables to identify most common stitching key values, debug data quality and distribution issues
+- **[realtime-skills/id-graph-canonical-id-size](./realtime-skills/id-graph-canonical-id-size)** - Query ID graph to analyze canonical ID group sizes and identify over-stitching patterns
+- **[realtime-skills/id-graph-ids-to-canonical-id](./realtime-skills/id-graph-ids-to-canonical-id)** - Detect individual IDs mapping to multiple canonical IDs (over-stitching detection)
+
 ### Workflow Skills
 
 - **[workflow-skills/digdag](./workflow-skills/digdag)** - Design and implement Treasure Workflow with proper error handling
@@ -75,6 +80,10 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[field-agent-skills/documentation](./field-agent-skills/documentation)** - Comprehensive templates and guidelines for documenting Field Agents with standardized structure, system prompts, and tool specifications
 - **[field-agent-skills/visualization](./field-agent-skills/visualization)** - Professional Plotly visualization best practices with TD color palette, chart specifications, and formatting standards for executive-ready visualizations
 
+### Studio Skills
+
+- **[studio-skills/skill-creator](./studio-skills/skill-creator)** - Guidance for writing effective custom skills (SKILL.md files) in Treasure Studio, covering description triggers, progressive disclosure, writing patterns, and examples
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
@@ -97,6 +106,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `tdx-skills` - tdx CLI for managing TD from command line
    - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
+   - `studio-skills` - Treasure Studio-specific skills including skill creation guidance
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -107,6 +117,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    /plugin install sdk-skills@td-skills
    /plugin install tdx-skills@td-skills
    /plugin install field-agent-skills@td-skills
+   /plugin install studio-skills@td-skills
    ```
 
 ### Invoking Skills
@@ -133,6 +144,9 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the rt-journey-monitor skill to debug activation failures"
 "Use the activations skill to query activation logs for parent segment 394649"
 "Use the identity skill to check recent profile merges for parent segment 394649"
+"Use the identify-top-key-values skill to debug stitching key distributions for parent segment 394649"
+"Use the id-graph-canonical-id-size skill to analyze canonical ID group sizes for parent segment 394649"
+"Use the id-graph-ids-to-canonical-id skill to detect over-stitching issues for parent segment 394649"
 "Use the digdag skill to create a workflow that runs every morning"
 "Use the workflow-management skill to debug this failing workflow"
 "Use the dbt skill to create an incremental model for user events"
@@ -156,7 +170,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, email, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, identify-top-key-values, id-graph-canonical-id-size, id-graph-ids-to-canonical-id, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
@@ -187,6 +201,29 @@ To add a new TD-specific skill:
    }
 
    ```
+
+## Release Channels
+
+Skills are published through two release channels:
+
+| Channel | Source | Consumer |
+|---------|--------|----------|
+| **next** | Prerelease tags on `main` (`vYYYY.M.patch`) | Early testing |
+| **stable** | Promoted GitHub releases | tdx, Treasure Studio |
+
+### Workflow
+
+1. **Tag a prerelease** — maintainer runs `./scripts/release.sh` on `main`, which tags and pushes. A GitHub Action auto-creates a prerelease.
+2. **Promote to stable** — maintainer runs `./scripts/release.sh promote`, which creates a PR targeting the `release` branch (an orphan branch containing only `.stable-version`).
+3. **Approve and merge** — an engineer reviews and merges the PR. A GitHub Action removes the prerelease flag, making it the latest stable release.
+
+```bash
+./scripts/release.sh            # Tag a next prerelease
+./scripts/release.sh promote    # Create PR to promote next -> stable
+./scripts/release.sh status     # Show channel info
+```
+
+Only maintainers listed in `.github/maintainers.yml` can run these commands.
 
 ## Contributing
 

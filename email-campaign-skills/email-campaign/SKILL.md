@@ -100,7 +100,7 @@ When the user requests an email campaign, produce a strategy brief first:
 After generating the HTML, render it in the Treasure Studio artifact panel:
 
 ```
-mcp__tdx-studio__preview_document(path="/tmp/email_campaign_preview.html")
+preview_document(path="/tmp/email_campaign_preview.html")
 ```
 
 Tell the user: "Here's the email preview. Describe any changes you'd like, or say **push to Engage** when you're ready."
@@ -112,7 +112,7 @@ When the user requests changes:
 1. Read the current HTML from `/tmp/email_campaign_preview.html`.
 2. Apply the requested modifications (copy changes, color updates, image swaps, layout adjustments, CTA rewording, etc.).
 3. Write the updated HTML back to `/tmp/email_campaign_preview.html`.
-4. Re-render the preview with `mcp__tdx-studio__preview_document`.
+4. Re-render the preview with `preview_document`.
 5. Repeat until the user approves.
 
 Keep a running list of merge tags used in the email (e.g., `{{profile.first_name}}`, `{{profile.loyalty_points}}`). Display these after each preview so the user knows what personalization is active.

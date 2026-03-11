@@ -47,7 +47,7 @@ cp /tmp/email_campaign_preview.html ~/email_exports/campaign_name_YYYY-MM-DD.htm
 
 Then open it for the user:
 ```
-mcp__tdx-studio__preview_document(path="~/email_exports/campaign_name_YYYY-MM-DD.html")
+preview_document(path="~/email_exports/campaign_name_YYYY-MM-DD.html")
 ```
 
 Tell the user they can copy the HTML and paste it into Engage Studio's code editor.
