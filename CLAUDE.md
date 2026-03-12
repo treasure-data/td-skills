@@ -213,13 +213,16 @@ Skills are published through two channels:
 Only maintainers listed in `.github/maintainers.yml` can create releases.
 
 ```bash
-# 1. Tag a new prerelease on main (next channel)
+# 1. (Optional) Run trigger tests before releasing
+./scripts/release.sh test
+
+# 2. Tag a new prerelease on main (next channel)
 ./scripts/release.sh
 
-# 2. Create a PR to promote the latest next release to stable
+# 3. Create a PR to promote the latest next release to stable
 ./scripts/release.sh promote
 
-# 3. Check current channel status
+# 4. Check current channel status
 ./scripts/release.sh status
 ```
 
