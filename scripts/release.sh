@@ -4,6 +4,7 @@ set -euo pipefail
 # Release management for td-skills
 #
 #   ./scripts/release.sh            Tag a next prerelease on main
+#   ./scripts/release.sh test       Run trigger tests only (no tag)
 #   ./scripts/release.sh promote    Promote a next release to stable
 #   ./scripts/release.sh status     Show channel info
 #
@@ -11,7 +12,7 @@ set -euo pipefail
 #   next   = prerelease tags on main (vYYYY.M.patch), auto-creates GitHub prerelease
 #   stable = promoted releases (prerelease flag removed via release branch)
 #
-# Before tagging, trigger tests are run to verify all skills trigger correctly.
+# The test and tag phases are separate — run `test` first if needed, then tag.
 #
 # Requires: gh CLI, maintainer listed in .github/maintainers.yml
 
@@ -67,11 +68,15 @@ latest_next() {
   gh release list --json tagName,isPrerelease --jq '[.[] | select(.isPrerelease == true)] | .[0].tagName // empty' 2>/dev/null
 }
 
+# --- ./scripts/release.sh test — run trigger tests only ---
+cmd_test() {
+  run_trigger_tests
+}
+
 # --- ./scripts/release.sh — tag next prerelease ---
 cmd_default() {
   check_maintainer
   ensure_main
-  run_trigger_tests
 
   log "Computing next version..."
   local all_tags; all_tags="$(git tag -l 'v*' --sort=-v:refname)"
@@ -217,11 +222,13 @@ cmd_status() {
 
 # --- Main ---
 case "${1:-}" in
+  test)    cmd_test ;;
   promote) cmd_promote ;;
   status)  cmd_status ;;
   -h|--help)
-    echo "Usage: $0 [promote|status]"
+    echo "Usage: $0 [test|promote|status]"
     echo "  (no args)  Tag a next prerelease on main"
+    echo "  test       Run trigger tests only (no tag)"
     echo "  promote    Create PR to promote next -> stable"
     echo "  status     Show channel info"
     ;;
