@@ -1,6 +1,6 @@
 ---
 name: analytical-query
-description: Converts natural language to TD-optimized Trino SQL with auto schema discovery, optimization, execution, and Plotly visualization. Use for analytical queries requiring aggregation, summarization, top N rankings, trend analysis, or metric calculations.
+description: Converts natural language to TD-optimized Trino SQL with auto schema discovery, optimization, execution, and Plotly visualization. Use for analytical queries requiring aggregation (sum, count, average), summarization (group by, rollup), top N rankings, trend analysis over time, metric calculations, comparisons across dimensions, or distribution analysis. Handles queries like "show me X", "analyze Y", "compare Z", "trends in A", "breakdown of B".
 ---
 
 # SQL Analytical Query
@@ -113,6 +113,27 @@ group by p.product_name order by total_revenue desc limit 10
 3. JST timezone for Japan data
 4. `td_time_string()` in SELECT only, not WHERE
 5. Use TD color palette
+
+## Error Handling
+
+**No tables found:**
+- Broaden search terms or check database access
+- Suggest alternative keywords
+
+**Query execution fails:**
+- Check syntax with trino-optimizer
+- Verify table/column names with schema-explorer
+- Add time filter if missing
+
+**Empty results:**
+- Verify time range is correct
+- Check filter conditions
+- Try broader time range or different filters
+
+**Timeout/Memory errors:**
+- Add or narrow time filter
+- Use approx functions instead of exact
+- Delegate to trino-optimizer for optimization
 
 ## Validation
 

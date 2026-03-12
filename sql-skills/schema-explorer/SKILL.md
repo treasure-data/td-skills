@@ -161,3 +161,19 @@ tdx describe <db>.<table>
 
 ⚠️ **Never display actual PII values** - only schema metadata
 
+---
+
+## Ambiguity Handling
+
+**Multiple matching tables:**
+- List all matches with row counts and descriptions
+- Ask user to clarify or show schema for most relevant
+
+**Unclear search intent:**
+- Suggest related search patterns
+- Offer to list databases or explore table structures
+
+**No results:**
+- Check spelling and suggest similar names
+- Try wildcard patterns: `*keyword*`
+

@@ -27,6 +27,27 @@ Execute in order:
 
 ---
 
+## Large Schema Handling (50+ columns)
+
+**Prioritize profiling:**
+1. ID columns (primary keys, foreign keys)
+2. PII columns (compliance critical)
+3. Timestamp columns (data freshness)
+4. High-value columns (revenue, quantity, status)
+5. High-null columns (data quality issues)
+
+**Sample strategically:**
+- Profile top 20-30 most important columns in detail
+- Summary stats only for remaining columns
+- Group related columns (e.g., address fields)
+
+**Present concisely:**
+- Summary tables with key metrics only
+- Expand details on request
+- Focus visualizations on critical columns
+
+---
+
 ## Required Output
 
 1. **Overview:** Total records, columns, date range, quality score, PII count

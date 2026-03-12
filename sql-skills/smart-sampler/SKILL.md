@@ -45,7 +45,7 @@ select * from ranked where rn <= 20
 
 ```sql
 -- Nulls
-select * from customers where email is null limit 100
+select * from customers where td_interval(time, '-30d', 'JST') and email is null limit 100
 
 -- Outliers (top 1%)
 with p as (select approx_percentile(amount, 0.99) as p99 from orders where td_interval(time, '-30d', 'JST'))

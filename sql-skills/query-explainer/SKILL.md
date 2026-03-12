@@ -1,6 +1,6 @@
 ---
 name: query-explainer
-description: Converts SQL to natural language explanations with step-by-step breakdowns. Identifies performance issues. Use to understand queries, debug issues, or document logic.
+description: Converts SQL to natural language explanations with step-by-step breakdowns. Use to understand queries, debug issues, or document logic.
 ---
 
 # Query Explainer
@@ -95,9 +95,14 @@ group by customer_id order by total_spent desc limit 10
 
 ---
 
-## Common Patterns
+## CTE Handling
 
-**CTE with window function:**
+**Explain CTEs step-by-step:**
+1. Explain each CTE independently (what data it produces)
+2. Show how CTEs connect (which CTE uses which)
+3. Explain final SELECT using CTE results
+
+**Example:**
 ```sql
 with monthly_sales as (
   select td_time_string(time, 'M!', 'JST') as month, sum(amount) as revenue
@@ -107,6 +112,15 @@ with monthly_sales as (
 select month, revenue, revenue - lag(revenue) over (order by month) as change
 from monthly_sales
 ```
+
+**Explanation:**
+1. **CTE monthly_sales**: Aggregates order revenue by month over last 6 months
+2. **Final SELECT**: Calculates month-over-month revenue change using LAG window function
+3. **Data flow**: orders → monthly aggregation → change calculation
+
+---
+
+## Common Patterns
 
 **JOIN optimization:**
 ```sql
