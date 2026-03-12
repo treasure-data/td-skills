@@ -1,6 +1,6 @@
 ---
 name: analytical-query
-description: Converts natural language to TD-optimized Trino SQL with auto schema discovery, optimization, execution, and Plotly visualization. Triggers on analytical keywords (summarize, aggregate, top N, trends, metrics) and sampling keywords (show records, sample, preview).
+description: Converts natural language to TD-optimized Trino SQL with auto schema discovery, optimization, execution, and Plotly visualization. Use for analytical queries requiring aggregation, summarization, top N rankings, trend analysis, or metric calculations.
 ---
 
 # SQL Analytical Query
@@ -14,7 +14,7 @@ Natural language → Trino SQL → Execution → Visualization
 3. **Execute** - Run via `tdx query --json`
 4. **Visualize** - Table + 2-3 Plotly charts
 
-**For sampling:** Apply smart-sampler strategies
+**For sampling requests:** Delegate to smart-sampler skill
 
 ## Requirements
 

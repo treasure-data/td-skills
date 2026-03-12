@@ -1,6 +1,6 @@
 ---
 name: query-explainer
-description: Converts SQL to natural language explanations with step-by-step breakdowns. Identifies performance issues, suggests alternatives. Use to understand queries, debug issues, or document logic.
+description: Converts SQL to natural language explanations with step-by-step breakdowns. Identifies performance issues. Use to understand queries, debug issues, or document logic.
 ---
 
 # Query Explainer
@@ -61,13 +61,13 @@ Extract: SQL, engine, time, data scanned, errors → Explain + optimize
 ## Performance Issue Detection
 
 **Auto-check for:**
-1. ❌ Missing time filter
-2. ❌ Exact distinct on large data
-3. ❌ Functions in WHERE (`td_time_string`)
-4. ❌ SELECT *
-5. ❌ Correlated subqueries
-6. ❌ LIMIT without ORDER BY
-7. ❌ UNION without ALL
+1. Missing time filter
+2. Exact distinct on large data
+3. Functions in WHERE (`td_time_string`)
+4. SELECT *
+5. Correlated subqueries
+6. LIMIT without ORDER BY
+7. UNION without ALL
 
 **If CRITICAL/HIGH issues found → Apply trino-optimizer recommendations**
 
@@ -91,7 +91,7 @@ group by customer_id order by total_spent desc limit 10
 3. Sum amount per customer
 4. Sort descending, limit 10
 
-**Performance:** ✅ Well-optimized (has time filter, aggregates efficiently)
+**Performance:** Well-optimized (has time filter, aggregates efficiently)
 
 ---
 

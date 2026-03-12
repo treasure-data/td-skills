@@ -7,15 +7,6 @@ description: TD Trino query optimization - detects missing time filters, suggest
 
 Automatic query optimization for Treasure Data with execution log analysis and performance recommendations.
 
-## When to Use
-
-**Common scenarios:**
-- "Optimize this query: [SQL]"
-- "Why is my query timing out?"
-- "Here's my query and execution log"
-- Before executing analytical queries
-- When CRITICAL performance issues are detected
-
 ---
 
 ## Query Log Analysis
@@ -38,10 +29,10 @@ TableScan: 60% of time → Full table scan
 ### 1. Time Filters (CRITICAL)
 
 ```sql
--- ❌ Missing time filter
+-- Bad: Missing time filter
 select customer_id, count(*) from sales_db.orders group by customer_id
 
--- ✅ With time filter (100-1000x faster)
+-- Good: With time filter (100-1000x faster)
 select customer_id, count(*) from sales_db.orders
 where td_interval(time, '-30d', 'JST')
 group by customer_id
@@ -50,10 +41,10 @@ group by customer_id
 ### 2. Approximate Functions
 
 ```sql
--- ❌ Exact (slow)
+-- Bad: Exact (slow)
 count(distinct customer_id)
 
--- ✅ Approx (10-50x faster, ~2% error)
+-- Good: Approx (10-50x faster, ~2% error)
 approx_distinct(customer_id)
 approx_percentile(amount, 0.95)
 ```
@@ -61,31 +52,31 @@ approx_percentile(amount, 0.95)
 ### 3. No Functions in WHERE
 
 ```sql
--- ❌ Prevents partition pruning
+-- Bad: Prevents partition pruning
 where td_time_string(time, 'd!', 'JST') = '2024-12-15'
 
--- ✅ Uses partition pruning (100x faster)
+-- Good: Uses partition pruning (100x faster)
 where td_time_range(time, '2024-12-15', '2024-12-16', 'JST')
 ```
 
 ### 4. Specific Columns
 
 ```sql
--- ❌ SELECT * (wasteful)
+-- Bad: SELECT * (wasteful)
 select * from large_table where td_interval(time, '-30d', 'JST')
 
--- ✅ Specific columns
+-- Good: Specific columns
 select order_id, customer_id, amount from large_table where td_interval(time, '-30d', 'JST')
 ```
 
 ### 5. Filter Before JOIN
 
 ```sql
--- ❌ Filter after JOIN
+-- Bad: Filter after JOIN
 select * from large_table l join small_table s on l.id = s.id
 where td_interval(l.time, '-1d', 'JST')
 
--- ✅ Filter before JOIN (10-100x faster)
+-- Good: Filter before JOIN (10-100x faster)
 select * from (
   select * from large_table where td_interval(time, '-1d', 'JST')
 ) l join small_table s on l.id = s.id
@@ -94,11 +85,11 @@ select * from (
 ### 6. Convert Correlated Subqueries
 
 ```sql
--- ❌ Correlated subquery (runs per row)
+-- Bad: Correlated subquery (runs per row)
 select order_id, (select count(*) from order_items where order_id = o.order_id)
 from orders o where td_interval(time, '-30d', 'JST')
 
--- ✅ JOIN (100-1000x faster)
+-- Good: JOIN (100-1000x faster)
 select o.order_id, count(oi.item_id) as item_count
 from orders o left join order_items oi on o.order_id = oi.order_id
 where td_interval(o.time, '-30d', 'JST') group by o.order_id
@@ -107,20 +98,20 @@ where td_interval(o.time, '-30d', 'JST') group by o.order_id
 ### 7. REGEXP_LIKE for Multiple Patterns
 
 ```sql
--- ❌ Multiple LIKE
+-- Bad: Multiple LIKE
 where column like '%android%' or column like '%ios%'
 
--- ✅ Single REGEXP
+-- Good: Single REGEXP
 where regexp_like(column, 'android|ios|mobile')
 ```
 
 ### 8. UNION ALL Over UNION
 
 ```sql
--- ❌ UNION (deduplicates)
+-- Bad: UNION (deduplicates)
 select customer_id from orders_2023 union select customer_id from orders_2024
 
--- ✅ UNION ALL (2-5x faster if duplicates ok)
+-- Good: UNION ALL (2-5x faster if duplicates ok)
 select customer_id from orders_2023 union all select customer_id from orders_2024
 ```
 
@@ -245,7 +236,7 @@ group by product_id order by total_sold desc limit 10
 ```sql
 select product_id, sum(quantity) as total_sold
 from sales_db.orders
-where td_interval(time, '-30d', 'JST')  -- ✅ Added
+where td_interval(time, '-30d', 'JST')  -- Added time filter
 group by product_id order by total_sold desc limit 10
 ```
 

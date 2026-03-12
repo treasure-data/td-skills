@@ -1,6 +1,6 @@
 ---
 name: schema-explorer
-description: Database schema discovery - lists databases, explores table schemas, searches tables/columns by keyword, discovers PII fields. Triggers for "what tables", "find tables", "show schema", "describe table", "list databases", "find PII", or any schema query.
+description: Database schema discovery - lists databases, explores table schemas, searches tables/columns by keyword, discovers PII fields. Use when you need to explore available data sources, understand table structures, locate specific columns, or identify PII.
 ---
 
 # Schema Explorer
