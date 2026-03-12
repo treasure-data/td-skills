@@ -161,7 +161,8 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./studio-skills/skill-creator"
+        "./studio-skills/skill-creator",
+        "./studio-skills/react-dashboard"
       ]
     }
   ]
