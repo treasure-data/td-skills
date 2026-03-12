@@ -163,6 +163,17 @@
       "skills": [
         "./studio-skills/skill-creator"
       ]
+    },
+    {
+      "name": "governance-skills",
+      "description": "Skills for PR orchestration, evaluation, and automated GitHub submission workflows",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./tdx-skills/eval-suite",
+        "./skills/master-skill-orchestrator",
+        "./skills/skill-push"
+      ]
     }
   ]
 }
