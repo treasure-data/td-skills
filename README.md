@@ -197,8 +197,15 @@ To add a new TD-specific skill:
        "./sql-skills/your-skill-name"  // Add your skill path here (must start with ./)
      ]
    }
-
    ```
+
+4. Add trigger tests to `tests/trigger-tests.yml`:
+   ```yaml
+   - prompt: "A realistic prompt that should trigger your skill"
+     expected: your-skill-name
+   ```
+
+5. Run `./tests/run-tests.sh` to verify your skill triggers correctly
 
 ## Release Channels
 
@@ -223,13 +230,41 @@ Skills are published through two release channels:
 
 Only maintainers listed in `.github/maintainers.yml` can run these commands.
 
+## Testing
+
+### Trigger Tests
+
+Every skill must have trigger tests to verify it activates for realistic user prompts.
+
+```bash
+# Run all trigger tests
+./tests/run-tests.sh
+
+# Run with verbose output
+./tests/run-tests.sh --verbose
+```
+
+Tests are defined in `tests/trigger-tests.yml`:
+
+```yaml
+tests:
+  - prompt: "Write a Trino query to count users"
+    expected: trino
+  - prompt: "Create a segment for recent purchasers"
+    expected: segment
+```
+
+**Philosophy**: Test prompts should be realistic. If a test fails, consider improving the skill description rather than making the prompt artificially specific.
+
 ## Contributing
 
 To contribute a new skill or improve an existing one:
 
 1. Create or update the skill in a feature branch
-2. Test the skill with Claude Code
-3. Submit a pull request with clear documentation
+2. Add trigger tests to `tests/trigger-tests.yml`
+3. Run `./tests/run-tests.sh` to verify triggers work
+4. Test the skill manually with Claude Code
+5. Submit a pull request with clear documentation
 
 ## Support
 

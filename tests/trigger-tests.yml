@@ -1,0 +1,206 @@
+# Skill trigger test cases
+# Format: prompt -> expected skill name
+# Run with: ./tests/run-tests.sh
+#
+# Philosophy: Prompts should be realistic (what a real user would say).
+# If a test fails, consider improving the skill description.
+
+tests:
+  # === SQL Skills ===
+
+  - prompt: "Optimize my Trino query for better performance"
+    expected: trino-optimizer
+
+  - prompt: "Write a Trino query to count users by country"
+    expected: trino
+
+  - prompt: "Write a Hive query with lateral view explode"
+    expected: hive
+
+  - prompt: "Convert this Trino query to Hive"
+    expected: trino-to-hive-migration
+
+  - prompt: "How do I use td_interval for time-based filtering"
+    expected: time-filtering
+
+  - prompt: "Set up dbt with TD Trino"
+    expected: dbt
+
+  # === TDX CLI Skills ===
+
+  - prompt: "Create a segment for users who purchased in the last 30 days"
+    expected: segment
+
+  - prompt: "Create a parent segment with customer attributes"
+    expected: parent-segment
+
+  - prompt: "Validate my segment YAML configuration"
+    expected: validate-segment
+
+  - prompt: "Create a customer journey with decision points and activations"
+    expected: journey
+
+  - prompt: "Validate my journey YAML file"
+    expected: validate-journey
+
+  - prompt: "List all databases using tdx"
+    expected: tdx-basic
+
+  - prompt: "Build an AI agent with knowledge base tools"
+    expected: agent
+
+  - prompt: "Write tests for my TD AI agent"
+    expected: agent-test
+
+  - prompt: "Write an effective system prompt for my agent"
+    expected: agent-prompt
+
+  - prompt: "Configure connector_config for a Salesforce activation"
+    expected: connector-config
+
+  - prompt: "Set up an activation to export segment data to Google Ads"
+    expected: activation
+
+  - prompt: "Query parent segment data to analyze customer behaviors"
+    expected: parent-segment-analysis
+
+  - prompt: "Manage workflows using tdx wf commands"
+    expected: workflow
+
+  - prompt: "Debug a failing workflow and check session logs"
+    expected: workflow-management
+
+  # === Workflow Skills ===
+
+  - prompt: "Create a digdag workflow for daily ETL"
+    expected: digdag
+
+  # === SDK Skills ===
+
+  - prompt: "Query TD from Python using pytd"
+    expected: pytd
+
+  - prompt: "Implement event tracking on my website with TD JavaScript SDK"
+    expected: td-javascript-sdk
+
+  # === Realtime Skills ===
+
+  - prompt: "Set up RT 2.0 personalization end-to-end"
+    expected: rt-setup-personalization
+
+  - prompt: "Set up RT triggers for real-time event processing"
+    expected: rt-setup-triggers
+
+  - prompt: "Configure RT 2.0 for a parent segment"
+    expected: rt-config
+
+  - prompt: "Check RT enablement status for my parent segment"
+    expected: rt-config-setup
+
+  - prompt: "Configure RT event tables and key events"
+    expected: rt-config-events
+
+  - prompt: "Add RT attributes like counters and lists"
+    expected: rt-config-attributes
+
+  - prompt: "Configure RT ID stitching for profile merging"
+    expected: rt-config-id-stitching
+
+  - prompt: "Create an RT personalization service and entity"
+    expected: rt-personalization
+
+  - prompt: "Validate my RT personalization entity payload"
+    expected: rt-personalization-validation
+
+  - prompt: "Create an RT journey with event triggers"
+    expected: rt-journey-create
+
+  - prompt: "Configure webhook activations for my RT journey"
+    expected: rt-journey-activations
+
+  - prompt: "Monitor RT journey activations and debug failures"
+    expected: rt-journey-monitor
+
+  - prompt: "Overview of RT triggers and journeys"
+    expected: rt-triggers
+
+  - prompt: "Query activation logs to check for errors"
+    expected: activations
+
+  - prompt: "Query identity change logs for profile merges"
+    expected: identity
+
+  - prompt: "Find the most common stitching key values in my RT events"
+    expected: identify-top-key-values
+
+  - prompt: "Analyze canonical ID group sizes to detect over-stitching"
+    expected: id-graph-canonical-id-size
+
+  - prompt: "Check if individual IDs appear in multiple canonical ID groups"
+    expected: id-graph-ids-to-canonical-id
+
+  # === Email & Engage Skills ===
+
+  - prompt: "Create an email campaign for my segment"
+    expected: email-campaign
+
+  - prompt: "Manage Engage campaigns using tdx engage commands"
+    expected: engage
+
+  # === Documentation Skills ===
+
+  - prompt: "Generate documentation for my golden layer tables"
+    expected: aps-doc-golden
+
+  - prompt: "Document my ingestion workflow"
+    expected: aps-doc-ingestion
+
+  - prompt: "Document my staging transformation layer"
+    expected: aps-doc-staging
+
+  - prompt: "Document my hist-union workflow"
+    expected: aps-doc-hist-union
+
+  - prompt: "Document my ID unification process"
+    expected: aps-doc-id-unification
+
+  - prompt: "Document my CDP parent segment configuration"
+    expected: aps-doc-master-segment
+
+  - prompt: "Core documentation patterns for TD pipelines"
+    expected: aps-doc-core
+
+  # === Field Agent Skills ===
+
+  - prompt: "Best practices for deploying a Field Agent to production"
+    expected: field-agent-deployment
+
+  - prompt: "Create documentation for my Field Agent"
+    expected: field-agent-documentation
+
+  - prompt: "Create a Plotly chart with TD color palette"
+    expected: field-agent-visualization
+
+  # === Analysis Skills ===
+
+  - prompt: "Run SEO analysis on my website"
+    expected: seo-analysis
+
+  - prompt: "Create a grid dashboard with KPIs and charts"
+    expected: grid-dashboard
+
+  - prompt: "Create an action report with recommendations"
+    expected: action-report
+
+  # === Data Governance Skills ===
+
+  - prompt: "Generate column descriptions for my data dictionary"
+    expected: data-dictionary
+
+  - prompt: "Auto-tag schemas with policy tags for compliance"
+    expected: schema-auto-tagger
+
+  # === Studio Skills ===
+
+  - prompt: "Create a new skill for Treasure Studio"
+    expected: skill-creator

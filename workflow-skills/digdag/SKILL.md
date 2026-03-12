@@ -1,6 +1,6 @@
 ---
 name: digdag
-description: Treasure Workflow (digdag) for TD. Covers .dig syntax, session variables (session_date, session_date_compact), td> operator, _parallel/_retry/_error directives, and tdx wf commands.
+description: Write .dig workflow files for Treasure Workflow. Covers digdag YAML syntax, td> operator, session variables (session_date, session_date_compact), and _parallel/_retry/_error directives. Use when creating or editing .dig workflow definitions.
 ---
 
 # Treasure Workflow (Digdag)
