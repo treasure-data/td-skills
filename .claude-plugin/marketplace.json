@@ -164,6 +164,15 @@
         "./studio-skills/skill-creator",
         "./studio-skills/react-dashboard"
       ]
+    },
+    {
+      "name": "product-skills",
+      "description": "Product overview and discovery skills for understanding the Treasure Data platform, product portfolio, capabilities by persona, and expansion opportunities",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./product-skills/td-product-overview"
+      ]
     }
   ]
 }
