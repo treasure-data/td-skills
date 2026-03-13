@@ -1,6 +1,6 @@
 ---
 name: skill-eval
-description: "Run a full evaluation of a Claude Code skill by orchestrating structure review, trigger evaluation, and output quality assessment. Use when you want a comprehensive skill review from a local path or PR."
+description: Run a full evaluation of a Claude Code skill by orchestrating structure review, trigger evaluation, and output quality assessment. Use when you want a comprehensive skill review from a local path or PR.
 ---
 
 # Skill Evaluation (Orchestrator)

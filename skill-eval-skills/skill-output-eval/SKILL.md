@@ -1,6 +1,6 @@
 ---
 name: skill-output-eval
-description: "Evaluate Claude's output quality when a skill is loaded. Tests whether SKILL.md instructions produce correct, useful results across test scenarios and model tiers. Use when testing if a skill actually works after triggering."
+description: Evaluate Claude's output quality when a skill is loaded. Tests whether SKILL.md instructions produce correct, useful results across test scenarios and model tiers. Use when testing if a skill actually works after triggering.
 ---
 
 # Skill Output Evaluation

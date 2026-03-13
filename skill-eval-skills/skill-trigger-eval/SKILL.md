@@ -1,6 +1,6 @@
 ---
 name: skill-trigger-eval
-description: "Evaluate whether a Claude Code skill's description triggers correctly. Tests for over-broad triggers, missed triggers, and overlap with other skills. Use when testing if a skill's description will match the right user prompts."
+description: Evaluate whether a Claude Code skill's description triggers correctly. Tests for over-broad triggers, missed triggers, and overlap with other skills. Use when testing if a skill's description will match the right user prompts.
 ---
 
 # Skill Trigger Evaluation

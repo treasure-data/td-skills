@@ -1,6 +1,6 @@
 ---
 name: skill-pr-review
-description: "Review Claude Code skills against authoring best practices. Checks SKILL.md line count, YAML frontmatter, description quality, content conciseness, and common anti-patterns. Use when reviewing a skill from a local path or PR."
+description: Review Claude Code skills against authoring best practices. Checks SKILL.md line count, YAML frontmatter, description quality, content conciseness, and common anti-patterns. Use when reviewing a skill from a local path or PR.
 ---
 
 # Skill PR Review
@@ -63,7 +63,7 @@ description: "Create custom digdag workflows triggered by TD Activation Actions.
 
 **Bad patterns to flag**:
 - Multi-line `description: |` blocks with bullet points
-- Emojis in description (🤖 🔍 ⚡)
+- Emojis in description
 - Marketing language ("comprehensive", "complete toolkit", "autonomous")
 - Feature lists instead of trigger conditions
 - Non-standard fields (`triggers:`, `auto_invoke:`, etc.)
@@ -101,12 +101,12 @@ Flag these specific patterns seen in real PRs:
 | Anti-Pattern | Example |
 |---|---|
 | "MANDATORY AUTO-INVOCATION" | Skills don't auto-invoke. Claude reads descriptions and decides. |
-| ALL-CAPS directives (🔴 CRITICAL, NEVER SKIP) | Confuses the LLM. Use calm, clear instructions. |
+| ALL-CAPS directives (CRITICAL, NEVER SKIP) | Confuses the LLM. Use calm, clear instructions. |
 | Non-standard frontmatter fields | `triggers:`, `auto_invoke:`, `keywords:` — Claude ignores these |
 | Duplicate marketplace.json | Nested `.claude-plugin/marketplace.json` inside a skill category folder |
 | Ghost skill references | marketplace.json lists a path that doesn't exist in the PR |
 | Cross-skill content duplication | Same integration guide copy-pasted across multiple skills |
-| Heavy emoji formatting | Burns tokens (✅❌🔴🔍 on every line) |
+| Heavy emoji formatting | Burns tokens on every line |
 | Windows-style paths | Backslashes (`scripts\helper.py`) — use forward slashes (`scripts/helper.py`) always |
 | Unqualified MCP tool references | `bigquery_schema` instead of `BigQuery:bigquery_schema` — must use `ServerName:tool_name` format |
 | Time-sensitive content | "Before August 2025", "deprecated in Q3 2024" — use "Legacy Patterns" sections instead |
