@@ -1,6 +1,6 @@
 ---
 name: schedule-task
-description: Use when the user wants to create, set up, or configure a scheduled task in Treasure Studio. Covers TASK.md authoring, schedule.yaml configuration, script creation, and the schedule_create MCP tool. Triggers on "create a scheduled task", "set up a recurring job", "automate daily report", "schedule a task", "cron job", etc.
+description: Use when the user wants to create, set up, or configure a scheduled task in Treasure Studio. Covers TASK.md authoring, schedule.yaml configuration, script creation, and direct file-based task setup. Triggers on "create a scheduled task", "set up a recurring job", "automate daily report", "schedule a task", "cron job", etc.
 ---
 
 # Schedule Task Creator
@@ -10,9 +10,11 @@ Create scheduled tasks in Treasure Studio that mix deterministic script executio
 ## Workflow
 
 1. **Capture Intent** — What to automate, how often, what tools/data needed, where results go
-2. **Create the Task** — Use `schedule_create` with TASK.md instructions, scripts, and reference files
-3. **Test** — Use `schedule_run` to trigger immediate execution, check with `schedule_results`
-4. **Enable** — Use `schedule_enable` to activate the cron schedule
+2. **Create the Task** — Write files directly to `~/.tdx/schedule-tasks/{task-name}/`
+3. **Validate** — Run `schedule_validate` to check schedule.yaml
+4. **Reload** — Run `schedule_reload` to pick up new/changed tasks
+5. **Test** — Use `schedule_run` to trigger immediate execution, check with `schedule_results`
+6. **Enable** — Use `schedule_enable` to activate the cron schedule
 
 ## Task Directory Structure
 
@@ -27,6 +29,8 @@ Create scheduled tasks in Treasure Studio that mix deterministic script executio
     ├── metadata.json    # System-managed run metadata
     └── output.md        # Execution summary (REQUIRED — agent writes this)
 ```
+
+Create the directory and files directly using Write/Bash tools. The system will pick them up after `schedule_reload`.
 
 ## TASK.md Anatomy
 
@@ -57,38 +61,26 @@ description: Fetch sales data, analyze trends, and post to Slack
 - If fetch script fails, retry once then report the error
 ```
 
-Additional sections (`## Notes`, `## Constraints`, `## Data Files`, `## Output Format`, etc.) are welcome — add any heading that helps clarify the task. The `run_id` is provided to the agent automatically in the prompt.
+Additional sections (`## Notes`, `## Constraints`, `## Data Files`, `## Output Format`, etc.) are welcome. The `run_id` is provided to the agent automatically in the prompt.
 
 ### Using data/ for Cross-Run State
 
 `data/` persists across runs (unlike `results/` which is pruned). When a task uses `data/`, **describe the files and their purpose in TASK.md** under a `## Data Files` section.
 
-## schedule_create Tool
-
-```typescript
-schedule_create({
-  name: "daily-sales-report",
-  description: "Fetch sales data, analyze trends, and post to Slack",
-  instructions: "## Steps\n1. Run `bash scripts/fetch-sales-data.sh`\n...",
-  schedule: "0 9 * * 1-5",
-  skills: ["sql-skills:trino"],
-  permissions: ["Bash", "Write", "slack_post_message", "slack_upload_file"],
-  scripts: [
-    { name: "fetch-sales-data.sh", content: "#!/bin/bash\ntdx query ..." }
-  ],
-  reference_files: [
-    { name: "report-template.html", content: "<html>..." }
-  ]
-})
-```
-
-Task starts **disabled** by default. The `schedule` field is a 5-field cron expression (minimum interval: 5 minutes).
-
-### Configuration in schedule.yaml
-
-Additional settings via `schedule_update` (replaces the full file content):
+## schedule.yaml Format
 
 ```yaml
+name: daily-sales-report
+schedule: "0 9 * * 1-5"
+enabled: false
+skills:
+  - sql-skills:trino
+permissions:
+  allow:
+    - Bash
+    - Write
+    - slack_post_message
+    - slack_upload_file
 notify:
   on_success: slack:channel-name
   on_failure: slack:channel-name
@@ -97,14 +89,17 @@ context:
   timeout: 600
 ```
 
-## Other MCP Tools
+Task name: lowercase, hyphens/underscores only, max 64 chars. Minimum cron interval: 5 minutes.
+
+## MCP Tools
 
 | Tool | Purpose |
 |------|---------|
 | `schedule_list` | List all tasks with status |
 | `schedule_get` | Full task details including TASK.md and recent results |
+| `schedule_validate` | Validate schedule.yaml against schema |
+| `schedule_reload` | Reload tasks from disk (after creating/editing files) |
 | `schedule_run` | Trigger immediate execution (for testing) |
 | `schedule_results` | View past run summaries and output files (optional `limit`, default 10) |
-| `schedule_update` | Replace TASK.md or schedule.yaml content |
 | `schedule_enable` / `schedule_disable` | Toggle task on/off |
 | `schedule_delete` | Remove task and all files |
