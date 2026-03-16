@@ -1,1 +1,11 @@
-.claude/worktrees
+# (Removed sql-skills/docs/ exclusion - these are committed docs)
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.claude/settings.local.json
+.claude/settings.json
