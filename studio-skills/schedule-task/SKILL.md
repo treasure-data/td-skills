@@ -28,8 +28,9 @@ Create scheduled tasks in Treasure Studio that mix deterministic script executio
 ├── TASK.md              # Instructions (frontmatter + markdown body)
 ├── schedule.yaml        # Cron schedule, permissions, notifications
 ├── scripts/             # Deterministic scripts (bash, python, etc.)
-├── reference/           # Templates, specs, configs
-└── results/{run-id}/    # Auto-created per execution
+├── reference/           # Immutable reference files (templates, specs, configs)
+├── data/                # Persistent data across runs (snapshots, state, caches)
+└── results/{run-id}/    # Auto-created per execution (pruned over time)
     ├── metadata.json    # System-managed run metadata
     └── output.md        # Execution summary (REQUIRED — agent writes this)
 ```
@@ -75,6 +76,31 @@ description: Fetch sales data, analyze trends, and post to Slack
 | File transformations | Summarization, reporting |
 | Health checks, probes | Anomaly detection, alerting |
 | Anything with fixed logic | Anything needing judgment |
+
+### Using data/ for Cross-Run State
+
+The `data/` directory persists across runs (unlike `results/` which is pruned). Use it for:
+
+- **Snapshots for diff comparison** — Save current state to data/, compare with previous snapshot on next run
+- **Accumulated data** — Append records across runs (e.g., daily metrics log)
+- **Cache** — Avoid re-fetching unchanged data
+
+When a task uses `data/`, TASK.md **must describe what files are in data/ and how they are used**:
+
+```markdown
+## Data Files
+
+- `data/previous-snapshot.json` — Last run's competitor page snapshot. Compare with today's fetch to detect changes.
+- `data/metrics-history.csv` — Accumulated daily metrics. Append today's row after analysis.
+
+## Steps
+
+1. Run `bash scripts/fetch-competitor-page.sh` to get today's snapshot
+2. Compare today's snapshot with `data/previous-snapshot.json`
+3. Report any new features, pricing changes, or content updates
+4. Save today's snapshot to `data/previous-snapshot.json` for next run
+5. Write results/{run_id}/output.md with diff summary
+```
 
 ## schedule_create Tool
 
