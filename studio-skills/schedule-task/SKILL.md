@@ -70,6 +70,8 @@ description: Fetch sales data, analyze trends, and post to Slack
 
 Additional sections (`## Notes`, `## Constraints`, `## Data Files`, `## Output Format`, etc.) are welcome. The `run_id` is provided to the agent automatically in the prompt.
 
+**Do NOT write Slack channel names or notification targets in TASK.md.** Notification channels are configured in `schedule.yaml` (`notify.on_success` / `notify.on_failure`) and injected into the prompt automatically at execution time. Writing them in TASK.md causes conflicts when the yaml is updated.
+
 ### Using data/ for Cross-Run State
 
 `data/` persists across runs (unlike `results/` which is pruned). When a task uses `data/`, **describe the files and their purpose in TASK.md** under a `## Data Files` section.
