@@ -99,6 +99,20 @@ outputs:
     json_schema: '{"type": "object", "properties": {"status": {"type": "string"}}}'
 ```
 
+## Tools
+
+### Web Search
+
+```yaml
+- type: web_search
+  target: '@ref(type: "web_search_tool", name: "web-search")'
+  target_function: SEARCH
+  function_name: search_web
+  function_description: Search the web
+```
+
+For detailed setup including Web Search Tool instance creation, see the [Web Search Tool Setup Guide](https://docs.treasuredata.com/treasure-code/book/14-agents-web-search).
+
 ## Reference Syntax
 
 All cross-resource references use `@ref(...)`. The `name` must exactly match the `name:` field in the target resource's YAML or frontmatter (NOT the folder name).
