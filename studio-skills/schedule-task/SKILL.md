@@ -12,6 +12,7 @@ Create scheduled tasks in Treasure Studio that mix deterministic script executio
 **CRITICAL: Never just create files and stop. Always run the task and iterate until it works.**
 
 1. **Capture Intent** — What to automate, how often, what tools/data needed, where results go
+   - **Ask the user** for output format (Slack message, CSV, HTML report, etc.) and notification channels before creating files. Never assume a Slack channel — always confirm.
 2. **Create the Task** — Write files directly to `~/.tdx/schedule-tasks/{task-name}/`
 3. **Validate** — Run `schedule_validate` to check schedule.yaml
 4. **Reload** — Run `schedule_reload` to pick up new/changed tasks
