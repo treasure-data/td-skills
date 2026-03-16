@@ -1,6 +1,6 @@
 ---
-name: quick-list
-description: Quickly upload a list of emails (or IDs) into CDP Engage as a usable audience segment. Use when a user wants to create a campaign list without manually configuring parent segments. Takes inline emails, a file, or a query and produces a segment visible on the Engage campaign creation page.
+name: engage-segment-builder
+description: Build an Engage audience segment from a list of emails or IDs. Use when a user wants to upload a contact list, import emails into a campaign, create a quick list for Engage, or target a specific set of people in an email campaign without manually configuring parent segments. Takes inline emails, a file, or a query and produces a segment visible on the Engage campaign creation page.
 ---
 
 # Quick List — Fast Audience Upload to Engage

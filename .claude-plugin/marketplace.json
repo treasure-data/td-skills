@@ -106,7 +106,7 @@
         "./tdx-skills/workflow",
         "./tdx-skills/parent-segment-analysis",
         "./tdx-skills/engage",
-        "./tdx-skills/quick-list"
+        "./tdx-skills/engage-segment-builder"
       ]
     },
     {
