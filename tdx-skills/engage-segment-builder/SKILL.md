@@ -1,6 +1,6 @@
 ---
 name: engage-segment-builder
-description: Build an Engage audience segment from a list of emails or IDs. Use when a user wants to upload a contact list, import emails into a campaign, create a quick list for Engage, or target a specific set of people in an email campaign without manually configuring parent segments. Takes inline emails, a file, or a query and produces a segment visible on the Engage campaign creation page.
+description: Build an Engage audience segment from a list of emails or IDs. Use when a user wants to upload a contact list, import emails into a campaign, or target a specific set of people in an email campaign without manually configuring parent segments. Takes inline emails, a file, or a query and produces a segment visible on the Engage campaign creation page.
 ---
 
 # Quick List — Fast Audience Upload to Engage
