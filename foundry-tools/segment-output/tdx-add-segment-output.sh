@@ -118,6 +118,7 @@ info "Adding :segment: output to $AGENT..."
 # Create the output definition using environment variable
 yq eval '.outputs += [{
   "name": ":segment:",
+  "output_type": "Custom",
   "function_name": "create_segment_draft",
   "function_description": "Generate a segment rule draft that users can review and save in the segment editor. This function creates the segment rule JSON data but does not create the final segment. Users must open the segment editor link and save to create the actual segment. ## Existing Segment Referencing - **baseSegmentIds**: Reference existing segments using their IDs - **Logic**: ALL (AND), ANY (OR), or EXCLUDE (NOT) to combine base segments - Create derivative segments by adding conditions to existing ones ## Schema Guide - **Attribute conditions**: Use column names as left_value - **Behavioral conditions**: Use behaviorCondition object for aggregated analysis - **Logic**: \"ALL\" for AND, \"ANY\" for OR between conditions - **Nested groups**: Create condition groups with logic and conditions for mixed expressions - **Time filtering**: \"TIME WITHIN PAST\" operator with value/unit objects",
   "json_schema": strenv(SCHEMA_JSON)
