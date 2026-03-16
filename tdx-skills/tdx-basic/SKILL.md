@@ -112,6 +112,12 @@ tdx show mydb.users --limit 10       # Preview actual data (not schema)
 
 ### Queries
 
+Query output is truncated to **40 rows** by default. Use `--limit` to return more:
+
+```bash
+tdx query "select * from users" --limit 100   # Return up to 100 rows
+```
+
 ```bash
 # With session database set, use unqualified table names
 tdx use database mydb
