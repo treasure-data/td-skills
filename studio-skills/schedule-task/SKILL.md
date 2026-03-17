@@ -94,14 +94,16 @@ permissions:
     - slack_post_message
     - slack_upload_file
 notify:
-  on_success: slack:channel-name
-  on_failure: slack:channel-name
+  on_success: slack:channel-name   # or "slack:dm" for DM
+  on_failure: slack:channel-name   # or "slack:dm" for DM
 context:
   max_turns: 20
   timeout: 600
 ```
 
 Task name: lowercase, hyphens/underscores only, max 64 chars. Minimum cron interval: 5 minutes.
+
+Notification targets: use `slack:channel-name` for a Slack channel, or `slack:dm` for the user's DM. **Always use `slack:dm` exactly** — not "direct message", "DM", or other variations.
 
 ## MCP Tools
 
