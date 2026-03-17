@@ -157,12 +157,14 @@
     },
     {
       "name": "studio-skills",
-      "description": "Treasure Studio-specific skills including skill creation guidance",
+      "description": "Treasure Studio-specific skills including skill creation and scheduled task management",
       "source": "./",
       "strict": false,
       "skills": [
         "./studio-skills/skill-creator",
-        "./studio-skills/react-dashboard"
+        "./studio-skills/react-dashboard",
+        "./studio-skills/schedule-task",
+        "./studio-skills/schedule-review"
       ]
     }
   ]
