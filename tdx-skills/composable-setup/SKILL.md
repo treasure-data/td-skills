@@ -58,6 +58,27 @@ Keep `rsa_key.p8` — needed for Zero-Copy config.
 
 ## Step 4: Configure Zero-Copy in Data Workbench
 
+### Check for Existing Configs First
+
+Before creating a new config, **always check if a compatible federated query config already exists**:
+
+```bash
+curl -s "https://api.treasuredata.com/v4/federated_query_configs" \
+  -H "Authorization: TD1 <api_key>"
+```
+
+Review the results and present a summary to the user:
+
+| ID | Name | Type | Database | Warehouse | Role | Connection ID |
+|----|------|------|----------|-----------|------|---------------|
+
+For each existing Snowflake config, show these details and ask the user:
+- **"An existing Zero-Copy config was found that points to the same Snowflake database. Would you like to reuse config ID `<id>` (`<name>`), or create a new one?"**
+
+If the user chooses to reuse, skip to Step 5 using the existing `federatedQueryConfigId`. Otherwise, proceed to create a new config below.
+
+### Create a New Config
+
 Navigate to **Data Workbench → Integrations → Integration Hub → Zero-Copy → Snowflake**
 
 Required fields:
@@ -170,8 +191,19 @@ The response includes the assigned parent segment ID — save it for reference.
 
 Navigate to your TD console → Composable Audience Studio.
 
-> **Current limitation**: Use the preview URL to access CAS:
-> `https://console-next.us01.treasuredata.com/app/assets/releases/CAS-34/index.html#/ps/<ps_id>/e/<env_id>/f/<folder_id>`
+### Direct URL
+
+Construct and present a clickable link to the newly created Parent Segment:
+
+| Region | URL Pattern |
+|--------|-------------|
+| US | `https://console.treasuredata.com/app/audiences/ps/<parent_segment_id>` |
+| EU | `https://console-eu01.treasuredata.com/app/audiences/ps/<parent_segment_id>` |
+| JP | `https://console-jp01.treasuredata.com/app/audiences/ps/<parent_segment_id>` |
+
+Replace `<parent_segment_id>` with the `id` returned from the CAS API in Step 6.
+
+Always include this URL in the final output summary so the user can click through directly.
 
 Your parent segment will appear with a **Composable** tag. You can:
 - Browse available attributes
