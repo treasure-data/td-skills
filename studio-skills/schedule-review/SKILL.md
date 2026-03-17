@@ -47,7 +47,7 @@ Files in task directory:
 
 Check the following:
 1. TASK.md has valid YAML frontmatter with `name` and `description`
-2. schedule.yaml has valid fields: name, schedule (cron), enabled
+2. schedule.yaml has valid fields: name, schedule (cron), enabled, catch_up (optional)
 3. Task name in TASK.md matches schedule.yaml name
 4. Cron expression is valid and not too frequent (minimum 5 minutes)
 5. permissions.allow lists all tools referenced in TASK.md steps (Bash for scripts, Write for output, slack_* for notifications)

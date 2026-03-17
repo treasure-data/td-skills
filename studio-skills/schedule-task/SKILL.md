@@ -84,6 +84,7 @@ Additional sections (`## Notes`, `## Constraints`, `## Data Files`, `## Output F
 name: daily-sales-report
 schedule: "0 9 * * 1-5"
 enabled: false
+catch_up: false          # true = run missed schedule once on next Studio startup
 skills:
   - sql-skills:trino
 permissions:
