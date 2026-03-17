@@ -163,7 +163,8 @@
       "skills": [
         "./studio-skills/skill-creator",
         "./studio-skills/react-dashboard",
-        "./studio-skills/schedule-task"
+        "./studio-skills/schedule-task",
+        "./studio-skills/schedule-review"
       ]
     }
   ]
