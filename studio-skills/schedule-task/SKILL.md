@@ -34,7 +34,7 @@ Steps 5-8 are **mandatory** — a task is not complete until it has been reviewe
 ├── scripts/             # Deterministic scripts (bash, python, etc.)
 ├── reference/           # Immutable reference files (templates, specs, configs)
 ├── data/                # Persistent data across runs (snapshots, state, caches)
-└── results/{run-id}/    # Auto-created per execution (pruned over time)
+└── results/{run_id}/    # Auto-created per execution (pruned over time)
     ├── metadata.json    # System-managed run metadata
     └── output.md        # Execution summary (REQUIRED — agent writes this)
 ```

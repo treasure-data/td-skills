@@ -47,7 +47,7 @@ Files in task directory:
 
 Check the following:
 1. TASK.md has valid YAML frontmatter with `name` and `description`
-2. schedule.yaml has valid fields: name, schedule (cron), enabled, catch_up (optional)
+2. schedule.yaml has required fields (name, schedule, enabled) and only valid optional fields (catch_up, skills, permissions, notify, context)
 3. Task name in TASK.md matches schedule.yaml name
 4. Cron expression is valid and not too frequent (minimum 5 minutes)
 5. permissions.allow lists all tools referenced in TASK.md steps (Bash for scripts, Write for output, slack_* for notifications)
@@ -100,7 +100,7 @@ Wait for both tasks to complete using `TaskGet`, then present a unified report:
 - [ ] Missing permission: Bash (needed for scripts/fetch.sh)
 ...
 
-### Quality: {GOOD/NEEDS IMPROVEMENT}
+### Quality: {GOOD/NEEDS IMPROVEMENT/MISSING}
 - [x] Steps are clear
 - [ ] No error handling for script failure
 - [ ] output.md format not specified
