@@ -16,12 +16,14 @@ Create scheduled tasks in Treasure Studio that mix deterministic script executio
 2. **Create the Task** — Write files directly to `~/.tdx/schedule-tasks/{task-name}/`
 3. **Validate** — Run `schedule_validate` to check schedule.yaml
 4. **Reload** — Run `schedule_reload` to pick up new/changed tasks
-5. **Test Run** — Run `schedule_run` to execute immediately
-6. **Check Results** — Use `schedule_results` to review output.md and check for errors
-7. **Fix & Retry** — If the run failed or output is wrong, edit the files and repeat from step 4
-8. **Enable** — Only after a successful test run, use `schedule_enable` to activate the cron schedule
+5. **Review** — Load the `schedule-review` skill and run a full review (structure + quality checks in parallel)
+6. **Fix Issues** — Address any findings from the review
+7. **Test Run** — Run `schedule_run` to execute immediately
+8. **Check Results** — Use `schedule_results` to review output.md and check for errors
+9. **Fix & Retry** — If the run failed or output is wrong, edit the files and repeat from step 4
+10. **Enable** — Only after a successful test run, use `schedule_enable` to activate the cron schedule
 
-Steps 5-7 are **mandatory** — a task is not complete until it has been executed successfully at least once.
+Steps 5-8 are **mandatory** — a task is not complete until it has been reviewed and executed successfully at least once.
 
 ## Task Directory Structure
 
