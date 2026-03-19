@@ -72,6 +72,8 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[tdx-skills/agent-test](./tdx-skills/agent-test)** - Run automated tests for LLM agents using `tdx agent test` with test.yml format and judge evaluation
 - **[tdx-skills/agent-prompt](./tdx-skills/agent-prompt)** - Write effective system prompts for TD AI agents with role definition, constraints, and output formatting
 - **[tdx-skills/workflow](./tdx-skills/workflow)** - Manage TD workflows via `tdx wf` commands: project sync, run, sessions, timeline, attempts, retry, and secrets
+- **[tdx-skills/parent-segment-analysis](./tdx-skills/parent-segment-analysis)** - Query and analyze CDP parent segment output databases: customers table, behavior tables, and attribute exploration
+- **[tdx-skills/engage](./tdx-skills/engage)** - Manage Treasure Engage email templates and campaigns using `tdx engage` with YAML+HTML configs, preview, and deployment
 
 ### Field Agent Skills
 
@@ -79,9 +81,19 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[field-agent-skills/documentation](./field-agent-skills/documentation)** - Comprehensive templates and guidelines for documenting Field Agents with standardized structure, system prompts, and tool specifications
 - **[field-agent-skills/visualization](./field-agent-skills/visualization)** - Professional Plotly visualization best practices with TD color palette, chart specifications, and formatting standards for executive-ready visualizations
 
+### Analysis Skills
+
+- **[analysis-skills/grid-dashboard](./analysis-skills/grid-dashboard)** - YAML format reference for grid dashboards rendered via `preview_grid_dashboard`: page structure, cell types, layout rules
+- **[analysis-skills/action-report](./analysis-skills/action-report)** - YAML format reference for action reports rendered via `preview_action_report`: prioritized recommendations with as-is/to-be diffs
+- **[analysis-skills/seo-analysis](./analysis-skills/seo-analysis)** - SEO and AEO (Answer Engine Optimization) audit producing data dashboards and action reports with before/after recommendations
+
 ### Studio Skills
 
-- **[studio-skills/skill-creator](./studio-skills/skill-creator)** - Guidance for writing effective custom skills (SKILL.md files) in Treasure Studio, covering description triggers, progressive disclosure, writing patterns, and examples
+- **[studio-skills/skill-creator](./studio-skills/skill-creator)** - Create, write, and optimize custom skills (SKILL.md files) in Treasure Studio with description optimization and writing patterns
+- **[studio-skills/react-dashboard](./studio-skills/react-dashboard)** - Build interactive React dashboards in Treasure Studio using `render_react` for custom components beyond `render_chart`
+- **[studio-skills/schedule-task](./studio-skills/schedule-task)** - Create and configure scheduled tasks in Treasure Studio: TASK.md authoring, schedule.yaml, and cron setup
+- **[studio-skills/schedule-review](./studio-skills/schedule-review)** - Review and validate scheduled tasks before enabling, with structural and quality checks via parallel sub-agents
+- **[studio-skills/web-search](./studio-skills/web-search)** - Web search and URL content extraction using `web_search` with query optimization, search operators, and structured research patterns
 
 ### Reference
 
@@ -105,7 +117,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `tdx-skills` - tdx CLI for managing TD from command line
    - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
-   - `studio-skills` - Treasure Studio-specific skills including skill creation guidance
+   - `studio-skills` - Treasure Studio skills: skill creation, React dashboards, scheduled tasks, and web search
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**

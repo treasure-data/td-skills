@@ -164,7 +164,8 @@
         "./studio-skills/skill-creator",
         "./studio-skills/react-dashboard",
         "./studio-skills/schedule-task",
-        "./studio-skills/schedule-review"
+        "./studio-skills/schedule-review",
+        "./studio-skills/web-search"
       ]
     }
   ]
