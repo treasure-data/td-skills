@@ -40,7 +40,7 @@ priority: medium          # critical|high|medium|low (items/goals only)
 assignee: Name            # items/goals only
 due: 2026-04-01           # items/goals only
 github: owner/repo#123    # link to GitHub issue or PR (items/goals only)
-jira: PROJ-456            # link to Jira ticket (items/goals only)
+jira: https://company.atlassian.net/browse/PROJ-456  # link to Jira ticket (items/goals only)
 created: 2026-03-23
 updated: 2026-03-23
 ---
