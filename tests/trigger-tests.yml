@@ -204,3 +204,6 @@ tests:
 
   - prompt: "Create a new skill for Treasure Studio"
     expected: skill-creator
+
+  - prompt: "Explore brand directions for my company landing page"
+    expected: brand-explore
