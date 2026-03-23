@@ -5,7 +5,15 @@ description: Use when the user asks to create, update, list, or manage work item
 
 # Work Basic
 
-Manage workspace documents (items, goals, notes, guides, references) using file operations. All state lives in markdown files with YAML frontmatter in the current working directory.
+Manage workspace documents (items, goals, notes, guides, references) using file operations. All state lives in markdown files with YAML frontmatter.
+
+## Workspace Location
+
+Workspaces are stored under `~/tdx/work/`:
+- **Local workspaces:** `~/tdx/work/local/{name}/` (default workspace: `~/tdx/work/local/default/`)
+- **GitHub workspaces:** `~/tdx/work/github/{owner}/{repo}/`
+
+Each workspace root contains a `tdx.json` config file. The current working directory is typically set to the active workspace.
 
 ## Folder Structure
 
