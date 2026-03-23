@@ -39,10 +39,14 @@ tags: [feature, auth]
 priority: medium          # critical|high|medium|low (items/goals only)
 assignee: Name            # items/goals only
 due: 2026-04-01           # items/goals only
+github: owner/repo#123    # link to GitHub issue or PR (items/goals only)
+jira: PROJ-456            # link to Jira ticket (items/goals only)
 created: 2026-03-23
 updated: 2026-03-23
 ---
 ```
+
+**Guides** also support `description:` — a one-line summary shown in the guide index and injected into agent context for accepted guides.
 
 Notes and references only need `title`, `tags`, `created`. References add `source: URL`.
 
