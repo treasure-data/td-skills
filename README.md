@@ -89,6 +89,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ### Studio Skills
 
+- **[studio-skills/work](./studio-skills/work)** - Manage workspace documents (items, goals, notes, guides, references) using file operations with YAML frontmatter, wiki-links, and status lifecycles
 - **[studio-skills/skill-creator](./studio-skills/skill-creator)** - Create, write, and optimize custom skills (SKILL.md files) in Treasure Studio with description optimization and writing patterns
 - **[studio-skills/react-dashboard](./studio-skills/react-dashboard)** - Build interactive React dashboards in Treasure Studio using `render_react` for custom components beyond `render_chart`
 - **[studio-skills/schedule-task](./studio-skills/schedule-task)** - Create and configure scheduled tasks in Treasure Studio: TASK.md authoring, schedule.yaml, and cron setup
@@ -117,7 +118,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `tdx-skills` - tdx CLI for managing TD from command line
    - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
-   - `studio-skills` - Treasure Studio skills: skill creation, React dashboards, scheduled tasks, and web search
+   - `studio-skills` - Treasure Studio skills: workspace management, skill creation, React dashboards, scheduled tasks, and web search
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
