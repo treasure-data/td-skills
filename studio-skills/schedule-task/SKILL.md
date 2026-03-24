@@ -110,7 +110,7 @@ Task name: lowercase, hyphens/underscores only, max 64 chars. Minimum cron inter
 - `configured` — Task is ready to run. Use this when creating a task specific to the user's environment.
 - `template` — Task is a reusable template that needs customization before enabling. Use this when the user wants to create a shareable template with placeholder values (e.g., `GITHUB_REPO`, `SLACK_CHANNEL`) that others will customize later.
 
-Tasks with `status: template` cannot be enabled until customized and set to `configured`.
+Tasks with `status: template` should not be enabled directly. First customize them and change `status` to `configured` before enabling.
 
 Notification targets: use `slack:channel-name` for a Slack channel, or `slack:dm` for the user's DM. **Always use `slack:dm` exactly** — not "direct message", "DM", or other variations.
 
