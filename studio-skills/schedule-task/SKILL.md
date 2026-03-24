@@ -84,6 +84,7 @@ Additional sections (`## Notes`, `## Constraints`, `## Data Files`, `## Output F
 name: daily-sales-report
 schedule: "0 9 * * 1-5"
 enabled: false
+status: configured       # "configured" = ready to run, "template" = needs customization
 catch_up: false          # true = run missed schedule once on next Studio startup
 skills:
   - sql-skills:trino
@@ -99,9 +100,17 @@ notify:
 context:
   max_turns: 20
   timeout: 600
+  autonomous: false      # true = Supervisor Agent auto-continues until task complete
 ```
 
 Task name: lowercase, hyphens/underscores only, max 64 chars. Minimum cron interval: 5 minutes.
+
+### Status Field
+
+- `configured` — Task is ready to run. Use this when creating a task specific to the user's environment.
+- `template` — Task is a reusable template that needs customization before enabling. Use this when the user wants to create a shareable template with placeholder values (e.g., `GITHUB_REPO`, `SLACK_CHANNEL`) that others will customize later.
+
+Tasks with `status: template` should not be enabled directly. First customize them and change `status` to `configured` before enabling.
 
 Notification targets: use `slack:channel-name` for a Slack channel, or `slack:dm` for the user's DM. **Always use `slack:dm` exactly** — not "direct message", "DM", or other variations.
 
