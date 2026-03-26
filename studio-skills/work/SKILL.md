@@ -167,5 +167,6 @@ To create a new workspace schedule:
 
 Workspace-only schedule.yaml fields:
 - `goal: {slug}` — scope to a goal's linked items
-- `skill: {name}` — invoke a workspace skill
+- `skill: {name}` — invoke a workspace skill (different from `skills` which lists capability packs)
 - `output.note: true` — auto-create a Note from results
+- `output.note_tags: [tag1, tag2]` — tags added to the auto-created Note

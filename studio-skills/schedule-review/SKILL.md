@@ -51,7 +51,7 @@ Files in task directory:
 
 Check the following:
 1. TASK.md has valid YAML frontmatter with `name` and `description`
-2. schedule.yaml has required fields (name, schedule, enabled) and only valid optional fields (status, catch_up, skills, permissions, notify, context, goal, skill, output)
+2. schedule.yaml has required fields (name, schedule, enabled) and only valid optional fields (status, catch_up, skills, permissions, notify, context, goal, skill, output). Note: `skills` (list of capability packs/MCP tools) and `skill` (workspace skill to invoke) serve different purposes and can coexist.
 2a. If status field is present, it must be either 'configured' or 'template'. Warn if missing (defaults to 'configured').
 3. Task name in TASK.md matches schedule.yaml name
 4. Cron expression is valid and not too frequent (minimum 5 minutes)
