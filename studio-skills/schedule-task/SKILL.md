@@ -7,13 +7,25 @@ description: Use when the user wants to create, set up, or configure a scheduled
 
 Create scheduled tasks in Treasure Studio that mix deterministic script execution with agent-driven analysis and delivery.
 
+## Task Directory Placement
+
+Determine where to create the task based on your current working directory:
+
+1. **If inside a workspace** (working directory has `tdx.json` with a `workspace` key, or has `goals/`/`items/` folders):
+   - Create under `{workspace}/schedules/{task-name}/`
+   - Workspace context (accepted guides, goals) is automatically available at execution time
+   - The workspace root becomes the working directory during execution
+
+2. **Otherwise** (standalone):
+   - Create under `~/.tdx/schedule-tasks/{task-name}/`
+
 ## Workflow
 
 **CRITICAL: Never just create files and stop. Always run the task and iterate until it works.**
 
 1. **Capture Intent** — What to automate, how often, what tools/data needed, where results go
    - **Ask the user** for output format (Slack message, CSV, HTML report, etc.) and notification channels before creating files. Never assume a Slack channel — always confirm.
-2. **Create the Task** — Write files directly to `~/.tdx/schedule-tasks/{task-name}/`
+2. **Create the Task** — Write files to the appropriate directory (workspace or standalone, see above)
 3. **Validate** — Run `schedule_validate` to check schedule.yaml
 4. **Reload** — Run `schedule_reload` to pick up new/changed tasks
 5. **Review** — Load the `schedule-review` skill and run a full review (structure + quality checks in parallel)
@@ -28,7 +40,7 @@ Steps 5-8 are **mandatory** — a task is not complete until it has been reviewe
 ## Task Directory Structure
 
 ```text
-~/.tdx/schedule-tasks/{task-name}/
+{task-dir}/
 ├── TASK.md              # Instructions (frontmatter + markdown body)
 ├── schedule.yaml        # Cron schedule, permissions, notifications
 ├── scripts/             # Deterministic scripts (bash, python, etc.)
@@ -104,6 +116,25 @@ context:
 ```
 
 Task name: lowercase, hyphens/underscores only, max 64 chars. Minimum cron interval: 5 minutes.
+
+### Workspace-Only Fields
+
+These fields are only meaningful for tasks inside a workspace `schedules/` directory:
+
+```yaml
+# Target Goal — agent scopes work to this goal's linked items
+goal: auth-redesign
+
+# Workspace skill to invoke as part of execution
+skill: weekly-review
+
+# Output configuration — create a Note from execution results
+output:
+  note: true                    # Create a Note in workspace notes/ from output.md
+  note_tags: [weekly, auto]     # Tags for auto-created Note
+```
+
+When `goal` is set, the agent receives the goal content and linked item statuses in its prompt. When `output.note: true` is set, a Note is automatically created in the workspace's `notes/` folder after successful execution.
 
 ### Status Field
 
