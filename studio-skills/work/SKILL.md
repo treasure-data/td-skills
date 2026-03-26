@@ -21,6 +21,7 @@ Each workspace root contains a `tdx.json` config file. The current working direc
 |--------|------|------------------|
 | `goals/` | goal | `{slug}.md` (no date prefix) |
 | `items/` | item | `YYYY-MM-DD-{slug}.md` |
+| `schedules/` | schedule | `{task-name}/` (subdirectory with TASK.md + schedule.yaml) |
 | `guides/` | guide | `YYYY-MM-DD-{slug}.md` |
 | `notes/` | note | `YYYY-MM-DD-{slug}.md` |
 | `notes/weekly/` | weekly note | `YYYY-WNN.md` |
@@ -153,3 +154,19 @@ When committing workspace changes, use this message format:
 3. **After work** — check if insights should become guides (proposed → accepted)
 4. **Accepted guides** are auto-injected into future sessions — promote guides when patterns are validated
 5. **Before creating** — search existing docs to avoid duplicates
+
+## Schedule Tasks
+
+Workspace schedules live in `schedules/{task-name}/` with TASK.md + schedule.yaml.
+Built-in schedules (weekly-review, synthesize-knowledge, stale-item-cleanup) are auto-created.
+
+To create a new workspace schedule:
+1. Write `schedules/{task-name}/TASK.md` and `schedules/{task-name}/schedule.yaml`
+2. Run `schedule_reload` to register the task
+3. Use `schedule_run` to test, then `schedule_enable` to activate
+
+Workspace-only schedule.yaml fields:
+- `goal: {slug}` — scope to a goal's linked items
+- `skill: {name}` — invoke a workspace skill (different from `skills` which lists capability packs)
+- `output.note: true` — auto-create a Note from results
+- `output.note_tags: [tag1, tag2]` — tags added to the auto-created Note

@@ -13,16 +13,20 @@ Review a scheduled task by running two parallel sub-agent checks using TaskCreat
 ## Workflow
 
 1. Ask the user which task to review (or infer from context)
-2. Read the task's TASK.md and schedule.yaml
-3. Launch both checks in parallel using TaskCreate
-4. Wait for results using TaskGet
-5. Present a unified report with pass/fail and actionable suggestions
+2. Locate the task directory:
+   - If inside a workspace: check `{workspace}/schedules/{task-name}/`
+   - Otherwise: check `~/.tdx/schedule-tasks/{task-name}/`
+   - Use `schedule_get` to find the task if the path is unclear
+3. Read the task's TASK.md and schedule.yaml
+4. Launch both checks in parallel using TaskCreate
+5. Wait for results using TaskGet
+6. Present a unified report with pass/fail and actionable suggestions
 
 ## Step 1: Read Task Files
 
 ```
-Read ~/.tdx/schedule-tasks/{task-name}/TASK.md
-Read ~/.tdx/schedule-tasks/{task-name}/schedule.yaml
+Read {task-dir}/TASK.md
+Read {task-dir}/schedule.yaml
 List files in scripts/, reference/, data/
 ```
 
@@ -47,7 +51,7 @@ Files in task directory:
 
 Check the following:
 1. TASK.md has valid YAML frontmatter with `name` and `description`
-2. schedule.yaml has required fields (name, schedule, enabled) and only valid optional fields (status, catch_up, skills, permissions, notify, context)
+2. schedule.yaml has required fields (name, schedule, enabled) and only valid optional fields (status, catch_up, skills, permissions, notify, context, goal, skill, output). Note: `skills` (list of capability packs/MCP tools) and `skill` (workspace skill to invoke) serve different purposes and can coexist.
 2a. If status field is present, it must be either 'configured' or 'template'. Warn if missing (defaults to 'configured').
 3. Task name in TASK.md matches schedule.yaml name
 4. Cron expression is valid and not too frequent (minimum 5 minutes)
@@ -57,6 +61,8 @@ Check the following:
 8. data/ files described in TASK.md exist if the task expects prior state
 9. No Slack channels or notification targets hardcoded in TASK.md (should be in schedule.yaml notify section only)
 10. output.md is mentioned as a required output in Steps
+11. If `goal` is set, verify the goal file exists in the workspace (workspace tasks only)
+12. If `output.note: true` is set, verify this is a workspace task (inside schedules/ directory)
 
 Report: PASS/FAIL for each item, with specific fix instructions for failures."
 ```
@@ -84,6 +90,7 @@ Check the following:
 6. Skills listed are appropriate for the task
 7. If data/ is used, the update cycle is clear (when to save, when to compare)
 8. The task is self-contained — no implicit dependencies on external state
+9. For workspace tasks: does the goal/skill configuration make sense for the intended purpose?
 
 Report: Rate each item as GOOD/NEEDS IMPROVEMENT/MISSING, with specific suggestions."
 ```
