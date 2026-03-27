@@ -41,7 +41,7 @@ priority: medium          # critical|high|medium|low (items/goals only)
 assignee: Name            # items/goals only
 due: 2026-04-01           # items/goals only
 github: owner/repo#123    # link to GitHub issue or PR (items/goals only)
-jira: https://company.atlassian.net/browse/PROJ-456  # link to Jira ticket (items/goals only)
+jira: atlassian-org/PROJ-456   # link to Jira ticket (items/goals only)
 created: 2026-03-23
 updated: 2026-03-23
 ---
@@ -146,6 +146,34 @@ When committing workspace changes, use this message format:
 - Status changes: `work: move "Title" old_status → new_status`
 - New documents: `work: create "Title"`
 - Updates: `work: update "Title"`
+
+## Sub-item Wiki-links
+
+When an item has sub-tasks, use `[[wiki-link]]` in checklists — even if the target page doesn't exist yet:
+
+```markdown
+- [ ] [[2026-03-26-add-auth-refresh]] — Token refresh logic
+- [ ] [[2026-03-26-update-api-docs]] — Update REST docs
+- [x] [[2026-03-26-fix-session-expiry]] — Session timeout fix
+```
+
+When starting work on a sub-task, create the actual `.md` file in `items/` so it becomes a trackable item with its own status and links.
+
+## External Tracker Links
+
+**Frontmatter fields** (field name provides the type):
+
+```yaml
+jira: <atlassian-org>/<TICKET-ID>    # e.g., acme-corp/PROJ-1234
+github: <owner>/<repo>#<number>       # e.g., acme-corp/my-app#456
+```
+
+**Inline references** in markdown body (prefix with `jira:` or `github:`):
+
+```markdown
+- [x] Auth token refresh — jira:acme-corp/PROJ-1234
+- [ ] Update API docs — github:acme-corp/my-app#789
+```
 
 ## Knowledge Loop
 
