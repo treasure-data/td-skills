@@ -1,6 +1,6 @@
 ---
 name: brand-onboarding
-description: Interactive wizard to create comprehensive brand guidelines for your company. Set up brand colors, fonts, voice, messaging, legal requirements, and accessibility standards. Use when setting up brand guidelines, creating brand standards, or configuring brand compliance. One-time 15-minute setup enables all creative skills.
+description: Interactive wizard to create comprehensive brand guidelines for your company. Set up brand colors, fonts, voice, messaging, legal requirements, and accessibility standards. Use when setting up brand guidelines, creating brand standards, or configuring brand compliance. One-time setup enables all creative skills.
 ---
 
 > **One-Time Setup**

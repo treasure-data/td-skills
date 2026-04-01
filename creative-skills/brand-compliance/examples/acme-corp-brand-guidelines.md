@@ -162,14 +162,14 @@ Acme Corp uses two logo variants for optimal contrast on different backgrounds:
 
 **Logo (Dark - For Light Backgrounds)**:
 - **Filename**: `Acme-logo-black_over_white.png`
-- **Full Path**: `/Users/charuta.kulkarni/Desktop/Projects/td-internal-skills/creative-skills/brand-compliance/examples/Acme-logo-black_over_white.png`
+- **Full Path**: `./Acme-logo-black_over_white.png`
 - **Appearance**: Black text "The Acme Corp" with black tree silhouettes on white background
 - **Use when**: Background is Raw Canvas (#F5F2ED) or other light colors
 - **Auto-selection rule**: Background luminance >= 128 (0-255 scale)
 
 **Logo (Light - For Dark Backgrounds)**:
 - **Filename**: `Acme-logo-white_over_black.png`
-- **Full Path**: `/Users/charuta.kulkarni/Desktop/Projects/td-internal-skills/creative-skills/brand-compliance/examples/Acme-logo-white-over-black.png`
+- **Full Path**: `./Acme-logo-white-over-black.png`
 - **Appearance**: White text "The Acme Corp" with white tree silhouettes on dark gray/black background
 - **Use when**: Background is Old Growth (#1B3022) or other dark colors
 - **Auto-selection rule**: Background luminance < 128 (0-255 scale)

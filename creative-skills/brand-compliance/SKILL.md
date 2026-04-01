@@ -242,26 +242,6 @@ For details, see the "Using Brand Guidelines" section in the multi-channel-ad-id
 
 ---
 
-## Best Practices
-
-**Define guidelines early**: Document brand standards before creating campaigns
-
-**Review at every stage**: Check compliance during ideation, not just at the end
-
-**Be specific with guidelines**: Use exact hex codes, font names, and terminology lists
-
-**Include context-specific tone**: Specify tone for Product Specs, Social Media, Sustainability, etc.
-
-**Document prohibited terms**: Explicitly list words/phrases to avoid
-
-**Verify legal requirements**: Ensure all channel-specific legal disclaimers are defined
-
-**Test accessibility**: Check all guidelines meet WCAG 2.1 AA standards (4.5:1 contrast)
-
-**Update guidelines regularly**: Keep brand standards current as brand evolves
-
----
-
 ## Example Workflow
 
 ### Scenario: Review Email for Acme Corp
@@ -293,31 +273,3 @@ For complete workflow example, see [`examples/review-workflow.md`](examples/revi
 - **email skill**: Email concepts that can be compliance-checked against brand standards.
 - **instagram skill**: Instagram ads that need brand validation before launch.
 - **sms skill**: SMS campaigns that require brand and legal compliance review.
-
----
-
-## Summary
-
-The brand compliance skill ensures all creative content aligns with your brand guidelines before launch:
-
-**Use it to**:
-- Validate email/SMS/Instagram ads against brand standards
-- Identify specific violations with exact locations and fixes
-- Score compliance across 8 dimensions (visual, tone, messaging, legal, channel, accessibility, identity, adherence)
-- Generate visual dashboards with color-coded tier indicators
-- Integrate brand guidelines into creative ideation workflows
-
-**Key Features**:
-- Adapts to any brand guideline format (markdown, inline, file path)
-- 8-dimension compliance scoring (0-40 points)
-- Visual dashboards with inline CSS (WCAG 2.1 AA compliant)
-- Specific violation identification with actionable fixes
-- Integration with multi-channel-ad-ideation for proactive compliance
-
-**Compliance Tiers**:
-- **Fully Compliant (38-40)**: Ready to launch
-- **Mostly Compliant (32-37)**: Minor fixes needed
-- **Partially Compliant (24-31)**: Significant issues to address
-- **Non-Compliant (0-23)**: Major revision required
-
-For detailed scoring criteria and violation examples, reference the supporting documentation in `references/` and `examples/`.
