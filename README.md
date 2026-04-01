@@ -87,6 +87,12 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[analysis-skills/action-report](./analysis-skills/action-report)** - YAML format reference for action reports rendered via `preview_action_report`: prioritized recommendations with as-is/to-be diffs
 - **[analysis-skills/seo-analysis](./analysis-skills/seo-analysis)** - SEO and AEO (Answer Engine Optimization) audit producing data dashboards and action reports with before/after recommendations
 
+### Creative Skills
+
+- **[creative-skills/multi-channel-ad-ideation](./creative-skills/multi-channel-ad-ideation)** - Orchestrate multi-channel ad ideation for email, SMS, and Instagram with structured creative direction workflows, text concepts, and HTML previews
+- **[creative-skills/brand-compliance](./creative-skills/brand-compliance)** - Review creative content for brand guideline compliance with 8-dimension scoring and visual dashboards
+- **[creative-skills/brand-onboarding](./creative-skills/brand-onboarding)** - Create comprehensive brand guidelines through an interactive wizard (~15 min setup)
+
 ### Studio Skills
 
 - **[studio-skills/work](./studio-skills/work)** - Manage workspace documents (items, goals, notes, guides, references) using file operations with YAML frontmatter, wiki-links, and status lifecycles
@@ -119,6 +125,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `tdx-skills` - tdx CLI for managing TD from command line
    - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
    - `studio-skills` - Treasure Studio skills: workspace management, skill creation, React dashboards, scheduled tasks, and web search
+   - `creative-skills` - Multi-channel ad ideation, brand compliance, and brand onboarding
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -130,6 +137,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    /plugin install tdx-skills@td-skills
    /plugin install field-agent-skills@td-skills
    /plugin install studio-skills@td-skills
+   /plugin install creative-skills@td-skills
    ```
 
 ### Invoking Skills
@@ -178,10 +186,13 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the deployment skill to set up a production publishing workflow"
 "Use the documentation skill to create comprehensive Field Agent documentation"
 "Use the visualization skill to create a Plotly chart with TD colors"
+"Use the multi-channel-ad-ideation skill to brainstorm ad concepts for our product launch"
+"Use the brand-compliance skill to review this email for brand guideline compliance"
+"Use the brand-onboarding skill to set up brand guidelines for my company"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, identify-top-key-values, id-graph-canonical-id-size, id-graph-ids-to-canonical-id, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, identify-top-key-values, id-graph-canonical-id-size, id-graph-ids-to-canonical-id, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization, multi-channel-ad-ideation, brand-compliance, brand-onboarding)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
