@@ -75,8 +75,8 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./workflow-skills/digdag",
-        "./workflow-skills/workflow-management",
+        "./workflow-skills/treasure-workflow",
+        "./workflow-skills/operators",
         "./workflow-skills/dbt"
       ]
     },

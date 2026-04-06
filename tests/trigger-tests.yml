@@ -68,12 +68,33 @@ tests:
     expected: workflow
 
   - prompt: "Debug a failing workflow and check session logs"
-    expected: workflow-management
+    expected: workflow
+
+  - prompt: "Set up webhook notifications when a workflow fails"
+    expected: treasure-workflow
+
+  - prompt: "Wait for upstream table data before running the next workflow step"
+    expected: treasure-workflow
+
+  - prompt: "How to make workflow retries safe with idempotent operations"
+    expected: treasure-workflow
 
   # === Workflow Skills ===
 
-  - prompt: "Create a digdag workflow for daily ETL"
-    expected: digdag
+  - prompt: "Create a Treasure Workflow for daily ETL"
+    expected: treasure-workflow
+
+  - prompt: "What operators are available in Treasure Workflow?"
+    expected: workflow-operators
+
+  - prompt: "How do I use td_load> in a workflow?"
+    expected: workflow-operators
+
+  - prompt: "How do I use the py> operator to run a Python script?"
+    expected: workflow-operators
+
+  - prompt: "What secrets does the http> operator support?"
+    expected: workflow-operators
 
   # === SDK Skills ===
 

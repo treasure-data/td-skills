@@ -957,7 +957,7 @@ summary = df.describe()
 
 - **trino**: Understanding Trino SQL syntax for queries in pytd
 - **hive**: Using Hive-specific functions and syntax
-- **digdag**: Orchestrating Python scripts using pytd in workflows
+- **treasure-workflow**: Orchestrating Python scripts using pytd in workflows
 - **td-javascript-sdk**: Browser-based data collection (frontend) vs pytd (backend/analytics)
 
 ## Comparison with Other Tools

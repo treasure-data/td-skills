@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Purpose
 
-This is a Claude Code skills marketplace for Treasure Data internal tools. It contains skill definitions that teach Claude how to work with TD-specific technologies: Trino SQL, Hive SQL, and digdag workflows.
+This is a Claude Code skills marketplace for Treasure Data internal tools. It contains skill definitions that teach Claude how to work with TD-specific technologies: Trino SQL, Hive SQL, and Treasure Workflow.
 
 ## Architecture
 
@@ -22,8 +22,9 @@ sql-skills/
   ├── trino/SKILL.md            # Trino query expertise
   └── hive/SKILL.md             # Hive query expertise
 workflow-skills/
-  ├── digdag/SKILL.md           # Digdag workflow creation
-  └── management/SKILL.md       # Workflow debugging/optimization
+  ├── treasure-workflow/SKILL.md # Workflow authoring and patterns
+  ├── operators/SKILL.md         # Operator reference
+  └── dbt/SKILL.md               # dbt with TD Trino
 template-skill/SKILL.md         # Template for new skills
 ```
 

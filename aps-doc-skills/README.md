@@ -37,7 +37,7 @@ This plugin collection contains **7 specialized documentation skills**:
 
 Consistent with other skill collections:
 - **sql-skills**: 6 focused skills (trino, hive, optimizer, etc.)
-- **workflow-skills**: 3 focused skills (digdag, management, dbt)
+- **workflow-skills**: 3 focused skills (treasure-workflow, operators, dbt)
 - **field-agent-skills**: 3 focused skills (deployment, docs, visualization)
 
 **aps-doc-skills** follows the same proven modular pattern!
