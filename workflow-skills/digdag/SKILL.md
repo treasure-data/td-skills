@@ -152,29 +152,23 @@ _export:
 
 Runtime params: `tdx wf start project workflow -p target_date=2026-04-01`
 
-## Common Pitfalls
+## mail> on TD
 
-- **`td.apikey` must be a Master API Key** in `ACCOUNT_ID/KEY` format. OAuth tokens cause 401. Never handle key values — present `tdx wf secrets set` commands with placeholders.
-- **`mail>` needs no SMTP config on TD** — built-in relay handles delivery. Only `to:`, `subject:`, and body required.
-- **`td_ddl>` `create_databases` requires `td.apikey`** — create the database via CLI first if the secret isn't set yet.
-
-## Schedule Options
+TD's built-in SMTP relay handles delivery. Do not configure `mail.host`, `mail.port`, `mail.username`, or `mail.password` secrets — they are not needed on the TD platform.
 
 ```yaml
-schedule:
-  daily>: "09:00:00"
-  # hourly>: 30:00
-  # weekly>: Mon,09:00:00
-  # monthly>: 1,09:00:00
-  # cron>: "*/15 * * * *"
-  # minutes_interval>: 30
++send_report:
+  mail>: templates/report.html
+  subject: "Daily Report ${session_date}"
+  to: [team@example.com]
+  html: true
 ```
 
-## LLM Agent via http>
+## LLM in Workflows
+
+Always use `http>` with TD LLM Proxy. This is the only way to call LLMs from TD workflows — do not use tdx agent, external API calls, or `py>` for LLM invocation.
 
 For advanced patterns (response parsing, conditional branching, Slack/email reports): [patterns-llm.md](references/patterns-llm.md)
-
-Call TD LLM Proxy directly — no Python/Docker needed (~2s vs ~60s for `py>`):
 
 ```yaml
 +ask_agent:
@@ -194,6 +188,23 @@ Call TD LLM Proxy directly — no Python/Docker needed (~2s vs ~60s for `py>`):
 ```
 
 Response in `${http.last_content}` (JSON string). Regional endpoints: US `us01`, JP `treasuredata.co.jp`, EU `eu01`, AP `ap02`/`ap03`.
+
+## Common Pitfalls
+
+- **`td.apikey` must be a Master API Key** in `ACCOUNT_ID/KEY` format. OAuth tokens cause 401. Never handle key values — present `tdx wf secrets set` commands with placeholders.
+- **`td_ddl>` `create_databases` requires `td.apikey`** — create the database via CLI first if the secret isn't set yet.
+
+## Schedule Options
+
+```yaml
+schedule:
+  daily>: "09:00:00"
+  # hourly>: 30:00
+  # weekly>: Mon,09:00:00
+  # monthly>: 1,09:00:00
+  # cron>: "*/15 * * * *"
+  # minutes_interval>: 30
+```
 
 ## Building a Complete Pipeline
 

@@ -2,7 +2,7 @@
 
 Run Python code on TD via Custom Script Docker containers. Use for logic that SQL and `http>` cannot handle — external API calls with complex auth, HTML scraping, data transformation, writing to TD tables, etc.
 
-> Note: `py>` tasks incur ~60 seconds overhead for Docker container startup. For LLM agent calls, use `http>` instead (see SKILL.md).
+**Each `py>` task takes ~60 seconds overhead for Docker container startup.** This cost is per task invocation, not per workflow. Minimize the number of `py>` tasks — combine logic into a single task where possible. For LLM calls, use `http>` with TD LLM Proxy instead (~2 seconds).
 
 ## Basic Usage
 
