@@ -231,27 +231,43 @@ pytd
 
 ## Secrets Management
 
+### Important: Never handle secret values programmatically
+
+**Do not** attempt to retrieve, store, or set API keys or credentials via scripts, LLM agents, or automation. Secret values must be entered by the user directly. The agent's role is to tell the user **which secrets are needed** and provide the **exact commands to run** — with placeholder values that the user replaces.
+
 ### Required secrets
 
-| Secret key | Description | Required for |
-|---|---|---|
-| `td.apikey` | TD API key | `td>`, `td_ddl>`, `td_load>`, `td_for_each>`, `td_wait>`, `td_run>` |
-| `slack.webhook` | Slack Incoming Webhook URL | Error/success notifications via `http>` |
-| `mail.host`, `mail.port`, `mail.username`, `mail.password` | SMTP credentials | `mail>` operator |
-| `langfuse.public`, `langfuse.secret`, `langfuse.host` | Langfuse tracing keys | `py>` with Langfuse |
+| Secret key | Format | Required for | Where to find |
+|---|---|---|---|
+| `td.apikey` | `ACCOUNT_ID/KEY` (e.g., `1234/abcdef01...`) | `td>`, `td_ddl>`, `td_load>`, `td_for_each>`, `td_wait>`, `td_run>`, `http>` with LLM Proxy | TD Console → My Settings → API Keys |
+| `slack.webhook` | `https://hooks.slack.com/services/...` | Error/success notifications via `http>` | Slack App → Incoming Webhooks |
+| `mail.host`, `mail.port`, `mail.username`, `mail.password` | SMTP credentials | `mail>` operator (local digdag only — **not needed on TD platform**) | Your SMTP provider |
+| `langfuse.public`, `langfuse.secret`, `langfuse.host` | Langfuse keys | `py>` with Langfuse | Langfuse dashboard → Settings |
 
-### Setting secrets
+### How to set secrets
+
+After pushing the workflow project, the user sets secrets via CLI. The agent should present the exact commands with `YOUR_...` placeholders:
 
 ```bash
-# Set secrets for a project
-tdx wf secrets set --project my_project td.apikey YOUR_TD_API_KEY
-tdx wf secrets set --project my_project slack.webhook https://hooks.slack.com/services/xxx
+# Required: TD Master API Key
+# Get your key from: TD Console → My Settings → API Keys
+tdx wf secrets set <project-name> "td.apikey=YOUR_MASTER_API_KEY"
 
-# For py> with Langfuse
-tdx wf secrets set --project my_project langfuse.public YOUR_PUBLIC_KEY
-tdx wf secrets set --project my_project langfuse.secret YOUR_SECRET_KEY
-tdx wf secrets set --project my_project langfuse.host https://us.cloud.langfuse.com
+# Optional: Slack webhook for error notifications
+tdx wf secrets set <project-name> "slack.webhook=YOUR_SLACK_WEBHOOK_URL"
+
+# Optional: Langfuse tracing
+tdx wf secrets set <project-name> "langfuse.public=YOUR_PUBLIC_KEY"
+tdx wf secrets set <project-name> "langfuse.secret=YOUR_SECRET_KEY"
+tdx wf secrets set <project-name> "langfuse.host=YOUR_LANGFUSE_HOST"
 ```
+
+### About `td.apikey`
+
+- **Must be a Master API Key** in `ACCOUNT_ID/KEY` format. OAuth tokens and write-only keys will **not** work.
+- **Where to find it**: TD Console → click your avatar (top-right) → My Settings → API Keys. Copy the Master API Key.
+- **OAuth tokens (e.g., from Treasure Studio) cannot be used** as `td.apikey`. The workflow engine authenticates with `TD1` scheme, which only accepts Master API Keys.
+- **If `td.apikey` is not set**, `td>` operators fall back to the workflow owner's default key. However, `${secret:td.apikey}` references in `http>` headers (e.g., LLM Proxy calls) will fail.
 
 ### Referencing secrets in .dig
 
@@ -261,11 +277,42 @@ _env:
   TD_API_KEY: ${secret:td.apikey}
   SLACK_WEBHOOK: ${secret:slack.webhook}
 
-# Directly in http>
+# In http> headers (e.g., LLM Proxy)
++call_llm:
+  http>: https://llm-proxy.us01.treasuredata.com/v1/messages
+  method: POST
+  headers:
+    - x-api-key: ${secret:td.apikey}
+    - anthropic-version: 2023-06-01
+  content:
+    model: claude-haiku-4-5-20251001
+    max_tokens: 1024
+    messages:
+      - role: user
+        content: "Hello"
+  content_format: json
+
+# Directly in http> URL
 +notify:
   http>: ${secret:slack.webhook}
   method: POST
 ```
+
+### Verifying secrets
+
+```bash
+# List registered secret keys (values are never shown)
+tdx wf secrets list <project-name>
+
+# Delete a secret
+tdx wf secrets delete <project-name> <key> --yes
+```
+
+### Important notes
+
+- **Secrets are project-scoped.** Each workflow project needs its own secret configuration.
+- **Secret values are never displayed** in logs, CLI output, or the TD Console.
+- **`mail>` on TD platform does not require SMTP secrets.** TD provides a built-in SMTP relay. Only set `mail.*` secrets when running digdag locally.
 
 ---
 
@@ -280,9 +327,9 @@ cat manifest.yml
 # 2. Push project to TD (or use Studio's Push button)
 tdx wf push my_project
 
-# 3. Set secrets
-tdx wf secrets set --project my_project td.apikey YOUR_KEY
-tdx wf secrets set --project my_project slack.webhook YOUR_WEBHOOK
+# 3. Set secrets (user must run — see Secrets Management above)
+tdx wf secrets set my_project "td.apikey=YOUR_MASTER_API_KEY"
+tdx wf secrets set my_project "slack.webhook=YOUR_SLACK_WEBHOOK_URL"
 
 # 4. Verify
 tdx wf list my_project

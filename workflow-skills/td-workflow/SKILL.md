@@ -1,6 +1,6 @@
 ---
 name: td-workflow
-description: Design and implement Treasure Workflows (digdag) on TD with correct .dig syntax, TD-specific operators, scheduling, manifest-based lifecycle management, and deployment via tdx CLI. Use this skill whenever the user mentions digdag, .dig files, Treasure Workflow, TD workflow, workflow scheduling on TD, td> operator, or wants to create/modify/deploy any scheduled data pipeline on Treasure Data. Also trigger when the user asks about workflow registry, workflow manifest, or managing existing workflows on TD.
+description: Create, build, and deploy data pipelines and workflows on Treasure Data using digdag. Use when the user wants to create a workflow, build a pipeline, set up scheduled ETL, automate data processing, combine SQL with LLM/mail/HTTP steps, or deploy a .dig project to TD. Also trigger on mentions of digdag, .dig files, td> operator, workflow manifest, or tdx wf push.
 ---
 
 # TD Workflow (Digdag) Skill
@@ -27,6 +27,83 @@ Build Treasure Data workflows using digdag `.dig` files. This skill covers the c
 - Any operator requiring direct command-line execution
 
 Use `py>` with Custom Script Docker images for any logic that would otherwise require shell or Ruby. This is the escape hatch for arbitrary compute on TD.
+
+## Common Pitfalls
+
+Lessons learned from real workflow deployments on the TD platform.
+
+### 1. `td.apikey` must be a Master API Key — set by the user, not the agent
+
+The `td.apikey` workflow secret **must** be a Master API Key in `ACCOUNT_ID/KEY` format (e.g., `1234/abcdef01...`). OAuth tokens will cause `[401:Unauthorized]` errors on all TD operators. **The agent must never attempt to retrieve or handle API key values.** Instead, after pushing the workflow, present the user with the exact `tdx wf secrets set` commands and placeholder values so they can register secrets themselves. See [scaffold.md](references/scaffold.md) for the full procedure.
+
+### 2. `mail>` works without SMTP configuration on TD
+
+On the TD platform, `mail>` uses TD's built-in SMTP relay. You only need `to:`, `subject:`, and the body — no `mail.host`, `mail.port`, `mail.username`, or `mail.password` secrets are required. These secrets are only needed when running digdag locally or against a custom SMTP server.
+
+```yaml
++send:
+  mail>: templates/report.html
+  subject: "Daily Report - ${session_date}"
+  to: [team@example.com]
+  html: true
+  # No SMTP secrets needed on TD
+```
+
+### 3. Database creation requires a valid `td.apikey`
+
+`td_ddl>` with `create_databases:` requires `td.apikey` to be set as a workflow secret. Without a valid Master API Key, it fails with 401. If you cannot set the secret yet, create the database beforehand via CLI or REST API:
+
+```bash
+# Via REST API with OAuth token
+curl -s -X POST "https://api.treasuredata.com/v3/database/create/my_database" \
+  -H "Authorization: Bearer $OAUTH_TOKEN"
+
+# Then remove td_ddl> create_databases from the workflow
+```
+
+### 4. Hubspot association tables use `from_id`/`to_id`, not entity names
+
+Hubspot association tables (e.g., `deals_to_companies_associations`) use generic column names:
+
+| Column | Type | Description |
+|---|---|---|
+| `from_id` | `bigint` | Source entity ID (e.g., deal ID) |
+| `to_id` | `bigint` | Target entity ID (e.g., company ID) |
+| `association_type_id` | `bigint` | Association type |
+| `association_category` | `varchar` | Category |
+| `from_object` | `varchar` | Source object type |
+| `to_object` | `varchar` | Target object type |
+
+The main entity tables use `varchar` for `id`, so cast `from_id`/`to_id` when joining:
+
+```sql
+LEFT JOIN (
+  SELECT CAST(from_id AS VARCHAR) AS deal_id,
+         CAST(to_id AS VARCHAR) AS company_id,
+         ROW_NUMBER() OVER (PARTITION BY from_id ORDER BY to_id) AS rn
+  FROM deals_to_companies_associations
+) dca ON d.id = dca.deal_id AND dca.rn = 1
+```
+
+### 5. Hubspot column naming is inconsistent
+
+Hubspot table column names don't follow a single convention. Always run `tdx describe` before writing SQL:
+
+| Table | Column | NOT |
+|---|---|---|
+| `owners` | `first_name`, `last_name` | ~~`firstname`~~, ~~`lastname`~~ |
+| `contacts` | `firstname`, `lastname` | ~~`first_name`~~, ~~`last_name`~~ |
+| `hubspot_reference_data` | `object_type = 'Deal Stage'` (title case) | ~~`dealstage`~~ |
+
+```bash
+# Always check schema first
+tdx describe hubspot.owners --json
+tdx describe hubspot.contacts --json
+```
+
+### 6. `store_last_results` only captures the first row
+
+The `td>` operator with `store_last_results: true` stores only the first row of results as `${td.last_results.column_name}`. Design your KPI query to return a single row with all needed values using aggregation, `CROSS JOIN`, or subqueries.
 
 ## .dig File Structure
 
@@ -162,10 +239,13 @@ tdx wf start my_project my_workflow -p target_date=2026-04-01 -p mode=full
     TD_API_KEY: ${secret:td.apikey}
 ```
 
-Set secrets via CLI:
+Set secrets via CLI — **the user must run these commands themselves** (agent should present the commands with placeholders, never handle actual values):
 ```bash
-tdx wf secrets set --project my_project slack.webhook YOUR_WEBHOOK_URL
-tdx wf secrets set --project my_project td.apikey YOUR_API_KEY
+# Master API Key — get from TD Console → My Settings → API Keys
+tdx wf secrets set <project-name> "td.apikey=YOUR_MASTER_API_KEY"
+
+# Optional: Slack webhook
+tdx wf secrets set <project-name> "slack.webhook=YOUR_SLACK_WEBHOOK_URL"
 ```
 
 ## Parallel Execution
@@ -435,8 +515,8 @@ See [scaffold.md](references/scaffold.md) for full manifest spec and project str
 # Push project to TD
 tdx wf push my_project
 
-# Set secrets
-tdx wf secrets set --project my_project td.apikey YOUR_KEY
+# Set secrets (user must run these — see scaffold.md)
+tdx wf secrets set my_project "td.apikey=YOUR_MASTER_API_KEY"
 
 # Start a workflow manually
 tdx wf start my_project my_workflow
