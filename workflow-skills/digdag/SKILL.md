@@ -166,13 +166,28 @@ TD's built-in SMTP relay handles delivery. Do not configure `mail.host`, `mail.p
 
 ## LLM in Workflows
 
-Always use `http>` with TD LLM Proxy. This is the only way to call LLMs from TD workflows — do not use tdx agent, external API calls, or `py>` for LLM invocation.
+LLM calls in TD workflows always go through `http>`. There are two options — **always ask the user which to use** before writing the workflow:
+
+| Option | Prerequisites | Best for |
+|---|---|---|
+| **Raw LLM** (TD LLM Proxy) | None — works immediately with `td.apikey` | Simple summarization, classification, formatting |
+| **TD Agent** (webhook) | Agent pre-created in TD Console, webhook URL obtained | Complex tasks requiring tools, knowledge bases, or multi-turn reasoning |
+
+Do not use `py>`, external API calls, or direct Anthropic endpoints for LLM invocation.
 
 For advanced patterns (response parsing, conditional branching, Slack/email reports): [patterns-llm.md](references/patterns-llm.md)
 
+### Option 1: Raw LLM (no setup required)
+
+Call TD LLM Proxy directly. Set the endpoint to match the user's TD region.
+
 ```yaml
-+ask_agent:
-  http>: https://llm-proxy.us01.treasuredata.com/v1/messages
+_export:
+  # Set to user's region: us01 | treasuredata.co.jp | eu01 | ap02 | ap03
+  llm_endpoint: https://llm-proxy.us01.treasuredata.com/v1/messages
+
++ask_llm:
+  http>: ${llm_endpoint}
   method: POST
   headers:
     - x-api-key: ${secret:td.apikey}
@@ -187,7 +202,33 @@ For advanced patterns (response parsing, conditional branching, Slack/email repo
   store_content: true
 ```
 
-Response in `${http.last_content}` (JSON string). Regional endpoints: US `us01`, JP `treasuredata.co.jp`, EU `eu01`, AP `ap02`/`ap03`.
+Response in `${http.last_content}` (JSON string). Available models: `claude-haiku-4-5-20251001`, `claude-sonnet-4-6`, `claude-opus-4-6`.
+
+| Region | Endpoint |
+|---|---|
+| US | `https://llm-proxy.us01.treasuredata.com` |
+| JP | `https://llm-proxy.treasuredata.co.jp` |
+| EU | `https://llm-proxy.eu01.treasuredata.com` |
+| AP02 | `https://llm-proxy.ap02.treasuredata.com` |
+| AP03 | `https://llm-proxy.ap03.treasuredata.com` |
+
+### Option 2: TD Agent (requires pre-setup)
+
+Call a pre-built TD Agent via its webhook URL. The user must provide:
+1. **Agent created** in TD Console (with tools, knowledge bases, system prompt configured)
+2. **Webhook URL** obtained from the agent settings
+
+```yaml
++call_agent:
+  http>: ${secret:agent.webhook_url}
+  method: POST
+  headers:
+    - content-type: application/json
+  content:
+    message: "Analyze sales activity for ${session_date}"
+  content_format: json
+  store_content: true
+```
 
 ## Common Pitfalls
 
