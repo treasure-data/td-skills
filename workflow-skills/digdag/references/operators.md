@@ -5,6 +5,36 @@ For the latest details, see https://docs.digdag.io/operators.html
 
 ---
 
+## Scheduling
+
+```yaml
+# Hourly at :30
+schedule:
+  hourly>: 30:00
+
+# Daily at 9am JST
+schedule:
+  daily>: "09:00:00"
+
+# Weekly on Monday
+schedule:
+  weekly>: Mon,09:00:00
+
+# Monthly on the 1st
+schedule:
+  monthly>: 1,09:00:00
+
+# Cron
+schedule:
+  cron>: "*/15 * * * *"
+
+# Fixed interval
+schedule:
+  minutes_interval>: 30
+```
+
+---
+
 ## Treasure Data Operators
 
 ### td>: Run Queries
