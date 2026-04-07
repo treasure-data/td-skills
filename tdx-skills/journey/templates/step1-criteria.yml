@@ -1,0 +1,129 @@
+# ---
+# Step 1: Criteria Segments
+# ---
+#
+# Build segments for journey criteria ONLY:
+#   - Goal segment
+#   - Stage entry_criteria, milestones, exit_criteria
+#
+# Decision point branches and condition waits come in Step 2.
+#
+# --- Discovery FIRST (do NOT skip) ---
+#
+# Run these commands and analyze real data BEFORE writing segments:
+#   tdx ps desc -o                    # Get output table name
+#   tdx sg fields                     # Discover attributes and behaviors
+#   tdx query "SELECT col, COUNT(*) FROM table GROUP BY 1 ORDER BY 2 DESC LIMIT 20"
+#
+# Query actual data to understand values, distributions, and thresholds.
+#
+# --- Segment Strategy ---
+#
+# Always create embedded segments. Use `tdx sg fields` output to build rules.
+# ref: only works with journey-type segments (kind=3) from other journeys.
+# To reuse logic, pull the other journey and copy segment rules.
+#
+# --- CRITERIA RULES ---
+#
+# 1. Goal: Journey-level success. One segment required.
+# 2. entry_criteria: Stage 1 needs a NEW segment. Stage 2+ reuses
+#    previous stage's milestone segment (no new segment needed).
+# 3. milestone: "Graduation criteria" — defines who enters the NEXT stage.
+#    Stage 1 milestone → Stage 2 entry. Last stage: NO milestone.
+#    TIP: Add "— ready for Stage N" in description.
+# 4. exit_criteria: Users removed (churned, unsubscribed). Reusable across stages.
+#
+# Checklist: goal defined, Stage 1 entry exists, non-last stages have milestone,
+# last stage has NO milestone, exit_criteria on every stage.
+#
+# Load the **segment** skill for full operator reference, Behavior conditions,
+# filter/timeWindow syntax, and nested condition groups.
+#
+# --- After designing the segments ---
+#   1. Show the segment design to the client and get confirmation
+#   2. Once confirmed, write the segments: section to the journey file
+#   3. Immediately move to Step 2 — do NOT ask "shall we proceed?"
+#
+# ---
+#
+# Example: 3-stage journey criteria segments
+#
+# Milestone flow:
+#   Stage 1 entry_criteria: new_signups (who enters Stage 1)
+#   Stage 1 milestone:      email_engaged (who enters Stage 2)
+#   Stage 2 milestone:      active_users (who enters Stage 3)
+#   Stage 3:                no milestone (last stage)
+
+type: journey
+name: Welcome Onboarding Journey
+description: 3-stage onboarding flow for new customers
+reentry: no_reentry
+
+segments:
+  # -- Goal --
+  onboarding_completed:
+    description: User completed product setup
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: onboarding_status
+          operator:
+            type: Equal
+            value: "completed"
+
+  # -- Stage 1: Welcome & Engagement --
+  # entry_criteria (Stage 1 ONLY — Stage 2+ use previous milestone)
+  new_signups:
+    description: Users who signed up in the last 7 days
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: signup_date
+          operator:
+            type: TimeWithinPast
+            value: 7
+            unit: day
+  # milestone (defines who enters Stage 2)
+  email_engaged:
+    description: Users who opened welcome email — ready for Stage 2
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: email_opened
+          operator:
+            type: Equal
+            value: "true"
+  # exit_criteria
+  churned_users:
+    description: Users who churned (shared across all stages)
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: status
+          operator:
+            type: Equal
+            value: "churned"
+
+  # -- Stage 2: Product Activation --
+  # entry_criteria: automatic (→ Stage 1 milestone: email_engaged)
+  # milestone (defines who enters Stage 3)
+  active_users:
+    description: Users with 3+ logins in 7 days — ready for Stage 3
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: login_count_7d
+          operator:
+            type: GreaterEqual
+            value: 3
+  # exit_criteria: reuse churned_users (same embedded segment name in multiple stages)
+
+  # -- Stage 3: Retention & Loyalty (last stage) --
+  # entry_criteria: automatic (→ Stage 2 milestone: active_users)
+  # milestone: NONE (last stage — no next stage to enter)
+  # exit_criteria: reuse churned_users

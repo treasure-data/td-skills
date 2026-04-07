@@ -43,6 +43,11 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[realtime-skills/activations](./realtime-skills/activations)** - Query activation logs to check for errors and view volume for digital marketing activations
 - **[realtime-skills/identity](./realtime-skills/identity)** - Query id change logs to get information about new, updated and merged realtime profiles
 
+#### RT ID Analysis & Debugging
+- **[realtime-skills/identify-top-key-values](./realtime-skills/identify-top-key-values)** - Analyze RT event tables to identify most common stitching key values, debug data quality and distribution issues
+- **[realtime-skills/id-graph-canonical-id-size](./realtime-skills/id-graph-canonical-id-size)** - Query ID graph to analyze canonical ID group sizes and identify over-stitching patterns
+- **[realtime-skills/id-graph-ids-to-canonical-id](./realtime-skills/id-graph-ids-to-canonical-id)** - Detect individual IDs mapping to multiple canonical IDs (over-stitching detection)
+
 ### Workflow Skills
 
 - **[workflow-skills/digdag](./workflow-skills/digdag)** - Design and implement Treasure Workflow with proper error handling
@@ -67,12 +72,35 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[tdx-skills/agent-test](./tdx-skills/agent-test)** - Run automated tests for LLM agents using `tdx agent test` with test.yml format and judge evaluation
 - **[tdx-skills/agent-prompt](./tdx-skills/agent-prompt)** - Write effective system prompts for TD AI agents with role definition, constraints, and output formatting
 - **[tdx-skills/workflow](./tdx-skills/workflow)** - Manage TD workflows via `tdx wf` commands: project sync, run, sessions, timeline, attempts, retry, and secrets
+- **[tdx-skills/parent-segment-analysis](./tdx-skills/parent-segment-analysis)** - Query and analyze CDP parent segment output databases: customers table, behavior tables, and attribute exploration
+- **[tdx-skills/engage](./tdx-skills/engage)** - Manage Treasure Engage email templates and campaigns using `tdx engage` with YAML+HTML configs, preview, and deployment
 
 ### Field Agent Skills
 
 - **[field-agent-skills/deployment](./field-agent-skills/deployment)** - Best practices for developing, testing, and deploying production-ready Field Agents including R&D workflows and release management
 - **[field-agent-skills/documentation](./field-agent-skills/documentation)** - Comprehensive templates and guidelines for documenting Field Agents with standardized structure, system prompts, and tool specifications
 - **[field-agent-skills/visualization](./field-agent-skills/visualization)** - Professional Plotly visualization best practices with TD color palette, chart specifications, and formatting standards for executive-ready visualizations
+
+### Analysis Skills
+
+- **[analysis-skills/grid-dashboard](./analysis-skills/grid-dashboard)** - YAML format reference for grid dashboards rendered via `preview_grid_dashboard`: page structure, cell types, layout rules
+- **[analysis-skills/action-report](./analysis-skills/action-report)** - YAML format reference for action reports rendered via `preview_action_report`: prioritized recommendations with as-is/to-be diffs
+- **[analysis-skills/seo-analysis](./analysis-skills/seo-analysis)** - SEO and AEO (Answer Engine Optimization) audit producing data dashboards and action reports with before/after recommendations
+
+### Creative Skills
+
+- **[creative-skills/multi-channel-ad-ideation](./creative-skills/multi-channel-ad-ideation)** - Orchestrate multi-channel ad ideation for email, SMS, and Instagram with structured creative direction workflows, text concepts, and HTML previews
+- **[creative-skills/brand-compliance](./creative-skills/brand-compliance)** - Review creative content for brand guideline compliance with 8-dimension scoring and visual dashboards
+- **[creative-skills/brand-onboarding](./creative-skills/brand-onboarding)** - Create comprehensive brand guidelines through an interactive wizard (~15 min setup)
+
+### Studio Skills
+
+- **[studio-skills/work](./studio-skills/work)** - Manage workspace documents (items, goals, notes, guides, references) using file operations with YAML frontmatter, wiki-links, and status lifecycles
+- **[studio-skills/skill-creator](./studio-skills/skill-creator)** - Create, write, and optimize custom skills (SKILL.md files) in Treasure Studio with description optimization and writing patterns
+- **[studio-skills/react-dashboard](./studio-skills/react-dashboard)** - Build interactive React dashboards in Treasure Studio using `render_react` for custom components beyond `render_chart`
+- **[studio-skills/schedule-task](./studio-skills/schedule-task)** - Create and configure scheduled tasks in Treasure Studio: TASK.md authoring, schedule.yaml, and cron setup
+- **[studio-skills/schedule-review](./studio-skills/schedule-review)** - Review and validate scheduled tasks before enabling, with structural and quality checks via parallel sub-agents
+- **[studio-skills/web-search](./studio-skills/web-search)** - Web search and URL content extraction using `web_search` with query optimization, search operators, and structured research patterns
 
 ### Reference
 
@@ -96,6 +124,8 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
    - `tdx-skills` - tdx CLI for managing TD from command line
    - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
+   - `studio-skills` - Treasure Studio skills: workspace management, skill creation, React dashboards, scheduled tasks, and web search
+   - `creative-skills` - Multi-channel ad ideation, brand compliance, and brand onboarding
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -106,6 +136,8 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    /plugin install sdk-skills@td-skills
    /plugin install tdx-skills@td-skills
    /plugin install field-agent-skills@td-skills
+   /plugin install studio-skills@td-skills
+   /plugin install creative-skills@td-skills
    ```
 
 ### Invoking Skills
@@ -132,6 +164,9 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the rt-journey-monitor skill to debug activation failures"
 "Use the activations skill to query activation logs for parent segment 394649"
 "Use the identity skill to check recent profile merges for parent segment 394649"
+"Use the identify-top-key-values skill to debug stitching key distributions for parent segment 394649"
+"Use the id-graph-canonical-id-size skill to analyze canonical ID group sizes for parent segment 394649"
+"Use the id-graph-ids-to-canonical-id skill to detect over-stitching issues for parent segment 394649"
 "Use the digdag skill to create a workflow that runs every morning"
 "Use the workflow-management skill to debug this failing workflow"
 "Use the dbt skill to create an incremental model for user events"
@@ -151,10 +186,13 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the deployment skill to set up a production publishing workflow"
 "Use the documentation skill to create comprehensive Field Agent documentation"
 "Use the visualization skill to create a Plotly chart with TD colors"
+"Use the multi-channel-ad-ideation skill to brainstorm ad concepts for our product launch"
+"Use the brand-compliance skill to review this email for brand guideline compliance"
+"Use the brand-onboarding skill to set up brand guidelines for my company"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, identify-top-key-values, id-graph-canonical-id-size, id-graph-ids-to-canonical-id, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization, multi-channel-ad-ideation, brand-compliance, brand-onboarding)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
@@ -183,16 +221,74 @@ To add a new TD-specific skill:
        "./sql-skills/your-skill-name"  // Add your skill path here (must start with ./)
      ]
    }
-
    ```
+
+4. Add trigger tests to `tests/trigger-tests.yml`:
+   ```yaml
+   - prompt: "A realistic prompt that should trigger your skill"
+     expected: your-skill-name
+   ```
+
+5. Run `./tests/run-tests.sh` to verify your skill triggers correctly
+
+## Release Channels
+
+Skills are published through two release channels:
+
+| Channel | Source | Consumer |
+|---------|--------|----------|
+| **next** | Prerelease tags on `main` (`vYYYY.M.patch`) | Early testing |
+| **stable** | Promoted GitHub releases | tdx, Treasure Studio |
+
+### Workflow
+
+1. **Tag a prerelease** — maintainer runs `./scripts/release.sh` on `main`, which tags and pushes. A GitHub Action auto-creates a prerelease.
+2. **Promote to stable** — maintainer runs `./scripts/release.sh promote`, which creates a PR targeting the `release` branch (an orphan branch containing only `.stable-version`).
+3. **Approve and merge** — an engineer reviews and merges the PR. A GitHub Action removes the prerelease flag, making it the latest stable release.
+
+```bash
+./scripts/release.sh            # Tag a next prerelease
+./scripts/release.sh promote    # Create PR to promote next -> stable
+./scripts/release.sh status     # Show channel info
+```
+
+Only maintainers listed in `.github/maintainers.yml` can run these commands.
+
+## Testing
+
+### Trigger Tests
+
+Every skill must have trigger tests to verify it activates for realistic user prompts.
+
+```bash
+# Run all trigger tests
+./tests/run-tests.sh
+
+# Run with verbose output
+./tests/run-tests.sh --verbose
+```
+
+Tests are defined in `tests/trigger-tests.yml`:
+
+```yaml
+tests:
+  - prompt: "Write a Trino query to count users"
+    expected: trino
+  - prompt: "Create a segment for recent purchasers"
+    expected: segment
+```
+
+**Philosophy**: Test prompts should be realistic. If a test fails, consider improving the skill description rather than making the prompt artificially specific.
 
 ## Contributing
 
 To contribute a new skill or improve an existing one:
 
 1. Create or update the skill in a feature branch
-2. Test the skill with Claude Code
-3. Submit a pull request with clear documentation
+2. Add trigger tests to `tests/trigger-tests.yml`
+3. Run `./tests/run-tests.sh` to verify triggers work
+4. Test the skill manually with Claude Code
+5. Submit a pull request with clear documentation
 
 ## Support
 

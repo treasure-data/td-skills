@@ -1,0 +1,98 @@
+# ---
+# Step 2: Decision Point & Condition Wait Segments
+# ---
+#
+# Build segments for decision point branches and condition waits.
+# Criteria segments (goal, entry, exit, milestone) are already done in Step 1.
+#
+# --- decision_point vs condition wait ---
+#
+#   decision_point: "Wait 5 days, THEN check" → fixed delay, then branch
+#   condition wait: "Wait UP TO 5 days, react immediately" → responsive + timeout
+#   If unsure, ask: "React immediately, or wait then check?"
+#
+# --- Plan stage flows first ---
+# For each stage, determine: what decision points, what branches (new segment
+# vs reuse from Step 1 vs excluded catch-all), and any condition waits.
+# Duration waits do NOT need segments.
+#
+# Discovery: same as Step 1 (`tdx sg fields`, query actual data).
+# Checklist: every non-excluded branch has a segment, every condition wait
+# has a trigger segment. Load **segment** skill for operator reference.
+#
+# --- After designing ---
+#   1. Add new segments with "# NEW" comments + structure summary
+#   2. Show to client, get confirmation, then move to Step 3
+#
+# ---
+
+type: journey
+name: Welcome Onboarding Journey
+description: 3-stage onboarding flow for new customers
+reentry: no_reentry
+
+segments:
+  # (criteria segments from Step 1 — do not modify)
+
+  # -- Stage 1: Welcome & Engagement --
+  # decision_point: Email Open Check
+  # - "Opened" branch (reuses: email_engaged from Step 1)
+  # - "Not Opened" branch (excluded — no segment needed)
+  #
+  # wait steps: duration only (no segments needed)
+
+  # -- Stage 2: Product Activation --
+  # decision_point: Usage Level Check
+  power_users:                                                 # NEW
+    description: Users with 10+ logins and 5+ features used
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: login_count_7d
+          operator:
+            type: GreaterEqual
+            value: 10
+        - type: Value
+          attribute: feature_usage_count
+          operator:
+            type: GreaterEqual
+            value: 5
+  # - "Active" branch (reuses: active_users from Step 1)
+  # - "Inactive" branch (excluded — no segment needed)
+  #
+  # wait steps: duration only (no segments needed)
+
+  # -- Stage 3: Retention & Loyalty --
+  # decision_point: NPS Score Check
+  nps_promoters:                                               # NEW
+    description: NPS score 9 or above
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: nps_score
+          operator:
+            type: GreaterEqual
+            value: 9
+  nps_detractors:                                              # NEW
+    description: NPS score 6 or below
+    rule:
+      type: And
+      conditions:
+        - type: Value
+          attribute: nps_score
+          operator:
+            type: LessEqual
+            value: 6
+  # - "Passive" branch (excluded — no segment needed)
+  #
+  # wait steps: duration only (no segments needed)
+
+  # --- Condition wait segment example ---
+  # made_purchase:                          # NEW (for condition wait)
+  #   rule: { type: And, conditions: [{ type: Behavior, attribute: purchase_event,
+  #     operator: { type: GreaterEqual, value: 1 }, aggregation: { type: Count },
+  #     source: behavior_purchases }] }
+
+# Stage flows: S1=EmailOpen(Opened/NotOpened) S2=Usage(Power/Active/Inactive) S3=NPS(Promoter/Detractor/Passive)

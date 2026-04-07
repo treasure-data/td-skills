@@ -1,0 +1,7 @@
+"tdx:core-skills":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "tdx-skills/**"
+          - "sql-skills/**"
+          - "workflow-skills/**"
+          - "studio-skills/**"
