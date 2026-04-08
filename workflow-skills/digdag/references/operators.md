@@ -3,6 +3,13 @@
 Full parameter reference for all operators available on the TD platform.
 For the latest details, see https://docs.digdag.io/operators.html
 
+## Table of Contents
+
+- [Scheduling](#scheduling)
+- [Treasure Data Operators](#treasure-data-operators) — td>, td_run>, td_ddl>, td_load>, td_for_each>, td_wait>, td_wait_table>, td_partial_delete>, td_table_export>, td_result_export>
+- [Workflow Control Operators](#workflow-control-operators) — call>, if>, for_each>, for_range>, loop>, fail>, echo>, wait>, http_call>, require>
+- [py>: Python Custom Script](#py-python-custom-script)
+
 ---
 
 ## Scheduling
