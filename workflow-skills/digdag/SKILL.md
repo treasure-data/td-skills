@@ -13,8 +13,8 @@ Write `.dig` workflow files for Treasure Data.
 
 When the user asks about an existing workflow, check **local first**:
 
-1. **Local check**: Call `workflow_list` to see if it exists in `~/.tdx/workflows/`
-2. **If found locally**: Use `workflow_get` for full details (manifest, `.dig` content, execution history via Studio)
+1. **Local check**: Call `workflow_list` MCP tool to see if it exists in `~/.tdx/workflows/`
+2. **If found locally**: Use `workflow_get` MCP tool for manifest details and `.dig` content. For execution history, use `tdx wf sessions <project>` or check the Studio TD Workflows panel.
 3. **If NOT found locally**: Use `tdx wf workflows <project>` and `tdx wf sessions` to query TD platform
 
 When **creating** a new workflow, always create it locally in `~/.tdx/workflows/` with a proper `manifest.yml`. See [scaffold.md](references/scaffold.md) for the naming convention and directory structure.
