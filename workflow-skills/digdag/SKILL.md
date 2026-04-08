@@ -271,6 +271,4 @@ schedule:
 
 For ETL pipeline patterns (idempotent write, wait-then-process, backfill, modular workflows): [patterns-etl.md](references/patterns-etl.md)
 
-For workflow registry governance (TTL review, duplicate detection, pre-deploy check): [patterns-registry.md](references/patterns-registry.md)
-
 For deploying to TD (manifest.yml, project structure, secrets, deployment checklist): [scaffold.md](references/scaffold.md)

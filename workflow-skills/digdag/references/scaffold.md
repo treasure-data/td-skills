@@ -2,6 +2,16 @@
 
 Directory structure, template, secrets setup, and deployment checklist for TD Workflow projects.
 
+## Table of Contents
+
+- [Project Directory Structure](#project-directory-structure)
+- [Workflow Manifest](#workflow-manifest) — local storage, naming convention
+- [Workflow Template](#workflow-template) — SQL-only ETL, Python+SQL hybrid
+- [Secrets Management](#secrets-management) — required secrets, how to set/verify
+- [Deployment](#deployment) — push, update, manual run, monitoring
+- [Deployment Checklist](#deployment-checklist)
+- [File Naming Conventions](#file-naming-conventions)
+
 ---
 
 ## Project Directory Structure
@@ -53,11 +63,9 @@ Each directory contains:
 - `queries/`, `tasks/`, etc. — supporting files
 - `.state.json` — deploy/run status (auto-managed by Studio)
 
-Treasure Studio discovers workflows from both locations. The Work panel's TD WFs tab shows workspace-scoped workflows; the main TD Workflows panel shows all.
-
 ### Naming Convention
 
-- **`name`** = directory name (use `snake_case`)
+- **`name`** = directory name — lowercase, digits, hyphens, underscores only; must start with letter or digit; max 64 chars (regex: `^[a-z0-9][a-z0-9_-]*$`)
 - **`workflow`** = `.dig` filename without extension (defaults to `name`)
 - **`project`** = TD project name (use `kebab-case`, TD convention)
 
