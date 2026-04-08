@@ -44,8 +44,9 @@ Every workflow project **must** include a `manifest.yml` at the project root. Th
 ### manifest.yml Specification
 
 ```yaml
-name: daily_revenue_etl              # Workflow name = .dig filename (without extension)
+name: daily_revenue_etl              # Must match directory name (~/.tdx/workflows/{name}/)
 project: pricing-watch-revenue-daily  # TD project name (used in tdx wf push)
+workflow: daily_revenue_etl           # TD workflow name (.dig filename without extension)
 owner: pricing-watch                  # Creator: agent name or user name
 created: "2026-04-03"
 purpose: "Aggregate daily revenue data into dim_revenue"
@@ -68,8 +69,9 @@ tags:
 
 | Field | Required | Description |
 |---|---|---|
-| `name` | yes | Workflow name, must match `.dig` filename |
-| `project` | yes | TD project name for `tdx wf push` |
+| `name` | yes | Must match the directory name under `~/.tdx/workflows/`. Used as the local identifier in Studio and MCP tools (e.g., `workflow_get daily_revenue_etl`). Use `snake_case`. |
+| `project` | yes | TD project name for `tdx wf push`. Use `kebab-case` (TD convention). |
+| `workflow` | yes | TD workflow name — must match the `.dig` filename (without extension). This is used for `tdx wf run project.workflow`. Can be `snake_case` or `kebab-case` depending on the `.dig` file. |
 | `owner` | yes | Agent name or user who created it |
 | `created` | yes | Creation date (YYYY-MM-DD) |
 | `purpose` | yes | One-line description of what this workflow does |
@@ -90,6 +92,22 @@ Workflows are stored in `~/.tdx/workflows/` as directories. Each directory conta
 
 Treasure Studio's TD Workflow panel automatically discovers all directories in `~/.tdx/workflows/` and displays them. No separate registration step is needed.
 
+### Naming Convention
+
+Three names must be consistent:
+
+```
+~/.tdx/workflows/daily_revenue_etl/       ← directory name = manifest `name`
+  manifest.yml                             ← name: daily_revenue_etl
+  daily_revenue_etl.dig                    ← .dig filename = manifest `workflow`
+```
+
+- **`name`** = directory name (use `snake_case`)
+- **`workflow`** = `.dig` filename without extension (use same as `.dig` file — may be `snake_case` or `kebab-case`)
+- **`project`** = TD project name (use `kebab-case`, TD convention)
+
+When creating a new workflow from scratch, use the same `snake_case` name for all three. When importing an existing TD project (via `tdx wf pull`), the `.dig` filename may use `kebab-case` — set `workflow` accordingly.
+
 ### Creating a Workflow
 
 To create a new workflow, simply create a directory with a valid manifest.yml:
@@ -102,6 +120,7 @@ mkdir -p ~/.tdx/workflows/daily_revenue_etl
 cat > ~/.tdx/workflows/daily_revenue_etl/manifest.yml << 'EOF'
 name: daily_revenue_etl
 project: pricing-watch-revenue-daily
+workflow: daily_revenue_etl
 owner: pricing-watch
 created: "2026-04-03"
 purpose: "Aggregate daily revenue data into dim_revenue"
