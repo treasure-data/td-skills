@@ -1,6 +1,6 @@
 ---
 name: digdag
-description: Write .dig workflow files for Treasure Workflow. Covers digdag YAML syntax, td> operator, session variables (session_date, session_date_compact), _parallel/_retry/_error directives, and TD platform constraints. Use when creating or editing .dig workflow definitions. Also trigger on mentions of digdag, .dig files, td> operator, or workflow scheduling.
+description: Write .dig workflow files for Treasure Workflow. Covers creating new workflows (create_workflow MCP tool), importing existing workflows (register_workflow), digdag YAML syntax, td> operator, session variables, _parallel/_retry/_error directives, and TD platform constraints. Use when creating, editing, or deploying TD workflows. Also trigger on mentions of digdag, .dig files, td> operator, workflow scheduling, or any request to build a new ETL pipeline or data workflow on Treasure Data.
 ---
 
 # Treasure Workflow (Digdag)
