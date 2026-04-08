@@ -9,15 +9,25 @@ Write `.dig` workflow files for Treasure Data.
 
 > **Official docs**: https://docs.digdag.io/
 
-## Workflow Lookup Order
+## Workflow Lifecycle
+
+### Creating a New Workflow
+
+Use `create_workflow` MCP tool to scaffold a new workflow. This creates `manifest.yml`, a template `.dig` file, and `queries/main.sql`. When a workspace is active, the workflow is created in `{workspace}/workflows/{name}/` by default; otherwise in `~/.tdx/workflows/{name}/`. Use the `scope` parameter to override.
+
+After creation, edit the `.dig` file and queries to define the workflow logic, then deploy with `tdx wf push`.
+
+### Importing an Existing Workflow from TD
+
+Use `tdx wf pull` to download, then `register_workflow` MCP tool to copy the files and generate `manifest.yml`. Same scope rules as `create_workflow`.
+
+### Lookup Order
 
 When the user asks about an existing workflow, check **local first**:
 
-1. **Local check**: Call `workflow_list` MCP tool to see if it exists in `~/.tdx/workflows/`
+1. **Local check**: Call `workflow_list` MCP tool to see workflows from both global (`~/.tdx/workflows/`) and workspace (`{workspace}/workflows/`) sources
 2. **If found locally**: Use `workflow_get` MCP tool for manifest details and `.dig` content. For execution history, use `tdx wf sessions <project>` or check the Studio TD Workflows panel.
 3. **If NOT found locally**: Use `tdx wf workflows <project>` and `tdx wf sessions` to query TD platform
-
-When **creating** a new workflow, always create it locally in `~/.tdx/workflows/` with a proper `manifest.yml`. See [scaffold.md](references/scaffold.md) for the naming convention and directory structure.
 
 ## TD Platform Constraints
 
