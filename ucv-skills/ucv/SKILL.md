@@ -14,7 +14,7 @@ This skill requires:
 - **tdx CLI** — for parent segment discovery (`tdx ps desc`) and data queries (`tdx query`)
 - **A CDP parent segment or database** — containing customer profile and behavior data
 
-If Studio preview is unavailable, skip the `preview_document` call and tell the user: "Studio preview is unavailable. The dashboard has been saved to `/tmp/ucv_dashboard.html` — open it in any browser."
+If Studio preview is unavailable, skip the `preview_document` call and tell the user: "Studio preview is unavailable. The dashboard has been saved to `/tmp/ucv-<customer-name>.html` — open it in any browser."
 
 ## Core Principles
 
@@ -46,7 +46,20 @@ Never hardcode column names. Always discover the schema first via `tdx ps desc` 
 
 Only build tabs for data groups that actually exist in the schema. Some parent segments may have 88 columns, others may have 20.
 
-### 3. Chunked HTML Generation
+### 3. Unique File Naming
+
+Each dashboard must have a unique filename so previous lookups are not overwritten. Use the customer's name (lowercase, hyphens for spaces) as the filename:
+
+```
+/tmp/ucv-<customer-name>.html
+```
+
+**Examples:**
+- John Smith → `/tmp/ucv-john-smith.html`
+- Customer #12345 → `/tmp/ucv-12345.html`
+- Unknown (random lookup) → `/tmp/ucv-<cdp_customer_id>.html`
+
+### 4. Chunked HTML Generation
 
 **Never use the Write tool for HTML files — it fails silently above ~300 lines.**
 
@@ -54,20 +67,20 @@ Large HTML files (300-500+ lines) must be written using sequential `cat >>` comm
 
 **Pattern:**
 ```bash
-# Start fresh
-cat > /tmp/ucv_dashboard.html << 'EOF'
+# Start fresh — use unique filename
+cat > /tmp/ucv-john-smith.html << 'EOF'
 <!DOCTYPE html>...styles...header...
 EOF
 
 # Append chunks
-cat >> /tmp/ucv_dashboard.html << 'EOF'
+cat >> /tmp/ucv-john-smith.html << 'EOF'
 ...tab content...
 EOF
 
 # Repeat for 4-8 total chunks
 ```
 
-### 4. CSS Radio Button Tabs
+### 5. CSS Radio Button Tabs
 
 Tab switching uses hidden radio inputs with CSS sibling combinators. The `input:checked+label` selector highlights the active tab, and `#id:checked~.wrap-c .class` shows the matching content panel.
 
@@ -151,12 +164,12 @@ GROUP BY loyalty_tier
 
 ### Step 4: Build the HTML Dashboard
 
-Write the dashboard to `/tmp/ucv_dashboard.html` using 4-8 chunked `cat >>` calls. Follow the HTML architecture documented below.
+Write the dashboard to `/tmp/ucv-<customer-name>.html` using 4-8 chunked `cat >>` calls. Follow the HTML architecture documented below.
 
 ### Step 5: Render in Studio
 
 ```
-mcp__tdx-studio__preview_document(path="/tmp/ucv_dashboard.html", title="UCV — Customer Name")
+mcp__tdx-studio__preview_document(path="/tmp/ucv-john-smith.html", title="UCV — John Smith")
 ```
 
 Tell the user: "Here's the customer profile dashboard. Click the tabs to explore different views, or tell me if you'd like to look up a different customer."
@@ -347,7 +360,7 @@ Compare aggregate metrics across segments or tiers instead of individual lookup.
 1. Remove ALL `<script>` tags — Studio's iframe blocks JavaScript execution entirely.
 2. Remove any `onclick`, `onload`, or other inline event handlers.
 3. Ensure CSS doesn't reference external fonts or stylesheets.
-4. Verify the file path passed to `preview_document` is absolute (e.g., `/tmp/ucv_dashboard.html`).
+4. Verify the file path passed to `preview_document` is absolute (e.g., `/tmp/ucv-john-smith.html`).
 
 ### Issue: Tabs don't switch when clicked
 
@@ -370,7 +383,7 @@ Compare aggregate metrics across segments or tiers instead of individual lookup.
 1. Use chunked `cat >>` commands in Bash instead of the Write tool.
 2. Start with `cat > file << 'EOF'` for the first chunk, then `cat >> file << 'EOF'` for subsequent chunks.
 3. Keep each chunk under 100 lines for reliability.
-4. Verify the file length after writing: `wc -l /tmp/ucv_dashboard.html`.
+4. Verify the file length after writing: `wc -l /tmp/ucv-john-smith.html`.
 
 ### Issue: Customer query returns no results
 
