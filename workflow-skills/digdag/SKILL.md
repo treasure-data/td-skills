@@ -9,6 +9,16 @@ Write `.dig` workflow files for Treasure Data.
 
 > **Official docs**: https://docs.digdag.io/
 
+## Workflow Lookup Order
+
+When the user asks about an existing workflow, check **local first**:
+
+1. **Local check**: Call `workflow_list` to see if it exists in `~/.tdx/workflows/`
+2. **If found locally**: Use `workflow_get` for full details (manifest, `.dig` content, execution history via Studio)
+3. **If NOT found locally**: Use `tdx wf workflows <project>` and `tdx wf sessions` to query TD platform
+
+When **creating** a new workflow, always create it locally in `~/.tdx/workflows/` with a proper `manifest.yml`. See [scaffold.md](references/scaffold.md) for the naming convention and directory structure.
+
 ## TD Platform Constraints
 
 Full parameter reference for all operators: [operators.md](references/operators.md)
