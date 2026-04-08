@@ -1,21 +1,11 @@
 ---
 name: ucv
-description: This skill should be used when the user asks to "look up a customer", "find a customer", "show me a customer profile", "customer 360", "UCV", or "unified customer view". Generates pure CSS/SVG tabbed dashboards in Treasure Studio with live preview, working with any parent segment or database.
-version: 1.0.0
+description: Use this skill to look up, find, or visualize a single customer's profile — also called a Unified Customer View (UCV) or Customer 360. Generates a 10-tab CSS/SVG dashboard in Treasure Studio with live preview, covering attributes, purchase history, engagement, loyalty, segments, and identity graph. Works with any CDP parent segment or database. For a single specific customer — not for aggregate analysis across all customers (use parent-segment-analysis for that).
 ---
 
 # Unified Customer View (UCV)
 
 This skill generates customer profile dashboards with up to 10 tabbed views, rendered in Treasure Studio via `mcp__tdx-studio__preview_document`. It queries any CDP parent segment or database dynamically, discovers the schema, and builds a pure CSS/SVG dashboard — no JavaScript required.
-
-## When to Use This Skill
-
-Use this skill when:
-- The user asks to "look up a customer", "find a customer", or "view a customer profile"
-- The user wants a "customer 360" or "unified customer view" dashboard
-- The user says "UCV" or requests a customer profile visualization
-- The user asks about customer attributes, purchase behavior, engagement, or loyalty for a specific person
-- The user wants to compare a customer against tier or segment averages
 
 ## Prerequisites
 
@@ -24,7 +14,7 @@ This skill requires:
 - **tdx CLI** — for parent segment discovery (`tdx ps desc`) and data queries (`tdx query`)
 - **A CDP parent segment or database** — containing customer profile and behavior data
 
-If Studio preview is unavailable, dashboards will be saved to disk at `/tmp/ucv_dashboard.html` and can be opened in any browser.
+If Studio preview is unavailable, skip the `preview_document` call and tell the user: "Studio preview is unavailable. The dashboard has been saved to `/tmp/ucv_dashboard.html` — open it in any browser."
 
 ## Core Principles
 
@@ -58,7 +48,9 @@ Only build tabs for data groups that actually exist in the schema. Some parent s
 
 ### 3. Chunked HTML Generation
 
-Large HTML files (300-500+ lines) must be written using sequential `cat >>` commands in Bash — not the Write tool. The Write tool fails silently on files this size.
+**Never use the Write tool for HTML files — it fails silently above ~300 lines.**
+
+Large HTML files (300-500+ lines) must be written using sequential `cat >>` commands in Bash.
 
 **Pattern:**
 ```bash
@@ -97,6 +89,8 @@ If the user doesn't specify a parent segment:
 ```bash
 tdx ps list
 ```
+
+If `tdx ps desc` fails, check authentication (`tdx auth status`) and verify the segment name with `tdx ps list`.
 
 **Option B — Direct database** (when user specifies a database):
 ```bash
@@ -337,9 +331,9 @@ Compare aggregate metrics across segments or tiers instead of individual lookup.
 4. **Parallel behavior queries** — Once you have a customer ID, query all behavior tables in parallel to save time.
 5. **Chunked HTML always** — Never try to write the full dashboard in one Write call. Always use 4-8 sequential `cat >>` chunks via Bash.
 6. **Save before preview** — Always finish writing the HTML file before calling `preview_document`.
-7. **Adapt tabs to data** — Only generate tabs for data groups that exist. If there's no engagement data, skip the Engagement tab. Adjust the grid columns if fewer than 10 tabs.
+7. **Adapt tabs to data** — Only generate tabs for data groups that exist. If there's no engagement data, skip the Engagement tab. For N tabs: use `grid-template-columns: repeat(ceil(N/2), 1fr)` for 2 rows, or `repeat(N, 1fr)` for 1 row if N ≤ 6. Remove the CSS `:checked` selectors for any skipped tabs.
 8. **Currency awareness** — Check the `currency` field in order tables. Not all amounts are USD.
-9. **Timestamp conversion** — Behavior table timestamps are often Unix epochs. Convert for display: use SQL `FROM_UNIXTIME()` or format in the HTML.
+9. **Timestamp conversion** — Always convert Unix timestamps in SQL before building the HTML: `FROM_UNIXTIME(time)` works in TD Trino/Presto. Do not attempt timestamp formatting in HTML — no JavaScript is available.
 10. **Highlight the customer** — In comparison charts, always highlight the customer's bar in blue (#3B82F6) against gray tier averages (#CBD5E1).
 
 ## Common Issues and Solutions
@@ -406,7 +400,6 @@ Compare aggregate metrics across segments or tiers instead of individual lookup.
 - **tdx-skills:segment** — Create child segments based on customer attributes discovered in UCV dashboards.
 - **sql-skills:trino** — Trino SQL syntax for querying Treasure Data databases.
 - **sql-skills:time-filtering** — td_interval patterns for time-based behavior queries.
-- **email-campaign-skills:email-campaign** — Generate email campaigns targeting customers identified via UCV analysis.
 
 ## Resources
 

@@ -1,0 +1,34 @@
+[
+  {
+    "name": "happy-path-parent-segment",
+    "prompt": "Look up a customer in the PacSun parent segment",
+    "criteria": [
+      "Runs tdx ps desc before any SQL query",
+      "Finds a customer with behavior data using JOIN + HAVING",
+      "Generates HTML using chunked cat >> commands, not the Write tool",
+      "Output HTML contains zero script tags and zero JavaScript",
+      "CSS tab system uses radio inputs with sibling combinators",
+      "Calls preview_document with absolute path and customer name in title"
+    ]
+  },
+  {
+    "name": "named-customer-lookup",
+    "prompt": "Find customer John Smith",
+    "criteria": [
+      "Discovers schema before querying",
+      "Uses LIKE search on name columns",
+      "If multiple matches, presents list and asks user to pick",
+      "Generates dashboard with tabs adapted to available data"
+    ]
+  },
+  {
+    "name": "fewer-than-10-tabs",
+    "prompt": "Show me a customer profile from a segment that only has demographics, purchases, and loyalty data",
+    "criteria": [
+      "Only generates tabs for data groups that exist in the schema",
+      "Adjusts grid-template-columns for fewer tabs",
+      "Removes unused CSS :checked selectors for skipped tabs",
+      "Dashboard renders correctly with reduced tab count"
+    ]
+  }
+]
