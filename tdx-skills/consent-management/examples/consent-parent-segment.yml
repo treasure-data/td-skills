@@ -1,0 +1,144 @@
+# Parent Segment with Consent & Preference Attributes
+# Complete example for Customer 360 with privacy compliance
+
+name: "Customer 360 with Consent"
+
+master:
+  database: customer_db
+  table: customers
+  filters:
+    - column: status
+      values: ["active", "trial"]
+
+schedule:
+  type: daily
+  time: "03:00:00"
+  timezone: "America/Los_Angeles"
+
+attributes:
+  # Consent Preferences (Latest Status)
+  - name: "Consent Preferences"
+    source:
+      database: customer_db
+      table: consent_wide  # View with pivoted consent statuses
+    join:
+      parent_key: customer_id
+      child_key: customer_id
+    columns:
+      - column: email_marketing_consent
+        type: string
+      - column: sms_consent
+        type: string
+      - column: profiling_consent
+        type: string
+      - column: data_sharing_consent
+        type: string
+      - column: consent_updated_at
+        type: long
+
+  # Email Preferences
+  - name: "Email Preferences"
+    source:
+      database: customer_db
+      table: email_preferences
+    join:
+      parent_key: email
+      child_key: email
+    columns:
+      - column: email_frequency
+        type: string  # daily, weekly, monthly
+      - column: topics_of_interest
+        type: string  # JSON: ["offers", "news", "events"]
+      - column: preferred_send_time
+        type: string  # morning, afternoon, evening
+      - column: unsubscribe_reason
+        type: string
+      - column: last_updated
+        type: long
+
+  # SMS Preferences
+  - name: "SMS Preferences"
+    source:
+      database: customer_db
+      table: sms_preferences
+    join:
+      parent_key: phone
+      child_key: phone_number
+    columns:
+      - column: sms_frequency
+        type: string
+      - column: sms_campaigns_allowed
+        type: string  # JSON array
+      - column: quiet_hours_enabled
+        type: boolean
+
+  # Privacy Settings
+  - name: "Privacy Settings"
+    source:
+      database: customer_db
+      table: privacy_settings
+    join:
+      parent_key: customer_id
+      child_key: customer_id
+    columns:
+      - column: do_not_sell
+        type: boolean  # CCPA
+      - column: marketing_allowed
+        type: boolean
+      - column: analytics_allowed
+        type: boolean
+      - column: third_party_sharing_allowed
+        type: boolean
+      - column: cookie_consent_level
+        type: string  # essential, functional, analytics, advertising
+
+  # User Profile (Non-PII)
+  - name: "User Profile"
+    source:
+      database: customer_db
+      table: user_profiles
+    join:
+      parent_key: customer_id
+      child_key: customer_id
+    columns:
+      - column: loyalty_tier
+        type: string
+      - column: lifetime_value
+        type: number
+      - column: account_age_days
+        type: number
+
+behaviors:
+  # Consent History (for audit)
+  - name: "Consent Changes"
+    source:
+      database: customer_db
+      table: consent_tracking
+    join:
+      parent_key: customer_id
+      child_key: customer_id
+    columns:
+      - column: consent_type
+        type: string
+      - column: consent_status
+        type: string
+      - column: consent_timestamp
+        type: long
+      - column: consent_channel
+        type: string
+
+  # Email Engagement
+  - name: "Email Engagement"
+    source:
+      database: customer_db
+      table: email_events
+    join:
+      parent_key: email
+      child_key: recipient_email
+    columns:
+      - column: event_type
+        type: string
+      - column: campaign_name
+        type: string
+      - column: event_timestamp
+        type: long

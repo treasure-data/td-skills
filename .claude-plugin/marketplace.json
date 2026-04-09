@@ -92,7 +92,7 @@
     },
     {
       "name": "tdx-skills",
-      "description": "tdx CLI for managing Treasure Data from the command line including database management, table operations, queries, context configuration, CDP parent segments, child segments with activations, segment validation, journey orchestration, and workflow management",
+      "description": "tdx CLI for managing Treasure Data from the command line including database management, table operations, queries, context configuration, CDP parent segments, child segments with activations, segment validation, journey orchestration, consent management, and workflow management",
       "source": "./",
       "strict": false,
       "skills": [
@@ -108,18 +108,7 @@
         "./tdx-skills/agent-prompt",
         "./tdx-skills/workflow",
         "./tdx-skills/parent-segment-analysis",
-        "./tdx-skills/engage"
-      ]
-    },
-    {
-      "name": "creative-skills",
-      "description": "Multi-channel ad ideation for email, SMS, and Instagram campaigns with structured creative direction workflows, brand compliance validation, and brand guideline onboarding",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./creative-skills/multi-channel-ad-ideation",
-        "./creative-skills/brand-compliance",
-        "./creative-skills/brand-onboarding"
+        "./tdx-skills/consent-management"
       ]
     },
     {
