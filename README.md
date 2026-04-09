@@ -51,7 +51,6 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 ### Workflow Skills
 
 - **[workflow-skills/digdag](./workflow-skills/digdag)** - Design and implement Treasure Workflow with proper error handling
-- **[workflow-skills/workflow-management](./workflow-skills/workflow-management)** - Manage, debug, and optimize existing Treasure Workflows
 - **[workflow-skills/dbt](./workflow-skills/dbt)** - Use dbt (data build tool) with TD Trino, includes setup, TD-specific macros, and incremental models
 
 ### SDK Skills
@@ -168,7 +167,6 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the id-graph-canonical-id-size skill to analyze canonical ID group sizes for parent segment 394649"
 "Use the id-graph-ids-to-canonical-id skill to detect over-stitching issues for parent segment 394649"
 "Use the digdag skill to create a workflow that runs every morning"
-"Use the workflow-management skill to debug this failing workflow"
 "Use the dbt skill to create an incremental model for user events"
 "Use the JavaScript SDK skill to implement event tracking on my website"
 "Use the pytd skill to query TD from Python and load results into pandas"

@@ -22,8 +22,9 @@ sql-skills/
   ├── trino/SKILL.md            # Trino query expertise
   └── hive/SKILL.md             # Hive query expertise
 workflow-skills/
-  ├── digdag/SKILL.md           # Digdag workflow creation
-  └── management/SKILL.md       # Workflow debugging/optimization
+  ├── digdag/SKILL.md             # Workflow authoring (.dig files)
+  │   └── references/            # Operator and pattern references
+  └── dbt/SKILL.md               # dbt with TD Trino
 template-skill/SKILL.md         # Template for new skills
 ```
 

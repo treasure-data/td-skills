@@ -1,52 +1,162 @@
 # TD Workflow Operators Reference
 
-Full parameter reference for all operators available on the TD platform.
-For the latest details, see https://docs.digdag.io/operators.html
+Parameter reference for operators available on the TD platform. For full details on each operator, see: `https://docs.treasuredata.com/products/customer-data-platform/data-workbench/workflows/operators/{operator_name}`
 
-## Table of Contents
+## Control Operators
 
-- [Scheduling](#scheduling)
-- [Treasure Data Operators](#treasure-data-operators) — td>, td_run>, td_ddl>, td_load>, td_for_each>, td_wait>, td_wait_table>, td_partial_delete>, td_table_export>, td_result_export>
-- [Workflow Control Operators](#workflow-control-operators) — call>, if>, for_each>, for_range>, loop>, fail>, echo>, wait>, http_call>, require>
-- [py>: Python Custom Script](#py-python-custom-script)
-
----
-
-## Scheduling
+### call>: Call Another Workflow
 
 ```yaml
-# Hourly at :30
-schedule:
-  hourly>: 30:00
++prepare:
+  call>: sub/prepare.dig
 
-# Daily at 9am JST
-schedule:
-  daily>: "09:00:00"
-
-# Weekly on Monday
-schedule:
-  weekly>: Mon,09:00:00
-
-# Monthly on the 1st
-schedule:
-  monthly>: 1,09:00:00
-
-# Cron
-schedule:
-  cron>: "*/15 * * * *"
-
-# Fixed interval
-schedule:
-  minutes_interval>: 30
++process:
+  call>: sub/process.dig
 ```
 
----
+Called workflow uses its subdirectory as working directory. Adjust relative file paths accordingly (e.g., `../queries/data.sql`).
+
+### http_call>: Dynamic Subtasks from HTTP
+
+Fetch YAML/JSON from a URL and use the response as subtask definitions. Supports the same parameters as `http>` except `store_content`. Response Content-Type must be `application/json` or `application/x-yaml` (use `content_type_override` if needed).
+
+```yaml
++dynamic:
+  http_call>: https://api.example.com/workflow-tasks
+```
+
+### require>: Depend on Another Workflow
+
+Wait for another workflow's session to succeed before continuing.
+
+```yaml
++wait_for_etl:
+  require>: daily_etl
+  project_name: data_pipeline
+```
+
+| Parameter | Default | Description |
+|---|---|---|
+| `require>:` | (required) | Workflow name |
+| `project_name:` | — | Project name (for cross-project) |
+| `project_id:` | — | Project ID (alternative to `project_name`) |
+| `session_time:` | — | Override session time (ISO 8601 with timezone) |
+| `rerun_on:` | none | `none`: skip if already succeeded, `failed`: re-run on failure, `all`: always re-run |
+| `ignore_failure:` | false | Succeed even if dependent workflow fails |
+| `retry_attempt_name:` | — | Custom attempt name (not inherited from parent) |
+| `params:` | — | Parameters map to pass to the workflow |
+
+Without `rerun_on: all`, the result of a previous run is reused. When multiple workflows `require>` the same target concurrently, one creates the attempt and others wait for it — set `retry_attempt_name` if each caller needs its own independent attempt.
+
+### loop>: Repeat N Times
+
+`${i}` is 0-indexed.
+
+```yaml
++repeat:
+  loop>: 7
+  _do:
+    +daily:
+      td>: queries/daily.sql
+      _export:
+        d: ${moment(session_time).subtract(i, 'days').format("YYYY-MM-DD")}
+```
+
+| Parameter | Description |
+|---|---|
+| `loop>:` | Number of iterations |
+| `_do:` | Subtasks per iteration |
+| `_parallel:` | Run iterations concurrently |
+
+### for_each>: Iterate Over Values
+
+```yaml
++matrix:
+  for_each>:
+    region: [us, eu, ap]
+    env: [staging, prod]
+  _do:
+    +run:
+      echo>: "Deploy ${region} ${env}"
+  _parallel: true
+```
+
+| Parameter | Description |
+|---|---|
+| `for_each>:` | Map of key: [values] |
+| `_do:` | Subtasks per combination |
+| `_parallel:` | Run iterations concurrently |
+
+### for_range>: Iterate Over Numeric Range
+
+```yaml
++batch:
+  for_range>:
+    from: 0
+    to: 10
+    step: 2
+  _do:
+    +process:
+      echo>: "range ${range.from} to ${range.to}"
+```
+
+| Parameter | Default | Description |
+|---|---|---|
+| `from:` | (required) | Start value |
+| `to:` | (required) | End value (exclusive) |
+| `step:` | 1 | Increment |
+| `_do:` | (required) | Subtasks per iteration |
+| `_parallel:` | false | Run iterations concurrently |
+
+**Output variables:** `${range.from}`, `${range.to}`, `${range.index}`
+
+### if>: Conditional Execution
+
+```yaml
++branch:
+  if>: ${td.last_results.row_count > 0}
+  _do:
+    +process:
+      td>: queries/process.sql
+  _else_do:
+    +notify_empty:
+      echo>: "No rows found"
+```
+
+| Parameter | Description |
+|---|---|
+| `if>:` | Boolean expression |
+| `_do:` | Tasks when true |
+| `_else_do:` | Tasks when false (optional) |
+
+At least one of `_do` or `_else_do` is required.
+
+### fail>: Force Failure
+
+```yaml
++abort:
+  fail>: "Data validation failed: expected > 1000 rows"
+```
+
+### echo>: Log a Message
+
+```yaml
++log:
+  echo>: "Processing ${session_date} for database ${td.each.db_name}"
+```
+
+### wait>: Wait for Duration
+
+```yaml
++pause:
+  wait>: 300
+```
 
 ## Treasure Data Operators
 
-### td>: Run Queries
+All TD operators use **secret** `td.apikey`. If not set, TD operators fall back to the workflow owner's (last `tdx wf push` user) default key.
 
-Execute Hive or Presto queries on Treasure Data.
+### td>: Run Queries
 
 ```yaml
 +query:
@@ -64,18 +174,23 @@ Execute Hive or Presto queries on Treasure Data.
 | `query:` | Inline SQL template (supports `${...}`) |
 | `data:` | Inline SQL string (no variable expansion) |
 
-**Result handling** (choose one):
+**Result destination** (choose one):
 
 | Parameter | Description |
 |---|---|
 | `create_table: NAME` | Create new table from results (drops existing) |
 | `insert_into: NAME` | Append results to table (creates if not exists) |
 | `download_file: NAME` | Export results as local CSV |
-| `store_last_results: true` | Store first row to `${td.last_results}` |
-| `preview: true` | Display sample results in log |
 | `result_url: URL` | Route results to external URL |
 | `result_connection: NAME` | Write results via configured connection |
-| `result_settings: MAP` | Additional settings for result connection |
+| `result_settings: MAP` | Additional settings (requires `result_connection`) |
+
+**Result options** (can combine with above):
+
+| Parameter | Default | Description |
+|---|---|---|
+| `store_last_results:` | false | Store first row to `${td.last_results}` |
+| `preview:` | false | Display sample results in log |
 
 **Execution options:**
 
@@ -97,10 +212,6 @@ Execute Hive or Presto queries on Treasure Data.
 | `${td.last_results}` | First row as map (requires `store_last_results: true`) |
 | `${td.last_job.num_records}` | Output record count |
 
-**Secrets:** `td.apikey`
-
----
-
 ### td_run>: Execute Saved Queries
 
 ```yaml
@@ -112,17 +223,13 @@ Execute Hive or Presto queries on Treasure Data.
 
 | Parameter | Default | Description |
 |---|---|---|
-| `td_run:` | (required) | Saved query name or numeric ID |
+| `td_run>:` | (required) | Saved query name or numeric ID |
 | `download_file:` | — | Export results as CSV |
 | `store_last_results:` | false | Store first row to `${td.last_results}` |
 | `preview:` | false | Display sample results |
 | `session_time:` | — | Override execution time (e.g. `2026-01-01T00:00:00+00:00`) |
 
 **Output variables:** Same as `td>`.
-
-**Secrets:** `td.apikey`
-
----
 
 ### td_ddl>: Table and Database Operations
 
@@ -152,10 +259,6 @@ Execute Hive or Presto queries on Treasure Data.
 
 **Options:** `database:`, `endpoint:`, `use_ssl:`
 
-**Secrets:** `td.apikey`
-
----
-
 ### td_load>: Bulk Loading
 
 ```yaml
@@ -173,13 +276,9 @@ Execute Hive or Presto queries on Treasure Data.
 
 **Output variables:** `${td.last_job_id}`, `${td.last_job.num_records}`
 
-**Secrets:** `td.apikey`
-
----
-
 ### td_for_each>: Query Loop
 
-Execute subtasks once per row returned by a query. Access row values via `${td.each.COLUMN_NAME}`.
+Run subtasks for each row returned by a query. Access row values via `${td.each.COLUMN_NAME}`.
 
 ```yaml
 +for_each_db:
@@ -194,7 +293,7 @@ Execute subtasks once per row returned by a query. Access row values via `${td.e
 
 | Parameter | Description |
 |---|---|
-| `td_for_each>:` | SQL template file |
+| `td_for_each>:` | SQL template file (supports `${...}`) |
 | `_do:` | Subtasks to run per row |
 | `_parallel:` | Run iterations concurrently |
 | `database:` | Target database |
@@ -204,13 +303,9 @@ Execute subtasks once per row returned by a query. Access row values via `${td.e
 
 **Output variables:** `${td.last_job_id}`, `${td.last_job.num_records}`
 
-**Secrets:** `td.apikey`
-
----
-
 ### td_wait>: Wait for Query Condition
 
-Poll a query until it returns true.
+Run a query periodically until it returns true.
 
 ```yaml
 +wait_for_data:
@@ -229,20 +324,17 @@ WHERE TD_TIME_RANGE(time, '${session_time}')
 
 | Parameter | Default | Description |
 |---|---|---|
-| `td_wait>:` | (required) | SQL template file |
+| `td_wait>:` | (required) | SQL template file (supports `${...}`) |
 | `database:` | — | Target database |
 | `engine:` | — | `presto` or `hive` |
 | `interval:` | 30s | Polling frequency |
+| `wait_timeout:` | — | Timeout for wait (e.g., `120s`) |
 | `priority:` | 0 | Job priority |
 | `job_retry:` | 0 | Auto-retry |
 
-**Secrets:** `td.apikey`
-
----
-
 ### td_wait_table>: Wait for Table Records
 
-Poll a table until it has enough records in the session time range.
+Wait until a table has enough records in the session time range.
 
 ```yaml
 +wait:
@@ -260,111 +352,75 @@ Poll a table until it has enough records in the session time range.
 | `interval:` | 30s | Polling frequency |
 | `engine:` | — | `presto` or `hive` |
 
-**Secrets:** `td.apikey`
-
----
-
-## Workflow Control Operators
-
-### if>: Conditional Execution
+### td_table_export>: Export Table to S3
 
 ```yaml
-+branch:
-  if>: ${td.last_results.row_count > 0}
-  _do:
-    +process:
-      td>: queries/process.sql
-  _else_do:
-    +notify_empty:
-      echo>: "No rows found"
++export:
+  td_table_export>: my_database.my_table
+  file_format: jsonl.gz
+  from: "${session_date} 00:00:00 +0900"
+  to: "${next_session_date} 00:00:00 +0900"
+  s3_bucket: my-bucket
+  s3_path_prefix: exports/
 ```
 
 | Parameter | Description |
 |---|---|
-| `if>:` | Boolean expression |
-| `_do:` | Tasks when true |
-| `_else_do:` | Tasks when false (optional) |
+| `td_table_export>:` | `database.table` to export |
+| `file_format:` | `tsv.gz`, `jsonl.gz`, `json.gz`, `line-json.gz` |
+| `from:` | Start time (inclusive) |
+| `to:` | End time (exclusive) |
+| `s3_bucket:` | S3 bucket name |
+| `s3_path_prefix:` | S3 key prefix |
 
-At least one of `_do` or `_else_do` is required.
+**Output variables:** `${td.last_job_id}`, `${td.last_job.num_records}`
 
----
+**Additional secrets:** `aws.s3.access_key_id`, `aws.s3.secret_access_key`
 
-### for_each>: Iterate Over Values
+### td_result_export>: Export Query Results
 
-Creates a Cartesian product of all provided values.
+Export results of a previous job via a result connection.
 
 ```yaml
-+matrix:
-  for_each>:
-    region: [us, eu, ap]
-    env: [staging, prod]
-  _do:
-    +run:
-      echo>: "Deploy ${region} ${env}"
-  _parallel: true
++export_results:
+  td_result_export>: ${td.last_job_id}
+  result_connection: my_s3_connection
+  result_settings:
+    bucket: my-bucket
+    path: /output/
 ```
 
 | Parameter | Description |
 |---|---|
-| `for_each>:` | Map of key: [values] |
-| `_do:` | Subtasks per combination |
-| `_parallel:` | Run iterations concurrently |
+| `td_result_export>:` | Job ID to export |
+| `result_connection:` | Connection name (created in web console) |
+| `result_settings:` | Additional settings map for the connection |
 
----
+**Output variables:** `${td.last_job_id}`, `${td.last_job.num_records}`
 
-### loop>: Repeat N Times
+## Network Operators
 
-Exposes `${i}` (0-indexed) in each iteration.
+### mail>: Send Email
 
 ```yaml
-+repeat:
-  loop>: 7
-  _do:
-    +daily:
-      td>: queries/daily.sql
-      _export:
-        d: ${moment(session_time).subtract(i, 'days').format("YYYY-MM-DD")}
++alert:
+  mail>: templates/alert.txt
+  subject: "Workflow alert: ${session_date}"
+  to: [team@example.com]
+  html: true
 ```
 
 | Parameter | Description |
 |---|---|
-| `loop>:` | Number of iterations |
-| `_do:` | Subtasks per iteration |
-| `_parallel:` | Run iterations concurrently |
+| `mail>:` | Body template file or `{data: "inline text"}` |
+| `subject:` | Subject line |
+| `to:` | Recipient list |
+| `cc:`, `bcc:` | CC/BCC lists |
+| `from:` | Sender address |
+| `html:` | Enable HTML body (default: false) |
+| `attach_files:` | File attachment list |
 
----
-
-### call>: Call Another Workflow
-
-```yaml
-+prepare:
-  call>: sub/prepare.dig
-
-+process:
-  call>: sub/process.dig
-```
-
-Called workflow uses its subdirectory as working directory. Adjust relative file paths accordingly (e.g., `../queries/data.sql`).
-
----
-
-### echo>: Log a Message
-
-```yaml
-+log:
-  echo>: "Processing ${session_date} for database ${td.each.db_name}"
-```
-
----
-
-### fail>: Force Failure
-
-```yaml
-+abort:
-  fail>: "Data validation failed: expected > 1000 rows"
-```
-
----
+**Secrets:** `mail.host`, `mail.port`, `mail.username`, `mail.password`, `mail.tls`
 
 ### http>: HTTP Request
 
@@ -389,34 +445,259 @@ Called workflow uses its subdirectory as working directory. Adjust relative file
 | `timeout:` | 30 | Timeout in seconds |
 | `retry:` | true (GET) | Auto-retry on failure |
 
+**Output variables:** `${http.last_status}` (status code), `${http.last_content}` (response body, requires `store_content: true`)
+
 **Secrets:** `http.authorization`, `http.user`, `http.password`
 
----
+## Database Operators
 
-### mail>: Send Email
+### databricks>: Run Databricks Queries
 
 ```yaml
-+alert:
-  mail>: templates/alert.txt
-  subject: "Workflow alert: ${session_date}"
-  to: [team@example.com]
-  html: true
++db_query:
+  databricks>: queries/analysis.sql
+  host: my-workspace.cloud.databricks.com
+  warehouse_id: abc123def456
+```
+
+| Parameter | Default | Description |
+|---|---|---|
+| `databricks>:` | (required) | SQL file path |
+| `host:` | (required) | Workspace host (without `https://`) |
+| `warehouse_id:` | (required) | SQL warehouse ID |
+| `catalog:` | — | Unity Catalog name |
+| `schema:` | — | Schema name |
+| `store_last_results:` | false | Store first row to `${databricks.last_results}` |
+
+Does **not** support multiple statements in a single task.
+
+**Output variables:** `${databricks.last_statement.id}`, `${databricks.last_statement.num_records}`
+
+**Secrets:** `pat` auth (default) requires `databricks.pat`. `oauth` auth requires `databricks.client_id`, `databricks.client_secret`.
+
+### pg>: Run PostgreSQL Queries
+
+```yaml
++pg_query:
+  pg>: queries/update.sql
+  host: db.example.com
+  user: myuser
+  database: mydb
+```
+
+| Parameter | Default | Description |
+|---|---|---|
+| `pg>:` | (required) | SQL file path |
+| `host:` | (required) | PostgreSQL host |
+| `user:` | (required) | User name |
+| `database:` | (required) | Database name |
+| `port:` | 5432 | Port number |
+| `ssl:` | false | Enable SSL |
+| `strict_transaction:` | true | Use `__digdag_status` table for idempotency |
+| `store_last_results:` | false | Store first row to `${pg.last_results}` |
+
+Set `strict_transaction: false` if CREATE TABLE is not allowed.
+
+**Secrets:** `pg.password`
+
+### snowflake>: Run Snowflake Queries
+
+```yaml
++sf_query:
+  snowflake>: queries/transform.sql
+  account_identifier: MYORG-MYACCOUNT
+  user: myuser
+  database: MY_DB
+  schema: PUBLIC
+  warehouse: COMPUTE_WH
+```
+
+| Parameter | Default | Description |
+|---|---|---|
+| `snowflake>:` | (required) | SQL file path |
+| `account_identifier:` | (required) | Snowflake account (MYORG-MYACCOUNT) |
+| `user:` | (required) | User name |
+| `database:` | — | Database name |
+| `schema:` | — | Schema name |
+| `warehouse:` | — | Warehouse name |
+| `role:` | — | Role name |
+| `store_last_results:` | false | Store first row to `${snowflake.last_results}` |
+
+Supports multi-statement SQL separated by `;`.
+
+**Output variables:** `${snowflake.last_statement.handle}`, `${snowflake.last_statement.num_records}`
+
+**Secrets:** `key_pair` auth (default) requires `snowflake.private_key`. `programmatic_access_token` auth requires `snowflake.programmatic_access_token`.
+
+## Amazon Web Services Operators
+
+S3 operators require **secrets** `aws.s3.access_key_id`, `aws.s3.secret_access_key`. Redshift operators require **secret** `aws.redshift.password`.
+
+### s3_wait>: Wait for S3 File
+
+Wait for an S3 object to appear. Polls with exponential backoff (5s → max 5min).
+
+```yaml
++wait_s3:
+  s3_wait>: my-bucket/data/${session_date}/export.csv.gz
+```
+
+| Parameter | Default | Description |
+|---|---|---|
+| `s3_wait>:` | (required) | S3 bucket/key path |
+| `region:` | — | AWS region |
+| `timeout:` | — | Max wait duration (e.g., `120s`) |
+| `continue_on_timeout:` | false | Succeed on timeout (`s3.last_object` will be empty) |
+
+**Output variables:** `${s3.last_object}`
+
+### s3_copy> / s3_delete> / s3_move>
+
+```yaml
++copy:
+  s3_copy>:
+  source: source-bucket/path/
+  destination: dest-bucket/path/
+  recursive: true
+
++delete:
+  s3_delete>: my-bucket/temp/
+  recursive: true
+
++move:
+  s3_move>:
+  source: source-bucket/old/
+  destination: dest-bucket/new/
 ```
 
 | Parameter | Description |
 |---|---|
-| `mail>:` | Body template file or `{data: "inline text"}` |
-| `subject:` | Subject line |
-| `to:` | Recipient list |
-| `cc:`, `bcc:` | CC/BCC lists |
-| `from:` | Sender address |
-| `html:` | Enable HTML body (default: false) |
-| `attach_files:` | File attachment list |
+| `source:` | Source bucket/key path (`s3_copy>`, `s3_move>`) |
+| `destination:` | Destination bucket/key path (`s3_copy>`, `s3_move>`) |
+| `recursive:` | Process all keys under prefix (default: false) |
 
-**Secrets:** `mail.host`, `mail.port`, `mail.username`, `mail.password`, `mail.tls`
+**s3_move> is not atomic** — copies then deletes. Cannot move/copy a folder into itself.
 
----
+Also supports `credential_provider: assume_role`.
 
-## py>: Python Custom Script
+### redshift>: Run Redshift Queries
+
+```yaml
++rs_query:
+  redshift>: queries/query.sql
+  host: my-cluster.redshift.amazonaws.com
+  user: myuser
+  database: mydb
+```
+
+| Parameter | Default | Description |
+|---|---|---|
+| `redshift>:` | (required) | SQL file path |
+| `host:` | (required) | Redshift cluster endpoint |
+| `user:` | (required) | User name |
+| `database:` | (required) | Database name |
+| `port:` | 5439 | Port number |
+| `ssl:` | false | Enable SSL |
+| `store_last_results:` | false | Store first row to `${redshift.last_results}` |
+
+### redshift_load>: Load S3 into Redshift
+
+| Parameter | Description |
+|---|---|
+| `host:` | Redshift cluster endpoint |
+| `user:` | User name |
+| `database:` | Database name |
+| `table:` | Target table |
+| `from:` | S3 URI |
+
+**Additional secrets:** `aws.redshift_load.access_key_id`, `aws.redshift_load.secret_access_key`
+
+### redshift_unload>: Unload Redshift to S3
+
+| Parameter | Description |
+|---|---|
+| `host:` | Redshift cluster endpoint |
+| `user:` | User name |
+| `database:` | Database name |
+| `query:` | SQL query to unload |
+| `to:` | S3 URI |
+
+**Additional secrets:** `aws.redshift_unload.access_key_id`, `aws.redshift_unload.secret_access_key`
+
+## Google Cloud Platform Operators
+
+All GCP operators require **secret** `gcp.credential`.
+
+### gcs_wait>: Wait for GCS File
+
+```yaml
++wait_gcs:
+  gcs_wait>: my-bucket/data/${session_date}/export.csv.gz
+```
+
+**Output variables:** `${gcs_wait.last_object}`
+
+### bq>: BigQuery Queries
+
+```yaml
++query:
+  bq>: queries/analysis.sql
+  destination_table: my_dataset.results
+```
+
+| Parameter | Default | Description |
+|---|---|---|
+| `bq>:` | (required) | SQL file path |
+| `destination_table:` | — | Target dataset.table |
+| `write_disposition:` | WRITE_TRUNCATE | `WRITE_TRUNCATE`, `WRITE_APPEND`, `WRITE_EMPTY` |
+| `create_disposition:` | CREATE_IF_NEEDED | `CREATE_IF_NEEDED`, `CREATE_NEVER` |
+| `store_last_results:` | false | Store first row to `${bq.last_results}` |
+
+### bq_ddl>: BigQuery Dataset/Table Management
+
+| Parameter | Description |
+|---|---|
+| `create_datasets:` | Create datasets if not exist |
+| `delete_datasets:` | Delete datasets |
+| `empty_datasets:` | Drop and recreate datasets |
+| `create_tables:` | Create tables if not exist |
+| `delete_tables:` | Delete tables |
+| `empty_tables:` | Drop and recreate tables |
+
+### bq_load>: Import GCS to BigQuery
+
+| Parameter | Description |
+|---|---|
+| `bq_load>:` | GCS URI (e.g., `gs://bucket/path/*.csv`) |
+| `destination_table:` | Target dataset.table |
+| `source_format:` | `CSV`, `NEWLINE_DELIMITED_JSON`, `AVRO`, `PARQUET` |
+
+### bq_extract>: Export BigQuery to GCS
+
+| Parameter | Description |
+|---|---|
+| `bq_extract>:` | Source dataset.table |
+| `destination:` | GCS URI (e.g., `gs://bucket/path/export_*.csv`) |
+| `destination_format:` | `CSV`, `NEWLINE_DELIMITED_JSON`, `AVRO` |
+
+## Scripting Operators
+
+### py>: Python Custom Script
 
 For the full `py>` reference (package installation, digdag Python API, argument mapping), see [py-operator.md](py-operator.md). Read it when building tasks that require Python — external API calls, HTML scraping, data transformation, or writing to TD tables.
+
+## Secrets Reference
+
+`${secret:key}` is only expanded in specific operator fields. Some operators also read named secrets automatically.
+
+| Operator | `${secret:key}` expanded in | Auto-resolved named secrets |
+|---|---|---|
+| `http>` | URI, query, headers, content | `http.authorization` (→ Authorization header), `http.user`, `http.password`, `http.uri` |
+| `td>` | `result_url`, `result_settings` | `td.apikey` |
+| `td_load>` | bulk load config | `td.apikey` |
+| `td_result_export>` | `result_settings` | `td.apikey` |
+| `td_table_export>` | — | `td.apikey`, `aws.s3.access_key_id`, `aws.s3.secret_access_key` |
+| `mail>` | — | `mail.host`, `mail.port`, `mail.username`, `mail.password`, `mail.tls`, `mail.ssl` |
+| `s3_wait>`, `s3_copy>`, `s3_delete>`, `s3_move>` | — | `aws.s3.access_key_id`, `aws.s3.secret_access_key` |
+| `gcs_wait>` | — | `gcp.credential` |
+| `py>` | **Not supported** | — (use `_env` instead) |

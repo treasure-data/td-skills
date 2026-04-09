@@ -544,7 +544,7 @@ Track documentation changes:
 ## Resources
 
 - **Atlassian MCP Documentation**: For Confluence integration
-- **Digdag Documentation**: https://docs.digdag.io/ - For workflow syntax
+- **Treasure Workflow Documentation**: https://docs.treasuredata.com/products/customer-data-platform/data-workbench/workflows - For workflow syntax
 - **Treasure Data Documentation**: https://docs.treasuredata.com/ - For TD patterns
 - **Presto SQL Reference**: https://prestodb.io/docs/current/ - For SQL transformations
 

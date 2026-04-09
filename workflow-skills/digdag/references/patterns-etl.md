@@ -40,30 +40,33 @@ _export:
 
 ## Idempotent Write (DELETE + INSERT)
 
-Safely re-run without duplicates using `td_partial_delete>` + `td>`.
+**Do not combine DELETE and INSERT in a single `td>` job** — a single job does not guarantee transactions. If DELETE succeeds but INSERT fails, data is lost. Always split into separate tasks.
+
+Group-level `_retry` ensures INSERT failure triggers re-execution from DELETE:
 
 ```yaml
-+delete_existing:
-  td_partial_delete>: daily_summary
-  database: analytics
-  from: ${session_date}
-  to: ${next_session_date}
++refresh_daily:
+  _retry: 3
 
-+insert_fresh:
-  td>: queries/daily_summary.sql
-  insert_into: daily_summary
+  +delete_records:
+    td>:
+      query: |
+        delete from target
+        where date = '${session_date}'
+    database: my_database
+
+  +insert_records:
+    td>: queries/insert_session.sql
+    insert_into: target
+    database: my_database
 ```
 
-Alternative using Presto (DELETE + INSERT in one workflow):
+For full table replacement, `create_table:` atomically replaces the entire table:
 
 ```yaml
-+delete_existing:
-  td>: queries/delete_partition.sql
-  # DELETE FROM daily_summary WHERE TD_TIME_RANGE(time, '${session_date}', '${next_session_date}')
-
-+insert_fresh:
-  td>: queries/daily_summary.sql
-  insert_into: daily_summary
++rebuild:
+  td>: queries/full_rebuild.sql
+  create_table: target
 ```
 
 ---
@@ -99,6 +102,10 @@ SELECT COUNT(*) > 10000
 FROM incoming_events
 WHERE TD_TIME_RANGE(time, '${session_time}')
 ```
+
+For external systems, use `http>` with an API that returns `408` or `429` until conditions are met — `http>` retries on these status codes automatically (up to the 24h task limit).
+
+**Do not use `loop>` for polling** — it creates a task per iteration and can hit the 1,000 task limit.
 
 ---
 
