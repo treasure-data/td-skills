@@ -296,6 +296,6 @@ See repository LICENSE file.
 
 ## Support
 
-- Documentation: https://docs.treasuredata.com/display/public/PD/RT+2.0
+- Documentation: https://docs.treasuredata.com/products/customer-data-platform/real-time/real-time
 - Issues: https://github.com/treasure-data/td-skills/issues
 - CSM: Contact your Treasure Data Customer Success Manager
