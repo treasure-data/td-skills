@@ -147,6 +147,20 @@ tests:
   - prompt: "Manage Engage campaigns using tdx engage commands"
     expected: engage
 
+  # === Document Skills ===
+
+  - prompt: "Create a PowerPoint presentation about our Q4 results"
+    expected: pptx
+
+  - prompt: "Generate a .pptx slide deck for my project proposal"
+    expected: pptx
+
+  - prompt: "Make a pitch deck with charts showing our growth metrics"
+    expected: pptx
+
+  - prompt: "I need slides for my team meeting tomorrow"
+    expected: pptx
+
   # === Documentation Skills ===
 
   - prompt: "Generate documentation for my golden layer tables"
