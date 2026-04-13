@@ -34,6 +34,8 @@ agent-browser install
 npm install pptxgenjs sharp
 ```
 
+**Important:** Always run agent-browser via Bash CLI, not MCP tools. Even if agent-browser MCP Connector is available, this skill requires `--stdin` piping and shell variable expansion that MCP tools cannot handle.
+
 ## Pipeline Overview
 
 ```
