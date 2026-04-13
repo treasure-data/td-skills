@@ -134,15 +134,25 @@ node scripts/build-pptx.js config.json output.pptx
 
 ## Gradient Rasterization
 
-CSS gradients (body or div) can't be directly represented in PowerPoint. Rasterize by screenshot:
+CSS gradients can't be directly represented in PowerPoint. Rasterize by screenshot with **content hidden** to avoid double-rendering text:
 
 ```bash
-# Body gradient → full-page screenshot as background
-agent-browser screenshot ./tmp/slides/slide-0-bg.png --json
+# CRITICAL: Set viewport to slide dimensions first
+agent-browser set viewport 960 540
 
-# Div gradient → get box coordinates, then crop
+# Hide all content, screenshot background only, then restore
+agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='hidden')"
+agent-browser screenshot ./tmp/slides/slide-0-bg.png --json
+agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='')"
+```
+
+**Why hide content?** The screenshot includes rendered text. If used as background, text appears twice: once in the background image and once as PptxGenJS text elements.
+
+For **div gradients**, get the box coordinates and crop from the hidden-content screenshot:
+
+```bash
 agent-browser get box "#gradient-div-id" --json
-# Use sharp to crop the region from the full screenshot
+# Use sharp to crop: sharp(screenshot).extract({left, top, width, height}).toFile(output)
 ```
 
 Set `bgImagePath` in config.json for body gradients. For div gradients, add `rasterizedPath` to the element in the extracted data before passing to build-pptx.js.
@@ -150,6 +160,9 @@ Set `bgImagePath` in config.json for body gradients. For div gradients, add `ras
 ## Workflow Example
 
 ```bash
+# 0. CRITICAL: Set viewport to match slide dimensions (720pt = 960px, 405pt = 540px)
+agent-browser set viewport 960 540
+
 # 1. Generate HTML slides (write slide-0.html, slide-1.html, ...)
 mkdir -p ./tmp/slides
 
@@ -158,19 +171,24 @@ for i in 0 1 2; do
   agent-browser open "file://$(pwd)/tmp/slides/slide-${i}.html"
 
   # Validate
-  cat scripts/validate.js | agent-browser eval --stdin --json
+  cat $SKILL_DIR/scripts/validate.js | agent-browser eval --stdin --json
 
-  # Screenshot (also serves as gradient background if needed)
+  # Visual review screenshot
   agent-browser screenshot "./tmp/slides/slide-${i}.png" --json
 
-  # Extract DOM
-  cat scripts/extract-dom.js | agent-browser eval --stdin --json
+  # For gradient backgrounds: hide content, screenshot bg only, restore
+  agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='hidden')"
+  agent-browser screenshot "./tmp/slides/slide-${i}-bg.png" --json
+  agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='')"
+
+  # Extract DOM positions
+  cat $SKILL_DIR/scripts/extract-dom.js | agent-browser eval --stdin --json
   # → save data.result to ./tmp/slides/slide-${i}.json
 done
 
 # 3. Build config.json from extracted data + placeholder definitions
 # 4. Assemble
-node scripts/build-pptx.js ./tmp/config.json ./output/presentation.pptx
+node $SKILL_DIR/scripts/build-pptx.js ./tmp/config.json ./output/presentation.pptx
 agent-browser close
 ```
 
@@ -178,11 +196,13 @@ agent-browser close
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
+| **Background doesn't fill slide** | Viewport wider than 960px | `agent-browser set viewport 960 540` before any operation |
+| **Text doubled/overlapping** | Screenshot bg includes text | Hide content before bg screenshot (`visibility='hidden'`) |
 | Text missing in PPTX | Text directly in `<div>` | Wrap in `<p>` or `<h1>`-`<h6>` |
 | Wrong font size | Using px in PptxGenJS | Convert: `px * 0.75 = pt` |
 | Element mispositioned | Wrong unit | Positions must be inches: `px / 96` |
 | Colors with `#` | PptxGenJS no-prefix | `"4472C4"` not `"#4472C4"` |
 | Single-line text wraps | Width underestimate | build-pptx.js auto-adds 2% |
-| Gradient blank | Not rasterized | Screenshot → set bgImagePath |
+| Gradient blank | Not rasterized | Hide content → screenshot → set bgImagePath |
 | Inset shadow corrupts | PptxGenJS limitation | extract-dom.js skips inset shadows |
 | margin array order | Not CSS order | `[left, right, bottom, top]` |

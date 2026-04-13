@@ -65,11 +65,14 @@ mkdir -p ./tmp/slides
 
 ### Step 2: Validate with agent-browser
 
-Use the bundled validation script for quick checks:
+**CRITICAL: Set viewport to match slide dimensions before any operation.**
 
 ```bash
+# Set viewport to exactly 960x540 (720pt x 405pt at 96dpi)
+agent-browser set viewport 960 540
+
 agent-browser open "file://$(pwd)/tmp/slides/slide-0.html"
-cat scripts/validate.js | agent-browser eval --stdin --json
+cat $SKILL_DIR/scripts/validate.js | agent-browser eval --stdin --json
 ```
 
 Returns `{ "valid": true/false, "errors": [...] }`. Fix any errors before proceeding.
@@ -85,16 +88,19 @@ agent-browser screenshot ./tmp/slides/slide-0.png --json
 Use the bundled extraction script to get all element positions, styles, and placeholder coordinates:
 
 ```bash
-cat scripts/extract-dom.js | agent-browser eval --stdin --json
+cat $SKILL_DIR/scripts/extract-dom.js | agent-browser eval --stdin --json
 ```
 
 The `data.result` field contains JSON: `{ background, elements, placeholders, errors }`.
 Save each slide's extracted data to a JSON file for the build step.
 
-For gradient backgrounds, also capture a screenshot to use as the rasterized background:
+For gradient backgrounds, rasterize **only the background** (hide content to avoid double-rendering text):
 
 ```bash
+# Hide all content, screenshot background only, then restore
+agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='hidden')"
 agent-browser screenshot ./tmp/slides/slide-0-bg.png --json
+agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='')"
 ```
 
 ### Step 4: Assemble PPTX
@@ -146,9 +152,11 @@ SKILL_DIR="$(dirname "$(find ~/.claude -path '*/document-skills/pptx/SKILL.md' 2
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
+| **Background doesn't fill slide** | Viewport wider than 960px, screenshot includes whitespace | `agent-browser set viewport 960 540` before any operation |
+| **Text appears doubled/overlapping** | Screenshot used as bg includes rendered text | Hide content before bg screenshot: `visibility='hidden'` |
 | agent-browser command not found | Not installed | `npx agent-browser@latest install` |
 | Text missing in PPTX | Text directly in `<div>` | Wrap in `<p>` or `<h1>`-`<h6>` |
-| Gradient background blank | Not rasterized | Take screenshot, set `bgImagePath` in config |
+| Gradient background blank | Not rasterized | Hide content, screenshot, set `bgImagePath` in config |
 | Overflow validation fails | Content exceeds 720pt x 405pt | Reduce font sizes, padding, or content |
 | Bottom margin error | Text within 0.5in of bottom | Add `padding-bottom: 48pt` to content area |
 | PPTX file corrupted | Inset box-shadow used | Use outer shadows only |
