@@ -29,8 +29,9 @@ Generate professional PowerPoint files by writing HTML/CSS slides and converting
 ## Prerequisites
 
 ```bash
+npm install -g agent-browser
+agent-browser install
 npm install pptxgenjs sharp
-npx agent-browser@latest install
 ```
 
 ## Pipeline Overview
@@ -180,7 +181,7 @@ SKILL_DIR="$(dirname "$(find ~/.claude -path '*/document-skills/pptx/SKILL.md' 2
 |---------|-------|-----|
 | **Background doesn't fill slide** | Viewport wider than 960px, screenshot includes whitespace | `agent-browser set viewport 960 540` before any operation |
 | **Text appears doubled/overlapping** | Screenshot used as bg includes rendered text | Hide content before bg screenshot: `visibility='hidden'` |
-| agent-browser command not found | Not installed | `npx agent-browser@latest install` |
+| agent-browser command not found | Not installed | `npm install -g agent-browser && agent-browser install` |
 | Text missing in PPTX | Text directly in `<div>` | Wrap in `<p>` or `<h1>`-`<h6>` |
 | Gradient background blank | Not rasterized | Hide content, screenshot, set `bgImagePath` in config |
 | Overflow validation fails | Content exceeds 720pt x 405pt | Reduce font sizes, padding, or content |
