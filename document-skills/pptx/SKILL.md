@@ -57,11 +57,12 @@ Key constraints:
 - Bottom margin: keep 36pt+ from bottom edge
 - Placeholders: `<div class="placeholder" id="chart1" style="width:300pt;height:200pt;">`
 
-Save each slide as a separate HTML file:
+Save each slide as a separate HTML file under a presentation-specific directory:
 
 ```bash
-mkdir -p ./tmp/slides
-# Write slide-0.html, slide-1.html, etc.
+# Use a URL-safe slug of the presentation title (e.g., "q4-results", "product-roadmap")
+mkdir -p ./tmp/slides/{title}
+# Write slide-0.html, slide-1.html, etc. into that directory
 ```
 
 ### Step 2: Validate with agent-browser
@@ -72,7 +73,7 @@ mkdir -p ./tmp/slides
 # Set viewport to exactly 960x540 (720pt x 405pt at 96dpi)
 agent-browser set viewport 960 540
 
-agent-browser open "file://$(pwd)/tmp/slides/slide-0.html"
+agent-browser open "file://$(pwd)/tmp/slides/{title}/slide-0.html"
 cat $SKILL_DIR/scripts/validate.js | agent-browser eval --stdin --json
 ```
 
@@ -81,7 +82,7 @@ Returns `{ "valid": true/false, "errors": [...] }`. Fix any errors before procee
 Take a screenshot for visual review:
 
 ```bash
-agent-browser screenshot ./tmp/slides/slide-0.png --json
+agent-browser screenshot ./tmp/slides/{title}/slide-0.png --json
 ```
 
 ### Step 3: Extract DOM Positions
@@ -100,7 +101,7 @@ For gradient backgrounds, rasterize **only the background** (hide content to avo
 ```bash
 # Hide all content, screenshot background only, then restore
 agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='hidden')"
-agent-browser screenshot ./tmp/slides/slide-0-bg.png --json
+agent-browser screenshot ./tmp/slides/{title}/slide-0-bg.png --json
 agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='')"
 ```
 
@@ -112,19 +113,19 @@ Then render placeholders for visual preview before final PPTX assembly:
 
 ```bash
 # For each slide with placeholders: render preview
-agent-browser open "file://$(pwd)/tmp/slides/slide-0.html"
+agent-browser open "file://$(pwd)/tmp/slides/{title}/slide-0.html"
 agent-browser set viewport 960 540
 
 # Set placeholder data and inject Chart.js
-agent-browser eval "window.__PLACEHOLDERS__ = $(jq '.slides[0].placeholders' tmp/config.json)"
+agent-browser eval "window.__PLACEHOLDERS__ = $(jq '.slides[0].placeholders' tmp/slides/{title}/config.json)"
 agent-browser eval "var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';document.head.appendChild(s)"
 agent-browser wait 2000
 
 # Render placeholders and screenshot for review
 cat $SKILL_DIR/scripts/render-placeholders.js | agent-browser eval --stdin --json
 agent-browser wait 1000
-agent-browser screenshot ./tmp/slides/slide-0-preview.png --json
-open ./tmp/slides/slide-0-preview.png
+agent-browser screenshot ./tmp/slides/{title}/slide-0-preview.png --json
+open ./tmp/slides/{title}/slide-0-preview.png
 ```
 
 Review the preview image. If adjustments are needed, regenerate the HTML and repeat from Step 2.
@@ -134,7 +135,7 @@ Review the preview image. If adjustments are needed, regenerate the HTML and rep
 Once all slides are reviewed, run the bundled build script:
 
 ```bash
-node $SKILL_DIR/scripts/build-pptx.js tmp/config.json ./output/presentation.pptx
+node $SKILL_DIR/scripts/build-pptx.js tmp/slides/{title}/config.json ./output/{title}.pptx
 ```
 
 ## Placeholder System

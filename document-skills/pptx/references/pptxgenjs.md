@@ -20,7 +20,7 @@ PptxGenJS margin array = [left, right, bottom, top] (NOT CSS order)
 Quick validation before full extraction. Run:
 
 ```bash
-agent-browser open "file://$(pwd)/tmp/slides/slide-0.html"
+agent-browser open "file://$(pwd)/tmp/slides/{title}/slide-0.html"
 cat scripts/validate.js | agent-browser eval --stdin --json
 ```
 
@@ -94,7 +94,7 @@ node scripts/build-pptx.js config.json output.pptx
         "elements": [ ... ],
         "placeholders": [ { "id": "chart1", "x": 3.96, "y": 1.04, "w": 3.33, "h": 2.71 } ]
       },
-      "bgImagePath": "./tmp/slides/slide-0-bg.png",
+      "bgImagePath": "./tmp/slides/{title}/slide-0-bg.png",
       "placeholders": [
         {
           "id": "chart1",
@@ -155,7 +155,7 @@ agent-browser set viewport 960 540
 
 # Hide all content, screenshot background only, then restore
 agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='hidden')"
-agent-browser screenshot ./tmp/slides/slide-0-bg.png --json
+agent-browser screenshot ./tmp/slides/{title}/slide-0-bg.png --json
 agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='')"
 ```
 
@@ -176,38 +176,42 @@ Set `bgImagePath` in config.json for body gradients. For div gradients, add `ras
 # 0. CRITICAL: Set viewport to match slide dimensions (720pt = 960px, 405pt = 540px)
 agent-browser set viewport 960 540
 
+# Use a URL-safe slug of the presentation title (e.g., "q4-results")
+TITLE="q4-results"
+
 # 1. Generate HTML slides (write slide-0.html, slide-1.html, ...)
-mkdir -p ./tmp/slides
+mkdir -p ./tmp/slides/${TITLE}
 
 # 2. For each slide: validate → extract → screenshot
 for i in 0 1 2; do
-  agent-browser open "file://$(pwd)/tmp/slides/slide-${i}.html"
+  agent-browser open "file://$(pwd)/tmp/slides/${TITLE}/slide-${i}.html"
 
   # Validate
   cat $SKILL_DIR/scripts/validate.js | agent-browser eval --stdin --json
 
   # Visual review screenshot
-  agent-browser screenshot "./tmp/slides/slide-${i}.png" --json
+  agent-browser screenshot "./tmp/slides/${TITLE}/slide-${i}.png" --json
 
   # For gradient backgrounds: hide content, screenshot bg only, restore
   agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='hidden')"
-  agent-browser screenshot "./tmp/slides/slide-${i}-bg.png" --json
+  agent-browser screenshot "./tmp/slides/${TITLE}/slide-${i}-bg.png" --json
   agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='')"
 
   # Extract DOM positions
   cat $SKILL_DIR/scripts/extract-dom.js | agent-browser eval --stdin --json
-  # → save data.result to ./tmp/slides/slide-${i}.json
+  # → save data.result to ./tmp/slides/${TITLE}/slide-${i}.json
 done
 
 # 3. Build config.json from extracted data + placeholder definitions
+# → save to ./tmp/slides/${TITLE}/config.json
 
 # 4. Preview: render placeholders into HTML and screenshot for review
 for i in 0 1 2; do
-  agent-browser open "file://$(pwd)/tmp/slides/slide-${i}.html"
+  agent-browser open "file://$(pwd)/tmp/slides/${TITLE}/slide-${i}.html"
   agent-browser set viewport 960 540
 
   # Set placeholder data from config.json
-  agent-browser eval "window.__PLACEHOLDERS__ = $(jq ".slides[${i}].placeholders" ./tmp/config.json)"
+  agent-browser eval "window.__PLACEHOLDERS__ = $(jq ".slides[${i}].placeholders" ./tmp/slides/${TITLE}/config.json)"
 
   # Inject Chart.js for chart rendering
   agent-browser eval "var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';document.head.appendChild(s)"
@@ -216,12 +220,12 @@ for i in 0 1 2; do
   # Render placeholders and take preview screenshot
   cat $SKILL_DIR/scripts/render-placeholders.js | agent-browser eval --stdin --json
   agent-browser wait 1000
-  agent-browser screenshot "./tmp/slides/slide-${i}-preview.png" --json
-  open "./tmp/slides/slide-${i}-preview.png"  # Visual review
+  agent-browser screenshot "./tmp/slides/${TITLE}/slide-${i}-preview.png" --json
+  open "./tmp/slides/${TITLE}/slide-${i}-preview.png"  # Visual review
 done
 
 # 5. Assemble PPTX
-node $SKILL_DIR/scripts/build-pptx.js ./tmp/config.json ./output/presentation.pptx
+node $SKILL_DIR/scripts/build-pptx.js ./tmp/slides/${TITLE}/config.json ./output/${TITLE}.pptx
 agent-browser close
 ```
 

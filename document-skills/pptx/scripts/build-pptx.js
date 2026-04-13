@@ -9,7 +9,7 @@
 //   "slides": [
 //     {
 //       "extracted": { "background": {...}, "elements": [...], "placeholders": [...] },
-//       "bgImagePath": "./tmp/slides/slide-0-bg.png",  // optional, for gradient backgrounds
+//       "bgImagePath": "./tmp/slides/{title}/slide-0-bg.png",  // optional, for gradient backgrounds
 //       "placeholders": [                                // optional, placeholder content definitions
 //         { "id": "chart1", "type": "chart", "chartType": "bar", "chartData": {...} },
 //         { "id": "table1", "type": "table", "tableData": {...} },
