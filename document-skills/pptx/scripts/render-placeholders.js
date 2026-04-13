@@ -29,16 +29,17 @@
     }
 
     try {
+      let ok = false;
       if (p.type === 'chart' && p.chartData) {
-        renderChart(el, p);
-        rendered++;
+        ok = renderChart(el, p);
       } else if (p.type === 'table' && p.tableData) {
         renderTable(el, p);
-        rendered++;
+        ok = true;
       } else if (p.type === 'image' && p.imageData) {
         renderImage(el, p);
-        rendered++;
+        ok = true;
       }
+      if (ok) rendered++;
     } catch (e) {
       errors.push(p.id + ': ' + (e.message || String(e)));
     }
@@ -50,7 +51,7 @@
     const Chart = window.Chart;
     if (!Chart) {
       errors.push('Chart.js not loaded — did you inject the CDN and wait?');
-      return;
+      return false;
     }
 
     const canvas = document.createElement('canvas');
@@ -92,6 +93,7 @@
         }
       }
     });
+    return true;
   }
 
   function renderTable(el, p) {

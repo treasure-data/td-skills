@@ -21,7 +21,7 @@ Quick validation before full extraction. Run:
 
 ```bash
 agent-browser open "file://$(pwd)/tmp/slides/{title}/slide-0.html"
-cat scripts/validate.js | agent-browser eval --stdin --json
+cat $SKILL_DIR/scripts/validate.js | agent-browser eval --stdin --json
 ```
 
 Returns: `{ "valid": true/false, "errors": ["..."] }`
@@ -33,7 +33,7 @@ Checks: body dimensions, overflow, `<br>` tags, unwrapped text in divs, manual b
 Full DOM extraction. Run after opening the HTML in agent-browser:
 
 ```bash
-cat scripts/extract-dom.js | agent-browser eval --stdin --json
+cat $SKILL_DIR/scripts/extract-dom.js | agent-browser eval --stdin --json
 ```
 
 The `data.result` field (string) parses to:
@@ -70,7 +70,7 @@ Renders chart/table/image content into placeholder divs for visual preview. Prer
 agent-browser eval "window.__PLACEHOLDERS__ = <JSON array>"
 agent-browser eval "var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';document.head.appendChild(s)"
 agent-browser wait 2000
-cat scripts/render-placeholders.js | agent-browser eval --stdin --json
+cat $SKILL_DIR/scripts/render-placeholders.js | agent-browser eval --stdin --json
 ```
 
 Returns: `{ "rendered": <number>, "errors": ["..."] }`
@@ -80,7 +80,7 @@ Returns: `{ "rendered": <number>, "errors": ["..."] }`
 Assembles PPTX from extracted data. Run:
 
 ```bash
-node scripts/build-pptx.js config.json output.pptx
+node $SKILL_DIR/scripts/build-pptx.js config.json output.pptx
 ```
 
 ## config.json Format
@@ -192,7 +192,8 @@ for i in 0 1 2; do
   # Visual review screenshot
   agent-browser screenshot "./tmp/slides/${TITLE}/slide-${i}.png" --json
 
-  # For gradient backgrounds: hide content, screenshot bg only, restore
+  # For gradient backgrounds only: hide content, screenshot bg only, restore
+  # Skip these 3 commands for solid-color backgrounds
   agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='hidden')"
   agent-browser screenshot "./tmp/slides/${TITLE}/slide-${i}-bg.png" --json
   agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='')"

@@ -45,15 +45,29 @@
     }
   });
 
-  // Text elements with backgrounds/borders
-  ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li'].forEach(tag => {
-    document.querySelectorAll(tag).forEach(el => {
-      const s = window.getComputedStyle(el);
-      if (s.backgroundColor && s.backgroundColor !== 'rgba(0, 0, 0, 0)') {
-        errors.push('<' + tag + '> has background-color — move to parent <div>');
-      }
-    });
+  // Combined text element checks: backgrounds, bottom margin, fonts
+  const slideH = h / PX_PER_IN;
+  const webSafe = ['arial', 'helvetica', 'times new roman', 'georgia', 'courier new', 'verdana', 'tahoma', 'trebuchet ms', 'impact', 'sans-serif', 'serif', 'monospace'];
+  const usedFonts = new Set();
+  document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, ul, ol, li, pre').forEach(el => {
+    const s = window.getComputedStyle(el);
+    const tag = el.tagName.toLowerCase();
+    // Background check
+    if (s.backgroundColor && s.backgroundColor !== 'rgba(0, 0, 0, 0)' && tag !== 'pre') {
+      errors.push('<' + tag + '> has background-color — move to parent <div>');
+    }
+    // Bottom margin check
+    const rect = el.getBoundingClientRect();
+    const bottomIn = (rect.top + rect.height) / PX_PER_IN;
+    const fontSize = parseFloat(s.fontSize) * PT_PER_PX;
+    if (fontSize > 12 && slideH - bottomIn < 0.5) {
+      errors.push('<' + tag + '> too close to bottom: ' + (slideH - bottomIn).toFixed(2) + 'in (need 0.5in)');
+    }
+    // Font check
+    const ff = s.fontFamily.split(',')[0].replace(/['"]/g, '').trim().toLowerCase();
+    if (ff && !webSafe.includes(ff)) usedFonts.add(ff);
   });
+  if (usedFonts.size > 0) errors.push('Non-web-safe fonts: ' + Array.from(usedFonts).join(', '));
 
   // Placeholder validation
   document.querySelectorAll('.placeholder').forEach(el => {
@@ -61,26 +75,6 @@
     if (!el.id) errors.push('Placeholder missing id attribute');
     if (rect.width === 0 || rect.height === 0) errors.push('Placeholder "' + (el.id || '?') + '" has zero ' + (rect.width === 0 ? 'width' : 'height'));
   });
-
-  // Bottom margin check
-  const slideH = h / PX_PER_IN;
-  document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, ul, ol').forEach(el => {
-    const rect = el.getBoundingClientRect();
-    const bottomIn = (rect.top + rect.height) / PX_PER_IN;
-    const fontSize = parseFloat(window.getComputedStyle(el).fontSize) * PT_PER_PX;
-    if (fontSize > 12 && slideH - bottomIn < 0.5) {
-      errors.push('<' + el.tagName.toLowerCase() + '> too close to bottom: ' + (slideH - bottomIn).toFixed(2) + 'in (need 0.5in)');
-    }
-  });
-
-  // Non-web-safe fonts
-  const webSafe = ['arial', 'helvetica', 'times new roman', 'georgia', 'courier new', 'verdana', 'tahoma', 'trebuchet ms', 'impact', 'sans-serif', 'serif', 'monospace'];
-  const usedFonts = new Set();
-  document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, pre').forEach(el => {
-    const ff = window.getComputedStyle(el).fontFamily.split(',')[0].replace(/['"]/g, '').trim().toLowerCase();
-    if (ff && !webSafe.includes(ff)) usedFonts.add(ff);
-  });
-  if (usedFonts.size > 0) errors.push('Non-web-safe fonts: ' + Array.from(usedFonts).join(', '));
 
   // Elements beyond bounds
   document.querySelectorAll('div, img').forEach(el => {

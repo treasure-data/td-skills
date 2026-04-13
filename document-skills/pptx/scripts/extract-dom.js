@@ -16,9 +16,9 @@
   const pxToPoints = s => parseFloat(s) * PT_PER_PX;
 
   const rgbToHex = rgb => {
-    if (rgb === 'rgba(0, 0, 0, 0)' || rgb === 'transparent') return 'FFFFFF';
+    if (rgb === 'rgba(0, 0, 0, 0)' || rgb === 'transparent') return null;
     const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-    return m ? m.slice(1).map(n => parseInt(n).toString(16).padStart(2, '0')).join('') : 'FFFFFF';
+    return m ? m.slice(1).map(n => parseInt(n).toString(16).padStart(2, '0')).join('') : null;
   };
 
   const extractAlpha = rgb => {
@@ -154,7 +154,7 @@
   const hasGradient = bgImage && (bgImage.includes('linear-gradient') || bgImage.includes('radial-gradient'));
   const background = hasGradient
     ? { type: 'gradient', css: bgImage }
-    : { type: 'color', value: rgbToHex(bodyStyle.backgroundColor) };
+    : { type: 'color', value: rgbToHex(bodyStyle.backgroundColor) || 'FFFFFF' };
 
   // Elements
   const elements = [];
@@ -162,7 +162,7 @@
   const textTags = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'UL', 'OL', 'LI', 'PRE'];
   const processed = new Set();
 
-  document.querySelectorAll('*').forEach(el => {
+  document.querySelectorAll('div, p, h1, h2, h3, h4, h5, h6, ul, ol, li, pre, img, .placeholder').forEach(el => {
     if (processed.has(el)) return;
 
     // Validate: text elements must not have bg/border/shadow (except PRE)
@@ -178,7 +178,7 @@
     }
 
     // Placeholders
-    if (el.className && typeof el.className === 'string' && el.className.includes('placeholder')) {
+    if (el.classList && el.classList.contains('placeholder')) {
       const rect = el.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) { errors.push('Placeholder "' + (el.id || 'unnamed') + '" has zero size'); }
       else { placeholders.push({ id: el.id || 'placeholder-' + placeholders.length, x: pxToInch(rect.left), y: pxToInch(rect.top), w: pxToInch(rect.width), h: pxToInch(rect.height) }); }

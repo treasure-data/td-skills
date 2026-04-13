@@ -170,7 +170,7 @@ async function main() {
 
   // Write output
   const outputDir = path.dirname(outputPath);
-  if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+  fs.mkdirSync(outputDir, { recursive: true });
 
   const buffer = await pptx.write({ outputType: 'nodebuffer' });
   fs.writeFileSync(outputPath, buffer);
