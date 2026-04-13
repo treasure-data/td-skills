@@ -128,10 +128,12 @@ agent-browser wait 2000
 cat $SKILL_DIR/scripts/render-placeholders.js | agent-browser eval --stdin --json
 agent-browser wait 1000
 agent-browser screenshot ./tmp/slides/{title}/slide-0-preview.png --json
+
+# IMPORTANT: Always open the preview image so the user can review it
 open ./tmp/slides/{title}/slide-0-preview.png
 ```
 
-Review the preview image. If adjustments are needed, regenerate the HTML and repeat from Step 2.
+**You MUST run `open` after each screenshot** to display the preview to the user. Do not skip this step — the user needs to visually confirm each slide before proceeding to PPTX assembly.
 
 ### Step 5: Assemble PPTX
 

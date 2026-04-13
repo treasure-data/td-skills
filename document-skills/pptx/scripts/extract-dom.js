@@ -227,13 +227,15 @@
         const shadow = parseBoxShadow(cs.boxShadow);
         const radiusVal = parseFloat(cs.borderRadius);
         if (hasBg || hasUniformBorder) {
+          const isCircle = cs.borderRadius.includes('%') && radiusVal >= 50;
           elements.push({
             type: 'shape',
             position: { x: pxToInch(rect.left), y: pxToInch(rect.top), w: pxToInch(rect.width), h: pxToInch(rect.height) },
             fill: hasBg ? rgbToHex(cs.backgroundColor) : null,
             transparency: hasBg ? extractAlpha(cs.backgroundColor) : null,
             line: hasUniformBorder ? { color: rgbToHex(cs.borderColor), width: pxToPoints(cs.borderWidth), dashType: getBorderDashType(cs.borderStyle) } : null,
-            rectRadius: radiusVal > 0 ? (cs.borderRadius.includes('%') ? (radiusVal >= 50 ? 1 : radiusVal / 100 * pxToInch(Math.min(rect.width, rect.height))) : radiusVal / PX_PER_IN) : 0,
+            isCircle,
+            rectRadius: isCircle ? 0 : (radiusVal > 0 ? (cs.borderRadius.includes('%') ? radiusVal / 100 * pxToInch(Math.min(rect.width, rect.height)) : radiusVal / PX_PER_IN) : 0),
             shadow
           });
         }

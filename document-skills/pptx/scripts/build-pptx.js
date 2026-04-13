@@ -67,7 +67,7 @@ async function main() {
 
       // Lines (partial borders)
       if (el.type === 'line') {
-        slide.addShape(pptx.ShapeType.line, {
+        slide.addShape(pptx.ShapeType ? pptx.ShapeType.line : 'line', {
           x: el.x1, y: el.y1, w: el.x2 - el.x1, h: el.y2 - el.y1,
           line: { color: el.color, width: el.width }
         });
@@ -86,13 +86,18 @@ async function main() {
       // Shapes (div backgrounds/borders)
       if (el.type === 'shape') {
         const opts = { x: pos.x, y: pos.y, w: pos.w, h: pos.h };
-        if (el.rectRadius > 0) opts.shape = pptx.ShapeType.roundRect;
+        // Circle (border-radius >= 50%) → ellipse, otherwise roundRect
+        if (el.isCircle) {
+          opts.shape = pptx.ShapeType ? pptx.ShapeType.ellipse : 'ellipse';
+        } else if (el.rectRadius > 0) {
+          opts.shape = pptx.ShapeType ? pptx.ShapeType.roundRect : 'roundRect';
+          opts.rectRadius = el.rectRadius;
+        }
         if (el.fill) {
           opts.fill = { color: el.fill };
           if (el.transparency != null) opts.fill.transparency = el.transparency;
         }
         if (el.line) opts.line = el.line;
-        if (el.rectRadius > 0) opts.rectRadius = el.rectRadius;
         if (el.shadow) opts.shadow = el.shadow;
         slide.addText(el.text || '', opts);
         continue;

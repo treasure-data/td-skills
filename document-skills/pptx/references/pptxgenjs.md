@@ -222,7 +222,8 @@ for i in 0 1 2; do
   cat $SKILL_DIR/scripts/render-placeholders.js | agent-browser eval --stdin --json
   agent-browser wait 1000
   agent-browser screenshot "./tmp/slides/${TITLE}/slide-${i}-preview.png" --json
-  open "./tmp/slides/${TITLE}/slide-${i}-preview.png"  # Visual review
+  # IMPORTANT: Always open preview for user to review before proceeding
+  open "./tmp/slides/${TITLE}/slide-${i}-preview.png"
 done
 
 # 5. Assemble PPTX
