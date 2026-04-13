@@ -39,7 +39,8 @@ npx agent-browser@latest install
 1. Generate HTML slides (720pt x 405pt, strict element rules)
 2. Validate and render via agent-browser (screenshot for visual review)
 3. Extract DOM positions via agent-browser eval (getBoundingClientRect)
-4. Assemble PPTX with PptxGenJS using extracted coordinates
+4. Build config.json, render placeholders, preview with `open` command
+5. Assemble PPTX with PptxGenJS using extracted coordinates
 ```
 
 ## Workflow
@@ -103,15 +104,38 @@ agent-browser screenshot ./tmp/slides/slide-0-bg.png --json
 agent-browser eval "document.querySelectorAll('body > *').forEach(e => e.style.visibility='')"
 ```
 
-### Step 4: Assemble PPTX
+### Step 4: Build config.json and Preview
 
-Create a `config.json` that references each slide's extracted data and placeholder definitions, then run the bundled build script:
+Create a `config.json` that references each slide's extracted data and placeholder definitions. See [references/pptxgenjs.md](references/pptxgenjs.md) for config.json format.
+
+Then render placeholders for visual preview before final PPTX assembly:
 
 ```bash
-node scripts/build-pptx.js config.json output.pptx
+# For each slide with placeholders: render preview
+agent-browser open "file://$(pwd)/tmp/slides/slide-0.html"
+agent-browser set viewport 960 540
+
+# Set placeholder data and inject Chart.js
+agent-browser eval "window.__PLACEHOLDERS__ = $(jq '.slides[0].placeholders' tmp/config.json)"
+agent-browser eval "var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';document.head.appendChild(s)"
+agent-browser wait 2000
+
+# Render placeholders and screenshot for review
+cat $SKILL_DIR/scripts/render-placeholders.js | agent-browser eval --stdin --json
+agent-browser wait 1000
+agent-browser screenshot ./tmp/slides/slide-0-preview.png --json
+open ./tmp/slides/slide-0-preview.png
 ```
 
-See [references/pptxgenjs.md](references/pptxgenjs.md) for config.json format and details.
+Review the preview image. If adjustments are needed, regenerate the HTML and repeat from Step 2.
+
+### Step 5: Assemble PPTX
+
+Once all slides are reviewed, run the bundled build script:
+
+```bash
+node $SKILL_DIR/scripts/build-pptx.js tmp/config.json ./output/presentation.pptx
+```
 
 ## Placeholder System
 
@@ -146,6 +170,7 @@ SKILL_DIR="$(dirname "$(find ~/.claude -path '*/document-skills/pptx/SKILL.md' 2
 |--------|----------|---------|
 | `validate.js` | `cat $SKILL_DIR/scripts/validate.js \| agent-browser eval --stdin --json` | Quick HTML validation |
 | `extract-dom.js` | `cat $SKILL_DIR/scripts/extract-dom.js \| agent-browser eval --stdin --json` | Full DOM extraction |
+| `render-placeholders.js` | `cat $SKILL_DIR/scripts/render-placeholders.js \| agent-browser eval --stdin --json` | Placeholder preview rendering |
 | `build-pptx.js` | `node $SKILL_DIR/scripts/build-pptx.js config.json output.pptx` | PPTX assembly |
 
 ## Troubleshooting

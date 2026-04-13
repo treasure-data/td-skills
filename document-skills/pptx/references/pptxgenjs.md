@@ -62,6 +62,19 @@ Element types extracted:
 - `pre` — Code blocks with monospace font
 - `p`, `h1`-`h6` — Text elements with full style extraction
 
+### render-placeholders.js
+
+Renders chart/table/image content into placeholder divs for visual preview. Prerequisites: set `window.__PLACEHOLDERS__` and inject Chart.js CDN before running.
+
+```bash
+agent-browser eval "window.__PLACEHOLDERS__ = <JSON array>"
+agent-browser eval "var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';document.head.appendChild(s)"
+agent-browser wait 2000
+cat scripts/render-placeholders.js | agent-browser eval --stdin --json
+```
+
+Returns: `{ "rendered": <number>, "errors": ["..."] }`
+
 ### build-pptx.js
 
 Assembles PPTX from extracted data. Run:
@@ -187,7 +200,27 @@ for i in 0 1 2; do
 done
 
 # 3. Build config.json from extracted data + placeholder definitions
-# 4. Assemble
+
+# 4. Preview: render placeholders into HTML and screenshot for review
+for i in 0 1 2; do
+  agent-browser open "file://$(pwd)/tmp/slides/slide-${i}.html"
+  agent-browser set viewport 960 540
+
+  # Set placeholder data from config.json
+  agent-browser eval "window.__PLACEHOLDERS__ = $(jq ".slides[${i}].placeholders" ./tmp/config.json)"
+
+  # Inject Chart.js for chart rendering
+  agent-browser eval "var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';document.head.appendChild(s)"
+  agent-browser wait 2000
+
+  # Render placeholders and take preview screenshot
+  cat $SKILL_DIR/scripts/render-placeholders.js | agent-browser eval --stdin --json
+  agent-browser wait 1000
+  agent-browser screenshot "./tmp/slides/slide-${i}-preview.png" --json
+  open "./tmp/slides/slide-${i}-preview.png"  # Visual review
+done
+
+# 5. Assemble PPTX
 node $SKILL_DIR/scripts/build-pptx.js ./tmp/config.json ./output/presentation.pptx
 agent-browser close
 ```
