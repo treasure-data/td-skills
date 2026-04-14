@@ -177,6 +177,8 @@ pytd
 |---|---|---|---|
 | `td.apikey` | `ACCOUNT_ID/KEY` (e.g., `1234/abcdef01...`) | `td>`, `td_ddl>`, `td_load>`, `td_for_each>`, `td_wait>`, `td_run>`, `http>` with LLM Proxy | TD Console → My Settings → API Keys |
 | `slack.webhook` | `https://hooks.slack.com/services/...` | Error/success notifications via `http>` | Slack App → Incoming Webhooks |
+| `slack.bot_user_oauth_token` | `xoxb-...` | Slack Bot API (`chat.postMessage`) | Slack App → OAuth & Permissions |
+| `td.webhook_key` | Basic auth key | TD Agent webhook calls | TD Console → AI Agents → Webhook Settings |
 | `mail.host`, `mail.port`, `mail.username`, `mail.password` | SMTP credentials | `mail>` operator (local digdag only — **not needed on TD platform**) | Your SMTP provider |
 | `langfuse.public`, `langfuse.secret`, `langfuse.host` | Langfuse keys | `py>` with Langfuse | Langfuse dashboard → Settings |
 

@@ -149,16 +149,26 @@ Available models: `claude-haiku-4-5-20251001`, `claude-sonnet-4-6`, `claude-opus
 
 ### TD Agent (webhook)
 
+Call a pre-built TD Agent via its webhook action URL. The user must provide:
+1. **Agent created** in TD Console (with tools, knowledge bases, system prompt configured)
+2. **Action ID** obtained from the agent's webhook settings
+
 ```yaml
+_export:
+  agent:
+    endpoint: "https://llm-connect.treasuredata.com/api/actions"
+    action_id: "YOUR_ACTION_ID"
+
 +call_agent:
-  http>: ${secret:agent.webhook_url}
+  http>: ${agent.endpoint}/${agent.action_id}/text
   method: POST
   headers:
-    - content-type: application/json
+    - Authorization: "Basic ${secret:td.webhook_key}"
+    - Content-Type: "application/json"
   content:
-    message: "Analyze sales activity for ${session_date}"
-  content_format: json
+    question: "Analyze sales activity for ${session_date}"
   store_content: true
+  timeout: 3600
 ```
 
 ### Response parsing
@@ -246,7 +256,7 @@ TD's built-in SMTP relay handles delivery — no SMTP secrets needed on TD platf
 | `td.apikey` | LLM Proxy calls | `tdx wf secrets set <project> "td.apikey=YOUR_KEY"` |
 | `slack.webhook` | Slack Webhook | `tdx wf secrets set <project> "slack.webhook=YOUR_URL"` |
 | `slack.bot_user_oauth_token` | Slack Bot API | `tdx wf secrets set <project> "slack.bot_user_oauth_token=YOUR_TOKEN"` |
-| `agent.webhook_url` | TD Agent calls | `tdx wf secrets set <project> "agent.webhook_url=YOUR_WEBHOOK_URL"` |
+| `td.webhook_key` | TD Agent calls | `tdx wf secrets set <project> "td.webhook_key=YOUR_WEBHOOK_KEY"` |
 
 ## References
 
