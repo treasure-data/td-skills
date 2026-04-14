@@ -190,7 +190,7 @@ Ask a yes/no question and branch on the answer. Use `py>` to parse into a boolea
   database: analytics
 
 +ask_llm:
-  http>: https://llm-proxy.us01.treasuredata.com/v1/messages
+  http>: ${llm_endpoint}
   method: POST
   headers:
     - x-api-key: ${secret:td.apikey}
@@ -254,7 +254,7 @@ Query results feed the LLM, and the LLM analysis is embedded into HTML via `py>`
   store_last_results: true
 
 +analyze:
-  http>: https://llm-proxy.us01.treasuredata.com/v1/messages
+  http>: ${llm_endpoint}
   method: POST
   headers:
     - x-api-key: ${secret:td.apikey}
