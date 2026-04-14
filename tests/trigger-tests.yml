@@ -75,6 +75,9 @@ tests:
   - prompt: "Create a digdag workflow for daily ETL"
     expected: digdag
 
+  - prompt: "Build a workflow that summarizes KPIs with LLM and posts to Slack"
+    expected: llm-workflow
+
   # === SDK Skills ===
 
   - prompt: "Query TD from Python using pytd"

@@ -1,35 +1,6 @@
-# LLM Agent Patterns
+# LLM Patterns
 
-Call the TD LLM Proxy (Anthropic Messages API-compatible) from digdag workflows via `http>`. No Python/Docker required (~2s vs ~60s for `py>`).
-
-`${secret:...}` works in `http>` headers. Response stored in `${http.last_content}` as JSON string when `store_content: true`.
-
----
-
-## Basic LLM Call
-
-```yaml
-_export:
-  llm_endpoint: https://llm-proxy.us01.treasuredata.com/v1/messages
-
-+ask_agent:
-  http>: ${llm_endpoint}
-  method: POST
-  headers:
-    - x-api-key: ${secret:td.apikey}
-    - anthropic-version: 2023-06-01
-  content:
-    model: claude-haiku-4-5-20251001
-    max_tokens: 1024
-    messages:
-      - role: user
-        content: "Summarize the key trends from today's sales data"
-  content_format: json
-  store_content: true
-
-+log:
-  echo>: "Agent response: ${http.last_content}"
-```
+Advanced patterns for LLM calls in TD workflows via `http>`.
 
 ---
 
@@ -43,7 +14,7 @@ Feed SQL results into an LLM for analysis.
   store_last_results: true
   database: analytics
 
-+analyze_with_agent:
++analyze:
   http>: https://llm-proxy.us01.treasuredata.com/v1/messages
   method: POST
   headers:
@@ -63,7 +34,7 @@ Feed SQL results into an LLM for analysis.
 
 ## LLM Conditional Action
 
-Ask the agent a yes/no question and branch on its answer. Use `py>` to parse the response into a boolean.
+Ask a yes/no question and branch on the answer. Use `py>` to parse into a boolean.
 
 ```yaml
 +gather_metrics:
@@ -71,7 +42,7 @@ Ask the agent a yes/no question and branch on its answer. Use `py>` to parse the
   store_last_results: true
   database: analytics
 
-+ask_agent:
++ask_llm:
   http>: https://llm-proxy.us01.treasuredata.com/v1/messages
   method: POST
   headers:
@@ -99,10 +70,14 @@ Ask the agent a yes/no question and branch on its answer. Use `py>` to parse the
       insert_into: public_table
   _else_do:
     +alert:
-      http>: ${secret:slack.webhook}
+      http>: https://slack.com/api/chat.postMessage
       method: POST
+      headers:
+        - content-type: "application/json"
+        - Authorization: "Bearer ${secret:slack.bot_user_oauth_token}"
       content:
-        text: ":warning: Agent flagged data quality issue for ${session_date}"
+        channel: "C0XXXXXXXXX"
+        text: "Data quality issue flagged for ${session_date}"
 ```
 
 `tasks/__init__.py`:
@@ -122,63 +97,9 @@ class ResponseParser:
 
 ---
 
-## LLM → Slack Notification
+## LLM Analysis to HTML Email Report
 
-Have the agent draft a summary, then post to Slack.
-
-```yaml
-+gather:
-  td>: queries/weekly_stats.sql
-  store_last_results: true
-  database: analytics
-
-+draft_summary:
-  http>: https://llm-proxy.us01.treasuredata.com/v1/messages
-  method: POST
-  headers:
-    - x-api-key: ${secret:td.apikey}
-    - anthropic-version: 2023-06-01
-  content:
-    model: claude-haiku-4-5-20251001
-    max_tokens: 1024
-    messages:
-      - role: user
-        content: "Write a concise Slack message (use markdown, under 500 chars) summarizing: revenue=${td.last_results.revenue}, WoW_change=${td.last_results.wow_pct}%, top_product=${td.last_results.top_product}, active_users=${td.last_results.active_users}."
-  content_format: json
-  store_content: true
-
-+extract_text:
-  py>: tasks.SlackFormatter.extract
-  docker:
-    image: "treasuredata/customscript-python:3.12.11-td1"
-
-+post_to_slack:
-  http>: ${secret:slack.webhook}
-  method: POST
-  content:
-    text: ${agent_message}
-  content_format: json
-```
-
-`tasks/__init__.py`:
-```python
-import digdag
-import json
-
-
-class SlackFormatter:
-    def extract(self):
-        response = digdag.env.params.get("http", {}).get("last_content", "{}")
-        body = json.loads(response) if isinstance(response, str) else response
-        text = body.get("content", [{}])[0].get("text", "")
-        digdag.env.store({"agent_message": text})
-```
-
----
-
-## LLM Analysis → HTML Email Report
-
-For LLM-augmented workflows (data quality summaries, KPI interpretation, anomaly reports), `mail>` with an HTML template is the standard output channel. Query results feed the LLM, and the LLM's analysis is embedded into the HTML body via `py>` + `digdag.env.store()`.
+Query results feed the LLM, and the LLM analysis is embedded into HTML via `py>` + `digdag.env.store()`.
 
 ```yaml
 +gather:

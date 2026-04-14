@@ -1,6 +1,6 @@
 ---
 name: workflow-management
-description: TD workflow debugging and operations. Covers tdx wf commands for monitoring (sessions, attempt, logs), retry/backfill patterns, alerting (_error with Slack/email), and data quality checks.
+description: TD workflow debugging and operations. Covers tdx wf commands for monitoring (sessions, attempt, logs), retry/backfill patterns, alerting (_error with Slack/email), and data quality checks. Use when debugging failed workflows, checking session logs, retrying tasks, or setting up workflow alerts.
 ---
 
 # TD Workflow Management
@@ -28,16 +28,15 @@ tdx wf push                          # Push changes with diff preview
 
 ## Alerting
 
-```yaml
-+critical_task:
-  td>: queries/important.sql
+Use `http>` with Slack webhook or Bot API. For detailed Slack patterns, see the **llm-workflow** skill.
 
-  _error:
-    +slack_alert:
-      sh>: |
-        curl -X POST ${secret:slack.webhook_url} \
-        -H 'Content-Type: application/json' \
-        -d '{"text": "Workflow failed: ${session_id}"}'
+```yaml
+_error:
+  +slack_alert:
+    http>: ${secret:slack.webhook}
+    method: POST
+    content:
+      text: "Workflow failed: ${session_date}"
 ```
 
 ## Data Quality Checks
@@ -50,52 +49,86 @@ tdx wf push                          # Push changes with diff preview
 +validate:
   td>:
     query: |
-      SELECT COUNT(*) as cnt,
-             SUM(CASE WHEN id IS NULL THEN 1 ELSE 0 END) as nulls
-      FROM results
+      select count(*) as cnt,
+             sum(case when id is null then 1 else 0 end) as nulls
+      from results
   store_last_results: true
 
 +check:
   if>: ${td.last_results.cnt == 0}
   _do:
     +fail:
-      sh>: exit 1
+      fail>: "No rows produced — data quality check failed"
 ```
 
 ## Wait for Data
 
+Use `td_wait_table>` to wait for data availability before processing.
+
 ```yaml
 +wait_for_data:
-  sh>: |
-    for i in {1..30}; do
-      COUNT=$(tdx query -d analytics "SELECT COUNT(*) FROM src WHERE date='${session_date}'" --format csv | tail -1)
-      if [ "$COUNT" -gt 0 ]; then exit 0; fi
-      sleep 60
-    done
-    exit 1
+  td_wait_table>: source_table
+  database: analytics
+  rows: 1
+  interval: 120
+```
+
+For custom conditions, use `td_wait>` with a SQL query:
+
+```yaml
++wait_for_condition:
+  td_wait>: queries/check_ready.sql
+  database: analytics
+  interval: 120
+```
+
+`queries/check_ready.sql`:
+```sql
+select count(*) > 0
+from source_table
+where td_interval(time, '-1d')
 ```
 
 ## Idempotent Operations
 
+Use `td_partial_delete>` before insert, or `create_table` to overwrite.
+
 ```yaml
-+safe_insert:
-  td>:
-    query: |
-      DELETE FROM target WHERE date = '${session_date}';
-      INSERT INTO target SELECT * FROM source WHERE date = '${session_date}'
+# Option 1: Partial delete + insert
++delete_existing:
+  td_partial_delete>: target_table
+  from: ${session_date}
+  to: ${next_session_date}
+
++insert_fresh:
+  td>: queries/transform.sql
+  insert_into: target_table
+
+# Option 2: Overwrite with create_table
++overwrite:
+  td>: queries/transform.sql
+  create_table: target_table
 ```
 
 ## Backfill Pattern
 
 ```yaml
 +backfill:
-  loop>:
-    dates: ["2024-01-01", "2024-01-02", "2024-01-03"]
+  loop>: 7
   _do:
     +process:
       call>: main_workflow.dig
-      params:
-        session_date: ${dates}
+```
+
+Or use `for_each>` with explicit dates:
+
+```yaml
++backfill:
+  for_each>:
+    target_date: ["2026-01-01", "2026-01-02", "2026-01-03"]
+  _do:
+    +process:
+      td>: queries/process.sql
 ```
 
 ## Secrets
@@ -103,8 +136,12 @@ tdx wf push                          # Push changes with diff preview
 See **tdx-skills/workflow** for `tdx wf secrets` commands. Usage in .dig files:
 
 ```yaml
-+task:
-  sh>: curl -H "Authorization: ${secret:API_KEY}" https://api.example.com
++call_api:
+  http>: https://api.example.com/data
+  method: GET
+  headers:
+    - Authorization: "Bearer ${secret:api_token}"
+  store_content: true
 ```
 
 ## Common Issues
@@ -114,4 +151,4 @@ See **tdx-skills/workflow** for `tdx wf secrets` commands. Usage in .dig files:
 | Timeout | Add `timeout: 3600s`, `_retry: 2` |
 | Intermittent failures | Add `_retry: 5` with exponential backoff |
 | Out of memory | Reduce data volume, use approx functions |
-| Duplicate runs | Use idempotent DELETE+INSERT pattern |
+| Duplicate runs | Use idempotent DELETE+INSERT or `create_table` pattern |

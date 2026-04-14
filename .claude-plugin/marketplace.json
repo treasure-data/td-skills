@@ -76,6 +76,7 @@
       "strict": false,
       "skills": [
         "./workflow-skills/digdag",
+        "./workflow-skills/llm-workflow",
         "./workflow-skills/workflow-management",
         "./workflow-skills/dbt"
       ]
