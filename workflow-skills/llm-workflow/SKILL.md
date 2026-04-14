@@ -246,6 +246,7 @@ TD's built-in SMTP relay handles delivery — no SMTP secrets needed on TD platf
 | `td.apikey` | LLM Proxy calls | `tdx wf secrets set <project> "td.apikey=YOUR_KEY"` |
 | `slack.webhook` | Slack Webhook | `tdx wf secrets set <project> "slack.webhook=YOUR_URL"` |
 | `slack.bot_user_oauth_token` | Slack Bot API | `tdx wf secrets set <project> "slack.bot_user_oauth_token=YOUR_TOKEN"` |
+| `agent.webhook_url` | TD Agent calls | `tdx wf secrets set <project> "agent.webhook_url=YOUR_WEBHOOK_URL"` |
 
 ## References
 

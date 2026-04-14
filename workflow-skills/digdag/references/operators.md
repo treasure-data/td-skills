@@ -264,6 +264,74 @@ Poll a table until it has enough records in the session time range.
 
 ---
 
+### td_partial_delete>: Delete Records by Time Range
+
+Delete records within a time range. Use before `insert_into` for idempotent writes.
+
+```yaml
++delete_old:
+  td_partial_delete>: target_table
+  database: analytics
+  from: ${session_date}
+  to: ${next_session_date}
+```
+
+| Parameter | Description |
+|---|---|
+| `td_partial_delete>:` | Table name |
+| `database:` | Target database |
+| `from:` | Start time (inclusive, ISO 8601 or `yyyy-MM-dd`) |
+| `to:` | End time (exclusive) |
+
+**Secrets:** `td.apikey`
+
+---
+
+### td_table_export>: Export Table to Cloud Storage
+
+Export a table to S3, GCS, or Azure Blob.
+
+```yaml
++export:
+  td_table_export>: analytics.events
+  file_format: jsonl.gz
+  from: "2026-01-01 00:00:00 +0900"
+  to: "2026-01-02 00:00:00 +0900"
+```
+
+| Parameter | Description |
+|---|---|
+| `td_table_export>:` | `database.table` |
+| `file_format:` | `jsonl.gz`, `msgpack.gz`, `json.gz` |
+| `from:` | Start time (inclusive) |
+| `to:` | End time (exclusive) |
+
+Requires a result export target configured on the table in TD Console.
+
+**Secrets:** `td.apikey`
+
+---
+
+### td_result_export>: Re-export Job Results
+
+Re-export results from a previously completed job to a configured destination.
+
+```yaml
++reexport:
+  td_result_export>: 12345678
+  result_connection: my_s3_connection
+```
+
+| Parameter | Description |
+|---|---|
+| `td_result_export>:` | Job ID |
+| `result_connection:` | Connection name configured in TD Console |
+| `result_settings:` | Additional settings map |
+
+**Secrets:** `td.apikey`
+
+---
+
 ## Workflow Control Operators
 
 ### if>: Conditional Execution
@@ -334,6 +402,63 @@ Exposes `${i}` (0-indexed) in each iteration.
 
 ---
 
+### for_range>: Iterate Over Numeric Range
+
+Like `loop>` but with explicit start/end/step. Exposes `${range.from}`, `${range.to}`, `${range.index}`.
+
+```yaml
++by_range:
+  for_range>:
+    from: 0
+    to: 10
+    step: 2
+  _do:
+    +run:
+      echo>: "Index ${range.index}, value ${range.from}"
+```
+
+| Parameter | Description |
+|---|---|
+| `from:` | Start value (inclusive) |
+| `to:` | End value (exclusive) |
+| `step:` | Increment (default: 1) |
+| `_do:` | Subtasks per iteration |
+| `_parallel:` | Run iterations concurrently |
+
+---
+
+### wait>: Wait for Duration
+
+Pause workflow execution for a specified duration.
+
+```yaml
++pause:
+  wait>: 300
+```
+
+| Parameter | Description |
+|---|---|
+| `wait>:` | Duration in seconds |
+
+---
+
+### require>: Require Another Workflow Session
+
+Wait for another workflow's session to complete before proceeding.
+
+```yaml
++depend:
+  require>: upstream_project/upstream_workflow
+```
+
+| Parameter | Description |
+|---|---|
+| `require>:` | `project/workflow` to wait for |
+| `session_time:` | Override session time to wait for |
+| `timeout:` | Max wait time in seconds |
+
+---
+
 ### call>: Call Another Workflow
 
 ```yaml
@@ -390,6 +515,12 @@ Called workflow uses its subdirectory as working directory. Adjust relative file
 | `retry:` | true (GET) | Auto-retry on failure |
 
 **Secrets:** `http.authorization`, `http.user`, `http.password`
+
+---
+
+### http_call>: HTTP Request (alias)
+
+Alias for `http>`. Use `http>` instead — same parameters and behavior.
 
 ---
 

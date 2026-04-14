@@ -133,4 +133,18 @@ Query results feed the LLM, and the LLM analysis is embedded into HTML via `py>`
   html: true
 ```
 
+`tasks/__init__.py`:
+```python
+import digdag
+import json
+
+
+class ResponseExtractor:
+    def run(self):
+        response = digdag.env.params.get("http", {}).get("last_content", "{}")
+        body = json.loads(response) if isinstance(response, str) else response
+        text = body.get("content", [{}])[0].get("text", "")
+        digdag.env.store({"analysis_content": text})
+```
+
 The HTML template references `${analysis_content}` (stored by `py>`) and `${td.last_results.*}` for raw KPIs. Use inline CSS only — email clients strip `<link>` tags.

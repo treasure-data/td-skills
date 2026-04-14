@@ -183,6 +183,20 @@ Use `py>` to store the LLM analysis into a variable, then reference it in the HT
   html: true
 ```
 
+`tasks/__init__.py`:
+```python
+import digdag
+import json
+
+
+class ResponseExtractor:
+    def run(self):
+        response = digdag.env.params.get("http", {}).get("last_content", "{}")
+        body = json.loads(response) if isinstance(response, str) else response
+        text = body.get("content", [{}])[0].get("text", "")
+        digdag.env.store({"analysis_content": text})
+```
+
 `templates/report.html`:
 ```html
 <h2>Daily Report: ${session_date}</h2>
