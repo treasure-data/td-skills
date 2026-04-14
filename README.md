@@ -6,16 +6,49 @@ Treasure Data skills for [Claude Code](https://claude.com/claude-code) to enhanc
 
 Skills are folders of instructions and resources that Claude loads dynamically to improve performance on specialized tasks. These TD skills teach Claude how to use our tools and follow our best practices.
 
+## SQL Analyst Suite
+
+**Five core SQL skills for data analysis:**
+
+| Skill | Triggers For | Examples |
+|-------|------------------|----------|
+| **analytical-query** | Analysis/metrics/trends queries | "Top 10 products by revenue", "Count daily signups", "Show revenue trends" |
+| **smart-sampler** | Data samples/records | "Show 100 sample orders", "Give me examples of null emails", "Preview recent data" |
+| **schema-explorer** | Schema/structure/PII discovery | "What tables are available?", "Show me the schema for orders", "Find PII columns" |
+| **data-profiler** | Data quality/distributions | "Profile the orders table", "Analyze data quality", "What's the distribution of revenue?" |
+| **query-explainer** | SQL query explanations | "Explain this query: [SQL]", "What does this do?", "Break down this query" |
+
 ## Available Skills
 
 ### SQL Skills
 
-- **[sql-skills/trino](./sql-skills/trino)** - Write and optimize SQL queries for Trino with TD best practices
-- **[sql-skills/hive](./sql-skills/hive)** - Create efficient Hive queries following TD conventions
-- **[sql-skills/time-filtering](./sql-skills/time-filtering)** - Time-based filtering with td_interval() and td_time_range() for partition pruning and query performance
-- **[sql-skills/trino-optimizer](./sql-skills/trino-optimizer)** - Optimize slow Trino queries, fix timeouts and memory errors, reduce costs
+#### Core Analyst Skills
+
+**Analytical & Data Exploration Suite:**
+
+- **[sql-skills/analytical-query](./sql-skills/analytical-query)** - Natural language to SQL analytics for summarizing, aggregating, analyzing trends, metrics, and KPIs. Generates optimized queries, executes them, and creates professional Plotly visualizations. **Also uses smart-sampler for sampling/data preview requests.**
+
+- **[sql-skills/smart-sampler](./sql-skills/smart-sampler)** - Intelligent data sampling with multiple strategies (random, time-based, stratified, edge-case) for exploring data and finding examples without full scans.
+
+#### Query Support & Optimization
+
+**Schema Discovery & Analysis:**
+- **[sql-skills/schema-explorer](./sql-skills/schema-explorer)** - Discover databases, tables, columns, and PII fields across your TD environment.
+
+- **[sql-skills/data-profiler](./sql-skills/data-profiler)** - Analyze data quality, distributions, completeness, null rates, and outliers with professional visualizations.
+
+- **[sql-skills/query-explainer](./sql-skills/query-explainer)** - Convert SQL queries to natural language explanations, identify performance issues, and generate documentation.
+
+**Query Optimization & Development:**
+- **[sql-skills/trino](./sql-skills/trino)** - Write and optimize SQL queries for Trino with TD best practices (td_interval, approx functions, time filtering)
+- **[sql-skills/hive](./sql-skills/hive)** - Create efficient Hive queries following TD conventions for large data processing
+- **[sql-skills/time-filtering](./sql-skills/time-filtering)** - Advanced time-based filtering with td_interval() and td_time_range() for partition pruning and query performance
+- **[sql-skills/trino-optimizer](./sql-skills/trino-optimizer)** - Optimize slow Trino queries, fix timeouts and memory errors, reduce costs with execution log analysis
 - **[sql-skills/trino-to-hive-migration](./sql-skills/trino-to-hive-migration)** - Convert Trino queries to Hive to resolve memory errors and handle large datasets
-- **[sql-skills/td-mcp](./sql-skills/td-mcp)** - Connect Claude Code to TD via MCP server for natural language data exploration and queries
+
+#### Data Discovery & Profiling
+
+(See SQL Analyst Suite section above - schema-explorer and data-profiler are listed there)
 
 ### Realtime Skills
 
@@ -118,7 +151,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 2. **Browse and install plugins:**
 
    Select "Browse and install plugins" from the menu, then choose from:
-   - `sql-skills` - Trino and Hive query assistance, Trino CLI, and TD MCP server
+   - `sql-skills` - Analyst suite (analytical-query, smart-sampler, data-profiler), Trino and Hive query assistance, and query optimization
    - `realtime-skills` - RT 2.0 end-to-end orchestrators, configuration, personalization services, real-time journeys, and activation/identity log monitoring
    - `workflow-skills` - Treasure Workflow creation, management, and dbt transformations
    - `sdk-skills` - TD JavaScript SDK and pytd Python SDK
@@ -142,7 +175,26 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ### Invoking Skills
 
-Once installed, explicitly reference skills using the `skill` keyword to trigger them:
+Once installed, skills are triggered based on their description fields matching your question. Examples:
+
+```
+"Show me the top 10 products by revenue last 30 days" → analytical-query
+"Sample 100 recent orders from the sales table" → smart-sampler
+"Give me examples of null email addresses" → smart-sampler
+"Analyze the revenue trend by month" → analytical-query
+"Profile the customers table for data quality" → data-profiler
+"What tables are available in my database?" → schema-explorer
+"Show me the schema for the orders table" → schema-explorer
+"Find tables with PII columns" → schema-explorer
+"What columns does the sales table have?" → schema-explorer
+"Explain this query: SELECT * FROM orders WHERE time > now() - 7d" → query-explainer
+"What does this SQL do? [paste query]" → query-explainer
+"Break down this complex query step by step" → query-explainer
+"Profile the events table for null values and distribution" → data-profiler
+"Show me data quality metrics for the users table" → data-profiler
+```
+
+You can also explicitly reference skills:
 
 ```
 "Use the Trino skill to extract data from sample_datasets.nasdaq table"
@@ -290,6 +342,12 @@ To contribute a new skill or improve an existing one:
 4. Test the skill manually with Claude Code
 5. Submit a pull request with clear documentation
 
+## Documentation
+
+For detailed documentation on individual skills, each skill contains a `SKILL.md` file with comprehensive information:
+
+- **SQL Skills Documentation**: See individual `SKILL.md` files in each skill directory (e.g., `./sql-skills/analytical-query/SKILL.md`)
+
 ## Support
 
 For questions or issues:
@@ -299,3 +357,7 @@ For questions or issues:
 ---
 
 **Note:** These skills are for internal TD use only.
+
+**Latest Updates:**
+- Analytical-Query and Smart-Sampler skills now available
+- Comprehensive SQL analyst suite for data analysis and exploration

@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "sql-skills",
-      "description": "SQL query skills for Treasure Data including Trino and Hive query optimization, time-based filtering with td_interval, and Trino-to-Hive migration",
+      "description": "SQL query skills for Treasure Data including Trino/Hive optimization, time filtering, natural language to SQL, schema exploration, data profiling, sampling, and query explanation.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -19,7 +19,12 @@
         "./sql-skills/hive",
         "./sql-skills/trino-optimizer",
         "./sql-skills/trino-to-hive-migration",
-        "./sql-skills/time-filtering"
+        "./sql-skills/time-filtering",
+        "./sql-skills/analytical-query",
+        "./sql-skills/schema-explorer",
+        "./sql-skills/data-profiler",
+        "./sql-skills/smart-sampler",
+        "./sql-skills/query-explainer"
       ]
     },
     {
