@@ -6,16 +6,25 @@ Advanced patterns for LLM calls in TD workflows via `http>`.
 
 ## Query Results as LLM Context
 
-Feed SQL results into an LLM for analysis.
+`store_last_results: true` stores **only the first row**. Choose the pattern based on result shape:
+
+| Pattern | When to use |
+|---|---|
+| **Single row** | KPI snapshot, aggregated metrics — query returns exactly one row |
+| **SQL aggregation** | Multi-row data compressed into one row via `array_join`/`listagg` |
+| **py> formatting** | Large or complex tables — full control over formatting |
+
+### Pattern 1: Single row (simplest)
+
+Design the query to return one row of scalar values.
 
 ```yaml
 +gather_data:
   td>: queries/daily_summary.sql
   store_last_results: true
-  database: analytics
 
 +analyze:
-  http>: https://llm-proxy.us01.treasuredata.com/v1/messages
+  http>: ${llm_endpoint}
   method: POST
   headers:
     - x-api-key: ${secret:td.apikey}
@@ -25,9 +34,147 @@ Feed SQL results into an LLM for analysis.
     max_tokens: 2048
     messages:
       - role: user
-        content: "Analyze these metrics and flag anomalies: revenue=${td.last_results.revenue}, orders=${td.last_results.orders}, avg_order_value=${td.last_results.avg_order_value}. Compare to yesterday: prev_revenue=${td.last_results.prev_revenue}."
+        content: "Analyze: revenue=${td.last_results.revenue}, orders=${td.last_results.orders}, avg_order_value=${td.last_results.avg_order_value}"
   content_format: json
   store_content: true
+```
+
+### Pattern 2: SQL aggregation (no py> needed)
+
+Compress multiple rows into a single text column using string aggregation, then pass via `store_last_results`.
+
+```yaml
++gather_data:
+  td>: queries/aggregate_for_llm.sql
+  store_last_results: true
+
++analyze:
+  http>: ${llm_endpoint}
+  method: POST
+  headers:
+    - x-api-key: ${secret:td.apikey}
+    - anthropic-version: 2023-06-01
+  content:
+    model: claude-haiku-4-5-20251001
+    max_tokens: 2048
+    messages:
+      - role: user
+        content: |
+          Analyze the following sales data by region and identify trends:
+          ${td.last_results.report_text}
+  content_format: json
+  store_content: true
+```
+
+`queries/aggregate_for_llm.sql` (Trino):
+```sql
+select array_join(
+  array_agg(
+    region || ': revenue=' || cast(revenue as varchar)
+    || ', orders=' || cast(orders as varchar)
+    || ', avg_order=' || cast(avg_order_value as varchar)
+  ),
+  chr(10)
+) as report_text
+from (
+  select
+    region,
+    sum(revenue) as revenue,
+    count(*) as orders,
+    round(avg(order_value), 2) as avg_order_value
+  from sales
+  where td_interval(time, '-7d')
+  group by region
+  order by revenue desc
+)
+```
+
+This produces a single row like:
+```
+US: revenue=125000, orders=340, avg_order=367.65
+EU: revenue=89000, orders=210, avg_order=423.81
+AP: revenue=56000, orders=180, avg_order=311.11
+```
+
+**Tip:** For markdown table output, format with `|` separators:
+```sql
+select
+  '| Region | Revenue | Orders |' || chr(10)
+  || '|---|---|---|' || chr(10)
+  || array_join(
+    array_agg('| ' || region || ' | ' || cast(revenue as varchar) || ' | ' || cast(orders as varchar) || ' |'),
+    chr(10)
+  ) as report_text
+from ...
+```
+
+### Pattern 3: py> formatting (full control)
+
+Write query results to a table, then read with `py>` using pytd. Best for large result sets or complex formatting.
+
+```yaml
++build_report_data:
+  td>: queries/weekly_breakdown.sql
+  create_table: tmp_llm_input
+
++format_for_llm:
+  py>: tasks.LLMFormatter.run
+  docker:
+    image: "treasuredata/customscript-python:3.12.11-td1"
+  _env:
+    TD_API_KEY: ${secret:td.apikey}
+  database: analytics
+  table: tmp_llm_input
+
++analyze:
+  http>: ${llm_endpoint}
+  method: POST
+  headers:
+    - x-api-key: ${secret:td.apikey}
+    - anthropic-version: 2023-06-01
+  content:
+    model: claude-haiku-4-5-20251001
+    max_tokens: 2048
+    messages:
+      - role: user
+        content: |
+          Analyze this weekly performance data:
+          ${llm_input_text}
+  content_format: json
+  store_content: true
+```
+
+`tasks/__init__.py`:
+```python
+import digdag
+import os
+import pytd
+
+
+class LLMFormatter:
+    def run(self):
+        database = digdag.env.params["database"]
+        table = digdag.env.params["table"]
+
+        client = pytd.Client(
+            apikey=os.environ["TD_API_KEY"],
+            database=database,
+        )
+        result = client.query(f"select * from {table} order by date")
+
+        # Format as markdown table
+        headers = result["columns"]
+        lines = ["| " + " | ".join(headers) + " |"]
+        lines.append("| " + " | ".join(["---"] * len(headers)) + " |")
+        for row in result["data"]:
+            lines.append("| " + " | ".join(str(v) for v in row) + " |")
+
+        digdag.env.store({"llm_input_text": "\n".join(lines)})
+```
+
+`tasks/requirements.txt`:
+```
+pytd
 ```
 
 ---

@@ -107,6 +107,18 @@ _error:
 - **`${JSON.parse(http.last_content).content[0].text}`** extracts the LLM response text inline — no `py>` needed
 - **`_export` block** centralizes Slack and LLM config for reuse across steps and `_error`
 
+## Passing Query Results to LLM
+
+`store_last_results: true` stores only the first row. For multi-row data, choose the right pattern:
+
+| Pattern | When to use |
+|---|---|
+| **Single row** | KPI snapshot, aggregated metrics |
+| **SQL aggregation** | Multi-row → one text column via `array_join`/`listagg` (no py> needed) |
+| **py> formatting** | Large tables, complex formatting (markdown table, CSV) |
+
+For detailed examples of each pattern: [llm-patterns.md](references/llm-patterns.md)
+
 ## LLM Summarize
 
 Two options for calling LLM from workflows — **always ask the user which to use**:
