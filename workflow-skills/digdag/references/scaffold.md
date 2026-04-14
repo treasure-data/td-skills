@@ -177,8 +177,9 @@ pytd
 |---|---|---|---|
 | `td.apikey` | `ACCOUNT_ID/KEY` (e.g., `1234/abcdef01...`) | `td>`, `td_ddl>`, `td_load>`, `td_for_each>`, `td_wait>`, `td_run>`, `http>` with LLM Proxy | TD Console → My Settings → API Keys |
 | `slack.webhook` | `https://hooks.slack.com/services/...` | Error/success notifications via `http>` | Slack App → Incoming Webhooks |
+| `slack.bot_user_oauth_token` | `xoxb-...` | Slack Bot API (`chat.postMessage`) | Slack App → OAuth & Permissions |
+| `td.webhook_key` | Basic auth key | TD Agent webhook calls | TD Console → AI Agents → Webhook Settings |
 | `mail.host`, `mail.port`, `mail.username`, `mail.password` | SMTP credentials | `mail>` operator (local digdag only — **not needed on TD platform**) | Your SMTP provider |
-| `langfuse.public`, `langfuse.secret`, `langfuse.host` | Langfuse keys | `py>` with Langfuse | Langfuse dashboard → Settings |
 
 ### How to set secrets
 
@@ -192,10 +193,8 @@ tdx wf secrets set <project-name> "td.apikey=YOUR_MASTER_API_KEY"
 # Optional: Slack webhook for error notifications
 tdx wf secrets set <project-name> "slack.webhook=YOUR_SLACK_WEBHOOK_URL"
 
-# Optional: Langfuse tracing
-tdx wf secrets set <project-name> "langfuse.public=YOUR_PUBLIC_KEY"
-tdx wf secrets set <project-name> "langfuse.secret=YOUR_SECRET_KEY"
-tdx wf secrets set <project-name> "langfuse.host=YOUR_LANGFUSE_HOST"
+# Optional: Slack Bot API token
+tdx wf secrets set <project-name> "slack.bot_user_oauth_token=YOUR_BOT_TOKEN"
 ```
 
 ### About `td.apikey`
@@ -207,32 +206,29 @@ tdx wf secrets set <project-name> "langfuse.host=YOUR_LANGFUSE_HOST"
 
 ### Referencing secrets in .dig
 
+Secrets are available anywhere via `${secret:KEY}` — in headers, URLs, and `_env` blocks.
+
 ```yaml
 # In _env for py> tasks
 _env:
   TD_API_KEY: ${secret:td.apikey}
-  SLACK_WEBHOOK: ${secret:slack.webhook}
 
-# In http> headers (e.g., LLM Proxy)
-+call_llm:
-  http>: https://llm-proxy.us01.treasuredata.com/v1/messages
+# In http> headers
++call_api:
+  http>: https://api.example.com/data
   method: POST
   headers:
-    - x-api-key: ${secret:td.apikey}
-    - anthropic-version: 2023-06-01
-  content:
-    model: claude-haiku-4-5-20251001
-    max_tokens: 1024
-    messages:
-      - role: user
-        content: "Hello"
-  content_format: json
+    - Authorization: "Bearer ${secret:my_api_token}"
 
 # Directly in http> URL
 +notify:
   http>: ${secret:slack.webhook}
   method: POST
+  content:
+    text: "Pipeline completed for ${session_date}"
 ```
+
+For LLM Proxy and Slack Bot API secret usage patterns, see the **llm-workflow** skill.
 
 ### Verifying secrets
 

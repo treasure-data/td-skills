@@ -1,6 +1,6 @@
 ---
 name: digdag
-description: Write .dig workflow files for Treasure Workflow. Covers creating new workflows (create_workflow MCP tool), importing existing workflows (register_workflow), digdag YAML syntax, td> operator, session variables, _parallel/_retry/_error directives, and TD platform constraints. Use when creating, editing, or deploying TD workflows. Also trigger on mentions of digdag, .dig files, td> operator, workflow scheduling, or any request to build a new ETL pipeline or data workflow on Treasure Data.
+description: Write .dig workflow files for Treasure Workflow. Covers creating new workflows (create_workflow MCP tool), importing existing workflows (register_workflow), digdag YAML syntax, td> operator, session variables, _parallel/_retry/_error directives, and TD platform constraints. Use when creating, editing, or deploying TD workflows. Also trigger on mentions of digdag, .dig files, td> operator, workflow scheduling, or any request to build a new data ETL pipeline on Treasure Data. For workflows with LLM processing or Slack/email notification, see the llm-workflow skill.
 ---
 
 # Treasure Workflow (Digdag)
@@ -174,7 +174,7 @@ Runtime params: `tdx wf start project workflow -p target_date=2026-04-01`
 
 ## mail> on TD
 
-TD's built-in SMTP relay handles delivery. Do not configure `mail.host`, `mail.port`, `mail.username`, or `mail.password` secrets — they are not needed on the TD platform.
+TD's built-in SMTP relay handles delivery. No SMTP secrets needed on TD platform.
 
 ```yaml
 +send_report:
@@ -184,71 +184,9 @@ TD's built-in SMTP relay handles delivery. Do not configure `mail.host`, `mail.p
   html: true
 ```
 
-## LLM in Workflows
+## LLM and Notification
 
-LLM calls in TD workflows always go through `http>`. There are two options — **always ask the user which to use** before writing the workflow:
-
-| Option | Prerequisites | Best for |
-|---|---|---|
-| **Raw LLM** (TD LLM Proxy) | None — works immediately with `td.apikey` | Simple summarization, classification, formatting |
-| **TD Agent** (webhook) | Agent pre-created in TD Console, webhook URL obtained | Complex tasks requiring tools, knowledge bases, or multi-turn reasoning |
-
-Do not use `py>`, external API calls, or direct Anthropic endpoints for LLM invocation.
-
-For advanced patterns (response parsing, conditional branching, Slack/email reports): [patterns-llm.md](references/patterns-llm.md)
-
-### Option 1: Raw LLM (no setup required)
-
-Call TD LLM Proxy directly. Set the endpoint to match the user's TD region.
-
-```yaml
-_export:
-  # Set to user's region: us01 | treasuredata.co.jp | eu01 | ap02 | ap03
-  llm_endpoint: https://llm-proxy.us01.treasuredata.com/v1/messages
-
-+ask_llm:
-  http>: ${llm_endpoint}
-  method: POST
-  headers:
-    - x-api-key: ${secret:td.apikey}
-    - anthropic-version: 2023-06-01
-  content:
-    model: claude-haiku-4-5-20251001
-    max_tokens: 1024
-    messages:
-      - role: user
-        content: "Summarize today's data quality report"
-  content_format: json
-  store_content: true
-```
-
-Response in `${http.last_content}` (JSON string). Available models: `claude-haiku-4-5-20251001`, `claude-sonnet-4-6`, `claude-opus-4-6`.
-
-| Region | Endpoint |
-|---|---|
-| US | `https://llm-proxy.us01.treasuredata.com` |
-| JP | `https://llm-proxy.treasuredata.co.jp` |
-| EU | `https://llm-proxy.eu01.treasuredata.com` |
-| AP02 | `https://llm-proxy.ap02.treasuredata.com` |
-| AP03 | `https://llm-proxy.ap03.treasuredata.com` |
-
-### Option 2: TD Agent (requires pre-setup)
-
-Call a pre-built TD Agent via its webhook URL. The user must provide:
-1. **Agent created** in TD Console (with tools, knowledge bases, system prompt configured)
-2. **Webhook URL** obtained from the agent settings
-
-```yaml
-+call_agent:
-  http>: ${secret:agent.webhook_url}
-  method: POST
-  headers:
-    - content-type: application/json
-  content:
-    message: "Analyze sales activity for ${session_date}"
-  content_format: json
-  store_content: true
-```
+For LLM calls (TD LLM Proxy, TD Agent) and notification patterns (Slack, email), see the **llm-workflow** skill. It covers end-to-end patterns: data pipeline → LLM summarize → Slack/Mail notify.
 
 ## Common Pitfalls
 
