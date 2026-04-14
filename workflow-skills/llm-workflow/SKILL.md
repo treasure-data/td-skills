@@ -36,7 +36,7 @@ _export:
 # 1. Setup
 +setup:
   td_ddl>:
-  create_databases: ["${output_db}"]
+    create_databases: ["${output_db}"]
 
 # 2. Build tables
 +build_tables:

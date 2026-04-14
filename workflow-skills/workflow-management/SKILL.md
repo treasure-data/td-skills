@@ -97,27 +97,34 @@ Use `td_partial_delete>` before insert, or `create_table` to overwrite.
 # Option 1: Partial delete + insert
 +delete_existing:
   td_partial_delete>: target_table
+  database: analytics
   from: ${session_date}
   to: ${next_session_date}
 
 +insert_fresh:
   td>: queries/transform.sql
+  database: analytics
   insert_into: target_table
 
 # Option 2: Overwrite with create_table
 +overwrite:
   td>: queries/transform.sql
+  database: analytics
   create_table: target_table
 ```
 
 ## Backfill Pattern
+
+Use `loop>` with date math to iterate over past days:
 
 ```yaml
 +backfill:
   loop>: 7
   _do:
     +process:
-      call>: main_workflow.dig
+      td>: queries/process.sql
+      _export:
+        target_date: ${moment(session_time).subtract(i, 'days').format("YYYY-MM-DD")}
 ```
 
 Or use `for_each>` with explicit dates:
@@ -129,6 +136,8 @@ Or use `for_each>` with explicit dates:
   _do:
     +process:
       td>: queries/process.sql
+      _export:
+        dt: ${target_date}
 ```
 
 ## Secrets

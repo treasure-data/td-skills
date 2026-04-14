@@ -9,9 +9,8 @@ Slack and email notification patterns for TD workflows.
 Simplest method. The webhook URL contains the auth token — just POST a JSON payload.
 
 ```yaml
-_export:
-  # Store webhook URL as a secret, not inline
-  # tdx wf secrets set <project> "slack.webhook=https://hooks.slack.com/services/..."
+# Store webhook URL as a secret, not inline
+# tdx wf secrets set <project> "slack.webhook=https://hooks.slack.com/services/..."
 
 +notify_success:
   http>: ${secret:slack.webhook}
