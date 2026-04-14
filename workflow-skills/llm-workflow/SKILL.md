@@ -15,7 +15,9 @@ For digdag syntax and operator reference, see the **digdag** skill.
 
 ## End-to-End Template
 
-A complete workflow: scheduled pipeline builds tables, extracts KPIs, asks LLM to summarize, and posts to Slack.
+Steps 1-4 are shared. Step 5 depends on notification channel — **Slack** (requires Bot App) or **Mail** (no setup needed on TD).
+
+### Steps 1-4: Pipeline + LLM (shared)
 
 ```yaml
 timezone: Asia/Tokyo
@@ -28,9 +30,6 @@ _export:
     database: my_database
     engine: presto
   output_db: my_analytics
-  slack:
-    post_url: "https://slack.com/api/chat.postMessage"
-    channel: "C0XXXXXXXXX"
   llm_endpoint: "https://llm-proxy.us01.treasuredata.com/v1/messages"
 
 # 1. Setup
@@ -75,8 +74,19 @@ _export:
           Metric B: ${td.last_results.metric_b}
   content_format: json
   store_content: true
+```
 
-# 5. Post to Slack
+### Step 5a: Notify via Slack (Bot API)
+
+Requires Slack Bot App with `chat:write` scope. Add after step 4:
+
+```yaml
+_export:
+  slack:
+    post_url: "https://slack.com/api/chat.postMessage"
+    channel: "C0XXXXXXXXX"
+
+# 5. Post to Slack — JSON.parse extracts LLM text inline (no py> needed)
 +post_to_slack:
   http>: ${slack.post_url}
   method: POST
@@ -88,7 +98,6 @@ _export:
     text: ${JSON.parse(http.last_content).content[0].text}
   store_content: true
 
-# Error notification
 _error:
   +notify_failure:
     http>: ${slack.post_url}
@@ -101,13 +110,57 @@ _error:
       text: "Workflow failed for ${session_date}"
 ```
 
-### Key patterns in this template
+### Step 5b: Notify via Email (no setup needed)
 
-- **`store_last_results: true`** on the KPI query exposes `${td.last_results.*}` — design the query to return exactly one row
+TD's built-in SMTP relay handles delivery — no secrets required. LLM response must be extracted via `py>` into a template variable:
+
+```yaml
+# 5. Extract LLM response and send email
++extract_summary:
+  py>: tasks.ResponseExtractor.run
+  docker:
+    image: "treasuredata/customscript-python:3.12.11-td1"
+
++send_report:
+  mail>: templates/report.html
+  subject: "Daily Report ${session_date}"
+  to: [team@example.com]
+  html: true
+
+_error:
+  +notify_failure:
+    mail>:
+      data: "Workflow failed for ${session_date}"
+    subject: "ALERT: workflow failure ${session_date}"
+    to: [team@example.com]
+```
+
+`tasks/__init__.py`:
+```python
+import digdag
+import json
+
+class ResponseExtractor:
+    def run(self):
+        response = digdag.env.params.get("http", {}).get("last_content", "{}")
+        body = json.loads(response) if isinstance(response, str) else response
+        text = body.get("content", [{}])[0].get("text", "")
+        digdag.env.store({"llm_summary": text})
+```
+
+`templates/report.html` — use inline CSS only (email clients strip `<link>` tags):
+```html
+<h2>Daily Report: ${session_date}</h2>
+<div>${llm_summary}</div>
+```
+
+### Key patterns
+
+- **`timeout: 300`** on LLM calls — `http>` defaults to 30s which is insufficient. Always set 300+ for LLM Proxy, 3600 for TD Agent
+- **`store_last_results: true`** exposes `${td.last_results.*}` — design the query to return exactly one row
 - **`store_content: true`** on `http>` stores the raw response in `${http.last_content}`
-- **`${JSON.parse(http.last_content).content[0].text}`** extracts the LLM response text inline — no `py>` needed
-- **`_export` block** centralizes Slack and LLM config for reuse across steps and `_error`
-- **`timeout: 300`** on LLM calls — `http>` defaults to 30s which is insufficient for LLM responses. Always set 300+ for LLM Proxy, 3600 for TD Agent
+- **`${JSON.parse(http.last_content).content[0].text}`** extracts LLM text inline (Slack path, no py> needed)
+- **`py>` extraction** needed for Mail path because `mail>` templates cannot use `JSON.parse()`
 
 ## Passing Query Results to LLM
 
@@ -123,7 +176,7 @@ For detailed examples of each pattern: [llm-patterns.md](references/llm-patterns
 
 ## LLM Summarize
 
-Two options for calling LLM from workflows — **always ask the user which to use**:
+Two options — **always ask the user which to use**:
 
 | Option | Prerequisites | Best for |
 |---|---|---|
@@ -188,28 +241,16 @@ _export:
 
 ### Response parsing
 
-**Inline (no py> needed)** — use JavaScript expressions in digdag templates:
+**Inline (Slack path)** — `${JSON.parse(http.last_content).content[0].text}`
 
-```yaml
-# Extract text from Anthropic Messages API response
-text: ${JSON.parse(http.last_content).content[0].text}
-```
-
-**Via py> (for complex parsing)** — when you need conditional logic or multi-field extraction:
-
-```yaml
-+parse:
-  py>: tasks.ResponseParser.extract
-  docker:
-    image: "treasuredata/customscript-python:3.12.11-td1"
-```
+**Via py> (Mail path or complex parsing):**
 
 ```python
 import digdag
 import json
 
-class ResponseParser:
-    def extract(self):
+class ResponseExtractor:
+    def run(self):
         response = digdag.env.params.get("http", {}).get("last_content", "{}")
         body = json.loads(response) if isinstance(response, str) else response
         text = body.get("content", [{}])[0].get("text", "")
@@ -218,16 +259,25 @@ class ResponseParser:
 
 ## Notification
 
-For detailed patterns (Block Kit, threads, HTML email): [notification-patterns.md](references/notification-patterns.md)
-
-### Slack: two methods
-
-| Method | Auth | Use case |
+| Channel | Setup required | Best for |
 |---|---|---|
-| **Incoming Webhook** | URL contains token | Simple post to a fixed channel |
-| **Bot API** (`chat.postMessage`) | Bearer token | Dynamic channel, threads, richer control |
+| **Email** (`mail>`) | None on TD platform | Reports, alerts — simplest path |
+| **Slack Webhook** | Webhook URL | Simple fixed-channel posts |
+| **Slack Bot API** | Bot App with `chat:write` | Dynamic channels, threads |
 
-**Webhook** (simplest):
+For detailed patterns: [notification-patterns.md](references/notification-patterns.md)
+
+### Email
+
+```yaml
++send_report:
+  mail>: templates/report.html
+  subject: "Daily Report ${session_date}"
+  to: [team@example.com]
+  html: true
+```
+
+### Slack Webhook
 
 ```yaml
 +notify:
@@ -237,7 +287,7 @@ For detailed patterns (Block Kit, threads, HTML email): [notification-patterns.m
     text: "Pipeline completed for ${session_date}"
 ```
 
-**Bot API** (flexible):
+### Slack Bot API
 
 ```yaml
 +notify:
@@ -252,26 +302,16 @@ For detailed patterns (Block Kit, threads, HTML email): [notification-patterns.m
   store_content: true
 ```
 
-### Email
-
-TD's built-in SMTP relay handles delivery — no SMTP secrets needed on TD platform.
-
-```yaml
-+send_report:
-  mail>: templates/report.html
-  subject: "Daily Report ${session_date}"
-  to: [team@example.com]
-  html: true
-```
-
 ## Secrets
 
 | Secret | Required for | How to set |
 |---|---|---|
 | `td.apikey` | LLM Proxy calls | `tdx wf secrets set <project> "td.apikey=YOUR_KEY"` |
+| `td.webhook_key` | TD Agent calls | `tdx wf secrets set <project> "td.webhook_key=YOUR_WEBHOOK_KEY"` |
 | `slack.webhook` | Slack Webhook | `tdx wf secrets set <project> "slack.webhook=YOUR_URL"` |
 | `slack.bot_user_oauth_token` | Slack Bot API | `tdx wf secrets set <project> "slack.bot_user_oauth_token=YOUR_TOKEN"` |
-| `td.webhook_key` | TD Agent calls | `tdx wf secrets set <project> "td.webhook_key=YOUR_WEBHOOK_KEY"` |
+
+Email (`mail>`) requires no secrets on TD platform.
 
 ## References
 
