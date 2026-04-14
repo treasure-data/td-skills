@@ -59,6 +59,7 @@ _export:
 +llm_summarize:
   http>: ${llm_endpoint}
   method: POST
+  timeout: 300
   headers:
     - x-api-key: ${secret:td.apikey}
     - anthropic-version: 2023-06-01
@@ -106,6 +107,7 @@ _error:
 - **`store_content: true`** on `http>` stores the raw response in `${http.last_content}`
 - **`${JSON.parse(http.last_content).content[0].text}`** extracts the LLM response text inline — no `py>` needed
 - **`_export` block** centralizes Slack and LLM config for reuse across steps and `_error`
+- **`timeout: 300`** on LLM calls — `http>` defaults to 30s which is insufficient for LLM responses. Always set 300+ for LLM Proxy, 3600 for TD Agent
 
 ## Passing Query Results to LLM
 
@@ -136,6 +138,7 @@ For detailed patterns (conditional branching, multi-step reasoning): [llm-patter
 +ask_llm:
   http>: ${llm_endpoint}
   method: POST
+  timeout: 300
   headers:
     - x-api-key: ${secret:td.apikey}
     - anthropic-version: 2023-06-01

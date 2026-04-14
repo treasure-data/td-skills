@@ -26,6 +26,7 @@ Design the query to return one row of scalar values.
 +analyze:
   http>: ${llm_endpoint}
   method: POST
+  timeout: 300
   headers:
     - x-api-key: ${secret:td.apikey}
     - anthropic-version: 2023-06-01
@@ -51,6 +52,7 @@ Compress multiple rows into a single text column using string aggregation, then 
 +analyze:
   http>: ${llm_endpoint}
   method: POST
+  timeout: 300
   headers:
     - x-api-key: ${secret:td.apikey}
     - anthropic-version: 2023-06-01
@@ -129,6 +131,7 @@ Write query results to a table, then read with `py>` using pytd. Best for large 
 +analyze:
   http>: ${llm_endpoint}
   method: POST
+  timeout: 300
   headers:
     - x-api-key: ${secret:td.apikey}
     - anthropic-version: 2023-06-01
@@ -192,6 +195,7 @@ Ask a yes/no question and branch on the answer. Use `py>` to parse into a boolea
 +ask_llm:
   http>: ${llm_endpoint}
   method: POST
+  timeout: 300
   headers:
     - x-api-key: ${secret:td.apikey}
     - anthropic-version: 2023-06-01
@@ -256,6 +260,7 @@ Query results feed the LLM, and the LLM analysis is embedded into HTML via `py>`
 +analyze:
   http>: ${llm_endpoint}
   method: POST
+  timeout: 300
   headers:
     - x-api-key: ${secret:td.apikey}
     - anthropic-version: 2023-06-01

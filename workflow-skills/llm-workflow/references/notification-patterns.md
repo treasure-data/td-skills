@@ -61,6 +61,7 @@ Chain `http>` calls: LLM response stored via `store_content: true`, then parsed 
 +llm_summarize:
   http>: ${llm_endpoint}
   method: POST
+  timeout: 300
   headers:
     - x-api-key: ${secret:td.apikey}
     - anthropic-version: 2023-06-01
@@ -158,6 +159,7 @@ Use `py>` to store the LLM analysis into a variable, then reference it in the HT
 +analyze:
   http>: ${llm_endpoint}
   method: POST
+  timeout: 300
   headers:
     - x-api-key: ${secret:td.apikey}
     - anthropic-version: 2023-06-01
