@@ -147,6 +147,8 @@ Read these files as needed during analysis. Do not load all at once.
 
 | Reference | When to read | Path |
 |-----------|-------------|------|
+| Grid Dashboard format | Before writing any dashboard YAML | **grid-dashboard** skill (part of `studio-skills`) |
+| Action Report format | Before writing any action report YAML | **action-report** skill (part of `studio-skills`) |
 | AEO Scoring rubric | Calculating AEO scores (5 dimensions, 100 pts) | [references/aeo-scoring.md](references/aeo-scoring.md) |
 | BLUF Writing Patterns | Writing before→after recommendations | [references/bluf-patterns.md](references/bluf-patterns.md) |
 | Intent Classification | Mapping SERP features to content format | [references/intent-classification.md](references/intent-classification.md) |
@@ -159,7 +161,12 @@ Read these files as needed during analysis. Do not load all at once.
 
 When `preview_grid_dashboard` or `preview_action_report` is not available, output both dashboard summary and action items as formatted markdown directly in the conversation.
 
-## Related Skills
+## Required Skills (from `studio-skills`)
 
 - **grid-dashboard** — Grid dashboard YAML format reference (cell types, layout, merging)
 - **action-report** — Action report YAML format reference (as-is/to-be/reason cards)
+
+If these skills are not found, ask the user to install `studio-skills`:
+```
+/plugin install studio-skills@td-skills
+```
