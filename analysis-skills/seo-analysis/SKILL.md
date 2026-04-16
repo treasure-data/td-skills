@@ -166,7 +166,4 @@ When `preview_grid_dashboard` or `preview_action_report` is not available, outpu
 - **grid-dashboard** — Grid dashboard YAML format reference (cell types, layout, merging)
 - **action-report** — Action report YAML format reference (as-is/to-be/reason cards)
 
-If these skills are not found, ask the user to install `studio-skills`:
-```
-/plugin install studio-skills@td-skills
-```
+If these skills are not found, ask the user to install the `studio-skills` plugin from the td-skills marketplace.
