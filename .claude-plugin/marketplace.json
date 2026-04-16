@@ -143,12 +143,10 @@
     },
     {
       "name": "analysis-skills",
-      "description": "SEO and AEO analysis skills with visual dashboards and action reports. Includes: (1) grid-dashboard — generic grid dashboard YAML format for visual reports, (2) action-report — generic action report YAML format for prioritized recommendations with as-is/to-be diffs, (3) seo-analysis — unified SEO/AEO audit using GSC, SerpAPI, GA4, and Playwright.",
+      "description": "SEO and AEO analysis skills including unified SEO/AEO audit using GSC, SerpAPI, GA4, and Playwright",
       "source": "./",
       "strict": false,
       "skills": [
-        "./analysis-skills/grid-dashboard",
-        "./analysis-skills/action-report",
         "./analysis-skills/seo-analysis"
       ]
     },
@@ -178,13 +176,15 @@
     },
     {
       "name": "studio-skills",
-      "description": "Treasure Studio-specific skills including workspace document management, skill creation, and scheduled task management",
+      "description": "Treasure Studio-specific skills including workspace document management, skill creation, scheduled task management, and UI rendering formats for grid dashboards and action reports",
       "source": "./",
       "strict": false,
       "skills": [
         "./studio-skills/work",
         "./studio-skills/skill-creator",
         "./studio-skills/react-dashboard",
+        "./studio-skills/grid-dashboard",
+        "./studio-skills/action-report",
         "./studio-skills/schedule-task",
         "./studio-skills/schedule-review",
         "./studio-skills/web-search"
