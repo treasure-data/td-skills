@@ -147,7 +147,9 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./analysis-skills/seo-analysis"
+        "./analysis-skills/seo-analysis",
+        "./studio-skills/grid-dashboard",
+        "./studio-skills/action-report"
       ]
     },
     {
