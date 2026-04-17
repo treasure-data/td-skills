@@ -1,9 +1,15 @@
 """CS Health Check Workflow
 
-Scans all active accounts via Studio Agent (HubSpot), evaluates churn risk
-with deterministic scoring, and sends personalized Slack alerts for at-risk accounts.
+Scans active accounts via Studio Agent (HubSpot), evaluates churn risk
+with deterministic scoring, and sends personalized Slack alerts for
+at-risk accounts.
 
 Graph: scan_accounts >> evaluate_risk >> notify_csm
+
+Each agent-backed task opens its own ephemeral Studio Agent session.
+Cross-task context is passed explicitly through return values —
+``notify_csm`` re-supplies the at-risk accounts to its fresh session
+because a new session does not share memory with prior ones.
 """
 
 from graflow import task, workflow
@@ -11,57 +17,64 @@ from graflow.core.context import TaskExecutionContext
 from studio_agent import StudioAgent
 
 
-with workflow("cs-health-check") as ctx:
-    ctx.register_llm_agent("studio", lambda _: StudioAgent())
-
-    @task(inject_llm_agent="studio")
-    def scan_accounts(agent):
-        """Fetch all active accounts with recent activity data from HubSpot."""
+@task
+def scan_accounts() -> list:
+    """Fetch all active accounts with recent activity data from HubSpot."""
+    with StudioAgent() as agent:
         result = agent.run(
             "List all active accounts from HubSpot. For each account, include: "
             "company name, account owner, last activity date, open support tickets count, "
             "and contract renewal date. Return as a structured JSON list."
         )
-        return result["output"]
+    return result["output"]
 
-    @task(inject_context=True)
-    def evaluate_risk(ctx: TaskExecutionContext, accounts: list):
-        """Deterministic churn risk scoring — no AI needed."""
-        from datetime import datetime, timedelta
 
-        at_risk = []
-        threshold = datetime.now() - timedelta(days=14)
+@task(inject_context=True)
+def evaluate_risk(ctx: TaskExecutionContext, accounts: list):
+    """Deterministic churn risk scoring — no agent needed."""
+    from datetime import datetime, timedelta
 
-        for account in accounts:
-            risk_score = 0.0
-            if account.get("last_activity_date", "") < threshold.isoformat():
-                risk_score += 0.4
-            if account.get("open_tickets", 0) > 3:
-                risk_score += 0.3
-            if account.get("days_to_renewal", 365) < 30:
-                risk_score += 0.3
+    at_risk = []
+    threshold = datetime.now() - timedelta(days=14)
 
-            if risk_score >= 0.5:
-                account["risk_score"] = risk_score
-                at_risk.append(account)
+    for account in accounts:
+        risk_score = 0.0
+        if account.get("last_activity_date", "") < threshold.isoformat():
+            risk_score += 0.4
+        if account.get("open_tickets", 0) > 3:
+            risk_score += 0.3
+        if account.get("days_to_renewal", 365) < 30:
+            risk_score += 0.3
 
-        if not at_risk:
-            ctx.terminate_workflow("No at-risk accounts found today")
+        if risk_score >= 0.5:
+            account["risk_score"] = risk_score
+            at_risk.append(account)
 
-        # Sort by risk score descending
-        at_risk.sort(key=lambda a: a["risk_score"], reverse=True)
-        return at_risk
+    if not at_risk:
+        ctx.terminate_workflow("No at-risk accounts found today")
 
-    @task(inject_llm_agent="studio")
-    def notify_csm(agent, at_risk: list):
-        """Draft and send personalized Slack alerts for at-risk accounts."""
-        # Agent remembers the account data from scan_accounts (shared session)
-        return agent.run(
-            f"There are {len(at_risk)} at-risk accounts. For each one, "
-            f"draft a concise alert message with: account name, risk score, "
-            f"key risk factors, and a suggested next action. "
+    at_risk.sort(key=lambda a: a["risk_score"], reverse=True)
+    return at_risk
+
+
+@task
+def notify_csm(at_risk: list) -> str:
+    """Draft and send personalized Slack alerts for at-risk accounts.
+
+    The prompt re-supplies the structured ``at_risk`` list because this
+    task runs in a fresh Studio Agent session and does not share memory
+    with ``scan_accounts``.
+    """
+    with StudioAgent() as agent:
+        result = agent.run(
+            f"Here are {len(at_risk)} at-risk accounts:\n\n{at_risk}\n\n"
+            f"For each one, draft a concise alert with: account name, "
+            f"risk score, key risk factors, and a suggested next action. "
             f"Post the summary to #cs-alerts on Slack."
-        )["output"]
+        )
+    return result["output"]
 
+
+with workflow("cs-health-check") as ctx:
     scan_accounts >> evaluate_risk >> notify_csm
     ctx.execute("scan_accounts")

@@ -1,6 +1,6 @@
 ---
 name: graflow
-description: Build agentic workflow pipelines using Graflow (Python). Use when the user asks to create, edit, or debug a Graflow workflow, agentic pipeline, or automated multi-step business process. Covers @task decorator, workflow composition (>> sequential, | parallel), Studio Agent integration for AI reasoning with MCP tools, dynamic branching (next_task, next_iteration), HITL approval flows, and workflow.yaml trigger configuration. Also trigger on mentions of Graflow, agentic workflow, task graph, workflow.py, multi-step automation, CS health check, SDR sequence, or any request combining deterministic logic with AI decision points. For digdag/TD Workflow, see the digdag skill. For scheduled tasks with TASK.md, see the schedule-task skill.
+description: Build agentic workflow pipelines using Graflow (Python). Use when the user asks to create, edit, or debug a Graflow workflow, agentic pipeline, or automated multi-step business process. Covers @task decorator, workflow composition (>> sequential, | parallel), Studio Agent integration with the ephemeral-per-task session pattern (MCP tools, state via channels), dynamic branching (next_task, next_iteration), HITL approval flows, and manifest.yml triggers and permissions.allow configuration. Also trigger on mentions of Graflow, agentic workflow, task graph, workflow.py, multi-step automation, CS health check, SDR sequence, or any request combining deterministic logic with AI decision points. For digdag/TD Workflow, see the digdag skill. For scheduled tasks with TASK.md, see the schedule-task skill.
 ---
 
 # Graflow Agentic Workflow
@@ -15,7 +15,7 @@ Build Python workflow pipelines combining **deterministic flow control** (branch
 | Add Studio Agent to a task | See [Studio Agent Integration](#studio-agent-integration) |
 | Add branching or loops | See [Dynamic Control Flow](#dynamic-control-flow) |
 | Add human approval gates | See [HITL Patterns](references/advanced-patterns.md#human-in-the-loop-hitl) |
-| Configure triggers | See [workflow.yaml Reference](references/workflow-yaml.md) |
+| Configure triggers and tool permissions | See [manifest.yml Reference](references/manifest-yml.md) |
 | Browse templates | See [templates/](templates/) |
 
 ## When to Use Graflow
@@ -32,6 +32,7 @@ Build Python workflow pipelines combining **deterministic flow control** (branch
 
 ```python
 from graflow import task, workflow
+from studio_agent import StudioAgent
 
 # Simple deterministic task
 @task
@@ -45,12 +46,14 @@ def route(context, score: float):
         context.next_task(urgent_action, goto=True)
 
 # Task with Studio Agent (AI reasoning + MCP tools)
-@task(inject_llm_agent="studio")
-def analyze(agent, account_id: str):
-    return agent.run(
-        f"Check HubSpot activity for account {account_id} "
-        f"and assess churn risk with supporting evidence."
-    )["output"]
+# Canonical pattern: ephemeral session opened inside the task.
+@task
+def analyze(account_id: str):
+    with StudioAgent() as agent:
+        return agent.run(
+            f"Check HubSpot activity for account {account_id} "
+            f"and assess churn risk with supporting evidence."
+        )["output"]
 ```
 
 ### Workflow Composition
@@ -66,24 +69,32 @@ a >> (b | c) >> d         # Fan-out/fan-in
 
 Delegate AI reasoning to Studio's Claude Agent SDK with access to 100+ MCP tools (HubSpot, Slack, Google Calendar, Gainsight, etc.).
 
+**Canonical pattern**: open a fresh `StudioAgent` inside each task and let the `with` block close it when the task ends. Pass state between tasks through return values / channel parameters — not through shared agent memory.
+
 ```python
+from graflow import task, workflow
 from studio_agent import StudioAgent
 
-with workflow("example") as ctx:
-    # Register once — session shared across all tasks in this run
-    ctx.register_llm_agent("studio", lambda _: StudioAgent())
 
-    @task(inject_llm_agent="studio")
-    def research(agent):
-        return agent.run("Find all deals closing this week in HubSpot")["output"]
-
-    @task(inject_llm_agent="studio")
-    def notify(agent, deals: list):
-        # Agent remembers research results (shared session)
+@task
+def research() -> str:
+    with StudioAgent() as agent:
         return agent.run(
-            f"Post a summary of {len(deals)} closing deals to #sales on Slack"
+            "Find all HubSpot deals closing this week. Return as JSON."
         )["output"]
 
+
+@task
+def notify(deals: str) -> str:
+    # Fresh session — pass prior output explicitly through the prompt.
+    with StudioAgent() as agent:
+        return agent.run(
+            f"Deals:\n{deals}\n\n"
+            f"Post a one-paragraph summary to #sales on Slack."
+        )["output"]
+
+
+with workflow("example") as ctx:
     research >> notify
     ctx.execute("research")
 ```
@@ -92,10 +103,10 @@ with workflow("example") as ctx:
 
 | Approach | Use When |
 |---|---|
-| `inject_llm_agent="studio"` | Need MCP tools, AI reasoning, natural language analysis |
+| Ephemeral `StudioAgent` | Need MCP tools, AI reasoning, natural language analysis |
 | Direct Python (no agent) | Deterministic logic, scoring, filtering, data transforms |
 
-See [Studio Agent Bridge](references/studio-agent-bridge.md) for full API, session sharing, and MCP tool filtering.
+**Do not** register an agent at the workflow level (`ctx.register_llm_agent(...)`) and share it across tasks. That keeps a Claude session open through every intervening deterministic task and couples tasks to implicit agent memory instead of explicit channel state. See [Studio Agent Bridge](references/studio-agent-bridge.md) for the one narrow exception (multi-turn chain-of-thought inside a single task) and the full `StudioAgent` API.
 
 ### Channel Communication
 
@@ -148,22 +159,27 @@ ParallelGroup([a, b, c], name="quorum", execution_policy=ExecutionPolicy.AT_LEAS
 
 ## Output File Structure
 
-Every workflow produces two files plus optional supporting files:
+Every workflow directory contains a manifest, the workflow code, and pinned dependencies, plus optional supporting files:
 
 ```
 {workflow-id}/
+├── manifest.yml          # Metadata, triggers, permissions, execution config
 ├── workflow.py           # Graflow workflow definition
-├── workflow.yaml         # Metadata, triggers, execution config
 ├── requirements.txt      # Python dependencies (pinned versions)
+├── guide.md              # Human-readable description / run notes (optional)
 ├── reference/            # Context files for AI nodes (optional)
 └── data/                 # Input data, configs (optional)
 ```
 
-**workflow.yaml** (minimal):
+**manifest.yml** (minimal):
 
 ```yaml
 name: my-workflow
 description: What this workflow does
+permissions:
+  allow:
+    - "mcp__hubspot__*"
+    - "mcp__slack__post_message"
 triggers:
   - type: cron
     schedule: "0 9 * * *"
@@ -173,7 +189,7 @@ results:
   max_retained: 30
 ```
 
-See [workflow.yaml Reference](references/workflow-yaml.md) for all trigger types and options.
+See [manifest.yml Reference](references/manifest-yml.md) for all trigger types, the `permissions.allow` syntax, and every option.
 
 **requirements.txt**:
 
@@ -181,6 +197,8 @@ See [workflow.yaml Reference](references/workflow-yaml.md) for all trigger types
 graflow>=0.1.8
 studio-agent @ file:///path/to/studio/python/studio_agent
 ```
+
+Studio's scaffold fills in the correct `file://` path to the bundled `studio_agent` package automatically.
 
 **IMPORTANT**: Always pin dependency versions. Avoid open-ended ranges for production workflows.
 
@@ -211,22 +229,23 @@ studio-agent @ file:///path/to/studio/python/studio_agent
 scan >> evaluate >> notify
 
 ## Studio Agent Usage
-- scan: HubSpot MCP tools, shared session
-- notify: Slack MCP tool, references scan context
+- scan: ephemeral session, HubSpot MCP tools
+- notify: ephemeral session, Slack MCP tool; receives at-risk list via channel
 ```
 
 3. **Present to user** — Show the task graph diagram and key decisions. Iterate until approved. **Do not proceed to Phase 2 without explicit approval.**
 
 ### Phase 2: Implement
 
-Write `workflow.py` + `workflow.yaml` + `requirements.txt` based on the approved design.
+Write `workflow.py` + `manifest.yml` + `requirements.txt` based on the approved design.
 
 **Checklist**:
-- [ ] `@task` decorators with appropriate injections
+- [ ] `@task` decorators with appropriate injections (`inject_context=True` only where needed)
 - [ ] `>>` / `|` composition matching the design graph
-- [ ] `ctx.register_llm_agent("studio", ...)` for AI tasks
+- [ ] Every agent-backed task opens its own `with StudioAgent() as agent:` block
+- [ ] Cross-task state is passed through return values / channel parameters (not shared agent memory)
 - [ ] Deterministic tasks for scoring, filtering, routing
-- [ ] `workflow.yaml` with correct triggers
+- [ ] `manifest.yml` with correct triggers and a minimal `permissions.allow` list
 - [ ] Pinned dependencies in `requirements.txt`
 
 ### Phase 3: Review
@@ -234,15 +253,17 @@ Write `workflow.py` + `workflow.yaml` + `requirements.txt` based on the approved
 **Checklist**:
 - [ ] All tasks from design are implemented
 - [ ] Graph matches design diagram
-- [ ] Studio Agent prompts are specific (not vague)
+- [ ] Studio Agent prompts are specific (not vague) and re-supply any data the previous task produced
 - [ ] Deterministic tasks handle edge cases (empty lists, missing data)
-- [ ] `workflow.yaml` triggers are correct
+- [ ] `manifest.yml` triggers are correct and `permissions.allow` is as narrow as possible
 - [ ] No open-ended dependency ranges
 
 **Common issues**:
 - Missing `inject_context=True` when using `context.next_task()` or channels
-- Forgetting `ctx.register_llm_agent()` before using `inject_llm_agent`
+- Assuming the agent "remembers" a previous task's output — each task has a fresh session, so the caller must re-supply the data in the prompt
+- Registering a workflow-level `ctx.register_llm_agent(...)` instead of using the ephemeral-per-task pattern
 - Vague prompts — be specific about what data to fetch/analyze
+- Using an MCP tool that is not listed in `manifest.yml`'s `permissions.allow`
 
 ## Templates
 
@@ -258,8 +279,8 @@ Write `workflow.py` + `workflow.yaml` + `requirements.txt` based on the approved
 
 - [Workflow Patterns](references/workflow-patterns.md) — Task definitions, composition, channels, binding
 - [Advanced Patterns](references/advanced-patterns.md) — Dynamic tasks, HITL, checkpoints
-- [Studio Agent Bridge](references/studio-agent-bridge.md) — StudioAgent API, session sharing, MCP tools
-- [workflow.yaml Reference](references/workflow-yaml.md) — Triggers, execution, results config
+- [Studio Agent Bridge](references/studio-agent-bridge.md) — StudioAgent API, ephemeral-per-task pattern, shared-session exception
+- [manifest.yml Reference](references/manifest-yml.md) — Triggers, `permissions.allow`, execution, results config
 
 ## Related Skills
 

@@ -176,7 +176,9 @@ channel < bound < injection
 
 1. **Channel** (lowest): Auto-resolved from `channel.set()`
 2. **Bound**: Passed at task creation `task(param=value)`
-3. **Injection** (highest): `inject_context`, `inject_llm_agent`
+3. **Injection** (highest): `inject_context`
+
+> Graflow also supports `inject_llm_agent`, but Studio workflows do **not** use it. The canonical Studio pattern opens an ephemeral `StudioAgent` inside the task body instead of registering a workflow-level agent. See [Studio Agent Bridge](studio-agent-bridge.md).
 
 ---
 
