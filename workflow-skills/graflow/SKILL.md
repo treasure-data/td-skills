@@ -180,8 +180,8 @@ name: my-workflow
 description: What this workflow does
 permissions:
   allow:
-    - "mcp__hubspot__*"
-    - "mcp__slack__post_message"
+    - "slack_post_message"   # Studio MCP short name
+    - "Bash"                 # shell access (needed for `tdx`)
 triggers:
   - type: cron
     schedule: "0 9 * * *"
