@@ -78,7 +78,8 @@
         "./workflow-skills/digdag",
         "./workflow-skills/llm-workflow",
         "./workflow-skills/workflow-management",
-        "./workflow-skills/dbt"
+        "./workflow-skills/dbt",
+        "./workflow-skills/graflow"
       ]
     },
     {
