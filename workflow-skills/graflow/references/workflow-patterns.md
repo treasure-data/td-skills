@@ -129,7 +129,12 @@ a >> (b | c) >> d >> (e | f | g) >> h
 
 ## Channel Communication
 
-### Basic Channel Operations
+### Two Approaches: Explicit set/get vs Auto Resolution
+
+Graflow offers two ways for tasks to share data through channels. Choose based on your workflow's complexity.
+
+**Explicit channel set/get** — The recommended approach for most workflows, especially those with 3+ tasks or non-linear data flow. You control exactly what data is written and read, and channel key names don't need to match parameter names.
+
 ```python
 @task(inject_context=True)
 def producer(ctx: TaskExecutionContext):
@@ -144,19 +149,9 @@ def consumer(ctx: TaskExecutionContext):
     config = channel.get("config")    # {"batch_size": 100}
 ```
 
-### Channel Append
-```python
-@task(inject_context=True)
-def accumulator(ctx: TaskExecutionContext):
-    channel = ctx.get_channel()
-    channel.append("results", "item1")
-    channel.append("results", "item2")
-    # channel.get("results") == ["item1", "item2"]
-```
+**Auto keyword resolution** — Simpler syntax for short, linear pipelines. Parameters matching channel keys are resolved automatically. Works well when each value is consumed by exactly one downstream task and names match exactly.
 
-### Auto Keyword Resolution
 ```python
-# Parameters matching channel keys are auto-resolved
 @task(inject_context=True)
 def setup(ctx: TaskExecutionContext):
     ctx.get_channel().set("user_name", "Alice")
@@ -167,6 +162,22 @@ def greet(user_name: str, count: int = 1):
     # user_name="Alice", count=5 — auto-resolved from channel
     for _ in range(count):
         print(f"Hello, {user_name}!")
+```
+
+**When to prefer explicit set/get:**
+- Workflow has more than 3 tasks
+- Multiple downstream tasks need the same data
+- Channel key names differ from parameter names
+- You want to read and write channels within the same task (common when a task both consumes upstream data and produces downstream data)
+
+### Channel Append
+```python
+@task(inject_context=True)
+def accumulator(ctx: TaskExecutionContext):
+    channel = ctx.get_channel()
+    channel.append("results", "item1")
+    channel.append("results", "item2")
+    # channel.get("results") == ["item1", "item2"]
 ```
 
 ### Parameter Priority

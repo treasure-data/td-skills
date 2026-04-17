@@ -1,6 +1,6 @@
 # Studio Agent Bridge
 
-Graflow workflows delegate AI reasoning to Treasure Studio's Claude Agent SDK via the `StudioAgent` class. This gives workflow tasks access to Studio's 100+ MCP tools (HubSpot, Slack, Google Calendar, Gainsight, etc.) without configuring credentials in Python.
+Graflow workflows delegate AI reasoning to Treasure Studio's Claude Agent SDK via the `StudioAgent` class. This gives workflow tasks access to Studio's 100+ MCP tools (Slack, Google Calendar, CRM, etc.) without configuring credentials in Python.
 
 ## Prerequisites
 
@@ -9,29 +9,34 @@ Graflow workflows delegate AI reasoning to Treasure Studio's Claude Agent SDK vi
 
 ## Canonical Pattern — Ephemeral Session Per Task
 
-**Open a fresh `StudioAgent` inside each task and let the context manager close it when the task ends.** Pass state between tasks through task return values / channel parameters, not through shared agent memory.
+**Open a fresh `StudioAgent` inside each task and let the context manager close it when the task ends.** Pass state between tasks through explicit `channel.set()` / `channel.get()`, not through shared agent memory.
 
 ```python
 from graflow import task, workflow
+from graflow.core.context import TaskExecutionContext
 from studio_agent import StudioAgent
 
 
-@task
-def fetch_data() -> str:
+@task(inject_context=True)
+def fetch_data(ctx: TaskExecutionContext) -> str:
     with StudioAgent() as agent:
         result = agent.run(
-            "List all active HubSpot deals closing this month. Return as JSON."
+            "List all active deals closing this month. Return as JSON."
         )
-    return result["output"]
+    data = result["output"]
+    ctx.get_channel().set("deals", data)
+    return data
 
 
-@task
-def summarize(data: str) -> str:
-    # Runs in a new session — no memory of fetch_data's session.
-    # Pass the data explicitly through the prompt.
+@task(inject_context=True)
+def summarize(ctx: TaskExecutionContext) -> str:
+    deals = ctx.get_channel().get("deals")
+    # Fresh session — no memory of fetch_data's session.
+    # Re-supply the data explicitly and name the tool to use.
     with StudioAgent() as agent:
         result = agent.run(
-            f"Summarize these deals in one paragraph:\n\n{data}"
+            f"Summarize these deals in one paragraph:\n\n{deals}\n\n"
+            f"Then post the summary to #sales on Slack. Use slack_post_message tool."
         )
     return result["output"]
 
@@ -46,6 +51,102 @@ with workflow("example") as ctx:
 - **No idle sessions during deterministic tasks.** If a workflow interleaves Python-only tasks (scoring, filtering, merging) with agent tasks, a shared session would stay open — holding Studio resources — the whole time. Ephemeral sessions exist only while an agent is actively running.
 - **Parallel branches are independent.** Each parallel task gets its own session, so a slow or failed branch never blocks another from closing.
 - **Matches digdag's task-independent model.** State moves between tasks through explicit outputs, not through implicit agent memory, so the graph stays readable and each task is unit-testable on its own.
+
+## Agent Prompt Tips
+
+The prompt you pass to `agent.run()` is the single most important factor in task reliability. These patterns come from production workflows:
+
+### Name the MCP tool explicitly
+
+The agent has access to many tools but doesn't always pick the right one. Naming the tool removes ambiguity:
+
+```python
+# Good — agent knows exactly which tool to call
+agent.run("Post a summary to #ops. Use slack_post_message tool.")
+
+# Bad — agent may try slack_search_messages, read_channel, or other tools first
+agent.run("Post a summary to #ops on Slack.")
+```
+
+### Re-supply all data the task needs
+
+Each task starts a fresh agent session with no memory of prior tasks. Include all necessary data in the prompt, even if it feels redundant:
+
+```python
+@task(inject_context=True)
+def draft_report(ctx: TaskExecutionContext) -> str:
+    stats = ctx.get_channel().get("stats")
+    summaries = ctx.get_channel().get("summaries")
+    with StudioAgent() as agent:
+        result = agent.run(
+            f"Write a weekly report.\n\n"
+            f"## Stats\n{stats}\n\n"
+            f"## Summaries\n{summaries}\n\n"
+            f"Structure as: Highlights, Details by Category, Metrics."
+        )
+    return result["output"]
+```
+
+### Be specific about output format
+
+Tell the agent exactly what format you need, especially when the next task will parse the output:
+
+```python
+agent.run("List overdue items. Return as a JSON array of objects with keys: id, title, days_overdue.")
+```
+
+## When to Use Each Task Type
+
+| Approach | Use When |
+|---|---|
+| **Ephemeral `StudioAgent`** | Need MCP tools (Slack, Calendar, CRM), AI reasoning, natural language analysis, content generation |
+| **Direct Python** (no agent) | Deterministic logic, data transformation, scoring, filtering, classification |
+| **`subprocess.run()`** | Calling external CLIs (`gh`, `tdx`, `curl`) — faster and cheaper than routing a CLI call through an agent |
+| **Mix all three** | Most real workflows — subprocess for data fetching, agent for analysis/notification, Python for logic |
+
+### Example: Mixed Approach
+
+```python
+import subprocess, json
+
+@task(inject_context=True)
+def fetch_data(ctx: TaskExecutionContext) -> list:
+    """Subprocess: call a CLI tool directly."""
+    result = subprocess.run(
+        ["some-cli", "list", "--json"],
+        capture_output=True, text=True, timeout=60,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"CLI failed: {result.stderr}")
+    items = json.loads(result.stdout)
+    ctx.get_channel().set("items", items)
+    return items
+
+
+@task(inject_context=True)
+def analyze(ctx: TaskExecutionContext) -> str:
+    """Agent: AI reasoning on the fetched data."""
+    items = ctx.get_channel().get("items")
+    with StudioAgent() as agent:
+        result = agent.run(
+            f"Analyze these items and identify key trends:\n\n"
+            f"{json.dumps(items[:50], indent=2)}\n\n"
+            f"Return as a structured markdown report."
+        )
+    analysis = result["output"]
+    ctx.get_channel().set("analysis", analysis)
+    return analysis
+
+
+@task
+def calculate_score(items: list) -> float:
+    """Deterministic: pure logic, no I/O overhead."""
+    weights = {"activity": 0.4, "tickets": 0.3, "engagement": 0.3}
+    return sum(items.get(k, 0) * w for k, w in weights.items())
+
+
+fetch_data >> (analyze | calculate_score) >> report
+```
 
 ## StudioAgent API
 
@@ -67,7 +168,7 @@ Both defaults are what Studio sets when launching a workflow subprocess — **ca
 Send a prompt to Studio's Claude Agent SDK.
 
 ```python
-result = agent.run("Check HubSpot for account A123 and assess churn risk")
+result = agent.run("Check account A123 and assess churn risk")
 ```
 
 | Parameter | Type | Description |
@@ -129,46 +230,6 @@ def safe_query() -> str:
 ```
 
 `StudioAgentError` wraps both connection failures (`requests.ConnectionError`) and HTTP errors from the server, with the Studio base URL and response text included.
-
-## Studio Agent vs Direct Code
-
-| Approach | Use When |
-|---|---|
-| **Ephemeral `StudioAgent`** | Need MCP tools (CRM, Slack, Calendar), AI reasoning, natural language analysis |
-| **Direct Python** (no agent) | Deterministic logic, data transformation, scoring, filtering, math |
-| **Mix both** | Most workflows — agent tasks for data gathering/analysis, Python tasks for decisions/routing |
-
-### Example: Mixed Approach
-
-```python
-@task
-def gather_data() -> dict:
-    """AI: fetch and summarize data from multiple sources."""
-    with StudioAgent() as agent:
-        return agent.run(
-            "Get account A123's HubSpot activity, recent support tickets, "
-            "and last meeting notes from Google Calendar. Return as JSON."
-        )["output"]
-
-
-@task
-def calculate_score(data: dict) -> float:
-    """Deterministic: compute health score from structured data."""
-    weights = {"activity": 0.4, "tickets": 0.3, "meetings": 0.3}
-    return sum(data.get(k, 0) * w for k, w in weights.items())
-
-
-@task(inject_context=True)
-def route(context, score: float) -> None:
-    """Deterministic: branch based on score."""
-    if score < 0.3:
-        context.next_task(urgent_intervention, goto=True)
-    elif score < 0.6:
-        context.next_task(schedule_checkin)
-
-
-gather_data >> calculate_score >> route
-```
 
 ## Exception: Shared Session Within a Single Task
 
