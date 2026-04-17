@@ -102,6 +102,8 @@ def root(ctx: TaskExecutionContext):
 
 ## Human-in-the-Loop (HITL)
 
+> ⚠️ **Studio compatibility**: The Studio agentic-workflow runtime does **not** yet surface an approval UI for HITL requests. `ctx.request_feedback()` blocks on a filesystem poll for `feedback_data/responses/{feedback_id}.json` — if nothing writes that file before the `timeout`, the task raises `FeedbackTimeoutError` and the workflow run fails. For Studio-targeted workflows, prefer out-of-band review (post the draft to a Slack review channel and act on it separately) until Phase 2 adds the UI. The patterns below are still correct Graflow API, and will work unchanged once the UI lands.
+
 ### Basic Approval
 ```python
 @task(inject_context=True)

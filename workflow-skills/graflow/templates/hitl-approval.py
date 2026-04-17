@@ -9,6 +9,18 @@ Each agent-backed task opens its own ephemeral Studio Agent session.
 The ``request_approval`` task stores decision state on the channel so
 that ``route_action`` (which also opens a fresh session) can branch
 deterministically without relying on shared agent memory.
+
+.. warning::
+
+    The Studio agentic-workflow runtime does NOT yet surface an
+    approval UI. Running this template under Studio causes
+    ``request_approval`` to block on a filesystem poll for
+    ``feedback_data/responses/{feedback_id}.json`` until the
+    ``timeout`` elapses and the task raises ``FeedbackTimeoutError``.
+    Either skip HITL in Studio-targeted workflows, or run this
+    template outside Studio and drop the response JSON manually to
+    unblock it. Once Studio Phase 2 lands, this template will work
+    unchanged.
 """
 
 from graflow import task, workflow
