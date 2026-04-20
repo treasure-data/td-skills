@@ -200,7 +200,8 @@ GROUP BY 1 ORDER BY 1
 
 1. Confirm parent segment (audience) as in Workflow 1.
 2. List child segments:
-   - `tdx sg list --parent-segment "{ParentName}" --format json`
+   - `tdx sg use "{ParentName}"`
+   - `tdx sg list --format json`
 3. With the user, choose:
    - **Training Population** — base population segment or All Profiles.
    - **Scoring Target** — profiles that already performed the target behavior.
@@ -333,17 +334,19 @@ tdx api -X GET --type cdp /entities/predictive_segments/{id}/executions
 
 ### 4. Verify that scores are written
 
-- Predictive scoring enriches the parent segment customers table (cdp_audience_{id}.customers) with new columns, for example:
+- Predictive scoring enriches the parent segment customers table (cdp_audience_{id}.customers) with new columns:
 
-  - `predicted_churn_score`
-  - `predicted_conversion_score`
-  - `predicted_ltv`
+  - `td_predictive_score_{id}` — The prediction score (0-100 scale)
+  - `td_predictive_score_{id}_train` — Training set flag (1 or 0)
+
+  Where `{id}` is the predictive segment model ID (e.g., `td_predictive_score_10248`).
 
 - Verify with:
 
 ```bash
-tdx query "SELECT predicted_churn_score, COUNT(*) AS cnt
+tdx query "SELECT td_predictive_score_{id}, COUNT(*) AS cnt
            FROM cdp_audience_{audienceId}.customers
+           WHERE td_predictive_score_{id} IS NOT NULL
            GROUP BY 1
            ORDER BY 1"
 ```
@@ -405,10 +408,10 @@ rule:
   type: And
   conditions:
     - type: Value
-      attribute: predicted_churn_score
+      attribute: td_predictive_score_{id}
       operator:
         type: Greater
-        value: 0.8
+        value: 80
 ```
 
 - Validate and push:
