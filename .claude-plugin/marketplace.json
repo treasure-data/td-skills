@@ -145,11 +145,12 @@
     },
     {
       "name": "analysis-skills",
-      "description": "SEO and AEO analysis skills including unified SEO/AEO audit using GSC, SerpAPI, GA4, and Playwright",
+      "description": "SEO and AEO analysis skills including unified SEO/AEO audit using GSC, SerpAPI, GA4, and Playwright. Customer segmentation with adaptive 9-segment RFM classification for CDP purchase data.",
       "source": "./",
       "strict": false,
       "skills": [
-        "./analysis-skills/seo-analysis"
+        "./analysis-skills/seo-analysis",
+        "./analysis-skills/9segment-adaptive"
       ]
     },
     {

@@ -221,6 +221,12 @@ tests:
   - prompt: "Run SEO analysis on my website"
     expected: seo-analysis
 
+  - prompt: "Classify customers into segments based on purchase behavior"
+    expected: 9segment-adaptive
+
+  - prompt: "Create an RFM segmentation for my e-commerce customers"
+    expected: 9segment-adaptive
+
   - prompt: "Create a grid dashboard with KPIs and charts"
     expected: grid-dashboard
 
