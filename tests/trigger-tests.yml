@@ -64,6 +64,15 @@ tests:
   - prompt: "Query parent segment data to analyze customer behaviors"
     expected: parent-segment-analysis
 
+  - prompt: "Create a predictive scoring model to predict customer churn"
+    expected: predictive-scoring
+
+  - prompt: "Show me feature importance for my propensity model"
+    expected: predictive-scoring
+
+  - prompt: "Build a lookalike model in Audience Studio"
+    expected: predictive-scoring
+
   - prompt: "Manage workflows using tdx wf commands"
     expected: workflow
 
