@@ -213,6 +213,63 @@ with StudioAgent() as agent:
     result = agent.run("...")
 ```
 
+## Human-in-the-Loop: `request_feedback()`
+
+The `studio_agent` package provides a standalone `request_feedback()` function that pauses the workflow until a human responds via Studio's approval UI.
+
+```python
+from studio_agent import request_feedback
+
+decision = request_feedback(
+    prompt="Send the renewal pitch to Acme Corp?",
+    options=["Send now", "Queue for tomorrow"],
+    context={
+        "summary": "3 sessions this week, ARR $120k",
+        "draft": "Hi Pat — just checking in on Q2 goals...",
+    },
+    timeout=3600,
+)
+
+if decision["status"] == "approved":
+    selected = decision["choice"]    # "Send now" or "Queue for tomorrow"
+    comment = decision["comment"]    # Optional free-form text from user
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `prompt` | `str` | (required) | Question shown to the user (1–2000 chars) |
+| `options` | `list[str] \| None` | `None` | Up to 4 labeled options. `None` = free-form only |
+| `context` | `dict \| None` | `None` | Key/value pairs rendered beside the prompt |
+| `timeout` | `int` | `3600` | Max seconds to wait. Server clamps to [60, 86400] |
+| `base_url` | `str \| None` | env-resolved | Override Studio API base URL |
+| `auth_token` | `str \| None` | env-resolved | Override per-run auth token |
+
+### Return Value
+
+Returns a dict with three keys:
+
+| Key | Type | Description |
+|---|---|---|
+| `status` | `str` | `"approved"` \| `"rejected"` \| `"timeout"` \| `"cancelled"` |
+| `choice` | `str \| None` | Selected option label, or `None` if no options provided |
+| `comment` | `str \| None` | Free-form text the user entered, or `None` |
+
+### How It Works
+
+1. `request_feedback()` POSTs to Studio's `/feedback/create` endpoint
+2. Studio displays an approval card in the Agentic Workflows panel + sends an OS notification
+3. The function blocks on HTTP long-polling (`/feedback/{id}/wait`) until the user responds
+4. When the user clicks Approve/Reject, the resolution is returned to the caller
+
+### Notes
+
+- `request_feedback()` is independent of `StudioAgent` — it doesn't require an active agent session. Call it anywhere in your workflow code.
+- `auth_token` and `base_url` are auto-resolved from environment variables (`STUDIO_AUTH_TOKEN`, `STUDIO_API_PORT`) set by Studio when launching the workflow subprocess.
+- If Studio is closed while a feedback request is pending, `status` becomes `"cancelled"`.
+- Set `execution.timeout` in `manifest.yml` high enough to cover human response time (e.g. 3900s for a 1-hour HITL + 300s agent margin).
+
 ## Error Handling
 
 ```python

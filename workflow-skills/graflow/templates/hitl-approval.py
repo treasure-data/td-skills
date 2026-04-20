@@ -1,31 +1,20 @@
 """HITL Approval Workflow
 
-Drafts content using Studio Agent, pauses for human approval,
-then sends or revises based on feedback.
+Drafts content using Studio Agent, pauses for human approval via
+Studio's approval UI, then sends or revises based on feedback.
 
 Graph: draft_content >> request_approval >> route_action
 
 Each agent-backed task opens its own ephemeral Studio Agent session.
-The ``request_approval`` task stores decision state on the channel so
-that ``route_action`` (which also opens a fresh session) can branch
-deterministically without relying on shared agent memory.
-
-.. warning::
-
-    The Studio agentic-workflow runtime does NOT yet surface an
-    approval UI. Running this template under Studio causes
-    ``request_approval`` to block on a filesystem poll for
-    ``feedback_data/responses/{feedback_id}.json`` until the
-    ``timeout`` elapses and the task raises ``FeedbackTimeoutError``.
-    Either skip HITL in Studio-targeted workflows, or run this
-    template outside Studio and drop the response JSON manually to
-    unblock it. Once Studio Phase 2 lands, this template will work
-    unchanged.
+The ``request_approval`` task uses ``request_feedback()`` from the
+``studio_agent`` package to display an approval card in Studio and
+block until the user responds. Decision state is stored on the channel
+so ``route_action`` can branch deterministically.
 """
 
 from graflow import task, workflow
 from graflow.core.context import TaskExecutionContext
-from studio_agent import StudioAgent
+from studio_agent import StudioAgent, request_feedback
 
 
 @task
@@ -43,26 +32,31 @@ def draft_content() -> str:
 
 @task(inject_context=True)
 def request_approval(ctx: TaskExecutionContext, draft: str) -> bool:
-    """Pause workflow and wait for human review."""
-    response = ctx.request_feedback(
-        feedback_type="approval",
-        prompt=(
-            f"Review this executive update draft:\n\n{draft}\n\n"
-            "Approve to send, or reject with revision notes."
-        ),
-        timeout=3600.0,
+    """Pause workflow and wait for human review via Studio approval UI."""
+    decision = request_feedback(
+        prompt="Review this executive update draft. Approve to send, or reject with revision notes.",
+        options=["Send as-is", "Send with edits"],
+        context={
+            "draft": draft[:1000],
+            "type": "Weekly CS Update",
+        },
+        timeout=3600,
     )
 
     channel = ctx.get_channel()
-    if response.approved:
+    if decision["status"] == "approved":
         channel.set("action", "send")
         channel.set("final_content", draft)
-    else:
+        if decision["comment"]:
+            channel.set("send_note", decision["comment"])
+    elif decision["status"] == "rejected":
         channel.set("action", "revise")
-        channel.set("revision_notes", response.reason)
+        channel.set("revision_notes", decision.get("comment") or "No specific notes provided")
         channel.set("original_draft", draft)
+    else:
+        channel.set("action", "abort")
 
-    return response.approved
+    return decision["status"] == "approved"
 
 
 @task(inject_context=True)
@@ -75,12 +69,16 @@ def route_action(ctx: TaskExecutionContext, approved: bool) -> str:
     channel = ctx.get_channel()
     action = channel.get("action")
 
+    if action == "abort":
+        return "Workflow aborted — no human response or run cancelled."
+
     if action == "send":
         content = channel.get("final_content")
         with StudioAgent() as agent:
             result = agent.run(
                 f"Send this executive update via email to the CS leadership "
-                f"distribution list and post to #cs-leadership on Slack:\n\n{content}"
+                f"distribution list and post to #cs-leadership on Slack. "
+                f"Use slack_post_message tool.\n\n{content}"
             )
         return result["output"]
 

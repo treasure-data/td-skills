@@ -38,12 +38,6 @@ execution:
   timeout: 300                        # Max execution time in seconds (default: 300)
   max_retries: 2                      # Retry on failure (default: 0)
 
-# HITL settings (Phase 2 — not yet wired into Studio runtime; see warning below)
-hitl:
-  enabled: false
-  approval_channel: slack             # slack | studio
-  timeout: 3600                       # Wait time for human response (seconds)
-
 # Results retention
 results:
   max_retained: 30                    # Number of run results to keep (default: 30)

@@ -102,63 +102,108 @@ def root(ctx: TaskExecutionContext):
 
 ## Human-in-the-Loop (HITL)
 
-> ⚠️ **Studio compatibility**: The Studio agentic-workflow runtime does **not** yet surface an approval UI for HITL requests. `ctx.request_feedback()` blocks on a filesystem poll for `feedback_data/responses/{feedback_id}.json` — if nothing writes that file before the `timeout`, the task raises `FeedbackTimeoutError` and the workflow run fails. For Studio-targeted workflows, prefer out-of-band review (post the draft to a Slack review channel and act on it separately) until Phase 2 adds the UI. The patterns below are still correct Graflow API, and will work unchanged once the UI lands.
+Studio provides a built-in HITL mechanism via `request_feedback()` from the `studio_agent` package. When a workflow calls `request_feedback()`, Studio displays an approval card in the Agentic Workflows panel (plus an OS notification), and the call blocks until the user responds or the timeout expires.
+
+Use `request_feedback()` instead of Graflow's native `ctx.request_feedback()` for workflows running under Studio. The Studio function uses HTTP long-polling to the Local API Server rather than filesystem polling, and surfaces a rich approval UI with options, context display, and free-form comments.
 
 ### Basic Approval
 ```python
-@task(inject_context=True)
-def approval_task(ctx: TaskExecutionContext):
-    response = ctx.request_feedback(
-        feedback_type="approval",
-        prompt="Approve deployment to production?",
-        timeout=300.0,
-    )
+from studio_agent import request_feedback
 
-    if response.approved:
-        ctx.next_task(deploy())
-    else:
-        ctx.cancel_workflow(error=f"Rejected: {response.reason}")
+@task
+def approval_gate(draft: str) -> dict:
+    decision = request_feedback(
+        prompt=f"Approve this draft?\n\n{draft}",
+        timeout=3600,
+    )
+    if decision["status"] != "approved":
+        raise RuntimeError(f"Rejected: {decision.get('comment', 'no reason')}")
+    return decision
 ```
 
-### Text Input
+### Selection with Options
 ```python
 @task(inject_context=True)
-def text_input_task(ctx: TaskExecutionContext):
-    response = ctx.request_feedback(
-        feedback_type="text",
-        prompt="Enter the target Slack channel:",
-        timeout=60.0,
-    )
-    channel_name = response.text
-```
-
-### Selection
-```python
-@task(inject_context=True)
-def selection_task(ctx: TaskExecutionContext):
-    response = ctx.request_feedback(
-        feedback_type="selection",
+def select_action(ctx: TaskExecutionContext):
+    decision = request_feedback(
         prompt="Select action for at-risk account:",
-        options=["schedule_call", "send_email", "escalate_to_manager", "skip"],
-        timeout=120.0,
+        options=["Schedule call", "Send email", "Escalate to manager", "Skip"],
+        timeout=300,
     )
-    selected_action = response.selected
+    ctx.get_channel().set("action", decision["choice"])
 ```
 
-### Channel Integration
+### Rich Context Display
 ```python
 @task(inject_context=True)
-def feedback_to_channel(ctx: TaskExecutionContext):
-    response = ctx.request_feedback(
-        feedback_type="selection",
-        prompt="Select processing mode:",
-        options=["conservative", "balanced", "aggressive"],
-        channel_key="processing_mode",  # Auto-write to channel
-        write_to_channel=True,
-        timeout=60.0,
+def review_outreach(ctx: TaskExecutionContext):
+    email_body = ctx.get_channel().get("email_body")
+    account = ctx.get_channel().get("account")
+    decision = request_feedback(
+        prompt="Send this outreach email?",
+        options=["Send now", "Queue for tomorrow", "Discard"],
+        context={
+            "account": account["name"],
+            "ARR": f"${account['arr']:,.0f}",
+            "email_preview": email_body[:500],
+        },
+        timeout=3600,
     )
-    # response.selected is also written to channel["processing_mode"]
+    ctx.get_channel().set("send_decision", decision)
 ```
+
+### Handling All Response Statuses
+```python
+decision = request_feedback(prompt="Deploy to production?", timeout=1800)
+
+if decision["status"] == "approved":
+    # User clicked Approve
+    print(f"Approved. Choice: {decision['choice']}, Comment: {decision['comment']}")
+elif decision["status"] == "rejected":
+    # User clicked Reject
+    print(f"Rejected. Reason: {decision['comment']}")
+elif decision["status"] == "timeout":
+    # No response within timeout
+    print("No response — aborting.")
+elif decision["status"] == "cancelled":
+    # Studio closed or workflow run cancelled
+    print("Cancelled — exiting cleanly.")
+```
+
+### `request_feedback()` API
+
+```python
+from studio_agent import request_feedback
+
+decision = request_feedback(
+    prompt="Question for the user (1–2000 chars)",
+    options=["Option A", "Option B"],   # Up to 4 labeled options (optional)
+    context={"key": "value"},           # Key/value pairs shown beside the prompt (optional)
+    timeout=3600,                       # Max seconds to wait (clamped to [60, 86400])
+)
+```
+
+**Returns** a dict:
+
+| Key | Type | Description |
+|---|---|---|
+| `status` | `str` | `"approved"` \| `"rejected"` \| `"timeout"` \| `"cancelled"` |
+| `choice` | `str \| None` | Selected option label, or `None` |
+| `comment` | `str \| None` | Free-form text the user entered, or `None` |
+
+**Raises** `StudioAgentError` if Studio is unreachable.
+
+### Timeout Strategy for HITL Workflows
+
+When a workflow includes `request_feedback()`, the `execution.timeout` in `manifest.yml` must account for human response time. Budget the `request_feedback` timeout **plus** agent task time:
+
+| Workflow Shape | Recommended `execution.timeout` |
+|---|---|
+| 1 agent task + 1 HITL (1h) | 3900 (3600 + 300 margin) |
+| 2 agent tasks + 1 HITL (1h) | 4200 |
+| Agent + HITL + agent (chain) | 4500+ |
+
+Set `execution.timeout` >= the sum of all `request_feedback` timeouts plus agent execution time.
 
 ---
 
