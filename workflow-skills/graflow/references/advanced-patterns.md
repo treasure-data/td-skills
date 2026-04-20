@@ -117,7 +117,7 @@ def approval_gate(draft: str) -> dict:
         timeout=3600,
     )
     if decision["status"] != "approved":
-        raise RuntimeError(f"Rejected: {decision.get('comment', 'no reason')}")
+        raise RuntimeError(f"Rejected: {decision.get('comment') or 'no reason'}")
     return decision
 ```
 

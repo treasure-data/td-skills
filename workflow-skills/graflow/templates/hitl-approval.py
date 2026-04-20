@@ -44,19 +44,17 @@ def request_approval(ctx: TaskExecutionContext, draft: str) -> bool:
     )
 
     channel = ctx.get_channel()
-    if decision["status"] == "approved":
+    if decision["status"] == "approved" and decision.get("choice") != "Send with edits":
         channel.set("action", "send")
         channel.set("final_content", draft)
-        if decision["comment"]:
-            channel.set("send_note", decision["comment"])
-    elif decision["status"] == "rejected":
+    elif decision["status"] in ("approved", "rejected"):
         channel.set("action", "revise")
         channel.set("revision_notes", decision.get("comment") or "No specific notes provided")
         channel.set("original_draft", draft)
     else:
         channel.set("action", "abort")
 
-    return decision["status"] == "approved"
+    return channel.get("action") == "send"
 
 
 @task(inject_context=True)
