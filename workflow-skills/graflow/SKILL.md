@@ -15,11 +15,9 @@ Build Python workflow pipelines combining **deterministic flow control** (branch
 | Add Studio Agent to a task | See [Studio Agent Integration](#studio-agent-integration) |
 | Use CLI tools without agent overhead | See [Subprocess Tasks](#subprocess-tasks) |
 | Add branching or loops | See [Dynamic Control Flow](#dynamic-control-flow) |
-| Add human approval gates (see Studio note below) | See [HITL Patterns](references/advanced-patterns.md#human-in-the-loop-hitl) |
+| Add human approval gates | See [HITL Patterns](references/advanced-patterns.md#human-in-the-loop-hitl) |
 | Configure triggers and tool permissions | See [manifest.yml Reference](references/manifest-yml.md) |
 | Browse templates | See [templates/](templates/) |
-
-> **HITL + Studio**: `ctx.request_feedback()` works as a Graflow primitive, but the Studio agentic-workflow runtime does **not** yet provide an approval UI. A Studio-launched workflow that calls `request_feedback()` will block on a filesystem poll until the timeout expires (by default, failing the run). For Studio-targeted workflows, either skip the HITL task or keep humans in the loop out-of-band (e.g. post the draft to a Slack review channel for manual follow-up). When Studio Phase 2 lands, the task will surface in the UI without code changes.
 
 ## When to Use Graflow
 
@@ -372,7 +370,7 @@ Write `workflow.py` + `manifest.yml` + `requirements.txt` based on the approved 
 | [cs-health-check.py](templates/cs-health-check.py) | `scan >> evaluate >> alert` | CS account monitoring |
 | [sdr-sequence.py](templates/sdr-sequence.py) | `qualify >> (enrich_co \| enrich_ct) >> personalize >> schedule` | SDR outreach automation |
 | [parallel-enrichment.py](templates/parallel-enrichment.py) | `fetch >> (crm \| usage \| support) >> merge >> report` | Multi-source data enrichment |
-| [hitl-approval.py](templates/hitl-approval.py) (Studio UI pending) | `draft >> approve >> send/revise` | Human-gated content delivery (not runnable in Studio until Phase 2) |
+| [hitl-approval.py](templates/hitl-approval.py) | `draft >> approve >> send/revise` | Human-gated content delivery with Studio approval UI |
 
 ## References
 
