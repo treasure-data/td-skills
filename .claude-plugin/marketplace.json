@@ -110,7 +110,6 @@
         "./tdx-skills/agent-prompt",
         "./tdx-skills/workflow",
         "./tdx-skills/parent-segment-analysis",
-        "./tdx-skills/predictive-scoring",
         "./tdx-skills/engage"
       ]
     },

@@ -25,23 +25,23 @@ pres.layout = 'LAYOUT_WIDE'; // 16:9
 function addLogo(slide, variant = 'main') {
   const logoConfig = {
     main: {
-      path: 'assets/logos/treasure-ai-logo.png',
+      path: '../references/logos/treasure-ai-logo.png',
       x: 0.2, y: 0.15, w: 1.5, h: 0.35,
     },
     icon: {
-      path: 'assets/logos/treasure-ai-icon.png',
+      path: '../references/logos/treasure-ai-icon.png',
       x: 11.5, y: 6.5, w: 0.5, h: 0.5,
     },
   };
 
-  const config = logoConfig[variant];
+  const config = logoConfig[variant] || logoConfig.main;
   slide.addImage(config);
 }
 
 // **方法2: Base64エンコードから追加（オフライン環境向け）**
 function addLogoFromBase64(slide) {
   // ロゴをBase64エンコードする場合:
-  // const logoData = fs.readFileSync('assets/logos/treasure-ai-logo.png').toString('base64');
+  // const logoData = fs.readFileSync('../references/logos/treasure-ai-logo.png').toString('base64');
   // const dataUrl = `data:image/png;base64,${logoData}`;
 
   slide.addImage({
@@ -56,12 +56,7 @@ function createTitleSlide() {
 
   // グラデーション背景（簡易版：紺色）
   // 本格的なグラデーションはPowerPointで直接定義
-  slide.background = {
-    fill: {
-      type: 'solid',
-      color: COLORS.navy,
-    },
-  };
+  slide.background = { color: COLORS.navy };
 
   // ロゴ追加（左上）
   addLogo(slide, 'main');
@@ -87,7 +82,7 @@ function createTitleSlide() {
 // コンテンツスライド作成
 function createContentSlide(title, content) {
   const slide = pres.addSlide();
-  slide.background = { fill: COLORS.white };
+  slide.background = { color: COLORS.white };
 
   // ロゴ追加（左上・メインロゴ）
   addLogo(slide, 'main');

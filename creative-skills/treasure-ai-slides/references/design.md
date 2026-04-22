@@ -240,8 +240,8 @@ text_frame.word_wrap = True
 
 | ファイル | パス | 用途 | サイズ目安 |
 |---------|------|------|-----------|
-| メインロゴ（横） | `assets/logos/treasure-ai-logo.png` | スライド標準配置 | W: 150-200px |
-| アイコンのみ | `assets/logos/treasure-ai-icon.png` | 小サイズ・装飾 | W: 40-60px |
+| メインロゴ（横） | `references/logos/treasure-ai-logo.png` | スライド標準配置 | W: 150-200px |
+| アイコンのみ | `references/logos/treasure-ai-icon.png` | 小サイズ・装飾 | W: 40-60px |
 
 **ロゴの特徴**:
 - ダイヤモンド型アイコン: グラデーション（紫 → ピンク → 青）
@@ -268,7 +268,7 @@ text_frame.word_wrap = True
 ```javascript
 // メインロゴ追加（左上）
 slide.addImage({
-  path: 'assets/logos/treasure-ai-logo.png',
+  path: 'references/logos/treasure-ai-logo.png',
   x: 0.2,    // 左端から0.2インチ
   y: 0.15,   // 上端から0.15インチ
   w: 1.5,    // 幅1.5インチ
@@ -277,7 +277,7 @@ slide.addImage({
 
 // アイコンのみ（装飾用・右下）
 slide.addImage({
-  path: 'assets/logos/treasure-ai-icon.png',
+  path: 'references/logos/treasure-ai-icon.png',
   x: 11.5,
   y: 6.5,
   w: 0.5,
@@ -315,7 +315,7 @@ slide.addImage({
 - オプション: 右側に画像（角丸）または抽象シェイプ（ブランドカラーの円・楕円）
 
 #### C. コンテンツスライド（標準）
-- 白またはごく薄いグラデーション背景
+- 背景はソリッドカラーのみ（`#FFFFFF` または `#F9FEFF`）。グラデーションは使用しない
 - 左上にタイトル（黒・Bold）
 - サブタイトルは `#2D40AA` または `#C466D4`
 - 本文エリアにテキスト + ビジュアル要素
@@ -456,7 +456,7 @@ pres.layout = 'LAYOUT_WIDE'; // 33.87cm × 19.05cm
 // ロゴ追加ヘルパー
 function addLogo(slide) {
   slide.addImage({
-    path: 'assets/logos/treasure-ai-logo.png',
+    path: 'references/logos/treasure-ai-logo.png',
     x: 0.2,
     y: 0.15,
     w: 1.5,
@@ -549,4 +549,4 @@ function createContentSlide(title, content) {
 
 *このdesign.mdはTreasure AIの2026年公式テンプレートから抽出した仕様に基づいています。*
 *テンプレートファイル: `2026_Treasure_AI_Official_Template.pptx`*
-*ロゴファイル: `assets/logos/treasure-ai-logo.png`, `assets/logos/treasure-ai-icon.png`*
+*ロゴファイル: `references/logos/treasure-ai-logo.png`, `references/logos/treasure-ai-icon.png`*
