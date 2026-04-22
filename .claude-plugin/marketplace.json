@@ -116,13 +116,14 @@
     },
     {
       "name": "creative-skills",
-      "description": "Multi-channel ad ideation for email, SMS, and Instagram campaigns with structured creative direction workflows, brand compliance validation, and brand guideline onboarding",
+      "description": "Multi-channel ad ideation for email, SMS, and Instagram campaigns with structured creative direction workflows, brand compliance validation, brand guideline onboarding, and Treasure AI branded presentation generation",
       "source": "./",
       "strict": false,
       "skills": [
         "./creative-skills/multi-channel-ad-ideation",
         "./creative-skills/brand-compliance",
-        "./creative-skills/brand-onboarding"
+        "./creative-skills/brand-onboarding",
+        "./creative-skills/treasure-ai-slides"
       ]
     },
     {

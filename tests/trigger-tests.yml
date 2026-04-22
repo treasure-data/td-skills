@@ -168,6 +168,20 @@ tests:
   - prompt: "Manage Engage campaigns using tdx engage commands"
     expected: engage
 
+  # === Creative Skills ===
+
+  - prompt: "Create a Treasure AI presentation about our platform"
+    expected: treasure-ai-slides
+
+  - prompt: "Generate slides for Treasure AI product overview"
+    expected: treasure-ai-slides
+
+  - prompt: "Make a branded Treasure AI slide deck"
+    expected: treasure-ai-slides
+
+  - prompt: "Build a Treasure Data presentation with brand guidelines"
+    expected: treasure-ai-slides
+
   # === Document Skills ===
 
   - prompt: "Create a PowerPoint presentation about our Q4 results"
