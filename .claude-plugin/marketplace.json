@@ -127,11 +127,12 @@
     },
     {
       "name": "document-skills",
-      "description": "Document creation skills including PowerPoint presentation generation using HTML-to-PPTX conversion pipeline with agent-browser for rendering and PptxGenJS for assembly",
+      "description": "Document creation skills including PowerPoint presentation generation using HTML-to-PPTX conversion pipeline (generic) and Treasure AI branded template generation (python-pptx/pptxgenjs)",
       "source": "./",
       "strict": false,
       "skills": [
-        "./document-skills/pptx"
+        "./document-skills/pptx",
+        "./document-skills/treasure-ai-slides"
       ]
     },
     {
