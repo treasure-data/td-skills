@@ -483,4 +483,4 @@ You've successfully set up end-to-end RT Personalization with Engage Studio cont
 
 ---
 
-**Playbook complete!** Return to [PLAYBOOK.md](../PLAYBOOK.md) for overview.
+**Playbook complete!** Return to [SKILL.md](../SKILL.md) for overview.

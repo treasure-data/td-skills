@@ -4,11 +4,11 @@ End-to-end guides for common TD use cases. Each playbook combines multiple skill
 
 ## Available Playbooks
 
-**[Engage Studio Content + Realtime Personalization](engage-rt-personalization/PLAYBOOK.md)**  
+**[Engage Studio Content + Realtime Personalization](engage-rt-personalization/SKILL.md)**  
 Deliver dynamic in-app content (popup/embed) via RT Personalization API.
 
 ## Contributing
 
-Structure: `playbook-name/{PLAYBOOK.md, steps/, examples/}`
+Structure: `playbook-name/{SKILL.md, steps/, examples/}`
 
 See [CLAUDE.md](../CLAUDE.md) for guidelines.
