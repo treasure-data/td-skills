@@ -78,15 +78,6 @@ tests:
   - prompt: "Build a workflow that summarizes KPIs with LLM and posts to Slack"
     expected: llm-workflow
 
-  - prompt: "Create a Graflow workflow to scan accounts and alert for churn risk"
-    expected: graflow
-
-  - prompt: "Build an agentic workflow that checks HubSpot and sends Slack alerts"
-    expected: graflow
-
-  - prompt: "Set up a multi-step automation pipeline with AI decision points"
-    expected: graflow
-
   # === SDK Skills ===
 
   - prompt: "Query TD from Python using pytd"
@@ -230,3 +221,12 @@ tests:
 
   - prompt: "Create a new skill for Treasure Studio"
     expected: skill-creator
+
+  - prompt: "Create a Graflow workflow to scan accounts and alert for churn risk"
+    expected: graflow
+
+  - prompt: "Build an agentic workflow that checks HubSpot and sends Slack alerts"
+    expected: graflow
+
+  - prompt: "Set up a multi-step automation pipeline with AI decision points"
+    expected: graflow
