@@ -453,6 +453,6 @@ After configuring activations:
 
 ## Resources
 
-- [Activation Types Documentation](https://docs.treasuredata.com/display/public/PD/RT+Activations)
-- [Webhook Best Practices](https://docs.treasuredata.com/display/public/PD/Webhook+Guide)
-- [Salesforce Integration](https://docs.treasuredata.com/display/public/PD/Salesforce+Connector)
+- [Activation Types Documentation](https://docs.treasuredata.com/products/customer-data-platform/real-time/reviewing-real-time-triggered-activation-logs)
+- [Webhook Best Practices](https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration/realtime/creating-a-real-time-triggered-activation)
+- [Salesforce Integration](https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration/realtime/creating-a-real-time-triggered-activation)
