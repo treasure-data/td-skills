@@ -28,14 +28,14 @@ for(var r=function(t){return function(){return this["_"+t]=this["_"+t]||[],this[
        "resetUUID","ready","setSignedMode","setAnonymousMode","set","trackEvent","trackPageview","trackClicks","unblockEvents"],
     c=0;c<s.length;c++){var o=s[c];e[t].prototype[o]=r(o)}
 var n=document.createElement("script");n.type="text/javascript",n.async=!0,
-    n.src="https://cdn.treasuredata.com/sdk/4.4/td.min.js";
+    n.src="https://cdn.treasuredata.com/sdk/4.4.1/td.min.js";
 var i=document.getElementsByTagName("script")[0];i.parentNode.insertBefore(n,i)}}("Treasure",this);
 </script>
 
 <!-- Initialize -->
 <script>
 var td = new Treasure({
-  host: 'in.treasuredata.com',
+  host: 'YOUR_REGION.records.in.treasuredata.com',  // e.g., us01.records.in.treasuredata.com
   writeKey: 'YOUR_WRITE_KEY',     // From TD Console → Integrations → JavaScript SDK
   database: 'web_events',
   startInSignedMode: true
@@ -301,14 +301,14 @@ function trackEmbedShown() {
 
 ## 5.5 Complete Integration Example
 
-See [examples/frontend-integration.html](../examples/frontend-integration.html) for a complete working example.
+A complete working example is provided below in this section.
 
 **Quick overview:**
 
 ```javascript
 // 1. Initialize SDK
 var td = new Treasure({
-  host: 'in.treasuredata.com',
+  host: 'YOUR_REGION.records.in.treasuredata.com',  // e.g., us01.records.in.treasuredata.com
   writeKey: 'YOUR_WRITE_KEY',
   database: 'web_events'
 });
@@ -347,7 +347,7 @@ After integration, verify:
 
 **SDK doesn't load:**
 - Check network tab for script load errors
-- Verify CDN URL is correct: `https://cdn.treasuredata.com/sdk/4.4/td.min.js`
+- Verify CDN URL is correct: `https://cdn.treasuredata.com/sdk/4.4.1/td.min.js`
 - Check for ad blockers or CSP restrictions
 
 **Events not appearing in TD:**

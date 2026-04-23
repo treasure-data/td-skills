@@ -165,7 +165,8 @@ Check:
 For team members and future reference:
 
 **Create a configuration document:**
-```markdown
+
+````markdown
 # Personalization API Configuration
 
 **Parent Segment ID:** 1234567
@@ -186,7 +187,7 @@ const TD_CONFIG = {
   token: process.env.VITE_TD_P13N_TOKEN
 };
 ```
-```
+````
 
 ## Verification Checklist
 

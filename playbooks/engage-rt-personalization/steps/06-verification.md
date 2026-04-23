@@ -216,8 +216,8 @@ If you have multiple sections with different entry criteria:
 
 **Network Tab:**
 - Filter by "treasuredata" to see TD requests
-- Check event tracking requests (POST to in.treasuredata.com)
-- Check personalization API requests (GET to p13n.in.treasuredata.com)
+- Check event tracking requests (POST to your regional ingestion host, e.g., `us01.records.in.treasuredata.com`)
+- Check personalization API requests (POST to personalization host)
 - Verify request/response payloads
 
 **Application Tab:**
@@ -504,7 +504,6 @@ You've successfully set up end-to-end RT Personalization with Engage Studio cont
 
 ## Related Resources
 
-- **Code examples:** [examples/](../examples/)
 - **Skills:** rt-config, rt-personalization, engage, td-javascript-sdk
 - **API documentation:** [TD API Docs](https://api-docs.treasuredata.com/)
 

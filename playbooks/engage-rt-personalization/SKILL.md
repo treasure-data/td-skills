@@ -322,16 +322,29 @@ Use this playbook when you need to:
 2. **Use wildcard for testing** (not production): Set allowed origins to `*`
 3. **Verify token permissions** include CORS access
 
-**Example:**
+**Example (server-side proxy recommended):**
 ```javascript
-// Test from console on your domain
-fetch('https://<p13n_host>/<database>/<event_table>', {
+// ⚠️ Never put a master API key in client-side code or browser console
+// For production, call personalization API through your server-side proxy
+
+// Example server-side proxy endpoint (Node.js/Express):
+app.post('/api/personalization', async (req, res) => {
+  const response = await fetch(`https://${P13N_HOST}/${DATABASE}/${EVENT_TABLE}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/vnd.treasuredata.v1+json',
+      'Authorization': `TD1 ${process.env.TD_API_KEY}`,  // Server-side only
+      'wp13n-token': process.env.TD_PERSONALIZATION_TOKEN
+    },
+    body: JSON.stringify(req.body)
+  });
+  res.json(await response.json());
+});
+
+// Client-side call (safe):
+fetch('/api/personalization', {
   method: 'POST',
-  headers: {
-    'Content-Type': 'application/vnd.treasuredata.v1+json',
-    'Authorization': 'TD1 YOUR_MASTER_API_KEY',
-    'wp13n-token': 'YOUR_PERSONALIZATION_TOKEN'
-  },
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     email: 'test@example.com',
     event_name: 'product_view',
@@ -351,11 +364,5 @@ fetch('https://<p13n_host>/<database>/<event_table>', {
 - [Personalization API Reference](https://api-docs.treasuredata.com/) — API endpoint specifications and authentication
 - [Engage Studio Guide](https://docs.treasuredata.com/display/public/PD/Engage+Studio) — In-app message campaign creation
 - [TD JavaScript SDK](https://github.com/treasure-data/td-js-sdk) — SDK documentation and examples
-
-
-### Code Examples
-
-- [Complete frontend integration](examples/frontend-integration.html) — Full working example with HTML/JavaScript
-- [Personalization payload samples](examples/personalization-payload.json) — API response examples
 
 
