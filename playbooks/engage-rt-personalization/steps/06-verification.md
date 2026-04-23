@@ -66,8 +66,11 @@ Work through this checklist to verify each component.
 
 - [ ] **Section payload includes td_in_app.message_json**
   ```bash
-  curl -X GET "https://<region>.p13n.in.treasuredata.com/audiences/<ps_id>/personalizations/<pz_id>?td_client_id=test" \
-    -H "Authorization: TD1 ${TD_P13N_TOKEN}" | jq '.offers | keys'
+  curl -X POST "https://<p13n_host>/<database>/<event_table>" \
+    -H "Content-Type: application/vnd.treasuredata.v1+json" \
+    -H "Authorization: TD1 ${TD_API_KEY}" \
+    -H "wp13n-token: ${TD_PERSONALIZATION_TOKEN}" \
+    -d '{"email":"test@example.com","event_name":"product_view","page_url":"/test"}' | jq '.offers | keys'
   # Should return section names
   ```
 
@@ -260,31 +263,55 @@ LIMIT 100
 ```bash
 #!/bin/bash
 
-REGION="us01"
-PS_ID="your_parent_segment_id"
-PZ_ID="your_personalization_id"
-TOKEN="your_personalization_token"
+P13N_HOST="your_p13n_host"  # e.g., p13n-api.treasuredata.com or p13n-api-staging.treasuredata.com
+DATABASE="your_database"
+EVENT_TABLE="your_event_table"
+API_KEY="your_master_api_key"
+P13N_TOKEN="your_personalization_token"
 
-# Test with specific user
-curl -X GET \
-  "https://${REGION}.p13n.in.treasuredata.com/audiences/${PS_ID}/personalizations/${PZ_ID}?td_client_id=test_user_123&product_id=PROD-12345&product_status=on_sale" \
-  -H "Authorization: TD1 ${TOKEN}" \
-  -H "Content-Type: application/json" | jq '.'
+# Test with specific user and event
+curl -X POST \
+  "https://${P13N_HOST}/${DATABASE}/${EVENT_TABLE}" \
+  -H "Content-Type: application/vnd.treasuredata.v1+json" \
+  -H "Authorization: TD1 ${API_KEY}" \
+  -H "wp13n-token: ${P13N_TOKEN}" \
+  -d '{
+    "email": "test_user_123@example.com",
+    "event_name": "product_view",
+    "page_url": "/products/PROD-12345",
+    "product_status": "on_sale"
+  }' | jq '.'
 ```
 
 **Test with different parameters:**
 
 ```bash
-# Test matching criteria
-curl -X GET \
-  "https://${REGION}.p13n.in.treasuredata.com/audiences/${PS_ID}/personalizations/${PZ_ID}?td_client_id=test&product_status=on_sale" \
-  -H "Authorization: TD1 ${TOKEN}" | jq '.offers | keys'
+# Test matching criteria (should return offers)
+curl -X POST \
+  "https://${P13N_HOST}/${DATABASE}/${EVENT_TABLE}" \
+  -H "Content-Type: application/vnd.treasuredata.v1+json" \
+  -H "Authorization: TD1 ${API_KEY}" \
+  -H "wp13n-token: ${P13N_TOKEN}" \
+  -d '{
+    "email": "test@example.com",
+    "event_name": "product_view",
+    "page_url": "/test",
+    "product_status": "on_sale"
+  }' | jq '.offers | keys'
 # Should return section names
 
-# Test non-matching criteria
-curl -X GET \
-  "https://${REGION}.p13n.in.treasuredata.com/audiences/${PS_ID}/personalizations/${PZ_ID}?td_client_id=test&product_status=regular" \
-  -H "Authorization: TD1 ${TOKEN}" | jq '.offers | keys'
+# Test non-matching criteria (should return empty offers)
+curl -X POST \
+  "https://${P13N_HOST}/${DATABASE}/${EVENT_TABLE}" \
+  -H "Content-Type: application/vnd.treasuredata.v1+json" \
+  -H "Authorization: TD1 ${API_KEY}" \
+  -H "wp13n-token: ${P13N_TOKEN}" \
+  -d '{
+    "email": "test@example.com",
+    "event_name": "product_view",
+    "page_url": "/test",
+    "product_status": "regular"
+  }' | jq '.offers | keys'
 # Should return empty array []
 ```
 

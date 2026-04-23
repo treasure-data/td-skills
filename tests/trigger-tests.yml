@@ -230,3 +230,14 @@ tests:
 
   - prompt: "Set up a multi-step automation pipeline with AI decision points"
     expected: graflow
+
+  # === Playbooks ===
+
+  - prompt: "I want to show personalized popups on my website based on user behavior"
+    expected: engage-rt-personalization
+
+  - prompt: "Set up in-app messages that display different content for different user segments"
+    expected: engage-rt-personalization
+
+  - prompt: "Create dynamic in-app content using Engage Studio and RT Personalization"
+    expected: engage-rt-personalization

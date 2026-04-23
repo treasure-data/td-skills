@@ -1,22 +1,6 @@
 ---
 name: engage-rt-personalization
 description: Deliver dynamic in-app content (popup/embed) designed in Engage Studio via Realtime Personalization API, enabling frontend to render personalized content based on user profile attributes.
-prerequisites:
-  - Parent segment created in Data Workbench
-  - RT 2.0 enabled by TD CSM (Reactor instance provisioned)
-  - Engage Studio access
-  - Master API key with full permissions
-related_skills:
-  - realtime-skills:rt-config
-  - realtime-skills:rt-config-events
-  - realtime-skills:rt-config-attributes
-  - realtime-skills:rt-config-id-stitching
-  - realtime-skills:rt-config-setup
-  - realtime-skills:rt-personalization
-  - realtime-skills:rt-personalization-validation
-  - realtime-skills:rt-setup-personalization
-  - tdx-skills:engage
-  - sdk-skills:td-javascript-sdk
 ---
 
 # Engage Studio Content + Realtime Personalization
@@ -212,14 +196,28 @@ Complete workflow for delivering personalized in-app content:
 
 ## Best Practices
 
-1. **Start with simple entry criteria** — Use event-only triggers first, add attribute conditions incrementally to avoid complexity
-2. **Test with real user IDs** — Use actual `td_client_id` values from your event data, not test values, to verify RT processing
-3. **Design mobile-first** — Preview Engage content on mobile viewport (320px) before desktop to ensure responsive design
-4. **Implement frequency capping** — Prevent message fatigue with "once per day" or "once per session" limits in Engage campaign settings
-5. **Monitor API latency** — Target < 500ms response time; implement client-side caching if latency exceeds 1 second
-6. **Use environment variables** — Never hardcode personalization tokens in client-side code; use build-time env vars
-7. **Track impressions and clicks** — Send `modal_shown` and `modal_closed` events for analytics and optimization
-8. **Graceful degradation** — Always render fallback content if personalization API fails to prevent broken user experience
+1. **Start with minimal RT configuration and simple entry criteria** — Begin with a single key event without filters, and one simple attribute condition (e.g., `user_id IS NOT NULL`). Avoid complex nested conditions until basic integration works. Add complexity incrementally after validating the foundation.
+
+2. **Design minimal Engage content first** — Start with plain text or simple HTML (single headline + paragraph) in Engage Studio. Avoid images, custom CSS, or Liquid merge tags in the initial test. Verify the content appears correctly before enhancing the design.
+
+3. **Test API directly with curl before frontend integration** — Use curl commands with mock data to validate the personalization API returns expected payloads. This isolates RT/personalization issues from frontend rendering problems:
+   ```bash
+   # Test personalization API (POST with event data)
+   curl -X POST "https://<p13n_host>/<database>/<event_table>" \
+     -H "Content-Type: application/vnd.treasuredata.v1+json" \
+     -H "Authorization: TD1 ${TD_API_KEY}" \
+     -H "wp13n-token: ${TD_PERSONALIZATION_TOKEN}" \
+     -d '{
+       "email": "test@example.com",
+       "event_name": "product_view",
+       "page_url": "/products/123",
+       "product_status": "on_sale"
+     }' | jq '.offers'
+   ```
+   Only move to frontend integration after confirming API responses are correct.
+
+4. **Monitor API latency** — Target < 500ms response time; implement client-side caching if latency exceeds 1 second to ensure fast page load times.
+
 
 ## Steps
 
@@ -304,8 +302,7 @@ Use this playbook when you need to:
    GROUP BY 1
    ```
 2. **Check personalization status** is "Active" (not Draft) in Audience Studio
-3. **Wait 1-2 minutes** after sending event before fetching (RT processing delay)
-4. **Test with simplified criteria** - Remove attribute conditions, use event-only trigger
+3. **Test with simplified criteria** - Remove attribute conditions, use event-only trigger
 
 **Debug:** See [Step 6 - Debugging Tools](steps/06-verification.md#debugging-tools)
 
@@ -328,86 +325,23 @@ Use this playbook when you need to:
 **Example:**
 ```javascript
 // Test from console on your domain
-fetch('https://us01.p13n.in.treasuredata.com/audiences/.../personalizations/...?td_client_id=test', {
-  headers: {'Authorization': 'TD1 YOUR_TOKEN'}
+fetch('https://<p13n_host>/<database>/<event_table>', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/vnd.treasuredata.v1+json',
+    'Authorization': 'TD1 YOUR_MASTER_API_KEY',
+    'wp13n-token': 'YOUR_PERSONALIZATION_TOKEN'
+  },
+  body: JSON.stringify({
+    email: 'test@example.com',
+    event_name: 'product_view',
+    page_url: '/products/123'
+  })
 })
 .then(r => r.json())
 .then(console.log)
 ```
 
----
-
-### Issue: Content Doesn't Match Design
-
-**Symptoms:**
-- Modal renders but looks broken
-- CSS conflicts with page styles
-- Layout is distorted or unstyled
-
-**Solutions:**
-1. **Preview content in Engage Studio first** - Use preview mode to verify design
-2. **Test with simplified HTML** - Remove custom CSS, use basic HTML to isolate issue
-3. **Check for z-index conflicts** - Ensure modal has high z-index (10000+)
-4. **Inspect CSS specificity** - Page styles may override modal styles
-
-**Advanced:** Use Shadow DOM to isolate styles:
-```javascript
-const shadowRoot = document.createElement('div').attachShadow({mode: 'open'});
-shadowRoot.innerHTML = contentHtml;
-document.body.appendChild(shadowRoot.host);
-```
-
-**Debug:** See [Step 5 - Troubleshooting](steps/05-frontend-integration.md#troubleshooting)
-
----
-
-### Issue: High API Latency
-
-**Symptoms:**
-- Personalization API takes > 2 seconds to respond
-- Page feels slow, users see delay before content appears
-
-**Solutions:**
-1. **Simplify entry criteria** - Remove unnecessary attribute conditions
-2. **Reduce catalog lookup columns** - Only return essential fields
-3. **Implement client-side caching**:
-   ```javascript
-   const cache = new Map();
-   const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-   
-   function getCachedPersonalization(userId) {
-     const cached = cache.get(userId);
-     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-       return cached.data;
-     }
-     return null;
-   }
-   ```
-4. **Consider server-side proxy** for personalization API if client-side is too slow
-
-**Monitor:** Track latency with `performance.now()` and send to analytics
-
----
-
-### Issue: td_in_app.message_json Field Missing
-
-**Symptoms:**
-- API returns offers but no `td_in_app.message_json` field
-- Payload has attributes but no Engage content
-
-**Solutions:**
-1. **Verify Engage campaign is Active** (not Draft or Paused)
-2. **Re-link campaign to section**:
-   - Engage Studio → Campaign → Audience & Targeting
-   - Select correct Personalization and Section
-3. **Wait 1-2 minutes** after launching campaign for payload to update
-4. **Check campaign type** - Must be "In-App Message" (not Email)
-
-**Verify:**
-```bash
-curl "https://api-cdp.treasuredata.com/entities/realtime_personalizations/<pz_id>" \
-  -H "Authorization: TD1 ${TD_API_KEY}" | jq '.data.attributes.sections[].payload'
-```
 
 ## Resources
 
@@ -418,25 +352,10 @@ curl "https://api-cdp.treasuredata.com/entities/realtime_personalizations/<pz_id
 - [Engage Studio Guide](https://docs.treasuredata.com/display/public/PD/Engage+Studio) — In-app message campaign creation
 - [TD JavaScript SDK](https://github.com/treasure-data/td-js-sdk) — SDK documentation and examples
 
-### Related Skills
-
-**Orchestrator Skills:**
-- `rt-setup-personalization` — Complete automated setup
-- `rt-setup-triggers` — Event-driven journeys alternative
-
-**Component Skills:**
-- `rt-config`, `rt-personalization`, `engage`, `td-javascript-sdk` — Individual component configuration
-
-**Debugging Skills:**
-- `activations`, `identity`, `rt-journey-monitor` — Log queries and troubleshooting
 
 ### Code Examples
 
 - [Complete frontend integration](examples/frontend-integration.html) — Full working example with HTML/JavaScript
 - [Personalization payload samples](examples/personalization-payload.json) — API response examples
 
-### Internal Resources
 
-- RT 2.0 internal runbook: "How to setup an end-to-end realtime application"
-- Engage Studio BeeTree editor guide
-- API Admin / Provisioner documentation (Reactor instance setup)

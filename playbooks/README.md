@@ -10,5 +10,3 @@ Deliver dynamic in-app content (popup/embed) via RT Personalization API.
 ## Contributing
 
 Structure: `playbook-name/{SKILL.md, steps/, examples/}`
-
-See [CLAUDE.md](../CLAUDE.md) for guidelines.
