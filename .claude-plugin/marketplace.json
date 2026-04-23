@@ -78,8 +78,7 @@
         "./workflow-skills/digdag",
         "./workflow-skills/llm-workflow",
         "./workflow-skills/workflow-management",
-        "./workflow-skills/dbt",
-        "./workflow-skills/graflow"
+        "./workflow-skills/dbt"
       ]
     },
     {
@@ -188,7 +187,8 @@
         "./studio-skills/action-report",
         "./studio-skills/schedule-task",
         "./studio-skills/schedule-review",
-        "./studio-skills/web-search"
+        "./studio-skills/web-search",
+        "./studio-skills/graflow"
       ]
     }
   ]
