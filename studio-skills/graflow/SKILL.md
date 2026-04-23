@@ -383,5 +383,5 @@ Write `workflow.py` + `manifest.yml` + `requirements.txt` based on the approved 
 
 - **digdag** — TD-hosted workflow orchestration (`.dig` files, `td>` operator)
 - **llm-workflow** — LLM processing within digdag workflows
-- **workflow-management** — Debugging and monitoring TD workflows with `tdx wf`
+- **tdx-skills/workflow** — Debugging and monitoring TD workflows with `tdx wf`
 - **schedule-task** — Scheduled tasks using TASK.md and Claude Agent SDK
