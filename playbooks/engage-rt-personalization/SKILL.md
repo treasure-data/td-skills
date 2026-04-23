@@ -7,16 +7,16 @@ prerequisites:
   - Engage Studio access
   - Master API key with full permissions
 related_skills:
-  - rt-config
-  - rt-config-events
-  - rt-config-attributes
-  - rt-config-id-stitching
-  - rt-config-setup
-  - rt-personalization
-  - rt-personalization-validation
-  - rt-setup-personalization
-  - engage
-  - td-javascript-sdk
+  - realtime-skills:rt-config
+  - realtime-skills:rt-config-events
+  - realtime-skills:rt-config-attributes
+  - realtime-skills:rt-config-id-stitching
+  - realtime-skills:rt-config-setup
+  - realtime-skills:rt-personalization
+  - realtime-skills:rt-personalization-validation
+  - realtime-skills:rt-setup-personalization
+  - tdx-skills:engage
+  - sdk-skills:td-javascript-sdk
 ---
 
 # Engage Studio Content + Realtime Personalization
@@ -170,86 +170,45 @@ Track: td.trackEvent('modal_click', {section: sectionName})
 
 **See:** [Step 4 - A/B Testing](steps/04-engage-studio-content.md)
 
-## Quick Start Example
+## Workflow Summary
 
-Complete example for the "No returns on sale items" use case:
+Complete workflow for delivering personalized in-app content:
 
-### 1. Configure RT (Step 1)
+**1. Configure Realtime (Step 1)**
+- Register streaming event tables in Data Workbench
+- Create key events with event filters (e.g., product_status = "on_sale")
+- Define RT attributes to track user behavior (single, list, counter types)
+- Set up ID stitching for profile merging across identifiers
 
-```bash
-# Create key event with filter
-tdx api "/audiences/<ps_id>/realtime_key_events" --type cdp -X POST --data '{
-  "name": "product_view",
-  "databaseName": "web_events",
-  "tableName": "product_views",
-  "filterRule": {
-    "type": "And",
-    "conditions": [{
-      "column": "product_status",
-      "operator": "equal",
-      "value": "on_sale"
-    }]
-  }
-}'
+**2. Create Personalization Service (Step 2)**
+- Generate access token (public or private mode)
+- Configure regional API endpoint
+- Validate token with test API call
 
-# Create RT attribute
-tdx api "/audiences/<ps_id>/realtime_attributes" --type cdp -X POST --data '{
-  "name": "last_viewed_product",
-  "type": "single",
-  "realtimeKeyEventId": "<key_event_id>",
-  "valueColumn": "product_id",
-  "dataType": "string"
-}'
-```
+**3. Configure Section in Audience Studio (Step 3)**
+- Create personalization entity and section
+- Define entry criteria (event-based + attribute-based conditions)
+- Configure payload (attributes, strings, segments, catalog lookups)
+- Activate personalization
 
-### 2. Create Personalization (Steps 2-3)
+**4. Design Content in Engage Studio (Step 4)**
+- Create in-app message campaign (popup or embed)
+- Link campaign to personalization section
+- Design content using BeeTree visual editor
+- Launch campaign to populate payload
 
-- Generate token in Data Workbench → Personalization
-- Create section: `on_sale_no_returns`
-- Entry criteria: Key event `product_view` (auto-filtered for on_sale)
-- Payload: Attribute `last_viewed_product`
+**5. Frontend Integration (Step 5)**
+- Initialize TD JavaScript SDK
+- Track events that match RT key events
+- Call fetchPersonalization API with user context
+- Parse response and render in-app message (modal/embed)
 
-### 3. Design Content (Step 4)
+**6. Verify and Test (Step 6)**
+- Verify RT status, events, and attributes
+- Test with matching and non-matching scenarios
+- Monitor API latency and debug issues
 
-- Create popup in Engage Studio
-- Link to personalization section
-- Content: "This item is on sale and cannot be returned"
-
-### 4. Frontend Integration (Step 5)
-
-```javascript
-// Initialize SDK
-var td = new Treasure({
-  host: 'in.treasuredata.com',
-  writeKey: 'YOUR_WRITE_KEY',
-  database: 'web_events'
-});
-
-// Track product view
-td.trackEvent('product_views', {
-  event_name: 'product_view',
-  product_id: 'PROD-123',
-  product_status: 'on_sale'
-});
-
-// Fetch personalization
-const p13nConfig = {
-  endpoint: 'https://us01.p13n.in.treasuredata.com',
-  database: 'web_events',
-  table: 'product_views',
-  token: 'YOUR_P13N_TOKEN'
-};
-
-td.fetchPersonalization(p13nConfig, {td_client_id: td.client.track.uuid}, (response) => {
-  const offer = response.offers['on_sale_no_returns'];
-  if (offer) {
-    const message = JSON.parse(offer.attributes['td_in_app.message_json']);
-    renderModal(message.content_html);
-  }
-});
-```
-
-**For detailed step-by-step instructions, see the Steps section below.**
+**For detailed commands and code examples, see the [Steps](#steps) section below.**
 
 ## Best Practices
 

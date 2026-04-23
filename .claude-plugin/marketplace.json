@@ -190,6 +190,15 @@
         "./studio-skills/web-search",
         "./studio-skills/graflow"
       ]
+    },
+    {
+      "name": "playbooks",
+      "description": "End-to-end playbooks for common Treasure Data use cases. Each playbook combines multiple skills to guide you through complete business scenarios including RT personalization with Engage Studio content delivery, frontend SDK integration, and production deployment workflows.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./playbooks/engage-rt-personalization"
+      ]
     }
   ]
 }
