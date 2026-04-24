@@ -7,9 +7,9 @@ Variable behavior, secret expansion rules, concurrency, and system limits.
 ## Variable Behavior
 
 - Built-in variables (`session_time`, etc.) cannot be overwritten
-- All variable values are converted to **strings** — arrays and maps cannot be stored as-is
+- Values are **stringified when interpolated into `${...}` templates**; stored parameters/arguments can still be structured JSON (e.g., lists/maps passed to `py>`)
 - `_export` variables are evaluated at reference time (lazy), not at definition time
-- Pass runtime values via `tdx wf start <project> <workflow> -p key=value` to override variables at attempt start
+- Pass runtime values via `tdx wf start <project> <workflow> -p key=value` to override variables at attempt start (stringified when referenced in `${...}`)
 
 ---
 
