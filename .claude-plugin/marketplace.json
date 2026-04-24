@@ -125,11 +125,12 @@
     },
     {
       "name": "document-skills",
-      "description": "Document creation skills including PowerPoint presentation generation using HTML-to-PPTX conversion pipeline with agent-browser for rendering and PptxGenJS for assembly",
+      "description": "Document creation skills including PowerPoint presentation generation via HTML-to-PPTX, and Google Slides deck generation from template decks using the Studio Google Slides + Drive MCP connectors",
       "source": "./",
       "strict": false,
       "skills": [
-        "./document-skills/pptx"
+        "./document-skills/pptx",
+        "./document-skills/google-slides"
       ]
     },
     {
