@@ -91,11 +91,16 @@ and how to recover from common mistakes. Short version:
 2. Copy template deck        (google_drive_copy)
 3. List slides               (google_slides_list_slides)
 4. Plan deck                 (propose slide plan, get user sign-off)
-5. Inspect chosen patterns   (google_slides_get_slide per plan entry)
+5. Inspect chosen patterns   (google_slides_get_slide per plan entry;
+                               inventory text, table cells, empty placeholders,
+                               AND images — template stock images are replaceable content)
 6. Duplicate into final position (google_slides_duplicate_slide with insertion_index —
                                   either reverse-iterate at index 0, or forward-iterate
                                   with growing index; see workflow.md Step 6)
-7. Fill content              (google_slides_replace_text + batch_update for non-text)
+7. Fill content              (replace_text for text, batch_update insertText for empty
+                               placeholders, batch_update replaceImage for images. Agent-
+                               generated images go through generate_image → google_drive_upload
+                               → google_drive_share → replaceImage)
 8. Hide all used originals   (one google_slides_hide_slides call with the full array)
 9. QA                        (placeholder-leak + hidden-originals + thumbnail review)
 10. Return the working deck URL plus a summary of patterns used
@@ -133,6 +138,8 @@ superficial.
 | Placeholder text remains visible  | Replacement token mismatch      | Call `google_slides_get_slide` on the filled slide, read the untruncated fullText, retry with the exact string |
 | "Click to add subtitle" / "Click to add text" still visible | Empty placeholder shape was targeted with `replace_text` — Google's UI hint is not a real text run | Use `google_slides_batch_update` `insertText` with the shape's `objectId`. Look for `isEmptyPlaceholder: true` in `get_slide` output |
 | Landscape / picture icon still showing where an image should be | Empty image placeholder (`placeholder: "PICTURE"`) was never filled | `batch_update` `createImage` reusing the placeholder's `size` + `transform`, then `deleteObject` on the placeholder |
+| Template stock photos / icons still visible in the final deck | Agent treated `type: "image"` elements as decoration instead of replaceable content | Inventory images in Step 5; swap via `replaceImage` in Step 7 using a user-supplied URL or the generate → Drive upload → share → replaceImage pipeline |
+| `batch_update` fails with a permission error when Google fetches an image URL | The Drive file was uploaded but not shared publicly | Call `google_drive_share` with `role: "reader"`, `type: "anyone"`; use the `https://drive.google.com/uc?id=<file_id>` form, not the `/view` URL |
 | Japanese line breaks fall on wrong characters (`）` at start, `（` at end, English words split) | Manual `\n` was injected into replace text; Slides API does not auto-apply kinsoku shori | Compose paragraphs as free-flowing text, remove explicit breaks except at semantic boundaries. See workflow.md Step 7 kinsoku rules |
 | Table cell reads "011" / "Claude Cowork とは？Item One" (original text concatenated with new) | `insertText` was used on a non-empty cell — it prepends, does not replace | Use `replace_text` with the cell's existing `fullText` as the `find` argument. `get_slide` now returns `cells[].fullText` per cell |
 | Stale table rows like "5 Item Five" / "6 Item Six" visible | Pattern table had more rows than the brief content; unused rows were not cleaned | Call `batch_update` with `deleteTableRow` for each unused row (iterate from the bottom to keep indices stable) |

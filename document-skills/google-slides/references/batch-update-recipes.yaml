@@ -111,6 +111,21 @@
     applyMode: ABSOLUTE
 
 # --- Images ----------------------------------------------------------------
+#
+# URL requirements for both replaceImage and createImage:
+#   - Must be a public HTTPS URL (no auth).
+#   - For Drive-hosted images: use https://drive.google.com/uc?id=FILE_ID
+#     (the direct-download endpoint). The /file/d/.../view URL serves HTML
+#     and fails with "Invalid image URL".
+#   - The file must be shared with role=reader, type=anyone, otherwise
+#     Google's fetch from the Slides API is denied.
+#
+# Pipeline for agent-generated images:
+#   1. generate_image         → local file
+#   2. google_drive_upload    → file_id
+#   3. google_drive_share     → role: reader, type: anyone
+#   4. url = "https://drive.google.com/uc?id=" + file_id
+#   5. replaceImage or createImage with that url
 
 # Replace an existing image in place, keeping its position and size.
 # Use on an actual image element (type: "image" in get_slide). NOT for
@@ -122,7 +137,7 @@
 #   CENTER_CROP   — fill the box with the new image (may crop)
 - replaceImage:
     imageObjectId: "{{IMAGE_ID}}"
-    url: "{{NEW_IMAGE_URL}}"
+    url: "{{PUBLIC_HTTPS_URL}}"
     imageReplaceMethod: CENTER_INSIDE
 
 # Fill an empty PICTURE placeholder. Copy the placeholder's `size` and

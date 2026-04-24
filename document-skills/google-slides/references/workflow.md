@@ -131,7 +131,15 @@ needs to fill the slide correctly:
    share a placeholder role (e.g., all `BODY` placeholders) into
    left-to-right column order. The API does not return elements in
    visual order.
-5. **Leak-check snapshots** — save each pattern's element-level
+5. **Image elements (`type: "image"`)** — treat template imagery as
+   **replaceable by default**, not decoration. Most templates ship with
+   stock photos / icons that the author put there as a visual
+   placeholder; leaving them in the final deck is almost always wrong.
+   Inventory every image element (its `objectId`, `contentUrl`, and
+   bounds from `size`/`transform`) so Step 7 can decide per image
+   whether to swap with user-provided content, agent-generated
+   content, or (rarely) keep as-is.
+6. **Leak-check snapshots** — save each pattern's element-level
    `fullText` values keyed by `(slideId, objectId)`, plus table
    `cells[].fullText` keyed by `(slideId, objectId, rowIndex,
    columnIndex)`, into an in-memory snapshot. Step 9 compares the
@@ -294,6 +302,70 @@ ended up in column 1" failures.
 
 See `batch-update-recipes.yaml` for `deleteTableRow` / `insertText` /
 `deleteText` recipes.
+
+### Handling existing image elements (template stock imagery)
+
+`google_slides_get_slide` returns `type: "image"` for actual image
+elements the template already has content in. Treat these as
+**replaceable content** by default — template authors put stock photos
+/ icons there as visual placeholders, and leaving them in the final
+deck ships someone else's stock photography as if it were yours.
+
+For each image element, pick one of three paths:
+
+1. **Swap with a user-supplied image URL.** If the user provided a
+   direct HTTPS URL for this slot (or referenced a file they already
+   uploaded), use that URL.
+2. **Swap with an agent-generated image.** If the content calls for
+   imagery the user did not supply (icons for feature cards, diagrams,
+   illustrative photos), go through the generate-and-publish pipeline
+   below.
+3. **Keep the template image.** Rare. Acceptable when the template
+   image is explicitly the intended final asset (e.g., a company logo
+   in a footer slot).
+
+In every case, use `replaceImage` via `google_slides_batch_update`
+with the existing element's `objectId`:
+
+```yaml
+- replaceImage:
+    imageObjectId: "<existing image objectId>"
+    url: "<public HTTPS URL>"
+    imageReplaceMethod: CENTER_INSIDE   # or CENTER_CROP if the box
+                                         # should be fully filled
+```
+
+`replaceImage` preserves the element's position and size, so the new
+image lands exactly where the old one sat.
+
+#### Generate-and-publish pipeline for agent-created images
+
+Images the agent generates have to live at a public HTTPS URL for the
+Slides API to fetch them. Four tool calls, no custom infrastructure:
+
+1. **Generate the image** with `generate_image` (or any generator the
+   skill has access to). The result is a local file (e.g.,
+   `~/Downloads/icon.png`).
+2. **Upload to Drive** with `google_drive_upload`. Save the returned
+   `file_id`.
+3. **Make it public** with `google_drive_share` using
+   `role: "reader"`, `type: "anyone"` so the Slides API can fetch it
+   without authentication.
+4. **Construct the public URL** as
+   `https://drive.google.com/uc?id=<file_id>` (this is the
+   direct-download endpoint that works in `replaceImage` and
+   `createImage`).
+5. **Call `replaceImage`** with that URL on the image's `objectId`.
+
+Failure modes of this pipeline:
+
+- **Forgot to share publicly** → `batch_update` fails with a
+  permission error when Google tries to fetch the image.
+- **Used the `drive.google.com/file/d/.../view` URL instead of the
+  `uc?id=...` form** → Slides API receives HTML, rejects the image.
+- **Generated image has a wrong aspect ratio** → the image gets
+  letterboxed or cropped depending on `imageReplaceMethod`. Generate
+  at the same aspect ratio as the placeholder's `size` when possible.
 
 ### Handling empty image placeholders
 
@@ -462,6 +534,13 @@ Fetch thumbnails for every visible (not skipped) slide. Look for:
   visible slide and confirming every `placeholder: "PICTURE"` shape
   either has been replaced by an actual `type: "image"` element or
   has been removed via `deleteObject`.
+- **Template stock imagery still visible** — a `type: "image"` element
+  whose `contentUrl` is unchanged from the original template. For each
+  `type: "image"` element in the filled deck, compare `contentUrl`
+  against the snapshot captured in Step 5. Identical URL means the
+  image was never swapped; decide per slide whether to replace with
+  user-supplied or agent-generated imagery, or whether the template
+  image was the intended final asset (confirm with the user).
 - **Broken or distorted images** — wrong aspect ratio, HTTPS fetch
   failed, URL expired
 - **Contrast issues** — user-provided text color clashing with template
