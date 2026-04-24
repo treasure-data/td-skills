@@ -12,8 +12,10 @@
 # recipes below use PT where available.
 
 # --- Table operations ------------------------------------------------------
+# For text swaps across a deck, use google_slides_replace_text instead —
+# batchUpdate is for structural edits (rows, columns, cell-specific inserts).
 
-# Insert 1 row below a given row index.
+# Insert 1 row. Set insertBelow: false to insert above the reference row.
 - insertTableRows:
     tableObjectId: "{{TABLE_ID}}"
     cellLocation:
@@ -21,15 +23,7 @@
     insertBelow: true
     number: 1
 
-# Insert 1 row above a given row index (use insertBelow: false).
-- insertTableRows:
-    tableObjectId: "{{TABLE_ID}}"
-    cellLocation:
-      rowIndex: "{{ROW_INDEX}}"
-    insertBelow: false
-    number: 1
-
-# Insert 1 column to the right of a given column index.
+# Insert 1 column. Set insertRight: false to insert to the left.
 - insertTableColumns:
     tableObjectId: "{{TABLE_ID}}"
     cellLocation:
@@ -49,7 +43,7 @@
     cellLocation:
       columnIndex: "{{COLUMN_INDEX}}"
 
-# Insert text into a specific cell (use replace_text for global text swaps).
+# Insert text into a specific table cell.
 - insertText:
     objectId: "{{TABLE_ID}}"
     cellLocation:
@@ -92,16 +86,13 @@
 # --- Images ----------------------------------------------------------------
 
 # Replace an existing image in place, keeping its position and size.
+# imageReplaceMethod options:
+#   CENTER_INSIDE — fit the new image inside the box (may letterbox)
+#   CENTER_CROP   — fill the box with the new image (may crop)
 - replaceImage:
     imageObjectId: "{{IMAGE_ID}}"
     url: "{{NEW_IMAGE_URL}}"
     imageReplaceMethod: CENTER_INSIDE
-
-# CENTER_CROP fills the box (may crop). CENTER_INSIDE fits (may letterbox).
-- replaceImage:
-    imageObjectId: "{{IMAGE_ID}}"
-    url: "{{NEW_IMAGE_URL}}"
-    imageReplaceMethod: CENTER_CROP
 
 # Create a new image on a slide (needs position and size).
 - createImage:
@@ -158,8 +149,7 @@
     slideObjectIds: ["{{SLIDE_ID_A}}", "{{SLIDE_ID_B}}"]
     insertionIndex: 3
 
-# Change the layout used by a slide (rarely needed — most layouts cannot be
-# swapped cleanly once placeholders are filled).
+# Change a slide's background fill color.
 - updatePageProperties:
     objectId: "{{SLIDE_ID}}"
     pageProperties:

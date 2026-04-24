@@ -4,6 +4,11 @@ Read this file when you are about to start editing a deck. It expands every
 step in the short workflow in `SKILL.md` with concrete tool calls, inputs,
 and verification cues.
 
+Tool schemas (argument names, types, return shape) are defined in the tdx
+repo at `studio/electron/services/google-tools.ts` under
+`createGoogleSlidesTools`. Consult that file if a call fails with an
+unexpected argument error.
+
 ## Step 1 — Confirm prerequisites and collect inputs
 
 Both connectors must be connected:
@@ -143,11 +148,11 @@ For non-text edits (image swap, shape resize, table rows) use
 
 ### Style preservation guarantee
 
-`replaceAllText` operates on text runs in place, so the `<a:rPr>`-equivalent
-styling (font family, size, weight, color, decoration) is preserved
-automatically. You do not need to re-apply styles after replacement — doing
-so is actually harmful because it overrides the template author's theme
-decisions.
+`replaceAllText` edits the content of existing text runs in place, so the
+run's styling (font family, size, weight, color, decoration) is preserved
+automatically. Do not re-apply styles after replacement — that overrides
+the template author's theme decisions and breaks consistency across the
+deck.
 
 The only caveat: if the template author split a single logical phrase across
 multiple runs (rare, but possible), `replaceAllText` matches only within a
