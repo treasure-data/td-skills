@@ -22,8 +22,8 @@ Settings → Connected Services → connect the missing one.
 From the user, collect:
 
 1. **Template deck** — URL or Drive file ID. A URL like
-   `https://docs.google.com/presentation/d/ABCDEF.../edit` yields the
-   file ID in the path segment after `/d/`.
+   `https://docs.google.com/presentation/d/ABCDEF.../edit` yields the file
+   ID in the path segment after `/d/`.
 2. **Brief** — the content to fill the deck with. Can be structured
    (sections, bullet points) or free-form prose. Ask clarifying questions if
    the brief is too vague to map to patterns.
@@ -44,105 +44,168 @@ google_drive_copy(
 ```
 
 The response contains the new `file.id` and `webViewLink`. **Save both** —
-`file.id` is used for every subsequent Slides call, and the link is what the
-user will click at the end.
+`file.id` is used for every subsequent Slides call, and the link is what
+the user will click at the end.
 
-If the copy fails with a permission error, the user likely does not have read
-access to the source. Ask them to verify sharing or provide a different
-template.
+If the copy fails with a permission error, the user likely does not have
+read access to the source. Ask them to verify sharing or provide a
+different template.
 
-## Step 3 — Discover patterns in the working deck
+## Step 3 — List slides (cheap discovery)
 
-Call `google_slides_get(presentation_id = <new file.id>)`. The response has a
-summarized structure:
+Call:
+
+```
+google_slides_list_slides(presentation_id = <file.id>)
+```
+
+The response is a compact list suitable for large decks:
 
 ```
 {
-  "title": "...",
+  "slideCount": 70,
   "slides": [
-    {
-      "slideId": "...",
-      "isSkipped": false,
-      "layoutObjectId": "...",
-      "elements": [
-        { "objectId": "...", "type": "shape", "textPreview": "[Title]" },
-        ...
-      ]
-    },
-    ...
-  ],
-  "layouts": [ ... ]
+    { "slideId": "p1", "isSkipped": false, "layoutObjectId": "L1",
+      "title": "Welcome to your new template", "elementCount": 3 },
+    { "slideId": "g3d4…_145", "isSkipped": false,
+      "title": "Treasure AI — The Agentic Experience Platform",
+      "elementCount": 2 },
+    …
+  ]
 }
 ```
 
-For every slide, also fetch a thumbnail:
+Do **not** call `google_slides_get` on a large template here — it can
+easily exceed the tool response limit (the reference 70-slide template
+returned ~147 KB via `get`). Use `get` only when you need everything at
+once and you know the deck is small.
+
+## Step 4 — Plan the deck
+
+Match the brief to the listed titles. The plan is an ordered list:
+
+```
+1. (final index 0) Pattern "p1" → Title / cover
+2. (final index 1) Pattern "g3d4…_145" → Section divider: Context
+3. (final index 2) Pattern "p10" → Stat callout (2 metrics)
+4. …
+```
+
+Record both the **pattern slide id** (source for duplication) and the
+**final insertion index** so you can pre-place duplicates in step 6.
+
+**Show the plan to the user and get confirmation before any mutation.**
+Point out patterns you had to skip and why (e.g., "the template has no
+quote-style pattern, so I will use a bullet pattern instead"). See
+`pattern-selection.md` for how to pick without misclassifying.
+
+## Step 5 — Inspect chosen patterns, capture text snapshots
+
+For each slide id in the plan, call:
+
+```
+google_slides_get_slide(
+  presentation_id = <file.id>,
+  slide_id        = <pattern slideId>
+)
+```
+
+Unlike `google_slides_get`, this returns each element's `fullText`
+untruncated. That matters for two reasons:
+
+1. **Reliable `replace_text` find arguments** — the exact text as stored
+   in the deck is what `replaceAllText` matches on. A preview truncated
+   at 120 chars can hide the part you need to match.
+2. **Leak-check snapshots** — save each pattern's element-level
+   `fullText` values keyed by `(slideId, objectId)` into an in-memory
+   snapshot. Step 9 compares the filled deck against these snapshots to
+   detect content that was not replaced.
+
+Also fetch a thumbnail when you need visual confirmation of what the
+pattern looks like:
 
 ```
 google_slides_get_thumbnail(
   presentation_id = <file.id>,
-  slide_id = <slideId>,
-  size = "MEDIUM",
-  mime_type = "PNG"
+  slide_id        = <pattern slideId>,
+  size            = "MEDIUM",
+  mime_type       = "PNG"
 )
 ```
 
-Thumbnail URLs expire in ~30 minutes. If a URL fails later, re-fetch rather
-than debugging an expired signature. Register each slide in an internal
-catalog: `{ slideId, purpose (from title or text preview), thumbnailUrl }`.
+Thumbnail URLs expire in ~30 minutes — re-fetch rather than debugging an
+expired signature.
 
-## Step 4 — Plan the deck
+## Step 6 — Duplicate patterns into final position
 
-Match the brief to the pattern catalog. The plan is an ordered list:
+Without `insertion_index`, a duplicate lands immediately after its
+source slide (Google Slides API default). That leaves copies interleaved
+with originals and forces a separate reorder pass on anything larger
+than a few slides.
 
-```
-1. Pattern "slideId-title" → section opener
-2. Pattern "slideId-stat3col" → Q3 metrics
-3. Pattern "slideId-bullets" → key findings
-4. Pattern "slideId-cta" → call to action
-```
+With `insertion_index`, you can pre-place the copy in the same
+batchUpdate — no reorder pass. Two equivalent strategies:
 
-For each entry, note the pattern's known placeholder tokens (from `textPreview`
-fields in step 3) and what content will replace them. See
-`pattern-selection.md` for how to pick patterns without misclassifying them.
+### Recommended: reverse-iterate, always insert at index 0
 
-**Show the plan to the user and get confirmation before any mutation.** Point
-out any patterns you had to skip and why (e.g., "the template has no
-quote-style pattern, so I will use a bullet pattern instead").
-
-## Step 5 — Duplicate chosen patterns
-
-For each plan entry, in order:
+Walk the plan **from last entry to first**, calling:
 
 ```
 google_slides_duplicate_slide(
   presentation_id = <file.id>,
-  slide_id = <pattern slideId>
+  slide_id        = <pattern slideId>,
+  insertion_index = 0
 )
 ```
 
-Save the returned `newSlideId` alongside the plan entry. The duplicate lands
-immediately after its source, so the deck after this step has interleaved
-pattern/copy pairs. That is fine — step 7 hides the originals.
+Each insertion at position 0 pushes previous insertions down, so after
+all N duplicates the first N slides of the deck match the plan order
+exactly. The agent never has to compute shifting indices.
 
-If you need a specific order, you can re-order with
-`google_slides_batch_update` using `updateSlidesPosition`. See
-`batch-update-recipes.yaml`.
+Worked example with plan `[A, B, C]`:
 
-## Step 6 — Fill content
+| Iteration | Call | Deck prefix after |
+|---|---|---|
+| 1 | duplicate C → index 0 | `[C']` |
+| 2 | duplicate B → index 0 | `[B', C']` |
+| 3 | duplicate A → index 0 | `[A', B', C']` |
 
-For each new slide, gather the replacements and call:
+### Alternative: forward-iterate with growing index
+
+Walk the plan from first entry to last, passing
+`insertion_index = <0-based plan position>`. The API's `insertionIndex`
+is evaluated against the deck state before the request, so plan index
+0, 1, 2, … all work correctly:
+
+| Iteration | Call | Deck prefix after |
+|---|---|---|
+| 1 | duplicate A → index 0 | `[A']` |
+| 2 | duplicate B → index 1 | `[A', B']` |
+| 3 | duplicate C → index 2 | `[A', B', C']` |
+
+Both strategies produce the same result. Pick whichever feels natural
+for the plan — the reverse strategy is shorter to state (always 0).
+
+Save the returned `newSlideId` next to each plan entry regardless of
+strategy. You will need it in steps 7 and 9.
+
+## Step 7 — Fill content
+
+For each new slide, pass the replacements derived from the brief and the
+snapshot you captured in step 5:
 
 ```
 google_slides_replace_text(
-  presentation_id = <file.id>,
-  slide_ids = [<newSlideId>],
+  presentation_id   = <file.id>,
+  slide_ids         = [<newSlideId>],
   replacements_yaml = <YAML list of {find, replace, match_case?}>
 )
 ```
 
-Important: `slide_ids` scopes the replacement so that the same token (e.g.,
-`[Title]`) in other slides is not affected. Replace slides one at a time so
-each slide's content stays isolated.
+Important: `slide_ids` scopes the replacement so that the same token
+(e.g., `[Title]`) in other slides is not affected. Replace slides one at
+a time — this keeps each slide's content isolated and makes step 9's
+leak check per-slide straightforward.
 
 For non-text edits (image swap, shape resize, table rows) use
 `google_slides_batch_update` with recipes from `batch-update-recipes.yaml`.
@@ -155,72 +218,99 @@ automatically. Do not re-apply styles after replacement — that overrides
 the template author's theme decisions and breaks consistency across the
 deck.
 
-The only caveat: if the template author split a single logical phrase across
-multiple runs (rare, but possible), `replaceAllText` matches only within a
-single run. Symptom: partial replacement. Fix: the template should be
-corrected; do not work around it with `updateTextStyle`.
+The only caveat: if the template author split a single logical phrase
+across multiple runs (rare, but possible), `replaceAllText` matches only
+within a single run. Symptom: partial replacement. Fix: the template
+should be corrected; do not work around it with `updateTextStyle`.
 
-## Step 7 — Hide originals
+## Step 8 — Hide all used pattern originals in one call
 
-For every pattern ID listed in the plan:
+Collect every pattern slide id that appeared in the plan and hide them
+together:
 
 ```
-google_slides_hide_slide(
+google_slides_hide_slides(
   presentation_id = <file.id>,
-  slide_id = <pattern slideId>
+  slide_ids       = [<every used pattern slideId>]
 )
 ```
 
-`google_slides_hide_slide` sets `isSkipped: true` on `SlideProperties` via
-`updateSlideProperties`. The slide stays in the deck — it just doesn't
-appear in presentation mode. This is deliberate: if QA surfaces an issue,
-you can un-hide a pattern by calling `google_slides_batch_update` with an
-`updateSlideProperties` request setting `isSkipped: false`, then re-do the
-copy.
+`hide_slides` issues a single batchUpdate with N `updateSlideProperties`
+requests, so the cost is one round trip regardless of how many patterns
+were used. The slides stay in the deck — they just do not appear in
+presentation mode. To un-hide later, call `google_slides_batch_update`
+with an `updateSlideProperties` request setting `isSkipped: false`.
 
 Leave unused pattern slides as they are — hiding them by default changes
 the template into something the user did not ask for. If the user wants
-only the filled copies visible (the common case), confirm with them first,
-then hide the unused patterns with the same `google_slides_hide_slide`
-call.
+only the filled copies visible, confirm with them first, then add those
+patterns to the same `hide_slides` call.
 
-## Step 8 — QA
+## Step 9 — QA
 
 Three checks, in order:
 
-1. **Placeholder leak check.** Re-call `google_slides_get` and scan the
-   concatenated `textPreview` fields for remaining tokens:
+### 9a. Snapshot-diff leak check
 
-   - Square-bracket tokens: `[Title]`, `[Body]`, `[Metric`, `[CTA]`, …
-   - Common placeholder words: `Lorem ipsum`, `TODO`, `FIXME`
+The only reliable way to catch "original template text survived the
+fill" is to compare each filled slide against the pattern it came from:
 
-   If any hit, go back to step 6 and add the missing replacements.
+1. For each filled slide, call `google_slides_get_slide(presentation_id,
+   newSlideId)`.
+2. For each element in the filled slide, look up the matching element
+   (same shape role / placeholder type / logical slot) in the step-5
+   snapshot.
+3. If the filled element's `fullText` is identical to the pattern's
+   `fullText` for that slot, the replacement did not happen — flag as
+   a leak.
 
-2. **Hidden-originals check.** For every pattern ID in the plan, verify its
-   slide in the `google_slides_get` response has `isSkipped: true`. If not,
-   call `google_slides_hide_slide` again (idempotent).
+This catches cases like "the Boxed 3-column body text was truncated in
+preview, so the replace target was wrong" — the fill succeeds with no
+error but the visible text is still the template's instructional prose.
 
-3. **Thumbnail review.** Fetch thumbnails for every visible (not skipped)
-   slide. Look for:
+Also grep the filled deck for the generic placeholder tokens below —
+these are template-author idioms that often appear in Slides templates
+and are not captured by the per-slide snapshot:
 
-   - Text overflow (text running off the slide)
-   - Empty placeholders (pattern text survived because the replace target
-     did not match exactly)
-   - Broken or distorted images
-   - Contrast issues (e.g., user-provided text color clashing with template
-     background)
+```
+[Title]  [Body]  [Metric]  [CTA]  [Name]  [Subtitle]
+Lorem ipsum  TODO  FIXME
+xx%  XX%  00%  00.  YYYY  MM/DD
+Title goes here  Subtitle goes here  Keep in mind that
+Click to add text  PLACEHOLDER
+```
 
-   When in doubt, ask the user to review. Fresh eyes catch layout issues that
-   token-based checks miss.
+If any hit, return to step 7 and add the missing replacements.
 
-## Step 9 — Return the result
+### 9b. Hidden-originals check
+
+For every pattern ID in the plan, confirm the original has
+`isSkipped: true` in `google_slides_list_slides` (cheaper than `get`).
+If any is still visible, call `google_slides_hide_slides` again — it is
+idempotent.
+
+### 9c. Thumbnail review
+
+Fetch thumbnails for every visible (not skipped) slide. Look for:
+
+- Text overflow (text running off the slide edge)
+- Empty placeholders (pattern text survived because the replace target
+  did not match exactly)
+- Broken or distorted images
+- Contrast issues (user-provided text color clashing with template
+  background)
+
+When in doubt, ask the user to review. Fresh eyes catch layout issues
+that token checks miss.
+
+## Step 10 — Return the result
 
 Report to the user:
 
 - `webViewLink` from step 2
-- Summary of patterns used (order + purpose)
-- Any QA warnings and what you did or didn't fix
+- Summary of patterns used (final order + purpose)
+- Any QA warnings and what you did or did not fix
 
 Leave the source template and working copy in place. Deletion is
-irreversible from the skill's perspective, and the user can remove either
-from Drive manually if they want.
+irreversible from the skill's perspective, and the user can remove
+either from Drive manually if they want.

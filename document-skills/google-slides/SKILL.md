@@ -66,11 +66,13 @@ under `createGoogleSlidesTools`.
 | Tool                              | Role                                       |
 |-----------------------------------|--------------------------------------------|
 | `google_drive_copy`               | Copy the template into a new working deck  |
-| `google_slides_get`               | Read deck structure, slide IDs, text previews |
-| `google_slides_get_thumbnail`     | Visual inspection of a slide (PNG URL)     |
-| `google_slides_duplicate_slide`   | Copy a pattern slide so you can edit it    |
+| `google_slides_list_slides`       | **Discovery** — lightweight list of slides (id, title, skipped flag, element count) |
+| `google_slides_get_slide`         | Per-slide full detail — untruncated text, placeholder types, element geometry |
+| `google_slides_get`               | Full deck structure (heavier; prefer `list_slides` + `get_slide` on large decks) |
+| `google_slides_get_thumbnail`     | Visual inspection of a slide (PNG URL, ~30 min)  |
+| `google_slides_duplicate_slide`   | Copy a pattern slide (optional `insertion_index` to pre-place the copy) |
 | `google_slides_replace_text`      | Fill placeholder text (style-preserving)   |
-| `google_slides_hide_slide`        | Mark a pattern original as `isSkipped`     |
+| `google_slides_hide_slides`       | Mark pattern originals as `isSkipped` (array — one call for all at once) |
 | `google_slides_batch_update`      | Table rows/columns, element transforms, image replacement, text styling, multi-request batches |
 
 `google_slides_replace_text` and `google_slides_batch_update` take
@@ -86,18 +88,21 @@ and how to recover from common mistakes. Short version:
 
 ```
 1. Confirm both connectors, collect template URL + brief
-2. Copy template deck    (google_drive_copy)
-3. Discover patterns     (google_slides_get + thumbnails)
-4. Plan deck             (propose slide plan, get user sign-off)
-5. Duplicate chosen patterns  (google_slides_duplicate_slide per plan entry)
-6. Fill content          (google_slides_replace_text + batch_update for non-text)
-7. Hide originals        (google_slides_hide_slide on every pattern that was used)
-8. QA                    (placeholder-leak + hidden-originals + thumbnail review)
-9. Return the working deck URL plus a summary of patterns used
+2. Copy template deck        (google_drive_copy)
+3. List slides               (google_slides_list_slides)
+4. Plan deck                 (propose slide plan, get user sign-off)
+5. Inspect chosen patterns   (google_slides_get_slide per plan entry)
+6. Duplicate into final position (google_slides_duplicate_slide with insertion_index —
+                                  either reverse-iterate at index 0, or forward-iterate
+                                  with growing index; see workflow.md Step 6)
+7. Fill content              (google_slides_replace_text + batch_update for non-text)
+8. Hide all used originals   (one google_slides_hide_slides call with the full array)
+9. QA                        (placeholder-leak + hidden-originals + thumbnail review)
+10. Return the working deck URL plus a summary of patterns used
 ```
 
 **One rule that prevents every common failure**: after duplicating a
-pattern and filling it, hide the original pattern slide (step 7) rather
+pattern and filling it, hide the original pattern slide (step 8) rather
 than delete it. Hiding is reversible, keeps the template readable as a
 reference, and lets you recover the pattern if QA surfaces a problem.
 
@@ -109,8 +114,14 @@ Read it when building the slide plan in step 4.
 
 ## QA
 
-Run the three checks in step 8 of the workflow: placeholder-leak,
-hidden-originals, and thumbnail review. Details in `references/workflow.md`.
+Step 9 of the workflow runs three checks: a **snapshot-diff leak check**
+(compare each filled slide's text against the pre-replace pattern text —
+anything still matching means placeholder content survived), a
+hidden-originals check, and a thumbnail review. The leak check needs a
+text snapshot taken during step 5, so do not skip that capture.
+Details and a list of generic placeholder tokens live in
+`references/workflow.md`.
+
 Expect to loop at least once (generate → inspect → fix → re-verify) — a
 zero-problems report on the first pass almost always means the review was
 superficial.
@@ -119,7 +130,7 @@ superficial.
 
 | Symptom                           | Likely cause                    | Fix                                                     |
 |-----------------------------------|---------------------------------|---------------------------------------------------------|
-| Placeholder text remains visible  | Replacement token mismatch      | Call `google_slides_get`, find the exact token, retry   |
+| Placeholder text remains visible  | Replacement token mismatch      | Call `google_slides_get_slide` on the filled slide, read the untruncated fullText, retry with the exact string |
 | Text style changed after replace  | Used direct text set, not `google_slides_replace_text` | Re-copy the pattern slide and use `google_slides_replace_text` |
 | Thumbnail URL returns 404         | URL expired (>30 min)           | Re-fetch `google_slides_get_thumbnail`                  |
 | `google_slides_batch_update` returns 400 | YAML parsed to wrong shape | Validate YAML against the recipe file; check indent     |

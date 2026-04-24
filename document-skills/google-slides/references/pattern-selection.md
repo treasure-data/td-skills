@@ -29,17 +29,20 @@ template author followed the convention, each pattern slide has a title like
 A good template has ~10–15 patterns covering these families. Fewer means
 some briefs will not map cleanly.
 
-## Reading Thumbnails
+## Reading the Signals Available at Planning Time
 
-For each pattern slide, you have three signals:
+At step 4 (Plan the deck), the agent only has `google_slides_list_slides`
+data — titles, element counts, and skip flags. Full text is not yet
+loaded; that happens in step 5. The three signals you work with here:
 
 1. **Slide title** (if present) — e.g., `Pattern: Stat Callout (3 cols)`
-2. **Text previews** — first ~120 characters of each shape's text
-3. **Thumbnail URL** — a rendered PNG you can inspect visually
+2. **Element count** — rough complexity indicator (3 = simple layout,
+   10+ = heavy layout with many slots)
+3. **Thumbnail URL** via `google_slides_get_thumbnail` — a rendered PNG
+   you can inspect visually for ambiguous patterns
 
-The title is the most reliable signal. Text previews tell you the
-placeholder tokens in use. Thumbnails resolve ambiguity when the title is
-missing or generic.
+The title is the most reliable signal. Element count disambiguates
+between simple and complex variants. Thumbnails resolve the rest.
 
 Ambiguity example: two "Stat Callout" patterns that differ only in column
 count (2 vs 3). The title suffix and thumbnail disambiguate — pick the one
@@ -68,18 +71,21 @@ Then walk the outline and pick patterns:
 
 ## Selection Checklist
 
-Before committing to a pattern, verify:
+Before committing to a pattern, verify (from the `list_slides` title +
+thumbnail at step 4, and optionally a `get_slide` sneak peek):
 
-- **Slot count matches content.** If the pattern has 3 stat slots and the
-  user gave 5 metrics, pick a different pattern or trim to 3 — do not try
-  to add slots via `google_slides_batch_update`. Adding slots almost always breaks the
-  template's proportions.
+- **Slot count matches content.** If the pattern's thumbnail shows 3 stat
+  slots and the user gave 5 metrics, pick a different pattern or trim to
+  3 — do not try to add slots via `google_slides_batch_update`. Adding
+  slots almost always breaks the template's proportions.
 - **Image slots match available images.** An "Image + text" pattern needs
   an image; if the user did not provide one, pick a text-only equivalent.
-- **The placeholder text tokens are recognizable.** If `textPreview` shows
-  filler like "Lorem ipsum" with no token markers, the replace step will
+- **The placeholder text tokens are recognizable.** If a quick
+  `google_slides_get_slide` on a candidate shows filler like "Lorem
+  ipsum" with no `[Title]`/`[Body]`-style tokens, the replace step will
   have to search for the filler text verbatim — more fragile than
-  explicit `[Title]`/`[Body]` tokens.
+  explicit tokens. Consider picking a pattern with cleaner placeholder
+  text, or flag the template issue to the user.
 
 If no pattern fits a brief section, **do not improvise** by heavy
 `google_slides_batch_update` customization. Either:
