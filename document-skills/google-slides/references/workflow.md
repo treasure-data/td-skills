@@ -295,6 +295,78 @@ ended up in column 1" failures.
 See `batch-update-recipes.yaml` for `deleteTableRow` / `insertText` /
 `deleteText` recipes.
 
+### Handling empty image placeholders
+
+Templates often include image placeholder shapes shown in the UI with a
+landscape/picture icon and "Click to add image". These are shapes with
+`placeholder: "PICTURE"` (or similar image-type placeholders) — they
+contain no actual image and `replace_text` / `insertText` do nothing
+meaningful on them.
+
+Fill with `batch_update` `createImage`, reusing the placeholder's
+`size` and `transform` so the new image lands in the exact same spot:
+
+```yaml
+- createImage:
+    url: "<https URL of the image>"
+    elementProperties:
+      pageObjectId: "<slide objectId>"
+      size: <copy from placeholder.size>
+      transform: <copy from placeholder.transform>
+```
+
+Then delete the original placeholder so it does not show behind the new
+image:
+
+```yaml
+- deleteObject:
+    objectId: "<placeholder objectId>"
+```
+
+Leaving the original placeholder in place produces the landscape icon
+showing through when the inserted image does not fully cover the
+placeholder bounds.
+
+### Japanese text — kinsoku shori (禁則処理)
+
+When the deck contains Japanese text, apply the standard line-breaking
+rules before writing content into `replace_text` or `insertText`. The
+Slides API does not auto-apply kinsoku at the text-run level; whatever
+you hand the API is what appears on the slide, including mid-line
+breaks and punctuation at the wrong positions.
+
+**Line-start prohibition (行頭禁則)** — never start a visual line with:
+
+```
+）」』】)]}  、。,.  ！？!?  ・：；:;  ー
+```
+
+Bad: `...になる\n）する`  →  Good: `...になる）\nする`
+
+**Line-end prohibition (行末禁則)** — never end a visual line with:
+
+```
+（「『【([{
+```
+
+Bad: `データ（\nCDP`  →  Good: `データ\n（CDP`
+
+**No-break (分離禁止)** — keep together:
+
+- English words and numbers (`1,000`, `100%`, `Q3`)
+- URLs and email addresses
+- Paired punctuation (`「Hello」` stays on one line)
+
+**Practical rule**: compose each Japanese paragraph as free-flowing
+text without explicit `\n` breaks, and let the template's text box
+wrap naturally. Introduce `\n` only at semantic paragraph boundaries,
+not to force visual breaks — the latter is where most kinsoku
+violations originate.
+
+If the template author embedded manual breaks that violate kinsoku
+(rare but possible), that is a template bug; flag it to the user
+rather than trying to work around it in the skill.
+
 ### Style preservation guarantee
 
 `replaceAllText` edits the content of existing text runs in place, so the
@@ -378,12 +450,28 @@ idempotent.
 
 Fetch thumbnails for every visible (not skipped) slide. Look for:
 
-- Text overflow (text running off the slide edge)
-- Empty placeholders (pattern text survived because the replace target
-  did not match exactly)
-- Broken or distorted images
-- Contrast issues (user-provided text color clashing with template
-  background)
+- **Text overflow** — text running off the slide edge or clipping
+- **Empty text placeholders still showing "Click to add text" / "Click
+  to add subtitle"** — pattern text or UI hint survived because the
+  replace target did not match exactly, or `replace_text` was used on
+  an `isEmptyPlaceholder: true` shape that needed `insertText`
+- **Empty image placeholders still showing the landscape/picture icon**
+  — a `placeholder: "PICTURE"` shape was never filled with
+  `createImage`, or the inserted image did not cover the placeholder
+  bounds. Cross-check by calling `google_slides_get_slide` on each
+  visible slide and confirming every `placeholder: "PICTURE"` shape
+  either has been replaced by an actual `type: "image"` element or
+  has been removed via `deleteObject`.
+- **Broken or distorted images** — wrong aspect ratio, HTTPS fetch
+  failed, URL expired
+- **Contrast issues** — user-provided text color clashing with template
+  background
+- **Japanese line-break violations** — punctuation at line start
+  (`）「`, etc.) or unnatural breaks in the middle of English words or
+  numbers. See Step 7 "Japanese text — kinsoku shori" for the rules.
+- **Stale template artifacts** — any text or imagery that reads like
+  template filler ("Item Five", "Your text here", "Lorem ipsum", the
+  template author's sample content)
 
 When in doubt, ask the user to review. Fresh eyes catch layout issues
 that token checks miss.

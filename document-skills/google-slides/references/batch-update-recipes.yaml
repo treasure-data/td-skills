@@ -113,6 +113,10 @@
 # --- Images ----------------------------------------------------------------
 
 # Replace an existing image in place, keeping its position and size.
+# Use on an actual image element (type: "image" in get_slide). NOT for
+# PICTURE placeholder shapes — those need createImage (see below) because
+# they are shapes, not image elements.
+#
 # imageReplaceMethod options:
 #   CENTER_INSIDE — fit the new image inside the box (may letterbox)
 #   CENTER_CROP   — fill the box with the new image (may crop)
@@ -121,7 +125,31 @@
     url: "{{NEW_IMAGE_URL}}"
     imageReplaceMethod: CENTER_INSIDE
 
-# Create a new image on a slide (needs position and size).
+# Fill an empty PICTURE placeholder. Copy the placeholder's `size` and
+# `transform` from get_slide so the new image lands exactly where the
+# placeholder was. Then deleteObject the placeholder so the landscape
+# icon does not show through (see next recipe).
+- createImage:
+    url: "{{IMAGE_URL}}"
+    elementProperties:
+      pageObjectId: "{{SLIDE_ID}}"
+      size:
+        width: { magnitude: "{{WIDTH_PT}}", unit: PT }
+        height: { magnitude: "{{HEIGHT_PT}}", unit: PT }
+      transform:
+        scaleX: 1
+        scaleY: 1
+        translateX: "{{X_PT}}"
+        translateY: "{{Y_PT}}"
+        unit: PT
+
+# Delete a PICTURE placeholder after you have overlaid it with createImage.
+# Pair this with the createImage above in the same batchUpdate to avoid a
+# visible flicker where the placeholder icon shows through.
+- deleteObject:
+    objectId: "{{PLACEHOLDER_OBJECT_ID}}"
+
+# Create a new image on an empty area of a slide (not a placeholder).
 - createImage:
     url: "{{IMAGE_URL}}"
     elementProperties:
