@@ -106,10 +106,9 @@ and how to recover from common mistakes. Short version:
 10. Return the working deck URL plus a summary of patterns used
 ```
 
-**One rule that prevents every common failure**: after duplicating a
-pattern and filling it, hide the original pattern slide (step 8) rather
-than delete it. Hiding is reversible, keeps the template readable as a
-reference, and lets you recover the pattern if QA surfaces a problem.
+Prefer hiding a pattern slide (step 8) over deleting it: hiding is
+reversible, keeps the template readable as a reference, and lets you
+recover the pattern if QA surfaces a problem.
 
 ## Pattern Selection
 
@@ -133,18 +132,18 @@ superficial.
 
 ## Failure Modes and Recovery
 
-| Symptom                           | Likely cause                    | Fix                                                     |
-|-----------------------------------|---------------------------------|---------------------------------------------------------|
-| Placeholder text remains visible  | Replacement token mismatch      | Call `google_slides_get_slide` on the filled slide, read the untruncated fullText, retry with the exact string |
-| "Click to add subtitle" / "Click to add text" still visible | Empty placeholder shape was targeted with `replace_text` — Google's UI hint is not a real text run | Use `google_slides_batch_update` `insertText` with the shape's `objectId`. Look for `isEmptyPlaceholder: true` in `get_slide` output |
-| Landscape / picture icon still showing where an image should be | Empty image placeholder (`placeholder: "PICTURE"`) was never filled | `batch_update` `createImage` reusing the placeholder's `size` + `transform`, then `deleteObject` on the placeholder |
-| Template stock photos / icons still visible in the final deck | Agent treated `type: "image"` elements as decoration instead of replaceable content | Inventory images in Step 5; swap via `replaceImage` in Step 7 using a user-supplied URL or the generate → Drive upload → share → replaceImage pipeline |
-| `batch_update` fails with a permission error when Google fetches an image URL | The Drive file was uploaded but not shared publicly | Call `google_drive_share` with `role: "reader"`, `type: "anyone"`; use the `https://drive.google.com/uc?id=<file_id>` form, not the `/view` URL |
-| Japanese line breaks fall on wrong characters (`）` at start, `（` at end, English words split) | Manual `\n` was injected into replace text; Slides API does not auto-apply kinsoku shori | Compose paragraphs as free-flowing text, remove explicit breaks except at semantic boundaries. See workflow.md Step 7 kinsoku rules |
-| Table cell reads "011" / "Claude Cowork とは？Item One" (original text concatenated with new) | `insertText` was used on a non-empty cell — it prepends, does not replace | Use `replace_text` with the cell's existing `fullText` as the `find` argument. `get_slide` now returns `cells[].fullText` per cell |
-| Stale table rows like "5 Item Five" / "6 Item Six" visible | Pattern table had more rows than the brief content; unused rows were not cleaned | Call `batch_update` with `deleteTableRow` for each unused row (iterate from the bottom to keep indices stable) |
-| All content lands in column 1 of a multi-column pattern | Agent did not distinguish column 2/3 shapes from column 1 | Sort the shapes sharing a placeholder role by `transform.translateX` to identify column order, then bind content to each shape's `objectId` |
-| Text style changed after replace  | Used direct text set, not `google_slides_replace_text` | Re-copy the pattern slide and use `google_slides_replace_text` |
-| Thumbnail URL returns 404         | URL expired (>30 min)           | Re-fetch `google_slides_get_thumbnail`                  |
-| `google_slides_batch_update` returns 400 | YAML parsed to wrong shape | Validate YAML against the recipe file; check indent     |
-| Element moved to wrong position   | Transform applyMode confusion   | Use `applyMode: RELATIVE` for deltas, `ABSOLUTE` for pos |
+Non-obvious failures the agent is prone to. Generic issues (rate
+limits, expired thumbnail URLs, YAML syntax errors) are not listed —
+the agent handles those from its own reading of error messages.
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| "Click to add text" / "Click to add subtitle" visible in the final deck | Empty placeholder shape was targeted with `replace_text` — Google's UI hint is not a real text run | Use `batch_update insertText` on the shape's `objectId`. `get_slide` flags these with `isEmptyPlaceholder: true` |
+| Landscape / picture icon showing where an image should be | Empty `placeholder: "PICTURE"` shape was never filled | `batch_update createImage` reusing the placeholder's `size` + `transform`, then `deleteObject` on the placeholder |
+| Template stock photos / icons still visible | Agent treated `type: "image"` elements as template decoration | Inventory images in Step 5; swap via `replaceImage` using a user-supplied URL or the generate → upload → share → replaceImage pipeline |
+| `batch_update` fails when Google fetches an image URL | Drive file not shared publicly, or `/view` URL used instead of `/uc?id=…` | Call `google_drive_share` with `role: reader`, `type: anyone`; use the `uc?id=` form |
+| Table cell reads `"011"` / `"<new>Item One"` | `insertText` was used on a non-empty cell — it prepends, not replaces | Use `replace_text` with the cell's existing `fullText` as `find`. `get_slide` returns `cells[].fullText` |
+| Stale rows like "5 Item Five" visible | Unused template table rows were left | `batch_update deleteTableRow` per unused row, iterating from the bottom |
+| All content lands in column 1 of a multi-column pattern | Column order not determined | Sort shapes sharing a placeholder role by `transform.translateX` before binding content |
+| Japanese line breaks on wrong characters (`）` at start, `（` at end, English words split) | Manual `\n` was injected; Slides API does not auto-apply kinsoku shori | Compose paragraphs as free-flowing text, break only at semantic boundaries. See `references/filling-content.md` kinsoku rules |
+| Partial replacement inside one string | Template split the phrase across runs; `replaceAllText` matches within one run only | Fix the template; do not patch with `updateTextStyle` |

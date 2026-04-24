@@ -1,13 +1,23 @@
 # Detailed Workflow
 
-Read this file when you are about to start editing a deck. It expands every
-step in the short workflow in `SKILL.md` with concrete tool calls, inputs,
-and verification cues.
+Read this file before starting a deck. It expands the short workflow
+in `SKILL.md` with concrete tool calls, inputs, and verification cues.
+Element-specific patterns (empty placeholders, tables, images,
+Japanese) live in [`filling-content.md`](filling-content.md) and are
+pointed to from Step 7.
 
-Tool schemas (argument names, types, return shape) are defined in the tdx
-repo at `studio/electron/services/google-tools.ts` under
-`createGoogleSlidesTools`. Consult that file if a call fails with an
-unexpected argument error.
+## Contents
+
+- [Step 1 — Prerequisites and inputs](#step-1--confirm-prerequisites-and-collect-inputs)
+- [Step 2 — Copy the template](#step-2--copy-the-template)
+- [Step 3 — List slides](#step-3--list-slides-cheap-discovery)
+- [Step 4 — Plan the deck](#step-4--plan-the-deck)
+- [Step 5 — Inspect patterns, snapshot text](#step-5--inspect-chosen-patterns-capture-text-snapshots)
+- [Step 6 — Duplicate into final position](#step-6--duplicate-patterns-into-final-position)
+- [Step 7 — Fill content](#step-7--fill-content)
+- [Step 8 — Hide used originals](#step-8--hide-all-used-pattern-originals-in-one-call)
+- [Step 9 — QA](#step-9--qa)
+- [Step 10 — Return the result](#step-10--return-the-result)
 
 ## Step 1 — Confirm prerequisites and collect inputs
 
@@ -164,16 +174,11 @@ expired signature.
 ## Step 6 — Duplicate patterns into final position
 
 Without `insertion_index`, a duplicate lands immediately after its
-source slide (Google Slides API default). That leaves copies interleaved
-with originals and forces a separate reorder pass on anything larger
-than a few slides.
+source slide (Google Slides API default). With `insertion_index`, the
+duplicate is pre-placed in the same batchUpdate — no reorder pass.
 
-With `insertion_index`, you can pre-place the copy in the same
-batchUpdate — no reorder pass. Two equivalent strategies:
-
-### Recommended: reverse-iterate, always insert at index 0
-
-Walk the plan **from last entry to first**, calling:
+Walk the plan **from last entry to first** and call with
+`insertion_index = 0`:
 
 ```
 google_slides_duplicate_slide(
@@ -184,8 +189,8 @@ google_slides_duplicate_slide(
 ```
 
 Each insertion at position 0 pushes previous insertions down, so after
-all N duplicates the first N slides of the deck match the plan order
-exactly. The agent never has to compute shifting indices.
+N duplicates the first N slides of the deck match the plan order. No
+index arithmetic, no reorder pass.
 
 Worked example with plan `[A, B, C]`:
 
@@ -195,29 +200,17 @@ Worked example with plan `[A, B, C]`:
 | 2 | duplicate B → index 0 | `[B', C']` |
 | 3 | duplicate A → index 0 | `[A', B', C']` |
 
-### Alternative: forward-iterate with growing index
+Forward iteration with growing `insertion_index` (0, 1, 2, …) also
+works — pick whichever feels natural — but the reverse strategy is
+shorter to state.
 
-Walk the plan from first entry to last, passing
-`insertion_index = <0-based plan position>`. The API's `insertionIndex`
-is evaluated against the deck state before the request, so plan index
-0, 1, 2, … all work correctly:
-
-| Iteration | Call | Deck prefix after |
-|---|---|---|
-| 1 | duplicate A → index 0 | `[A']` |
-| 2 | duplicate B → index 1 | `[A', B']` |
-| 3 | duplicate C → index 2 | `[A', B', C']` |
-
-Both strategies produce the same result. Pick whichever feels natural
-for the plan — the reverse strategy is shorter to state (always 0).
-
-Save the returned `newSlideId` next to each plan entry regardless of
-strategy. You will need it in steps 7 and 9.
+Save the returned `newSlideId` next to each plan entry; you will
+need it in steps 7 and 9.
 
 ## Step 7 — Fill content
 
-For each new slide, pass the replacements derived from the brief and the
-snapshot you captured in step 5:
+For each new slide, pass the replacements derived from the brief and
+the snapshot from step 5:
 
 ```
 google_slides_replace_text(
@@ -227,230 +220,26 @@ google_slides_replace_text(
 )
 ```
 
-Important: `slide_ids` scopes the replacement so that the same token
-(e.g., `[Title]`) in other slides is not affected. Replace slides one at
-a time — this keeps each slide's content isolated and makes step 9's
-leak check per-slide straightforward.
+`slide_ids` scopes the replacement so the same token (e.g., `[Title]`)
+in other slides is not affected. Replace slides one at a time — each
+slide's content stays isolated and step 9's leak check runs per-slide.
 
-For non-text edits (image swap, shape resize, table rows) use
-`google_slides_batch_update` with recipes from `batch-update-recipes.yaml`.
+Non-text edits (table rows, image swaps, empty placeholders, multi-
+column layouts, Japanese text) need `google_slides_batch_update` with
+element-specific patterns. See
+[`references/filling-content.md`](filling-content.md) when you encounter:
 
-### Handling empty placeholders
+| Signal in `get_slide` | Handler section |
+|---|---|
+| `isEmptyPlaceholder: true` on a text shape | Empty text placeholders |
+| Several shapes sharing one `placeholder` role | Multi-column layouts |
+| `type: "table"` with `cells[]` | Table cells |
+| `type: "image"` with existing `contentUrl` | Existing image elements |
+| Image needed but no URL supplied | Generate-and-publish pipeline |
+| `placeholder: "PICTURE"` shape, no image | Empty image placeholders |
+| Any Japanese text in the fill | Kinsoku shori |
 
-`google_slides_get_slide` flags shapes with `isEmptyPlaceholder: true`
-for placeholder shapes that have no actual text runs. Google Slides
-shows a "Click to add text" or "Click to add subtitle" hint in the UI,
-but that label is not a real text run — `replaceAllText` has nothing to
-match.
-
-Fill these shapes via `google_slides_batch_update` with `insertText`
-addressed by the shape's objectId (not by cellLocation — these are
-shapes, not table cells):
-
-```yaml
-- insertText:
-    objectId: "<shape objectId>"
-    text: "Your content here"
-    insertionIndex: 0
-```
-
-If you use `replace_text` on an empty placeholder, the call succeeds
-silently (zero occurrences changed) and the UI hint stays visible in
-the final deck — a common cause of "column 2 shows Click to add text"
-bugs.
-
-### Handling multi-column layouts (left-to-right ordering)
-
-Patterns like "3-column" or "Grid" have several shapes that share the
-same placeholder role (e.g., three `BODY` placeholders). The Slides
-API does not order them left-to-right in its response — page element
-order is arbitrary.
-
-Sort by `transform.translateX` (ascending) to identify column order:
-
-1. Collect all shapes with the same `placeholder` role (or all shapes
-   that look like content containers).
-2. Sort ascending by `transform.translateX` — that gives you left,
-   center, right (or column 1 → N).
-3. Bind your content to the correctly-indexed shape via its `objectId`.
-
-Skipping this step is the root cause of "all three columns of content
-ended up in column 1" failures.
-
-### Handling table cells
-
-`google_slides_get_slide` returns a `cells` array for each `type:
-"table"` element. Each cell carries `rowIndex`, `columnIndex`, and
-`fullText` (absent when the cell is empty). Use this to plan the fill:
-
-- **Non-empty cells** already have text like `"1"` / `"Item One"` /
-  `"Presenter"`. Replace via `replace_text` using the cell's existing
-  text as the `find` argument, scoped to the slide:
-  ```yaml
-  - find: "Item One"
-    replace: "Claude Cowork とは？"
-  ```
-  Do NOT use `insertText` with `cellLocation` on a non-empty cell — it
-  prepends text instead of replacing, so the result is
-  `"Claude Cowork とは？Item One"`.
-- **Empty cells** have no fullText. Use `batch_update` `insertText`
-  with `objectId` + `cellLocation`.
-- **Unused rows** (rows whose cells all have no fullText that the brief
-  would fill) should be deleted via `batch_update` `deleteTableRow` —
-  leaving them in place shows rows like "5 Item Five Presenter" in the
-  final deck.
-
-See `batch-update-recipes.yaml` for `deleteTableRow` / `insertText` /
-`deleteText` recipes.
-
-### Handling existing image elements (template stock imagery)
-
-`google_slides_get_slide` returns `type: "image"` for actual image
-elements the template already has content in. Treat these as
-**replaceable content** by default — template authors put stock photos
-/ icons there as visual placeholders, and leaving them in the final
-deck ships someone else's stock photography as if it were yours.
-
-For each image element, pick one of three paths:
-
-1. **Swap with a user-supplied image URL.** If the user provided a
-   direct HTTPS URL for this slot (or referenced a file they already
-   uploaded), use that URL.
-2. **Swap with an agent-generated image.** If the content calls for
-   imagery the user did not supply (icons for feature cards, diagrams,
-   illustrative photos), go through the generate-and-publish pipeline
-   below.
-3. **Keep the template image.** Rare. Acceptable when the template
-   image is explicitly the intended final asset (e.g., a company logo
-   in a footer slot).
-
-In every case, use `replaceImage` via `google_slides_batch_update`
-with the existing element's `objectId`:
-
-```yaml
-- replaceImage:
-    imageObjectId: "<existing image objectId>"
-    url: "<public HTTPS URL>"
-    imageReplaceMethod: CENTER_INSIDE   # or CENTER_CROP if the box
-                                         # should be fully filled
-```
-
-`replaceImage` preserves the element's position and size, so the new
-image lands exactly where the old one sat.
-
-#### Generate-and-publish pipeline for agent-created images
-
-Images the agent generates have to live at a public HTTPS URL for the
-Slides API to fetch them. Four tool calls, no custom infrastructure:
-
-1. **Generate the image** with `generate_image` (or any generator the
-   skill has access to). The result is a local file (e.g.,
-   `~/Downloads/icon.png`).
-2. **Upload to Drive** with `google_drive_upload`. Save the returned
-   `file_id`.
-3. **Make it public** with `google_drive_share` using
-   `role: "reader"`, `type: "anyone"` so the Slides API can fetch it
-   without authentication.
-4. **Construct the public URL** as
-   `https://drive.google.com/uc?id=<file_id>` (this is the
-   direct-download endpoint that works in `replaceImage` and
-   `createImage`).
-5. **Call `replaceImage`** with that URL on the image's `objectId`.
-
-Failure modes of this pipeline:
-
-- **Forgot to share publicly** → `batch_update` fails with a
-  permission error when Google tries to fetch the image.
-- **Used the `drive.google.com/file/d/.../view` URL instead of the
-  `uc?id=...` form** → Slides API receives HTML, rejects the image.
-- **Generated image has a wrong aspect ratio** → the image gets
-  letterboxed or cropped depending on `imageReplaceMethod`. Generate
-  at the same aspect ratio as the placeholder's `size` when possible.
-
-### Handling empty image placeholders
-
-Templates often include image placeholder shapes shown in the UI with a
-landscape/picture icon and "Click to add image". These are shapes with
-`placeholder: "PICTURE"` (or similar image-type placeholders) — they
-contain no actual image and `replace_text` / `insertText` do nothing
-meaningful on them.
-
-Fill with `batch_update` `createImage`, reusing the placeholder's
-`size` and `transform` so the new image lands in the exact same spot:
-
-```yaml
-- createImage:
-    url: "<https URL of the image>"
-    elementProperties:
-      pageObjectId: "<slide objectId>"
-      size: <copy from placeholder.size>
-      transform: <copy from placeholder.transform>
-```
-
-Then delete the original placeholder so it does not show behind the new
-image:
-
-```yaml
-- deleteObject:
-    objectId: "<placeholder objectId>"
-```
-
-Leaving the original placeholder in place produces the landscape icon
-showing through when the inserted image does not fully cover the
-placeholder bounds.
-
-### Japanese text — kinsoku shori (禁則処理)
-
-When the deck contains Japanese text, apply the standard line-breaking
-rules before writing content into `replace_text` or `insertText`. The
-Slides API does not auto-apply kinsoku at the text-run level; whatever
-you hand the API is what appears on the slide, including mid-line
-breaks and punctuation at the wrong positions.
-
-**Line-start prohibition (行頭禁則)** — never start a visual line with:
-
-```
-）」』】)]}  、。,.  ！？!?  ・：；:;  ー
-```
-
-Bad: `...になる\n）する`  →  Good: `...になる）\nする`
-
-**Line-end prohibition (行末禁則)** — never end a visual line with:
-
-```
-（「『【([{
-```
-
-Bad: `データ（\nCDP`  →  Good: `データ\n（CDP`
-
-**No-break (分離禁止)** — keep together:
-
-- English words and numbers (`1,000`, `100%`, `Q3`)
-- URLs and email addresses
-- Paired punctuation (`「Hello」` stays on one line)
-
-**Practical rule**: compose each Japanese paragraph as free-flowing
-text without explicit `\n` breaks, and let the template's text box
-wrap naturally. Introduce `\n` only at semantic paragraph boundaries,
-not to force visual breaks — the latter is where most kinsoku
-violations originate.
-
-If the template author embedded manual breaks that violate kinsoku
-(rare but possible), that is a template bug; flag it to the user
-rather than trying to work around it in the skill.
-
-### Style preservation guarantee
-
-`replaceAllText` edits the content of existing text runs in place, so the
-run's styling (font family, size, weight, color, decoration) is preserved
-automatically. Do not re-apply styles after replacement — that overrides
-the template author's theme decisions and breaks consistency across the
-deck.
-
-The only caveat: if the template author split a single logical phrase
-across multiple runs (rare, but possible), `replaceAllText` matches only
-within a single run. Symptom: partial replacement. Fix: the template
-should be corrected; do not work around it with `updateTextStyle`.
+The style-preservation guarantee and multi-run caveat also live there.
 
 ## Step 8 — Hide all used pattern originals in one call
 
