@@ -31,7 +31,7 @@ When the user asks about an existing workflow, check **local first**:
 
 ## TD Platform Constraints
 
-TD-platform operator notes (authentication, `s3_move>`/`loop>`/`py>` caveats), common output variables, and Secrets Reference: [operators.md](references/operators.md). Parameter details are in the official TD docs.
+TD-platform operator notes: [operators.md](references/operators.md). Parameter details are in the official TD docs.
 
 **Available operators:**
 

@@ -42,9 +42,9 @@ Two types of retry:
 
 ## Secret Expansion
 
-`${secret:key}` is only expanded in operator fields that explicitly support it. Some operators also auto-resolve named secrets (e.g., `td>` reads `td.apikey`).
+`${secret:key}` is expanded in operator fields that accept template strings, like other `${...}` interpolation. Some operators also auto-resolve named secrets (e.g., `td>` reads `td.apikey`).
 
-Which fields each operator expands and which named secrets are auto-resolved — see [Secrets Reference in operators.md](operators.md#secrets-reference).
+For per-operator details (which named secrets, operator-specific caveats), see [operators.md](operators.md).
 
 ---
 
