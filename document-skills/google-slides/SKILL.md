@@ -131,6 +131,10 @@ superficial.
 | Symptom                           | Likely cause                    | Fix                                                     |
 |-----------------------------------|---------------------------------|---------------------------------------------------------|
 | Placeholder text remains visible  | Replacement token mismatch      | Call `google_slides_get_slide` on the filled slide, read the untruncated fullText, retry with the exact string |
+| "Click to add subtitle" / "Click to add text" still visible | Empty placeholder shape was targeted with `replace_text` — Google's UI hint is not a real text run | Use `google_slides_batch_update` `insertText` with the shape's `objectId`. Look for `isEmptyPlaceholder: true` in `get_slide` output |
+| Table cell reads "011" / "Claude Cowork とは？Item One" (original text concatenated with new) | `insertText` was used on a non-empty cell — it prepends, does not replace | Use `replace_text` with the cell's existing `fullText` as the `find` argument. `get_slide` now returns `cells[].fullText` per cell |
+| Stale table rows like "5 Item Five" / "6 Item Six" visible | Pattern table had more rows than the brief content; unused rows were not cleaned | Call `batch_update` with `deleteTableRow` for each unused row (iterate from the bottom to keep indices stable) |
+| All content lands in column 1 of a multi-column pattern | Agent did not distinguish column 2/3 shapes from column 1 | Sort the shapes sharing a placeholder role by `transform.translateX` to identify column order, then bind content to each shape's `objectId` |
 | Text style changed after replace  | Used direct text set, not `google_slides_replace_text` | Re-copy the pattern slide and use `google_slides_replace_text` |
 | Thumbnail URL returns 404         | URL expired (>30 min)           | Re-fetch `google_slides_get_thumbnail`                  |
 | `google_slides_batch_update` returns 400 | YAML parsed to wrong shape | Validate YAML against the recipe file; check indent     |

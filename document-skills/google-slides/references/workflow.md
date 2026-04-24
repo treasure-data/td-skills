@@ -110,16 +110,33 @@ google_slides_get_slide(
 )
 ```
 
-Unlike `google_slides_get`, this returns each element's `fullText`
-untruncated. That matters for two reasons:
+Unlike `google_slides_get`, this returns the full signal the agent
+needs to fill the slide correctly:
 
-1. **Reliable `replace_text` find arguments** — the exact text as stored
-   in the deck is what `replaceAllText` matches on. A preview truncated
-   at 120 chars can hide the part you need to match.
-2. **Leak-check snapshots** — save each pattern's element-level
-   `fullText` values keyed by `(slideId, objectId)` into an in-memory
-   snapshot. Step 9 compares the filled deck against these snapshots to
-   detect content that was not replaced.
+1. **Untruncated element text (`fullText`)** — the exact string as
+   stored in the deck, which is what `replaceAllText` matches on. A
+   shorter preview can hide the part you need to match.
+2. **`isEmptyPlaceholder: true`** on placeholder shapes with no text
+   runs. Empty placeholders look blank in the thumbnail (with a "Click
+   to add text" UI hint) but have no real text to match against.
+   `replace_text` cannot fill them; use
+   `google_slides_batch_update insertText` addressed by the shape's
+   objectId. See Step 7 for the full pattern.
+3. **`cells[]` on table elements** — every cell's rowIndex,
+   columnIndex, and (if present) fullText. Empty cells appear with no
+   fullText. The agent uses this to decide per cell whether to
+   replace (has fullText) or insert (empty) and which rows to delete
+   (rows with no content that the brief would fill).
+4. **`transform.translateX`** on shapes — lets you sort shapes that
+   share a placeholder role (e.g., all `BODY` placeholders) into
+   left-to-right column order. The API does not return elements in
+   visual order.
+5. **Leak-check snapshots** — save each pattern's element-level
+   `fullText` values keyed by `(slideId, objectId)`, plus table
+   `cells[].fullText` keyed by `(slideId, objectId, rowIndex,
+   columnIndex)`, into an in-memory snapshot. Step 9 compares the
+   filled deck against these snapshots to detect content that was not
+   replaced.
 
 Also fetch a thumbnail when you need visual confirmation of what the
 pattern looks like:
@@ -209,6 +226,74 @@ leak check per-slide straightforward.
 
 For non-text edits (image swap, shape resize, table rows) use
 `google_slides_batch_update` with recipes from `batch-update-recipes.yaml`.
+
+### Handling empty placeholders
+
+`google_slides_get_slide` flags shapes with `isEmptyPlaceholder: true`
+for placeholder shapes that have no actual text runs. Google Slides
+shows a "Click to add text" or "Click to add subtitle" hint in the UI,
+but that label is not a real text run — `replaceAllText` has nothing to
+match.
+
+Fill these shapes via `google_slides_batch_update` with `insertText`
+addressed by the shape's objectId (not by cellLocation — these are
+shapes, not table cells):
+
+```yaml
+- insertText:
+    objectId: "<shape objectId>"
+    text: "Your content here"
+    insertionIndex: 0
+```
+
+If you use `replace_text` on an empty placeholder, the call succeeds
+silently (zero occurrences changed) and the UI hint stays visible in
+the final deck — a common cause of "column 2 shows Click to add text"
+bugs.
+
+### Handling multi-column layouts (left-to-right ordering)
+
+Patterns like "3-column" or "Grid" have several shapes that share the
+same placeholder role (e.g., three `BODY` placeholders). The Slides
+API does not order them left-to-right in its response — page element
+order is arbitrary.
+
+Sort by `transform.translateX` (ascending) to identify column order:
+
+1. Collect all shapes with the same `placeholder` role (or all shapes
+   that look like content containers).
+2. Sort ascending by `transform.translateX` — that gives you left,
+   center, right (or column 1 → N).
+3. Bind your content to the correctly-indexed shape via its `objectId`.
+
+Skipping this step is the root cause of "all three columns of content
+ended up in column 1" failures.
+
+### Handling table cells
+
+`google_slides_get_slide` returns a `cells` array for each `type:
+"table"` element. Each cell carries `rowIndex`, `columnIndex`, and
+`fullText` (absent when the cell is empty). Use this to plan the fill:
+
+- **Non-empty cells** already have text like `"1"` / `"Item One"` /
+  `"Presenter"`. Replace via `replace_text` using the cell's existing
+  text as the `find` argument, scoped to the slide:
+  ```yaml
+  - find: "Item One"
+    replace: "Claude Cowork とは？"
+  ```
+  Do NOT use `insertText` with `cellLocation` on a non-empty cell — it
+  prepends text instead of replacing, so the result is
+  `"Claude Cowork とは？Item One"`.
+- **Empty cells** have no fullText. Use `batch_update` `insertText`
+  with `objectId` + `cellLocation`.
+- **Unused rows** (rows whose cells all have no fullText that the brief
+  would fill) should be deleted via `batch_update` `deleteTableRow` —
+  leaving them in place shows rows like "5 Item Five Presenter" in the
+  final deck.
+
+See `batch-update-recipes.yaml` for `deleteTableRow` / `insertText` /
+`deleteText` recipes.
 
 ### Style preservation guarantee
 

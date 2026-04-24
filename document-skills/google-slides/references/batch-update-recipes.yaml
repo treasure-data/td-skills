@@ -43,12 +43,39 @@
     cellLocation:
       columnIndex: "{{COLUMN_INDEX}}"
 
-# Insert text into a specific table cell.
+# Insert text into a specific table cell. Use ONLY when the cell is empty
+# (no fullText in get_slide response). On a non-empty cell this prepends,
+# producing garbage like "Claude Cowork とは？Item One" when the cell still
+# held "Item One". For non-empty cells, use replace_text with the existing
+# cell content as `find`.
 - insertText:
     objectId: "{{TABLE_ID}}"
     cellLocation:
       rowIndex: "{{ROW_INDEX}}"
       columnIndex: "{{COLUMN_INDEX}}"
+    text: "{{TEXT}}"
+    insertionIndex: 0
+
+# Clear a cell's contents before inserting new text. Use when the cell is
+# non-empty but you do not know the exact existing string for replace_text,
+# or when you want to normalize a cell to a specific string.
+- deleteText:
+    objectId: "{{TABLE_ID}}"
+    cellLocation:
+      rowIndex: "{{ROW_INDEX}}"
+      columnIndex: "{{COLUMN_INDEX}}"
+    textRange:
+      type: ALL
+
+# --- Empty placeholder shapes ----------------------------------------------
+# Placeholder shapes that show "Click to add text" / "Click to add subtitle"
+# in the UI have no real text runs — replace_text cannot match that label.
+# google_slides_get_slide flags these with `isEmptyPlaceholder: true`.
+# Fill them via insertText addressed by the shape's objectId (no
+# cellLocation — these are shapes, not cells).
+
+- insertText:
+    objectId: "{{SHAPE_ID}}"
     text: "{{TEXT}}"
     insertionIndex: 0
 
