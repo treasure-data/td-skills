@@ -7,6 +7,7 @@
 ```yaml
 # Required
 name: my-workflow                     # Unique identifier (lowercase, hyphens), must match directory name
+profile: "@tdx-studio:<site>:<account-id>:<user-id>"  # AUTO-STAMPED by Studio at create time — DO NOT hand-author. Omit to make the workflow visible under every Studio account (reserved for system-installed templates).
 description: What this workflow does  # Human-readable description
 
 # Tool permissions — which tools Studio Agent calls may invoke.
