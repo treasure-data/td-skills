@@ -120,7 +120,7 @@ superficial.
 | Symptom                           | Likely cause                    | Fix                                                     |
 |-----------------------------------|---------------------------------|---------------------------------------------------------|
 | Placeholder text remains visible  | Replacement token mismatch      | Call `google_slides_get`, find the exact token, retry   |
-| Text style changed after replace  | Used direct text set, not `replace_text` | Re-copy the pattern slide and use `replace_text`  |
+| Text style changed after replace  | Used direct text set, not `google_slides_replace_text` | Re-copy the pattern slide and use `google_slides_replace_text` |
 | Thumbnail URL returns 404         | URL expired (>30 min)           | Re-fetch `google_slides_get_thumbnail`                  |
-| `batch_update` returns 400        | YAML parsed to wrong shape      | Validate YAML against the recipe file; check indent     |
+| `google_slides_batch_update` returns 400 | YAML parsed to wrong shape | Validate YAML against the recipe file; check indent     |
 | Element moved to wrong position   | Transform applyMode confusion   | Use `applyMode: RELATIVE` for deltas, `ABSOLUTE` for pos |

@@ -72,7 +72,7 @@ Before committing to a pattern, verify:
 
 - **Slot count matches content.** If the pattern has 3 stat slots and the
   user gave 5 metrics, pick a different pattern or trim to 3 — do not try
-  to add slots via `batch_update`. Adding slots almost always breaks the
+  to add slots via `google_slides_batch_update`. Adding slots almost always breaks the
   template's proportions.
 - **Image slots match available images.** An "Image + text" pattern needs
   an image; if the user did not provide one, pick a text-only equivalent.
@@ -82,7 +82,7 @@ Before committing to a pattern, verify:
   explicit `[Title]`/`[Body]` tokens.
 
 If no pattern fits a brief section, **do not improvise** by heavy
-`batch_update` customization. Either:
+`google_slides_batch_update` customization. Either:
 
 - Pick the closest pattern and accept a slight mismatch, or
 - Tell the user the template is missing a needed pattern and ask whether

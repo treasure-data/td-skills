@@ -124,8 +124,9 @@ Save the returned `newSlideId` alongside the plan entry. The duplicate lands
 immediately after its source, so the deck after this step has interleaved
 pattern/copy pairs. That is fine — step 7 hides the originals.
 
-If you need a specific order, you can re-order with `batch_update` using
-`updateSlidesPosition`. See `batch-update-recipes.yaml`.
+If you need a specific order, you can re-order with
+`google_slides_batch_update` using `updateSlidesPosition`. See
+`batch-update-recipes.yaml`.
 
 ## Step 6 — Fill content
 
@@ -171,14 +172,17 @@ google_slides_hide_slide(
 ```
 
 `google_slides_hide_slide` sets `isSkipped: true` on `SlideProperties` via
-`updateSlideProperties`. The slide is still in the deck — it just doesn't
-appear during presentation mode. This is deliberate: if the QA step surfaces
-an issue, you can un-hide a pattern (`skipped: false`) and re-do the copy.
+`updateSlideProperties`. The slide stays in the deck — it just doesn't
+appear in presentation mode. This is deliberate: if QA surfaces an issue,
+you can un-hide a pattern by calling `google_slides_batch_update` with an
+`updateSlideProperties` request setting `isSkipped: false`, then re-do the
+copy.
 
-Leave unused pattern slides as they are — hiding them by default changes the
-template into something the user did not ask for. If the user wants only the
-filled copies visible (the common case), confirm with them first, then hide
-the unused patterns with the same `hide_slide` call.
+Leave unused pattern slides as they are — hiding them by default changes
+the template into something the user did not ask for. If the user wants
+only the filled copies visible (the common case), confirm with them first,
+then hide the unused patterns with the same `google_slides_hide_slide`
+call.
 
 ## Step 8 — QA
 
