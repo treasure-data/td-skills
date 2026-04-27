@@ -25,7 +25,7 @@ Determine where to create the task based on your current working directory:
 
 1. **Capture Intent** — What to automate, how often, what tools/data needed, where results go
    - **Ask the user** for output format (Slack message, CSV, HTML report, etc.) and notification channels before creating files. Never assume a Slack channel — always confirm.
-2. **Create the Task** — **Always use the `create_schedule` MCP tool**, never Write/Bash the files directly. The tool scaffolds schedule.yaml + TASK.md + the standard subdirs (`data/`, `reference/`, `scripts/`, `results/`) and stamps the active Studio profile into schedule.yaml. Extra files under `scripts/` or `reference/` are added afterwards with Write.
+2. **Create the Task** — **Always use the `create_schedule` MCP tool for the initial task scaffold**; do not hand-create `schedule.yaml`, `TASK.md`, or the standard subdirs (`data/`, `reference/`, `scripts/`, `results/`) with Write/Bash. The tool generates those files/directories and stamps the active Studio profile into schedule.yaml. Extra files under `scripts/` or `reference/` may be added afterwards with Write.
 3. **Validate** — Run `schedule_validate` to check schedule.yaml
 4. **Reload** — Run `schedule_reload` to pick up new/changed tasks
 5. **Review** — Load the `schedule-review` skill and run a full review (structure + quality checks in parallel)
