@@ -25,7 +25,7 @@ Determine where to create the task based on your current working directory:
 
 1. **Capture Intent** — What to automate, how often, what tools/data needed, where results go
    - **Ask the user** for output format (Slack message, CSV, HTML report, etc.) and notification channels before creating files. Never assume a Slack channel — always confirm.
-2. **Create the Task** — Write files to the appropriate directory (workspace or standalone, see above)
+2. **Create the Task** — **Always use the `create_schedule` MCP tool for the initial task scaffold**; do not hand-create `schedule.yaml`, `TASK.md`, or the standard subdirs (`data/`, `reference/`, `scripts/`, `results/`) with Write/Bash. The tool generates those files/directories and stamps the active Studio profile into schedule.yaml. Extra files under `scripts/` or `reference/` may be added afterwards with Write.
 3. **Validate** — Run `schedule_validate` to check schedule.yaml
 4. **Reload** — Run `schedule_reload` to pick up new/changed tasks
 5. **Review** — Load the `schedule-review` skill and run a full review (structure + quality checks in parallel)
@@ -51,7 +51,7 @@ Steps 5-8 are **mandatory** — a task is not complete until it has been reviewe
     └── output.md        # Execution summary (REQUIRED — agent writes this)
 ```
 
-Create the directory and files directly using Write/Bash tools. The system will pick them up after `schedule_reload`.
+Use `create_schedule` to scaffold the directory — it generates schedule.yaml, TASK.md, and the four subdirs in one call and auto-registers the task. Add extra files under `scripts/` and `reference/` afterwards with Write. The system will pick up subsequent edits after `schedule_reload`.
 
 ## TASK.md Anatomy
 
@@ -94,6 +94,7 @@ Additional sections (`## Notes`, `## Constraints`, `## Data Files`, `## Output F
 
 ```yaml
 name: daily-sales-report
+profile: "@tdx-studio:<site>:<account-id>:<user-id>"  # AUTO-STAMPED by create_schedule — DO NOT hand-author. Omit to make the task visible under every Studio account (reserved for system-installed templates).
 schedule: "0 9 * * 1-5"
 enabled: false
 status: configured       # "configured" = ready to run, "template" = needs customization
@@ -149,6 +150,7 @@ Notification targets: use `slack:channel-name` for a Slack channel, or `slack:dm
 
 | Tool | Purpose |
 |------|---------|
+| `create_schedule` | **Preferred path** to create a new task — scaffolds schedule.yaml, TASK.md, and the standard subdirs; stamps the active Studio profile automatically |
 | `schedule_list` | List all tasks with status |
 | `schedule_get` | Full task details including TASK.md and recent results |
 | `schedule_validate` | Validate schedule.yaml against schema |

@@ -5,9 +5,12 @@
 ## Full Schema
 
 ```yaml
-# Required
+# Required (user-authored)
 name: my-workflow                     # Unique identifier (lowercase, hyphens), must match directory name
 description: What this workflow does  # Human-readable description
+
+# Studio-managed — DO NOT hand-author
+profile: "@tdx-studio:<site>:<account-id>:<user-id>"  # Auto-stamped by Studio at create time. Omit to make the workflow visible under every Studio account (reserved for system-installed templates).
 
 # Tool permissions — which tools Studio Agent calls may invoke.
 permissions:

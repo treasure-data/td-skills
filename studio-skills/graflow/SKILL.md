@@ -263,6 +263,7 @@ Every workflow directory contains a manifest, the workflow code, and pinned depe
 
 ```yaml
 name: my-workflow
+profile: "@tdx-studio:<site>:<account-id>:<user-id>"  # AUTO-STAMPED by Studio at create time — DO NOT hand-author
 description: What this workflow does
 permissions:
   allow:
