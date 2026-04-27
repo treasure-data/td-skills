@@ -150,26 +150,34 @@ needs to fill the slide correctly:
    whether to swap with user-provided content, agent-generated
    content, or (rarely) keep as-is.
 6. **Leak-check snapshots** — save each pattern's element-level
-   `fullText` values keyed by `(slideId, objectId)`, plus table
-   `cells[].fullText` keyed by `(slideId, objectId, rowIndex,
-   columnIndex)`, into an in-memory snapshot. Step 9 compares the
-   filled deck against these snapshots to detect content that was not
-   replaced.
+   `fullText` values keyed by `(patternSlideId, objectId)`, plus
+   table `cells[].fullText` keyed by `(patternSlideId, objectId,
+   rowIndex, columnIndex)`, into an in-memory snapshot under an
+   `elements` key. Step 9 (the `google-slides-review` skill's leak
+   sub-agent) compares the filled deck against these snapshots to
+   detect content that was not replaced. Step 6 will append a
+   `duplicate_map` to the same snapshot (`newSlideId → patternSlideId`)
+   so the leak check can resolve which pattern's text to compare a
+   filled slide against.
 
 Also fetch a thumbnail when you need visual confirmation of what the
 pattern looks like:
 
 ```
-google_slides_get_thumbnail(
+result = google_slides_get_thumbnail(
   presentation_id = <file.id>,
   slide_id        = <pattern slideId>,
   size            = "MEDIUM",
-  mime_type       = "PNG"
 )
+# result.path → e.g. /tmp/.../tdx-studio-slides-thumbnails/<id>-<id>-<hex>.png
+Read(result.path)   # load the image into the conversation
 ```
 
-Thumbnail URLs expire in ~30 minutes — re-fetch rather than debugging an
-expired signature.
+The tool writes the rendered image to a temp file and returns its
+path. The `Read` tool call is what actually puts the image in front of
+you — without it the path is just a string. Carrying the path around
+between turns is fine; carrying base64 image bytes is not, which is
+why the tool returns a path instead of inlining the bytes.
 
 ## Step 6 — Duplicate patterns into final position
 
@@ -205,7 +213,11 @@ works — pick whichever feels natural — but the reverse strategy is
 shorter to state.
 
 Save the returned `newSlideId` next to each plan entry; you will
-need it in steps 7 and 9.
+need it in steps 7 and 9. While you're at it, append the
+`newSlideId → patternSlideId` pair to the snapshot's
+`duplicate_map` from Step 5 — Step 9's leak check needs both halves
+(per-pattern text and the duplicate-to-pattern mapping) to know
+which pattern's text to compare each filled slide against.
 
 ## Step 7 — Fill content
 
@@ -266,83 +278,12 @@ patterns to the same `hide_slides` call.
 
 ## Step 9 — QA
 
-Three checks, in order:
-
-### 9a. Snapshot-diff leak check
-
-The only reliable way to catch "original template text survived the
-fill" is to compare each filled slide against the pattern it came from:
-
-1. For each filled slide, call `google_slides_get_slide(presentation_id,
-   newSlideId)`.
-2. For each element in the filled slide, look up the matching element
-   (same shape role / placeholder type / logical slot) in the step-5
-   snapshot.
-3. If the filled element's `fullText` is identical to the pattern's
-   `fullText` for that slot, the replacement did not happen — flag as
-   a leak.
-
-This catches cases like "the Boxed 3-column body text was truncated in
-preview, so the replace target was wrong" — the fill succeeds with no
-error but the visible text is still the template's instructional prose.
-
-Also grep the filled deck for the generic placeholder tokens below —
-these are template-author idioms that often appear in Slides templates
-and are not captured by the per-slide snapshot:
-
-```
-[Title]  [Body]  [Metric]  [CTA]  [Name]  [Subtitle]
-Lorem ipsum  TODO  FIXME
-xx%  XX%  00%  00.  YYYY  MM/DD
-Title goes here  Subtitle goes here  Keep in mind that
-Click to add text  PLACEHOLDER
-```
-
-If any hit, return to step 7 and add the missing replacements.
-
-### 9b. Hidden-originals check
-
-For every pattern ID in the plan, confirm the original has
-`isSkipped: true` in `google_slides_list_slides` (cheaper than `get`).
-If any is still visible, call `google_slides_hide_slides` again — it is
-idempotent.
-
-### 9c. Thumbnail review
-
-Fetch thumbnails for every visible (not skipped) slide. Look for:
-
-- **Text overflow** — text running off the slide edge or clipping
-- **Empty text placeholders still showing "Click to add text" / "Click
-  to add subtitle"** — pattern text or UI hint survived because the
-  replace target did not match exactly, or `replace_text` was used on
-  an `isEmptyPlaceholder: true` shape that needed `insertText`
-- **Empty image placeholders still showing the landscape/picture icon**
-  — a `placeholder: "PICTURE"` shape was never filled with
-  `createImage`, or the inserted image did not cover the placeholder
-  bounds. Cross-check by calling `google_slides_get_slide` on each
-  visible slide and confirming every `placeholder: "PICTURE"` shape
-  either has been replaced by an actual `type: "image"` element or
-  has been removed via `deleteObject`.
-- **Template stock imagery still visible** — a `type: "image"` element
-  whose `contentUrl` is unchanged from the original template. For each
-  `type: "image"` element in the filled deck, compare `contentUrl`
-  against the snapshot captured in Step 5. Identical URL means the
-  image was never swapped; decide per slide whether to replace with
-  user-supplied or agent-generated imagery, or whether the template
-  image was the intended final asset (confirm with the user).
-- **Broken or distorted images** — wrong aspect ratio, HTTPS fetch
-  failed, URL expired
-- **Contrast issues** — user-provided text color clashing with template
-  background
-- **Japanese line-break violations** — punctuation at line start
-  (`）「`, etc.) or unnatural breaks in the middle of English words or
-  numbers. See Step 7 "Japanese text — kinsoku shori" for the rules.
-- **Stale template artifacts** — any text or imagery that reads like
-  template filler ("Item Five", "Your text here", "Lorem ipsum", the
-  template author's sample content)
-
-When in doubt, ask the user to review. Fresh eyes catch layout issues
-that token checks miss.
+Hand off to the [`google-slides-review`](../../google-slides-review/SKILL.md)
+skill. Pass `presentation_id`, the Step 5 `pattern_snapshot` (with
+both `elements` and `duplicate_map`), `pattern_slide_ids` from your
+plan, and `iteration` (start at 1, increment on re-review). The
+review skill owns the loop contract — see its "Loop contract"
+section for stop conditions.
 
 ## Step 10 — Return the result
 

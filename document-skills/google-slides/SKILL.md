@@ -69,7 +69,7 @@ under `createGoogleSlidesTools`.
 | `google_slides_list_slides`       | **Discovery** — lightweight list of slides (id, title, skipped flag, element count) |
 | `google_slides_get_slide`         | Per-slide full detail — untruncated text, placeholder types, element geometry |
 | `google_slides_get`               | Full deck structure (heavier; prefer `list_slides` + `get_slide` on large decks) |
-| `google_slides_get_thumbnail`     | Visual inspection of a slide (PNG URL, ~30 min)  |
+| `google_slides_get_thumbnail`     | Renders a slide to a temp file path; pair with the built-in `Read` tool to actually load the image into the conversation for visual inspection |
 | `google_slides_duplicate_slide`   | Copy a pattern slide (optional `insertion_index` to pre-place the copy) |
 | `google_slides_replace_text`      | Fill placeholder text (style-preserving)   |
 | `google_slides_hide_slides`       | Mark pattern originals as `isSkipped` (array — one call for all at once) |
@@ -102,7 +102,8 @@ and how to recover from common mistakes. Short version:
                                generated images go through generate_image → google_drive_upload
                                → google_drive_share → replaceImage)
 8. Hide all used originals   (one google_slides_hide_slides call with the full array)
-9. QA                        (placeholder-leak + hidden-originals + thumbnail review)
+9. QA                        (load google-slides-review skill — independent
+                               sub-agent review; loop until 0 findings)
 10. Return the working deck URL plus a summary of patterns used
 ```
 
@@ -118,23 +119,16 @@ Read it when building the slide plan in step 4.
 
 ## QA
 
-Step 9 of the workflow runs three checks: a **snapshot-diff leak check**
-(compare each filled slide's text against the pre-replace pattern text —
-anything still matching means placeholder content survived), a
-hidden-originals check, and a thumbnail review. The leak check needs a
-text snapshot taken during step 5, so do not skip that capture.
-Details and a list of generic placeholder tokens live in
-`references/workflow.md`.
-
-Expect to loop at least once (generate → inspect → fix → re-verify) — a
-zero-problems report on the first pass almost always means the review was
-superficial.
+Step 9 hands off to the [`google-slides-review`](../google-slides-review/SKILL.md)
+skill — see that skill's `Inputs` and `Loop contract` for how to
+invoke and when to stop. The leak sub-agent needs the per-element
+text snapshot captured during Step 5; do not skip that capture.
 
 ## Failure Modes and Recovery
 
 Non-obvious failures the agent is prone to. Generic issues (rate
-limits, expired thumbnail URLs, YAML syntax errors) are not listed —
-the agent handles those from its own reading of error messages.
+limits, YAML syntax errors) are not listed — the agent handles those
+from its own reading of error messages.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
