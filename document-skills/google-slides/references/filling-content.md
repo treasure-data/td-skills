@@ -33,7 +33,7 @@ shapes, not table cells):
     insertionIndex: 0
 ```
 
-Using `replace_text` on an empty placeholder succeeds silently (zero
+Using `google_slides_replace_text` on an empty placeholder succeeds silently (zero
 occurrences changed), and the UI hint stays visible in the final deck.
 That is the typical "column 2 shows 'Click to add text'" bug.
 
@@ -62,7 +62,7 @@ ended up in column 1" failures.
 (if present) `fullText`.
 
 - **Non-empty cells** already have text like `"1"` / `"Item One"` /
-  `"Presenter"`. Replace via `replace_text` using the cell's existing
+  `"Presenter"`. Replace via `google_slides_replace_text` using the cell's existing
   text as the `find` argument, scoped to the slide:
   ```yaml
   - find: "Item One"
@@ -70,10 +70,10 @@ ended up in column 1" failures.
   ```
   Using `insertText` with `cellLocation` on a non-empty cell prepends
   instead of replacing, producing `"Claude Cowork とは？Item One"`.
-- **Empty cells** have no fullText. Use `batch_update` `insertText`
+- **Empty cells** have no fullText. Use `google_slides_batch_update` `insertText`
   with `objectId` + `cellLocation`.
 - **Unused rows** (rows whose cells all have no fullText the brief
-  would fill) should be deleted via `batch_update` `deleteTableRow` —
+  would fill) should be deleted via `google_slides_batch_update` `deleteTableRow` —
   otherwise the final deck shows rows like "5 Item Five Presenter".
 
 See `batch-update-recipes.yaml` for `deleteTableRow` / `insertText` /
@@ -130,7 +130,7 @@ Slides API to fetch them. Five steps, no custom infrastructure:
 
 Failure modes:
 
-- **Forgot to share publicly** → `batch_update` fails with a
+- **Forgot to share publicly** → `google_slides_batch_update` fails with a
   permission error when Google fetches the image.
 - **Used the `/view` URL** → Slides API receives HTML, rejects the
   image.
@@ -143,10 +143,10 @@ Failure modes:
 Templates often include image placeholder shapes shown in the UI with
 a landscape icon and "Click to add image". These are shapes with
 `placeholder: "PICTURE"` (or similar image-type placeholders) — they
-hold no actual image, and `replace_text` / `insertText` do nothing
+hold no actual image, and `google_slides_replace_text` / `insertText` do nothing
 meaningful on them.
 
-Fill with `batch_update` `createImage`, reusing the placeholder's
+Fill with `google_slides_batch_update` `createImage`, reusing the placeholder's
 `size` and `transform` so the new image lands in the exact same spot:
 
 ```yaml
@@ -158,7 +158,7 @@ Fill with `batch_update` `createImage`, reusing the placeholder's
       transform: <copy from placeholder.transform>
 ```
 
-In the same `batch_update` call, delete the placeholder so its icon
+In the same `google_slides_batch_update` call, delete the placeholder so its icon
 does not show through when the inserted image is smaller than the
 placeholder bounds:
 
@@ -170,7 +170,7 @@ placeholder bounds:
 ## Japanese text — kinsoku shori
 
 When the deck contains Japanese text, apply the standard line-breaking
-rules before writing content into `replace_text` or `insertText`. The
+rules before writing content into `google_slides_replace_text` or `insertText`. The
 Slides API does not auto-apply kinsoku at the text-run level; whatever
 you hand the API is what appears on the slide, including mid-line
 breaks and punctuation at the wrong positions.

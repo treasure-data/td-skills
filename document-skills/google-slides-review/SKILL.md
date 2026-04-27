@@ -177,7 +177,7 @@ Return findings as a YAML list:
             missing-duplicate-mapping | snapshot-malformed
   evidence: <one sentence; for pattern-text-survived include both
              pattern and filled text, ~120 chars each>
-  suggested_fix: <which `replace_text` or `batch_update insertText`
+  suggested_fix: <which `google_slides_replace_text` or `google_slides_batch_update insertText`
                   call would fix it>
 
 Required final line (even on empty findings):
@@ -206,8 +206,8 @@ Workflow:
    - `placeholder: "PICTURE"` shape with no overlapping `type:
      "image"` of similar size + transform → empty picture placeholder
      that was never filled.
-   - `isEmptyPlaceholder: true` on a TEXT_BOX shape → `replace_text`
-     was used on a UI hint instead of `batch_update insertText`.
+   - `isEmptyPlaceholder: true` on a TEXT_BOX shape → `google_slides_replace_text`
+     was used on a UI hint instead of `google_slides_batch_update insertText`.
    - Table with rows whose every cell.fullText is empty or matches a
      generic stub ("Item One", just `5`) → unused template rows that
      should be `deleteTableRow`'d.
@@ -248,13 +248,13 @@ and present them like this:
 
 ## Slide gXXXX — title text
 - BLOCKER · placeholder-leak · "Title goes here" still visible →
-  call `replace_text { find: "Title goes here", replace: "..." }`
+  call `google_slides_replace_text { find: "Title goes here", replace: "..." }`
 - WARNING · stale-stock-image · template gradient unchanged →
   swap via `replaceImage` or confirm with user
 
 ## Slide gYYYY — agenda
 - WARNING · empty-picture-placeholder · landscape icon visible →
-  `batch_update createImage` reusing the placeholder's bounds, then
+  `google_slides_batch_update createImage` reusing the placeholder's bounds, then
   `deleteObject` on the placeholder
 ```
 

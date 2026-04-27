@@ -130,7 +130,8 @@
       "strict": false,
       "skills": [
         "./document-skills/pptx",
-        "./document-skills/google-slides"
+        "./document-skills/google-slides",
+        "./document-skills/google-slides-review"
       ]
     },
     {

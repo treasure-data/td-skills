@@ -176,6 +176,12 @@ tests:
   - prompt: "Generate a presentation in Google Slides using the template I shared — pattern slides are already set up"
     expected: google-slides
 
+  - prompt: "QA my deck before sharing it — I just filled a Google Slides template and want to make sure nothing is broken"
+    expected: google-slides-review
+
+  - prompt: "Is this deck ready? Check for placeholder leaks and stale template images"
+    expected: google-slides-review
+
   # === Documentation Skills ===
 
   - prompt: "Generate documentation for my golden layer tables"

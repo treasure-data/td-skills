@@ -97,8 +97,8 @@ and how to recover from common mistakes. Short version:
 6. Duplicate into final position (google_slides_duplicate_slide with insertion_index —
                                   either reverse-iterate at index 0, or forward-iterate
                                   with growing index; see workflow.md Step 6)
-7. Fill content              (replace_text for text, batch_update insertText for empty
-                               placeholders, batch_update replaceImage for images. Agent-
+7. Fill content              (google_slides_replace_text for text, google_slides_batch_update insertText for empty
+                               placeholders, google_slides_batch_update replaceImage for images. Agent-
                                generated images go through generate_image → google_drive_upload
                                → google_drive_share → replaceImage)
 8. Hide all used originals   (one google_slides_hide_slides call with the full array)
@@ -132,12 +132,12 @@ from its own reading of error messages.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| "Click to add text" / "Click to add subtitle" visible in the final deck | Empty placeholder shape was targeted with `replace_text` — Google's UI hint is not a real text run | Use `batch_update insertText` on the shape's `objectId`. `get_slide` flags these with `isEmptyPlaceholder: true` |
-| Landscape / picture icon showing where an image should be | Empty `placeholder: "PICTURE"` shape was never filled | `batch_update createImage` reusing the placeholder's `size` + `transform`, then `deleteObject` on the placeholder |
+| "Click to add text" / "Click to add subtitle" visible in the final deck | Empty placeholder shape was targeted with `google_slides_replace_text` — Google's UI hint is not a real text run | Use `google_slides_batch_update insertText` on the shape's `objectId`. `get_slide` flags these with `isEmptyPlaceholder: true` |
+| Landscape / picture icon showing where an image should be | Empty `placeholder: "PICTURE"` shape was never filled | `google_slides_batch_update createImage` reusing the placeholder's `size` + `transform`, then `deleteObject` on the placeholder |
 | Template stock photos / icons still visible | Agent treated `type: "image"` elements as template decoration | Inventory images in Step 5; swap via `replaceImage` using a user-supplied URL or the generate → upload → share → replaceImage pipeline |
-| `batch_update` fails when Google fetches an image URL | Drive file not shared publicly, or `/view` URL used instead of `/uc?id=…` | Call `google_drive_share` with `role: reader`, `type: anyone`; use the `uc?id=` form |
-| Table cell reads `"011"` / `"<new>Item One"` | `insertText` was used on a non-empty cell — it prepends, not replaces | Use `replace_text` with the cell's existing `fullText` as `find`. `get_slide` returns `cells[].fullText` |
-| Stale rows like "5 Item Five" visible | Unused template table rows were left | `batch_update deleteTableRow` per unused row, iterating from the bottom |
+| `google_slides_batch_update` fails when Google fetches an image URL | Drive file not shared publicly, or `/view` URL used instead of `/uc?id=…` | Call `google_drive_share` with `role: reader`, `type: anyone`; use the `uc?id=` form |
+| Table cell reads `"011"` / `"<new>Item One"` | `insertText` was used on a non-empty cell — it prepends, not replaces | Use `google_slides_replace_text` with the cell's existing `fullText` as `find`. `get_slide` returns `cells[].fullText` |
+| Stale rows like "5 Item Five" visible | Unused template table rows were left | `google_slides_batch_update deleteTableRow` per unused row, iterating from the bottom |
 | All content lands in column 1 of a multi-column pattern | Column order not determined | Sort shapes sharing a placeholder role by `transform.translateX` before binding content |
 | Japanese line breaks on wrong characters (`）` at start, `（` at end, English words split) | Manual `\n` was injected; Slides API does not auto-apply kinsoku shori | Compose paragraphs as free-flowing text, break only at semantic boundaries. See `references/filling-content.md` kinsoku rules |
 | Partial replacement inside one string | Template split the phrase across runs; `replaceAllText` matches within one run only | Fix the template; do not patch with `updateTextStyle` |
