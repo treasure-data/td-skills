@@ -1,0 +1,265 @@
+# Google Slides batchUpdate recipes
+#
+# Copy a recipe, replace the {{PLACEHOLDERS}} with real object IDs and values,
+# and pass the list as the `requests_yaml` argument to
+# `google_slides_batch_update`. Stack multiple recipes in one call to reduce
+# round trips.
+#
+# Reference: https://developers.google.com/workspace/slides/api/reference/rest/v1/presentations/request
+#
+# Unit note: Slides API uses EMU (English Metric Units) for sizes. 914400 EMU
+# = 1 inch. Most properties accept `PT` (points) as well for convenience; the
+# recipes below use PT where available.
+
+# --- Table operations ------------------------------------------------------
+# For text swaps across a deck, use google_slides_replace_text instead —
+# batchUpdate is for structural edits (rows, columns, cell-specific inserts).
+
+# Insert 1 row. Set insertBelow: false to insert above the reference row.
+- insertTableRows:
+    tableObjectId: "{{TABLE_ID}}"
+    cellLocation:
+      rowIndex: "{{ROW_INDEX}}"
+    insertBelow: true
+    number: 1
+
+# Insert 1 column. Set insertRight: false to insert to the left.
+- insertTableColumns:
+    tableObjectId: "{{TABLE_ID}}"
+    cellLocation:
+      columnIndex: "{{COLUMN_INDEX}}"
+    insertRight: true
+    number: 1
+
+# Delete a table row.
+- deleteTableRow:
+    tableObjectId: "{{TABLE_ID}}"
+    cellLocation:
+      rowIndex: "{{ROW_INDEX}}"
+
+# Delete a table column.
+- deleteTableColumn:
+    tableObjectId: "{{TABLE_ID}}"
+    cellLocation:
+      columnIndex: "{{COLUMN_INDEX}}"
+
+# Insert text into a specific table cell. Use ONLY when the cell is empty
+# (no fullText in get_slide response). On a non-empty cell this prepends,
+# producing garbage like "Claude Cowork とは？Item One" when the cell still
+# held "Item One". For non-empty cells, use replace_text with the existing
+# cell content as `find`.
+- insertText:
+    objectId: "{{TABLE_ID}}"
+    cellLocation:
+      rowIndex: "{{ROW_INDEX}}"
+      columnIndex: "{{COLUMN_INDEX}}"
+    text: "{{TEXT}}"
+    insertionIndex: 0
+
+# Clear a cell's contents before inserting new text. Use when the cell is
+# non-empty but you do not know the exact existing string for replace_text,
+# or when you want to normalize a cell to a specific string.
+- deleteText:
+    objectId: "{{TABLE_ID}}"
+    cellLocation:
+      rowIndex: "{{ROW_INDEX}}"
+      columnIndex: "{{COLUMN_INDEX}}"
+    textRange:
+      type: ALL
+
+# --- Empty placeholder shapes ----------------------------------------------
+# Placeholder shapes that show "Click to add text" / "Click to add subtitle"
+# in the UI have no real text runs — replace_text cannot match that label.
+# google_slides_get_slide flags these with `isEmptyPlaceholder: true`.
+# Fill them via insertText addressed by the shape's objectId (no
+# cellLocation — these are shapes, not cells).
+
+- insertText:
+    objectId: "{{SHAPE_ID}}"
+    text: "{{TEXT}}"
+    insertionIndex: 0
+
+# --- Shape / element transforms --------------------------------------------
+
+# Resize an element by 120% (relative — multiplies current transform).
+- updatePageElementTransform:
+    objectId: "{{ELEMENT_ID}}"
+    transform:
+      scaleX: 1.2
+      scaleY: 1.2
+      unit: EMU
+    applyMode: RELATIVE
+
+# Move an element by +50pt horizontally, -30pt vertically (relative).
+- updatePageElementTransform:
+    objectId: "{{ELEMENT_ID}}"
+    transform:
+      translateX: 50
+      translateY: -30
+      unit: PT
+    applyMode: RELATIVE
+
+# Place an element at absolute coordinates (overwrites position and scale).
+- updatePageElementTransform:
+    objectId: "{{ELEMENT_ID}}"
+    transform:
+      scaleX: 1
+      scaleY: 1
+      translateX: "{{X_PT}}"
+      translateY: "{{Y_PT}}"
+      unit: PT
+    applyMode: ABSOLUTE
+
+# --- Images ----------------------------------------------------------------
+#
+# URL requirements for both replaceImage and createImage:
+#   - Must be a public HTTPS URL (no auth).
+#   - For Drive-hosted images: use https://drive.google.com/uc?id=FILE_ID
+#     (the direct-download endpoint). The /file/d/.../view URL serves HTML
+#     and fails with "Invalid image URL".
+#   - The file must be shared with role=reader, type=anyone, otherwise
+#     Google's fetch from the Slides API is denied.
+#
+# Pipeline for agent-generated images:
+#   1. generate_image         → local file
+#   2. google_drive_upload    → file_id
+#   3. google_drive_share     → role: reader, type: anyone
+#   4. url = "https://drive.google.com/uc?id=" + file_id
+#   5. replaceImage or createImage with that url
+
+# Replace an existing image in place, keeping its position and size.
+# Use on an actual image element (type: "image" in get_slide). NOT for
+# PICTURE placeholder shapes — those need createImage (see below) because
+# they are shapes, not image elements.
+#
+# imageReplaceMethod options:
+#   CENTER_INSIDE — fit the new image inside the box (may letterbox)
+#   CENTER_CROP   — fill the box with the new image (may crop)
+- replaceImage:
+    imageObjectId: "{{IMAGE_ID}}"
+    url: "{{PUBLIC_HTTPS_URL}}"
+    imageReplaceMethod: CENTER_INSIDE
+
+# Fill an empty PICTURE placeholder. Copy the placeholder's `size` and
+# `transform` from get_slide so the new image lands exactly where the
+# placeholder was. Then deleteObject the placeholder so the landscape
+# icon does not show through (see next recipe).
+- createImage:
+    url: "{{IMAGE_URL}}"
+    elementProperties:
+      pageObjectId: "{{SLIDE_ID}}"
+      size:
+        width: { magnitude: "{{WIDTH_PT}}", unit: PT }
+        height: { magnitude: "{{HEIGHT_PT}}", unit: PT }
+      transform:
+        scaleX: 1
+        scaleY: 1
+        translateX: "{{X_PT}}"
+        translateY: "{{Y_PT}}"
+        unit: PT
+
+# Delete a PICTURE placeholder after you have overlaid it with createImage.
+# Pair this with the createImage above in the same batchUpdate to avoid a
+# visible flicker where the placeholder icon shows through.
+- deleteObject:
+    objectId: "{{PLACEHOLDER_OBJECT_ID}}"
+
+# Create a new image on an empty area of a slide (not a placeholder).
+- createImage:
+    url: "{{IMAGE_URL}}"
+    elementProperties:
+      pageObjectId: "{{SLIDE_ID}}"
+      size:
+        width: { magnitude: 300, unit: PT }
+        height: { magnitude: 200, unit: PT }
+      transform:
+        scaleX: 1
+        scaleY: 1
+        translateX: 100
+        translateY: 100
+        unit: PT
+
+# --- Text style ------------------------------------------------------------
+
+# Change font family for a text range (0-indexed, end exclusive).
+- updateTextStyle:
+    objectId: "{{SHAPE_ID}}"
+    style:
+      fontFamily: "{{FONT_NAME}}"
+    textRange:
+      type: FIXED_RANGE
+      startIndex: 0
+      endIndex: 10
+    fields: fontFamily
+
+# Change color of a text range (RGB, 0..1).
+- updateTextStyle:
+    objectId: "{{SHAPE_ID}}"
+    style:
+      foregroundColor:
+        opaqueColor:
+          rgbColor: { red: 0.8, green: 0.2, blue: 0.2 }
+    textRange:
+      type: ALL
+    fields: foregroundColor
+
+# Make a text range bold.
+- updateTextStyle:
+    objectId: "{{SHAPE_ID}}"
+    style:
+      bold: true
+    textRange:
+      type: ALL
+    fields: bold
+
+# --- Slide operations ------------------------------------------------------
+
+# Re-order slides (move a range of slide IDs to a new insertion index).
+- updateSlidesPosition:
+    slideObjectIds: ["{{SLIDE_ID_A}}", "{{SLIDE_ID_B}}"]
+    insertionIndex: 3
+
+# Change a slide's background fill color.
+- updatePageProperties:
+    objectId: "{{SLIDE_ID}}"
+    pageProperties:
+      pageBackgroundFill:
+        solidFill:
+          color:
+            rgbColor: { red: 1, green: 1, blue: 1 }
+    fields: pageBackgroundFill
+
+# Delete an element (shape, image, table) from a slide.
+- deleteObject:
+    objectId: "{{ELEMENT_ID}}"
+
+# --- Shape appearance ------------------------------------------------------
+
+# Change a shape's fill color.
+- updateShapeProperties:
+    objectId: "{{SHAPE_ID}}"
+    shapeProperties:
+      shapeBackgroundFill:
+        solidFill:
+          color:
+            rgbColor: { red: 0.1, green: 0.4, blue: 0.9 }
+          alpha: 1.0
+    fields: shapeBackgroundFill.solidFill.color
+
+# Remove a shape's outline.
+- updateShapeProperties:
+    objectId: "{{SHAPE_ID}}"
+    shapeProperties:
+      outline:
+        propertyState: NOT_RENDERED
+    fields: outline.propertyState
+
+# --- Notes -----------------------------------------------------------------
+#
+# Most recipes above are single requests. You can stack them in one YAML
+# list; the Slides API applies them in order and rolls back the whole batch
+# if any fails.
+#
+# When chaining operations that depend on earlier results (e.g., duplicate a
+# slide, then move it), use two separate tool calls — the reply from the
+# first call gives you the new object ID to use in the second.

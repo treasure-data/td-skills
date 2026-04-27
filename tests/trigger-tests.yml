@@ -164,6 +164,24 @@ tests:
   - prompt: "I need slides for my team meeting tomorrow"
     expected: pptx
 
+  - prompt: "Use this Google Slides template to create a Q3 business review deck: https://docs.google.com/presentation/d/ABC123/edit"
+    expected: google-slides
+
+  - prompt: "Fill in this Google Slides template with the bullet points from my brief"
+    expected: google-slides
+
+  - prompt: "Build a Google Slides deck from this template for my product launch"
+    expected: google-slides
+
+  - prompt: "Generate a presentation in Google Slides using the template I shared — pattern slides are already set up"
+    expected: google-slides
+
+  - prompt: "QA my deck before sharing it — I just filled a Google Slides template and want to make sure nothing is broken"
+    expected: google-slides-review
+
+  - prompt: "Is this deck ready? Check for placeholder leaks and stale template images"
+    expected: google-slides-review
+
   # === Documentation Skills ===
 
   - prompt: "Generate documentation for my golden layer tables"
