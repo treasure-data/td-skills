@@ -1,11 +1,11 @@
 ---
 name: schedule-task
-description: Use when the user wants to create, set up, or configure a scheduled task in Treasure Studio. Covers TASK.md authoring, schedule.yaml configuration, script creation, and direct file-based task setup. Triggers on "create a scheduled task", "set up a recurring job", "automate daily report", "schedule a task", "cron job", etc.
+description: Use when the user wants to create, set up, or configure a scheduled task in Treasure Work. Covers TASK.md authoring, schedule.yaml configuration, script creation, and direct file-based task setup. Triggers on "create a scheduled task", "set up a recurring job", "automate daily report", "schedule a task", "cron job", etc.
 ---
 
 # Schedule Task Creator
 
-Create scheduled tasks in Treasure Studio that mix deterministic script execution with agent-driven analysis and delivery.
+Create scheduled tasks in Treasure Work that mix deterministic script execution with agent-driven analysis and delivery.
 
 ## Task Directory Placement
 

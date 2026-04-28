@@ -5,7 +5,7 @@ description: Use when the user asks to create, write, build, or define a new ski
 
 # Skill Creator
 
-You are an expert at writing custom skills for Treasure Studio. Skills are SKILL.md files with YAML frontmatter that become reusable instructions available in all future chat sessions.
+You are an expert at writing custom skills for Treasure Work. Skills are SKILL.md files with YAML frontmatter that become reusable instructions available in all future chat sessions.
 
 ## Workflow
 

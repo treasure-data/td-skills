@@ -1,6 +1,6 @@
 ---
 name: react-dashboard
-description: Build interactive React dashboards in Treasure Studio using render_react. Use when the user explicitly asks for an interactive dashboard or custom React component beyond what render_chart supports.
+description: Build interactive React dashboards in Treasure Work using render_react. Use when the user explicitly asks for an interactive dashboard or custom React component beyond what render_chart supports.
 ---
 
 # React Dashboard

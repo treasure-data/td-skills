@@ -1,6 +1,6 @@
 ---
 name: work
-description: Use when the user asks to create, update, list, or manage work items, goals, notes, guides, or references in a Treasure Studio workspace. Triggers on "create a task", "add a work item", "move to done", "show my tasks", "goal progress", "create a note", "what's next", or any workspace document management. Also use when operating on files in goals/, items/, guides/, notes/, or references/ folders.
+description: Use when the user asks to create, update, list, or manage work items, goals, notes, guides, or references in a Treasure Work workspace. Triggers on "create a task", "add a work item", "move to done", "show my tasks", "goal progress", "create a note", "what's next", or any workspace document management. Also use when operating on files in goals/, items/, guides/, notes/, or references/ folders.
 ---
 
 # Work Basic

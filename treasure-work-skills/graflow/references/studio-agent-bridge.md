@@ -1,10 +1,10 @@
 # Studio Agent Bridge
 
-Graflow workflows delegate AI reasoning to Treasure Studio's Claude Agent SDK via the `StudioAgent` class. This gives workflow tasks access to Studio's 100+ MCP tools (Slack, Google Calendar, CRM, etc.) without configuring credentials in Python.
+Graflow workflows delegate AI reasoning to Treasure Work's Claude Agent SDK via the `StudioAgent` class. This gives workflow tasks access to Studio's 100+ MCP tools (Slack, Google Calendar, CRM, etc.) without configuring credentials in Python.
 
 ## Prerequisites
 
-- Treasure Studio running on the same machine (127.0.0.1:9877 by default — the port may change and is published to subprocesses via `STUDIO_API_PORT`)
+- Treasure Work running on the same machine (127.0.0.1:9877 by default — the port may change and is published to subprocesses via `STUDIO_API_PORT`)
 - `studio-agent` package installed in the workflow's venv
 
 ## Canonical Pattern — Ephemeral Session Per Task
