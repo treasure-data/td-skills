@@ -192,6 +192,23 @@
         "./studio-skills/web-search",
         "./studio-skills/graflow"
       ]
+    },
+    {
+      "name": "treasure-work-skills",
+      "description": "Treasure Work-specific skills including workspace document management, skill creation, scheduled task management, and UI rendering formats for grid dashboards and action reports. Uses the renamed `mcp__work__*` MCP tool namespace.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./treasure-work-skills/work",
+        "./treasure-work-skills/skill-creator",
+        "./treasure-work-skills/react-dashboard",
+        "./treasure-work-skills/grid-dashboard",
+        "./treasure-work-skills/action-report",
+        "./treasure-work-skills/schedule-task",
+        "./treasure-work-skills/schedule-review",
+        "./treasure-work-skills/web-search",
+        "./treasure-work-skills/graflow"
+      ]
     }
   ]
 }
