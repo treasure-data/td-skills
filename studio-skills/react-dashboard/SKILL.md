@@ -5,7 +5,7 @@ description: Build interactive React dashboards in Treasure Studio using render_
 
 # React Dashboard
 
-Use `mcp__tdx-studio__render_react`. For simple charts, prefer `render_chart`.
+Use `mcp__work__render_react`. For simple charts, prefer `render_chart`.
 
 ## Sandbox Globals
 
