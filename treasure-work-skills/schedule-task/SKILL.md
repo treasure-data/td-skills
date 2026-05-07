@@ -5,21 +5,26 @@ description: Use when the user wants to create, set up, or configure a scheduled
 
 # Schedule Task Creator
 
-Create scheduled tasks in Treasure Work — markdown files at `~/.treasure-work/schedules/{name}.md` (YAML frontmatter + prompt body) that run on a cron and execute their prompt as agent instructions when they fire.
+Create scheduled tasks in Treasure Work — directories at `~/.treasure-work/schedules/{name}/` that hold an `AGENTS.md` (same format as a workspace agent) plus any supporting files. The schedule fires on a cron and runs `AGENTS.md`'s body as the agent's instructions; cwd at run time is the schedule's directory.
 
 ## Storage layout
 
-Schedules live as one markdown file per schedule:
-
 ```text
 ~/.treasure-work/schedules/
-  {name}.md          # YAML frontmatter + markdown body (the prompt)
+  {name}/
+    AGENTS.md             # YAML frontmatter + markdown body (the prompt)
+    scripts/              # optional — bash / python scripts the prompt invokes
+    data/                 # optional — persistent state across runs
+    reference/            # optional — templates, specs, configs
+    …                     # any other supporting files
 
 ~/.treasure-work/logs/
   schedule-events.jsonl   # append-only run lifecycle journal (read-only for the agent)
 ```
 
-**File format** — frontmatter holds config; the body IS the agent's instructions when the schedule fires:
+The `AGENTS.md` file format matches workspace agents (`{workspace}/agents/{name}/AGENTS.md`) — same frontmatter conventions, same editor / loader on the Treasure Work side. The directory name is the schedule's identifier (`github-pr-triage/` → name `github-pr-triage`). Names should be short, lowercase, and hyphen-separated (max 64 chars).
+
+**`AGENTS.md` format** — frontmatter holds config; the body IS the agent's instructions when the schedule fires:
 
 ```markdown
 ---
@@ -30,14 +35,14 @@ description: Triage open PRs and post a summary to Slack
 
 ## Steps
 
-1. Run `gh pr list --json title,author,reviewDecision,url` and parse the JSON.
+1. Run `bash scripts/fetch-prs.sh` and parse the JSON it writes.
 2. Filter to PRs where `reviewDecision != APPROVED` and the author is not a bot.
 3. Build a markdown summary grouped by repository.
 4. Post the summary to `#engineering-prs` via `slack_post_message`.
-5. If `gh` returns an error, post a brief failure message to the same channel and stop.
+5. If `fetch-prs.sh` returns an error, post a brief failure message to the same channel and stop.
 ```
 
-The filename without `.md` is the schedule's identifier (`github-pr-triage.md` → name `github-pr-triage`). Names should be short, lowercase, and hyphen-separated (max 64 chars).
+Because cwd at run time is the schedule's directory, relative paths in the prompt body (`bash scripts/fetch-prs.sh`, `Read data/state.json`) resolve naturally without any path-juggling.
 
 ### Frontmatter fields
 
@@ -68,7 +73,7 @@ Steps 3–5 are mandatory. A schedule isn't done until it has been test-run succ
 
 | Tool | Purpose |
 |------|---------|
-| `schedule_create` | Create a new schedule. Args: `name`, `prompt`, `cron`, optional `description`, optional `enabled` (default `true`). Validates cron + writes `{name}.md`. |
+| `schedule_create` | Create a new schedule. Args: `name`, `prompt`, `cron`, optional `description`, optional `enabled` (default `true`). Validates cron + writes `{name}/AGENTS.md`. |
 | `schedule_list` | List all schedules with cron, status, last run, next run. Use this first when looking for an existing schedule. |
 | `schedule_get` | Full record for one schedule, including the prompt body. |
 | `schedule_update` | Patch description / prompt / cron / enabled. Names are stable; to rename, use `schedule_delete` + `schedule_create`. |
@@ -76,11 +81,11 @@ Steps 3–5 are mandatory. A schedule isn't done until it has been test-run succ
 | `schedule_delete` | Remove the schedule (deletes the `.md` file; preserves the events log). Confirm with the user before deleting frequently-running schedules. |
 | `schedule_run_now` | Trigger a one-off run. Does NOT advance the cron. Returns the run's `chatId`. |
 
-The MCP tools are the recommended path because they validate cron, normalize fields, and emit lifecycle events that the runner uses for status display. Direct `Read` / `Edit` of `{name}.md` is also supported for ad-hoc edits the tools don't cover (e.g., bulk renames in an editor).
+The MCP tools are the recommended path because they validate cron, normalize fields, and emit lifecycle events that the runner uses for status display. Direct `Read` / `Edit` of `{name}/AGENTS.md` is also supported for ad-hoc edits the tools don't cover (e.g., bulk renames in an editor).
 
 ## Writing a good prompt body
 
-The body of `{name}.md` is what the agent will see as its `### Agent Instructions` when the schedule fires. Treat it like a self-contained task prompt:
+The body of `{name}/AGENTS.md` is what the agent will see as its `### Agent Instructions` when the schedule fires. Treat it like a self-contained task prompt:
 
 - **Concrete steps**, numbered, in execution order. Don't say "look at the data" — say "run X, parse Y, write Z."
 - **Specific tool names** when the choice matters (`gh pr list`, `slack_post_message`, etc.). The agent has access to whatever MCP tools are registered; naming them in the prompt makes the choice explicit.
@@ -90,7 +95,13 @@ The body of `{name}.md` is what the agent will see as its `### Agent Instruction
 
 ## Working directory at run time
 
-When a schedule fires, the agent's working directory is the user's home directory (`$HOME`). If the prompt references files, use absolute paths or have the agent `cd` first. There is no per-task `scripts/` / `reference/` / `data/` directory anymore — inline scripts in the prompt body via heredocs (`bash <<'EOF' … EOF`), or have the agent `Write` files where the user wants them.
+When a schedule fires, the agent's cwd is the schedule's directory (`~/.treasure-work/schedules/{name}/`). Relative paths in the prompt resolve there, so:
+
+- Drop scripts in `scripts/` and call them with `bash scripts/foo.sh`.
+- Drop reference files in `reference/` and `Read` them by relative path.
+- Persist state across runs by `Write`-ing to `data/state.json`.
+
+These subdirectory names are conventions, not required. Use whatever organization makes sense for the task. The directory tree is yours — the runner only cares that `AGENTS.md` exists.
 
 ## Example: bare-minimum schedule
 
@@ -107,5 +118,7 @@ schedule_create with:
     4. Post the summary to `#engineering-prs` via `slack_post_message`. Title: "Open PRs · `2026-05-07`".
     5. If `gh` errors out, post "PR triage failed: {error}" to the same channel and stop.
 ```
+
+This creates `~/.treasure-work/schedules/pr-triage/AGENTS.md`. If the prompt grows to need a script, drop it at `~/.treasure-work/schedules/pr-triage/scripts/fetch-prs.sh` (relative paths in the prompt body resolve there at run time).
 
 After creating, run `schedule_run_now` and watch the resulting chat to confirm the agent behaves correctly before leaving it on the cron.
