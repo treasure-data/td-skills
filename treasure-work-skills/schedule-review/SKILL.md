@@ -1,121 +1,53 @@
 ---
 name: schedule-review
-description: Use when the user wants to review, validate, or check a scheduled task before enabling it. Runs two parallel sub-agent checks — structural validation and quality assessment. Triggers on "review this task", "check my scheduled task", "validate task", "is this task ready", etc.
+description: Use when the user wants to review, validate, or check a scheduled task before enabling it. Reviews the prompt body for clarity, error handling, and fitness for purpose. Triggers on "review this task", "check my scheduled task", "validate task", "is this task ready", etc.
 ---
 
 # Schedule Task Review
 
-Review a scheduled task by running two parallel sub-agent checks using TaskCreate:
-
-1. **Structure check** — Validates directory layout, file formats, and schema
-2. **Quality check** — Assesses whether the task meets the user's intent
+Most structural validation (cron syntax, field shape, name constraints) is handled by the `schedule_*` MCP tools at create / update time. This skill focuses on the part the tools can't check: **does the prompt body actually accomplish the user's intent?**
 
 ## Workflow
 
-1. Ask the user which task to review (or infer from context)
-2. Locate the task directory:
-   - If inside a workspace: check `{workspace}/schedules/{task-name}/`
-   - Otherwise: check `~/.tdx/schedule-tasks/{task-name}/`
-   - Use `schedule_get` to find the task if the path is unclear
-3. Read the task's TASK.md and schedule.yaml
-4. Launch both checks in parallel using TaskCreate
-5. Wait for results using TaskGet
-6. Present a unified report with pass/fail and actionable suggestions
+1. Ask the user which schedule to review (or infer from context — e.g., the last one they created).
+2. Fetch its current state: `schedule_get` with the schedule's name.
+3. Read the prompt body in the returned record (the agent's instructions when the schedule fires).
+4. Review against the checklist below.
+5. Present a brief report with concrete change suggestions; if the user agrees, apply them via `schedule_update`.
 
-## Step 1: Read Task Files
+## Quality checklist
 
-```
-Read {task-dir}/TASK.md
-Read {task-dir}/schedule.yaml
-List files in scripts/, reference/, data/
-```
+For each item below, rate **GOOD / NEEDS IMPROVEMENT / MISSING** and give a one-line fix when not GOOD.
 
-## Step 2: Launch Parallel Checks
+1. **Concrete, numbered steps.** Could a fresh agent execute them without guessing? "Look at the data" is bad; "run `gh pr list --json …` and filter where `reviewDecision != APPROVED`" is good.
+2. **Logical order** — typically fetch → process → analyze → output → notify. Out-of-order steps are a smell.
+3. **Specific tool / command names** where the choice matters (`gh pr list`, `slack_post_message`, `Read`, etc.) so the agent doesn't reach for a different tool.
+4. **Failure handling** — what happens if a script errors, an API is down, the input is empty? At minimum: "If X fails, post a brief error to the same channel and stop."
+5. **Output format** is explicit — markdown summary? CSV? Slack message with what shape? "Send a report" is missing; "post a markdown summary with one bullet per PR (title + URL)" is good.
+6. **No hidden state** — the prompt should be self-contained. The agent doesn't remember anything between runs.
+7. **Cron matches purpose** — `*/5 * * * *` for a daily report is wrong; `0 9 * * *` is right.
+8. **Notification target named** if the task notifies. Slack channel name should be in the prompt, not assumed.
 
-Use `TaskCreate` to spawn two sub-agents simultaneously.
+## Reporting
 
-### Sub-agent 1: Structure Check
-
-```
-TaskCreate with prompt:
-"Review this scheduled task for structural correctness.
-
-TASK.md content:
-{paste TASK.md content}
-
-schedule.yaml content:
-{paste schedule.yaml content}
-
-Files in task directory:
-{list of files}
-
-Check the following:
-1. TASK.md has valid YAML frontmatter with `name` and `description`
-2. schedule.yaml has required fields (name, schedule, enabled) and only valid optional fields (status, catch_up, skills, permissions, notify, context, goal, skill, output). Note: `skills` (list of capability packs/MCP tools) and `skill` (workspace skill to invoke) serve different purposes and can coexist.
-2a. If status field is present, it must be either 'configured' or 'template'. Warn if missing (defaults to 'configured').
-3. Task name in TASK.md matches schedule.yaml name
-4. Cron expression is valid and not too frequent (minimum 5 minutes)
-5. permissions.allow lists all tools referenced in TASK.md steps (Bash for scripts, Write for output, slack_* for notifications)
-6. Scripts referenced in TASK.md steps exist in scripts/
-7. Reference files mentioned in TASK.md exist in reference/
-8. data/ files described in TASK.md exist if the task expects prior state
-9. No Slack channels or notification targets hardcoded in TASK.md (should be in schedule.yaml notify section only)
-10. output.md is mentioned as a required output in Steps
-11. If `goal` is set, verify the goal file exists in the workspace (workspace tasks only)
-12. If `output.note: true` is set, verify this is a workspace task (inside schedules/ directory)
-
-Report: PASS/FAIL for each item, with specific fix instructions for failures."
-```
-
-### Sub-agent 2: Quality Check
-
-```
-TaskCreate with prompt:
-"Review this scheduled task for quality and fitness for purpose.
-
-TASK.md content:
-{paste TASK.md content}
-
-schedule.yaml content:
-{paste schedule.yaml content}
-
-The user's original request was: {describe what the user asked for}
-
-Check the following:
-1. Steps are clear and unambiguous — could another agent execute them without guessing?
-2. Steps are in a logical order (fetch → process → analyze → output → notify)
-3. Error handling is addressed (what to do if a script fails, API is down, etc.)
-4. output.md requirements are clear (what should be in the summary?)
-5. The schedule frequency matches the task's purpose (e.g., not checking hourly for a daily report)
-6. Skills listed are appropriate for the task
-7. If data/ is used, the update cycle is clear (when to save, when to compare)
-8. The task is self-contained — no implicit dependencies on external state
-9. For workspace tasks: does the goal/skill configuration make sense for the intended purpose?
-
-Report: Rate each item as GOOD/NEEDS IMPROVEMENT/MISSING, with specific suggestions."
-```
-
-## Step 3: Collect and Report
-
-Wait for both tasks to complete using `TaskGet`, then present a unified report:
+Keep it short. Example:
 
 ```markdown
-## Task Review: {task-name}
+## Review: pr-triage
 
-### Structure: {PASS/FAIL}
-- [x] Valid TASK.md frontmatter
-- [x] Valid schedule.yaml schema
-- [ ] Missing permission: Bash (needed for scripts/fetch.sh)
-...
+- **Concrete steps**: GOOD
+- **Logical order**: GOOD
+- **Specific tools**: GOOD (names `gh`, `slack_post_message`)
+- **Failure handling**: NEEDS IMPROVEMENT — no fallback if `gh` errors
+- **Output format**: GOOD (markdown summary spec'd)
+- **No hidden state**: GOOD
+- **Cron matches purpose**: GOOD (`0 9 * * 1-5` for a daily weekday summary)
+- **Notification target**: GOOD (`#engineering-prs`)
 
-### Quality: {GOOD/NEEDS IMPROVEMENT/MISSING}
-- [x] Steps are clear
-- [ ] No error handling for script failure
-- [ ] output.md format not specified
-...
+### Suggested fixes
+1. Add an explicit failure step at the end: "If any step above errors, post `'PR triage failed: {error}'` to the same channel and stop."
 
-### Recommended Fixes
-1. Add `Bash` to permissions.allow
-2. Add error handling step: "If fetch script fails, retry once..."
-3. Specify output.md format in a `## Output Format` section
+Apply with `schedule_update`?
 ```
+
+If the user agrees, call `schedule_update` with the new `prompt` body.
