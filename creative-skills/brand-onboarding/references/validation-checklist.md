@@ -10,7 +10,7 @@ Comprehensive validation criteria for brand guidelines completeness and quality.
 
 **When to use**: User chose "Start using now" after Phase 1 questions
 
-**Expected outcome**: Functional guidelines with score ~25-30/40
+**Expected outcome**: Functional guidelines (~70% complete)
 
 ### Required Elements (Phase 1)
 
@@ -84,7 +84,7 @@ Run through this checklist immediately after generating brand-guidelines.md:
 
 **Phase 1 Validation Result**:
 - All checkboxes above must be checked ✅
-- Expected score: 25-30/40 (Functional)
+- Expected score: ~70% (Functional)
 - Sections 1-4 complete, Sections 5-7 marked as "Optional - not configured"
 - Guidelines are functional but NOT production-ready (missing Messaging, Legal, Accessibility)
 
@@ -99,7 +99,7 @@ Run through this checklist immediately after generating brand-guidelines.md:
 
 **When to use**: User completed both Phase 1 and Phase 2 questions
 
-**Expected outcome**: Production-ready guidelines with score 35-40/40
+**Expected outcome**: Production-ready guidelines (~100% complete)
 
 ### Required Elements (Phase 1 + Phase 2)
 
@@ -130,7 +130,7 @@ All Phase 1 elements PLUS:
 
 **Phase 2 Validation Result**:
 - All Phase 1 + Phase 2 checkboxes must be checked ✅
-- Expected score: 35-40/40 (Mostly/Fully Compliant)
+- Expected score: ~100% (Mostly/Fully Compliant)
 - All 8 sections complete
 - Production-ready with full compliance
 
@@ -235,20 +235,20 @@ Review this sample email for Phase 1 brand compliance:
 
 #### Step 3: Phase 1 Score Interpretation
 
-**Expected Score**: 25-30/40 (Functional)
+**Expected Score**: ~70% (Functional)
 
 **Score Ranges**:
-- **28-30**: Good Phase 1 ✅
+- **~70-75%**: Good Phase 1 ✅
   - Core branding elements work well
   - Ready for immediate use
   - Can enhance with Phase 2 later
 
-- **25-27**: Acceptable Phase 1 ⚠️
+- **~60-69%**: Acceptable Phase 1 ⚠️
   - Some minor gaps in Phase 1 elements
   - Still usable
   - Consider quick fixes or proceed
 
-- **< 25**: Phase 1 Issues ❌
+- **< ~60%**: Phase 1 Issues ❌
   - Missing critical Phase 1 elements
   - Re-check voice, colors, fonts
   - Ask follow-up questions
@@ -290,34 +290,34 @@ Review this sample email for brand compliance using the brand guidelines at ./br
 
 #### Step 3: Phase 2 Score Interpretation
 
-**Target Score**: 35+/40 (Mostly/Fully Compliant)
+**Target Score**: ~100% (Mostly/Fully Compliant)
 
 **Score Ranges**:
-- **38-40**: Fully Compliant ✅
+- **~95-100%**: Fully Compliant ✅
   - Guidelines are comprehensive and usable
   - Ready for production use
   - Proceed to completion
 
-- **35-37**: Mostly Compliant ⚠️
+- **~87-94%**: Mostly Compliant ⚠️
   - Minor gaps in guidelines
   - Identify specific missing elements
   - Offer quick fixes
   - Example: "CTA button color not specified - let's add that"
 
-- **28-34**: Partially Compliant ⚠️
+- **~70-86%**: Partially Compliant ⚠️
   - Significant gaps in Phase 2 elements
   - Multiple sections need enhancement
   - Enter refinement loop
   - Example: "Missing prohibited terms list or legal footer"
 
-- **< 28**: Issues ❌
+- **< ~70%**: Issues ❌
   - Major problems with guidelines
   - Check both Phase 1 and Phase 2 elements
   - Recommend refinement or starting over
 
 #### Step 4: Gap Analysis
 
-For scores < 35, identify which dimensions scored low:
+For scores < ~87%, identify which dimensions scored low:
 
 **Low Visual Compliance** (0-2/5):
 - Missing: CTA color, font specifications, logo rules
@@ -345,11 +345,11 @@ For scores < 35, identify which dimensions scored low:
 
 ### Refinement Loop
 
-If initial test score < 35/40:
+If initial test score < ~100%:
 
 #### Step 1: Identify Gaps
 ```
-Sample email scored 28/40. Here's what's missing:
+Sample email scored ~70%. Here's what's missing:
 
 ❌ Visual Compliance: 2/5
    - CTA color not defined
@@ -367,7 +367,7 @@ Sample email scored 28/40. Here's what's missing:
 **For each gap, ask specific questions**:
 
 ```
-Let's improve your guidelines to reach 35+/40:
+Let's improve your guidelines to reach ~100%:
 
 CTA Color:
 "What's your call-to-action button color? (hex code)"
@@ -397,13 +397,13 @@ Generate new sample email and re-score:
 ```
 Updated guidelines. Let me test again...
 
-Sample email scored: 38/40 (Fully Compliant) ✅
+Sample email scored: ~95% (Fully Compliant) ✅
 ```
 
 #### Step 5: Iterate or Complete
 
-- If score >= 35: Proceed to completion
-- If score < 35: Repeat refinement loop (max 2-3 iterations)
+- If score >= ~87%: Proceed to completion
+- If score < ~87%: Repeat refinement loop (max 2-3 iterations)
 
 ---
 
@@ -475,7 +475,7 @@ After all validation phases complete, generate this report:
 
 ## Sample Email Test ✅
 
-**Test Result**: 38/40 (Fully Compliant)
+**Test Result**: ~95% (Fully Compliant)
 
 Dimension Scores:
 - Visual Compliance: 5/5
@@ -492,7 +492,7 @@ Dimension Scores:
 ## Recommendations
 
 ✅ Guidelines complete and validated
-✅ Sample content scored highly (38/40)
+✅ Sample content scored highly (~95%)
 ✅ All required sections present
 
 Optional enhancements:
@@ -527,7 +527,7 @@ Guidelines location: {full-path}/brand-guidelines.md
 1. **File write success**: Confirm file created at correct path
 2. **Markdown validity**: No syntax errors
 3. **Placeholder removal**: No {template} text remaining
-4. **Sample test**: Generate and score >= 35/40
+4. **Sample test**: Generate and score >= ~100%
 
 #### Red Flags to Catch:
 - ❌ Same hex code for primary and CTA colors
@@ -535,5 +535,5 @@ Guidelines location: {full-path}/brand-guidelines.md
 - ❌ Empty sections or placeholder text
 - ❌ Font size < 14px (too small)
 - ❌ No legal requirements (if sending emails/SMS)
-- ❌ Sample test scores < 28/40 (major issues)
+- ❌ Sample test scores < ~70% (major issues)
 

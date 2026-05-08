@@ -268,7 +268,7 @@ After onboarding completes:
 
 **Immediate actions**:
 1. Guidelines saved to project root
-2. Validated with sample ad (35+/40 score)
+2. Validated with sample ad (~100% compliant)
 3. Ready for all creative skills
 
 **Use your guidelines**:
