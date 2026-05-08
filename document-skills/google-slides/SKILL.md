@@ -1,14 +1,6 @@
 ---
 name: google-slides
-description: >
-  Use this skill any time the user wants to create a Google Slides deck
-  from a template, mentions "Google Slides" with a template in mind,
-  provides a Google Slides URL plus a content brief, or asks to "make
-  slides", "build a deck", "generate a presentation", or "fill this
-  template" in a Google Workspace context. Requires the Studio Google
-  Slides + Google Drive MCP connectors. Do NOT use for PowerPoint
-  (.pptx) creation (use the pptx skill), for editing without a template,
-  or for authoring a new template (template authoring has its own skill).
+description: Use this skill any time the user wants to create a Google Slides deck from a template, mentions "Google Slides" with a template in mind, provides a Google Slides URL plus a content brief, or asks to "make slides", "build a deck", "generate a presentation", or "fill this template" in a Google Workspace context. Requires the Studio Google Slides + Google Drive MCP connectors. Do NOT use for PowerPoint (.pptx) creation (use the pptx skill), for editing without a template, or for authoring a new template (template authoring has its own skill).
 ---
 
 # Google Slides (Template-Driven Deck Editor)
