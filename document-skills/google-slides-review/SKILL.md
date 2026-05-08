@@ -1,17 +1,6 @@
 ---
 name: google-slides-review
-description: >
-  Use this skill at the end of a Google Slides deck-creation flow run
-  by the same agent in the current session, before reporting the
-  finished URL to the user. Catches the failure modes a creating
-  agent reliably misses — surviving placeholder text, unswapped
-  template imagery, layout overflow, hidden-original leaks. Trigger
-  when the parent google-slides workflow reaches Step 9 / QA, or
-  when the user asks "is this deck ready?" / "QA my deck" about a
-  deck this agent itself just edited. Do NOT trigger for reviewing
-  decks the agent did not create — without the Step 5 pre-fill
-  snapshot the leak check silently degrades and the result is
-  misleading.
+description: Use this skill at the end of a Google Slides deck-creation flow run by the same agent in the current session, before reporting the finished URL to the user. Catches the failure modes a creating agent reliably misses — surviving placeholder text, unswapped template imagery, layout overflow, hidden-original leaks. Trigger when the parent google-slides workflow reaches Step 9 / QA, or when the user asks "is this deck ready?" / "QA my deck" about a deck this agent itself just edited. Do NOT trigger for reviewing decks the agent did not create — without the Step 5 pre-fill snapshot the leak check silently degrades and the result is misleading.
 ---
 
 # Google Slides Review
