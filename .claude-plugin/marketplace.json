@@ -1,5 +1,5 @@
 {
-  "name": "td-skills",
+  "name": "gregs-test-skills",
   "owner": {
     "name": "Treasure Data",
     "email": "support@treasuredata.com"
@@ -177,7 +177,8 @@
         "./studio-skills/react-dashboard",
         "./studio-skills/schedule-task",
         "./studio-skills/schedule-review",
-        "./studio-skills/web-search"
+        "./studio-skills/web-search",
+        "./studio-skills/skill-eval"
       ]
     }
   ]
