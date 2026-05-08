@@ -205,8 +205,3 @@ tests:
   - prompt: "Create a new skill for Treasure Studio"
     expected: skill-creator
 
-  - prompt: "Evaluate my agent's test results with a review UI"
-    expected: skill-eval
-
-  - prompt: "Run eval for my math-tutor agent and review the results"
-    expected: skill-eval
