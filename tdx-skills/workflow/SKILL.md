@@ -5,6 +5,16 @@ description: Manages TD workflows using `tdx wf` commands. Covers project sync (
 
 # tdx wf - Workflow Commands
 
+## Workflow Lookup Order
+
+When the user asks about a workflow, always check **local first**, then TD platform:
+
+1. **Local check**: Call `workflow_list` MCP tool to see if the workflow exists in `~/.tdx/workflows/`
+2. **If found locally**: Use `workflow_get` MCP tool for manifest details and `.dig` content. For execution history, use `tdx wf sessions <project>` or check the Studio TD Workflows panel.
+3. **If NOT found locally**: Use `tdx wf` CLI commands below to query the TD platform
+
+Note: `~/.tdx/workflows/` is where Studio manages workflow manifests. This is separate from `tdx wf pull`, which downloads project files to the current working directory.
+
 ## Project Context
 
 ```bash

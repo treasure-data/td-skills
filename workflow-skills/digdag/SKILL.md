@@ -1,9 +1,49 @@
 ---
 name: digdag
-description: Write .dig workflow files for Treasure Workflow. Covers digdag YAML syntax, td> operator, session variables (session_date, session_date_compact), and _parallel/_retry/_error directives. Use when creating or editing .dig workflow definitions.
+description: Write .dig workflow files for Treasure Workflow. Covers creating new workflows (create_workflow MCP tool), importing existing workflows (register_workflow), digdag YAML syntax, td> operator, session variables, _parallel/_retry/_error directives, and TD platform constraints. Use when creating, editing, or deploying TD workflows. Also trigger on mentions of digdag, .dig files, td> operator, workflow scheduling, or any request to build a new data ETL pipeline on Treasure Data. For workflows with LLM processing or Slack/email notification, see the llm-workflow skill.
 ---
 
 # Treasure Workflow (Digdag)
+
+Write `.dig` workflow files for Treasure Data.
+
+> **Official docs**: https://docs.digdag.io/
+
+## Workflow Lifecycle
+
+### Creating a New Workflow
+
+Use `create_workflow` MCP tool to scaffold a new workflow. This creates `manifest.yml`, a template `.dig` file, and `queries/main.sql`. When a workspace is active, the workflow is created in `{workspace}/workflows/{name}/` by default; otherwise in `~/.tdx/workflows/{name}/`. Use the `scope` parameter to override.
+
+After creation, edit the `.dig` file and queries to define the workflow logic, then deploy with `tdx wf push`.
+
+### Importing an Existing Workflow from TD
+
+Use `tdx wf pull` to download, then `register_workflow` MCP tool to copy the files and generate `manifest.yml`. Same scope rules as `create_workflow`.
+
+### Lookup Order
+
+When the user asks about an existing workflow, check **local first**:
+
+1. **Local check**: Call `workflow_list` MCP tool to see workflows from both global (`~/.tdx/workflows/`) and workspace (`{workspace}/workflows/`) sources
+2. **If found locally**: Use `workflow_get` MCP tool for manifest details and `.dig` content. For execution history, use `tdx wf sessions <project>` or check the Studio TD Workflows panel.
+3. **If NOT found locally**: Use `tdx wf workflows <project>` and `tdx wf sessions` to query TD platform
+
+## TD Platform Constraints
+
+Full parameter reference for all operators: [operators.md](references/operators.md)
+
+**Available operators:**
+
+| Category | Operators |
+|---|---|
+| Workflow control | `call>`, `if>`, `for_each>`, `for_range>`, `loop>`, `fail>`, `echo>`, `wait>`, `http_call>`, `require>` |
+| Treasure Data | `td>`, `td_run>`, `td_ddl>`, `td_load>`, `td_for_each>`, `td_wait>`, `td_wait_table>`, `td_partial_delete>`, `td_table_export>`, `td_result_export>` |
+| Scripting | `py>` (Python via Custom Script Docker image) |
+| Network | `http>`, `mail>` |
+
+**Not available on TD** (no shell access): `sh>`, `rb>`, `embulk>`.
+Use `py>` with Custom Script Docker images for arbitrary compute.
 
 ## Basic Structure
 
@@ -11,7 +51,7 @@ description: Write .dig workflow files for Treasure Workflow. Covers digdag YAML
 timezone: Asia/Tokyo
 
 schedule:
-  daily>: 02:00:00
+  daily>: "09:00:00"
 
 _export:
   td:
@@ -20,34 +60,29 @@ _export:
 
 +extract:
   td>: queries/extract.sql
-  create_table: raw_data
+  create_table: staging_table
 
 +transform:
   td>: queries/transform.sql
-  create_table: results
+  insert_into: result_table
 ```
 
-**Key points:**
-- `.dig` extension required; filename becomes workflow name
-- Tasks run sequentially with `+task_name:` prefix
-- `foo>: bar` is sugar for `_type: foo` and `_command: bar`
+- Filename becomes workflow name (`etl_daily.dig` → `etl_daily`)
+- Tasks prefixed with `+`, execute top-to-bottom
+- `type>: command` is shorthand for `_type: type`, `_command: command`
 
 ## Session Variables
 
 | Variable | Example |
-|----------|---------|
-| `${session_time}` | `2024-01-30T00:00:00+09:00` |
-| `${session_date}` | `2024-01-30` |
-| `${session_date_compact}` | `20240130` |
-| `${session_unixtime}` | `1706540400` |
+|---|---|
+| `${session_time}` | `2026-01-30T00:00:00+09:00` |
+| `${session_date}` | `2026-01-30` |
+| `${session_date_compact}` | `20260130` |
+| `${session_unixtime}` | `1738159200` |
 | `${last_session_date}` | Previous scheduled date |
 | `${next_session_date}` | Next scheduled date |
 
-**Moment.js available:**
-```yaml
-+tomorrow:
-  echo>: ${moment(session_time).add(1, 'days').format("YYYY-MM-DD")}
-```
+Date math via Moment.js: `${moment(session_time).subtract(1, 'days').format("YYYY-MM-DD")}`
 
 ## TD Operator
 
@@ -59,144 +94,119 @@ _export:
   create_table: results      # or insert_into: existing_table
 ```
 
-**Inline SQL:**
+Inline SQL:
 ```yaml
 +inline:
   td>:
     query: |
       SELECT * FROM events
-      WHERE TD_TIME_RANGE(time, '${session_date}', TD_TIME_ADD('${session_date}', '1d'))
+      WHERE TD_TIME_RANGE(time, '${session_date}', '${next_session_date}')
 ```
 
-## Parallel Execution
+`store_last_results: true` stores **only the first row** as `${td.last_results.column}`. Design KPI queries to return a single row.
+
+## Parallel, Retry, Error Handling
+
+For full pipeline examples with retry + error notification: [patterns-control.md](references/patterns-control.md)
 
 ```yaml
 +parallel_tasks:
   _parallel: true
-
   +task_a:
     td>: queries/a.sql
-
   +task_b:
     td>: queries/b.sql
 
-+after_parallel:
-  echo>: "Runs after all parallel tasks"
-```
-
-**Limited concurrency:**
-```yaml
-+limited:
-  _parallel:
-    limit: 2
-```
-
-## Error Handling
-
-```yaml
-+task:
-  td>: queries/important.sql
-  _retry: 3
-
-  _error:
-    +alert:
-      sh>: python scripts/alert.py "Task failed"
-```
-
-**Retry with backoff:**
-```yaml
-+task:
++fragile_step:
   _retry:
     limit: 3
     interval: 10
-    interval_type: exponential  # or constant
+    interval_type: exponential
+  td>: queries/heavy.sql
+
+_error:
+  http>: https://hooks.slack.com/services/xxx
+  method: POST
+  content:
+    text: "Workflow failed at ${moment().format('YYYY-MM-DD HH:mm')}"
 ```
 
-## Variables
-
-```yaml
-_export:
-  td:
-    database: production
-  my_param: value
-  api_key: ${secret:api_credentials.key}  # TD parameter store
-
-+task:
-  py>: scripts.process.main
-  param: ${my_param}
-```
-
-## Conditional & Loops
+## Conditionals and Loops
 
 ```yaml
 +check:
   td>: queries/count.sql
   store_last_results: true
 
-+if_data:
++branch:
   if>: ${td.last_results.cnt > 0}
   _do:
     +process:
       td>: queries/process.sql
 
-+loop:
++by_region:
   for_each>:
-    region: [US, EU, ASIA]
+    region: [us, eu, ap]
   _do:
-    +process:
+    +aggregate:
       td>: queries/by_region.sql
 ```
 
-## Event Triggers
+## Variables and Secrets
+
+For `py>` tasks — package installation, digdag Python API, argument mapping: [py-operator.md](references/py-operator.md)
 
 ```yaml
-# Runs after another workflow succeeds
-trigger:
-  attempt>:
-  dependent_workflow_name: segment_refresh
-  dependent_project_name: customer_segments
+_export:
+  td:
+    database: production
+  my_param: value
 
-+activate:
-  td>: queries/activate.sql
++task:
+  py>: tasks.MyTask.run
+  docker:
+    image: "treasuredata/customscript-python:3.12.11-td1"
+  _env:
+    TD_API_KEY: ${secret:td.apikey}
 ```
 
-## tdx wf Commands
+Runtime params: `tdx wf start project workflow -p target_date=2026-04-01`
 
-For full CLI reference, see **tdx-skills/workflow**. Key commands:
+## mail> on TD
 
-```bash
-tdx wf pull my_project               # Pull project to local folder
-tdx wf push                          # Push local changes with diff preview
-tdx wf run my_project.my_workflow    # Run specific workflow
-tdx wf sessions --status error       # Find failed sessions
-tdx wf timeline my_project.workflow  # Visual task execution timeline
-tdx wf attempt <id> logs +task_name  # View task logs
+TD's built-in SMTP relay handles delivery. No SMTP secrets needed on TD platform.
+
+```yaml
++send_report:
+  mail>: templates/report.html
+  subject: "Daily Report ${session_date}"
+  to: [team@example.com]
+  html: true
 ```
 
-## Project Structure
+## LLM and Notification
 
-```
-workflows/
-└── my_project/              # Created by tdx wf pull
-    ├── tdx.json             # Sync tracking (auto-generated)
-    ├── main.dig             # Workflow definition
-    ├── queries/
-    │   └── analysis.sql
-    └── scripts/
-        └── process.py
-```
+For LLM calls (TD LLM Proxy, TD Agent) and notification patterns (Slack, email), see the **llm-workflow** skill. It covers end-to-end patterns: data pipeline → LLM summarize → Slack/Mail notify.
+
+## Common Pitfalls
+
+- **`td.apikey` must be a Master API Key** in `ACCOUNT_ID/KEY` format. OAuth tokens cause 401. Never handle key values — present `tdx wf secrets set` commands with placeholders.
+- **`td_ddl>` `create_databases` requires `td.apikey`** — create the database via CLI first if the secret isn't set yet.
 
 ## Schedule Options
 
 ```yaml
 schedule:
-  daily>: 02:00:00
-  # hourly>: 00:00
-  # cron>: "0 */4 * * *"
-  # weekly>: "Mon,00:00:00"
+  daily>: "09:00:00"
+  # hourly>: 30:00
+  # weekly>: Mon,09:00:00
+  # monthly>: 1,09:00:00
+  # cron>: "*/15 * * * *"
+  # minutes_interval>: 30
 ```
 
-## Resources
+## Building a Complete Pipeline
 
-- https://docs.digdag.io/
-- https://docs.digdag.io/operators.html
+For ETL pipeline patterns (idempotent write, wait-then-process, backfill, modular workflows): [patterns-etl.md](references/patterns-etl.md)
+
+For deploying to TD (manifest.yml, project structure, secrets, deployment checklist): [scaffold.md](references/scaffold.md)

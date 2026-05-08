@@ -102,6 +102,17 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[studio-skills/schedule-review](./studio-skills/schedule-review)** - Review and validate scheduled tasks before enabling, with structural and quality checks via parallel sub-agents
 - **[studio-skills/web-search](./studio-skills/web-search)** - Web search and URL content extraction using `web_search` with query optimization, search operators, and structured research patterns
 
+### Treasure Work Skills
+
+Mirror of `studio-skills` updated for the renamed `mcp__work__*` MCP namespace (formerly `mcp__tdx-studio__*`). Use this plugin with builds that ship the `work` MCP server name.
+
+- **[treasure-work-skills/work](./treasure-work-skills/work)** - Manage workspace documents (items, goals, notes, guides, references) using file operations with YAML frontmatter, wiki-links, and status lifecycles
+- **[treasure-work-skills/skill-creator](./treasure-work-skills/skill-creator)** - Create, write, and optimize custom skills (SKILL.md files) in Treasure Work with description optimization and writing patterns
+- **[treasure-work-skills/react-dashboard](./treasure-work-skills/react-dashboard)** - Build interactive React dashboards in Treasure Work using `render_react` for custom components beyond `render_chart`
+- **[treasure-work-skills/schedule-task](./treasure-work-skills/schedule-task)** - Create and configure scheduled tasks in Treasure Work: TASK.md authoring, schedule.yaml, and cron setup
+- **[treasure-work-skills/schedule-review](./treasure-work-skills/schedule-review)** - Review and validate scheduled tasks before enabling, with structural and quality checks via parallel sub-agents
+- **[treasure-work-skills/web-search](./treasure-work-skills/web-search)** - Web search and URL content extraction using `web_search` with query optimization, search operators, and structured research patterns
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
@@ -125,6 +136,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    - `tdx-skills` - tdx CLI for managing TD from command line
    - `field-agent-skills` - Field Agent deployment, documentation, and visualization best practices
    - `studio-skills` - Treasure Studio skills: workspace management, skill creation, React dashboards, scheduled tasks, and web search
+   - `treasure-work-skills` - Treasure Work skills (same set as `studio-skills`, but updated for the renamed `mcp__work__*` MCP namespace)
    - `creative-skills` - Multi-channel ad ideation, brand compliance, and brand onboarding
    - `template-skill` - Template for creating new skills
 
@@ -137,6 +149,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
    /plugin install tdx-skills@td-skills
    /plugin install field-agent-skills@td-skills
    /plugin install studio-skills@td-skills
+   /plugin install treasure-work-skills@td-skills
    /plugin install creative-skills@td-skills
    ```
 

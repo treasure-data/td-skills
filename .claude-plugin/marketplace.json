@@ -76,6 +76,7 @@
       "strict": false,
       "skills": [
         "./workflow-skills/digdag",
+        "./workflow-skills/llm-workflow",
         "./workflow-skills/workflow-management",
         "./workflow-skills/dbt"
       ]
@@ -123,6 +124,17 @@
       ]
     },
     {
+      "name": "document-skills",
+      "description": "Document creation skills including PowerPoint presentation generation via HTML-to-PPTX, and Google Slides deck generation from template decks using the Studio Google Slides + Drive MCP connectors",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./document-skills/pptx",
+        "./document-skills/google-slides",
+        "./document-skills/google-slides-review"
+      ]
+    },
+    {
       "name": "template-skill",
       "description": "Template for creating new TD-specific Claude Code skills with best practices and standard structure",
       "source": "./",
@@ -133,12 +145,10 @@
     },
     {
       "name": "analysis-skills",
-      "description": "SEO and AEO analysis skills with visual dashboards and action reports. Includes: (1) grid-dashboard — generic grid dashboard YAML format for visual reports, (2) action-report — generic action report YAML format for prioritized recommendations with as-is/to-be diffs, (3) seo-analysis — unified SEO/AEO audit using GSC, SerpAPI, GA4, and Playwright.",
+      "description": "SEO and AEO analysis skills including unified SEO/AEO audit using GSC, SerpAPI, GA4, and Playwright",
       "source": "./",
       "strict": false,
       "skills": [
-        "./analysis-skills/grid-dashboard",
-        "./analysis-skills/action-report",
         "./analysis-skills/seo-analysis"
       ]
     },
@@ -168,16 +178,36 @@
     },
     {
       "name": "studio-skills",
-      "description": "Treasure Studio-specific skills including workspace document management, skill creation, and scheduled task management",
+      "description": "Treasure Studio-specific skills including workspace document management, skill creation, scheduled task management, and UI rendering formats for grid dashboards and action reports",
       "source": "./",
       "strict": false,
       "skills": [
         "./studio-skills/work",
         "./studio-skills/skill-creator",
         "./studio-skills/react-dashboard",
+        "./studio-skills/grid-dashboard",
+        "./studio-skills/action-report",
         "./studio-skills/schedule-task",
         "./studio-skills/schedule-review",
-        "./studio-skills/web-search"
+        "./studio-skills/web-search",
+        "./studio-skills/graflow"
+      ]
+    },
+    {
+      "name": "treasure-work-skills",
+      "description": "Treasure Work-specific skills including workspace document management, skill creation, scheduled task management, and UI rendering formats for grid dashboards and action reports. Uses the renamed `mcp__work__*` MCP tool namespace.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./treasure-work-skills/work",
+        "./treasure-work-skills/skill-creator",
+        "./treasure-work-skills/react-dashboard",
+        "./treasure-work-skills/grid-dashboard",
+        "./treasure-work-skills/action-report",
+        "./treasure-work-skills/schedule-task",
+        "./treasure-work-skills/schedule-review",
+        "./treasure-work-skills/web-search",
+        "./treasure-work-skills/graflow"
       ]
     }
   ]
