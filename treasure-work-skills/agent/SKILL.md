@@ -92,6 +92,10 @@ You are the Daily Sales Report agent. Each weekday morning:
 | `work_folder` | Working directory at run time (defaults to the agent dir). |
 | `profile` | TDX Studio profile (`@tdx-studio:<site>:<account-id>:<user-id>`) to scope the agent to. Omit for system-wide visibility. |
 | `site`, `database`, `parent_segment`, `llm_project`, `llm_agent` | TD context hints injected into the prompt. |
+| `goal` *(workspace-only)* | Target Goal slug. The agent runs scoped to that goal's linked items. Ignored on global agents. |
+| `skill` *(workspace-only)* | Workspace skill name to invoke as part of the run. Distinct from `skills` (which loads capability packs / MCP tools). Ignored on global agents. |
+| `output.note` *(workspace-only)* | When `true`, the run's result is filed as a Note in the workspace `notes/` folder. Ignored on global agents. |
+| `output.note_tags` *(workspace-only)* | Tags applied to the auto-created Note. Ignored on global agents. |
 
 **Do NOT write Slack channel names or notification targets in the body.** They belong in `notify.*` and are injected into the prompt at run time. Hard-coding them in the body causes drift when the frontmatter is updated.
 
@@ -134,7 +138,7 @@ Use `slack:channel-name` for a Slack channel, or `slack:dm` for the user's DM. *
 
 ## What's gone from the Schedule era
 
-The Schedule-Task model has been retired. The fields and tools below **no longer exist** — do not write them, do not look them up:
+The Schedule-Task model has been retired in the Agents architecture. When authoring or reviewing an agent through *this* skill, **do not write or call** the fields and tools below. (Other skill docs in this plugin may still mention some of them — that's stale guidance pending its own update; the agent runtime no longer supports them.)
 
 - `TASK.md` — the body lives directly in `AGENTS.md`.
 - `schedule.yaml` — the frontmatter lives directly in `AGENTS.md`.

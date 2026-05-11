@@ -121,10 +121,25 @@ Wait for both via `TaskGet`, then present a unified report:
 …
 
 ### Recommended Fixes
+
+**Global agents** — emit each fix as one `agent_update` call. The writer merges patches over existing frontmatter, so unrelated fields are preserved automatically:
+
 1. `agent_update { name: "...", allowed_tools: [..., "Bash"] }`
 2. `agent_update { name: "...", body: "<revised body with retry-once step>" }`
 3. `agent_update { name: "...", display_name: "Daily Sales Report" }`
-4. `agent_update { name: "...", status: "" }` then re-set with `status: active` (migrate from deprecated `enabled`).
+4. Deprecated-field migration — a single `agent_update` that sets the canonical field is enough to fix **runtime behavior** (the schema reads the new key; the legacy key is ignored by the runtime). The stale legacy key is preserved on disk by the writer though, so a fully clean AGENTS.md requires an additional cleanup pass (see below).
+   - `enabled: true` → `agent_update { name: "...", status: "active" }`
+   - `cron: "..."` → `agent_update { name: "...", schedule: "..." }`
+   - `permissions.allow: [...]` → `agent_update { name: "...", allowed_tools: [...] }`
+   - `context.{max_turns,timeout,autonomous}` → `agent_update { name: "...", max_turns: N, timeout: S, autonomous: B }`
+   - Never patch `status` with an empty string — `status` is a required enum and the schema will reject the write. To pause an agent, use `status: paused`; to retire it, `status: resting`.
+5. Fully remove stale legacy keys from disk (cosmetic cleanup — runtime is already correct after step 4):
+   - Open the agent in **AgentSettings** and re-save. The UI rebuilds AGENTS.md from a typed serializer, which drops keys it doesn't recognise (e.g. `cron`, `permissions`, `context.*`).
+   - Or, if the run-state history can be dropped: `agent_get { name }` → capture the body → `agent_delete { name }` → `agent_create { name, body, ...new_frontmatter }` to write a clean file.
+
+**Workspace agents** — `agent_*` mutations target global agents only. Instead, instruct the user to:
+- Open the agent in the **AgentSettings** UI (sidebar → Agents → click the agent) and apply each fix there, **or**
+- If the fix is non-trivial, copy the agent into the global scope by reading its body via `agent_get` and creating a new global agent with `agent_create { name, body, ...frontmatter }`, then deleting the workspace copy from the UI.
 ```
 
 If the structure check returns any FAIL, the agent should **not** be activated (`status: active`) until those are resolved.
