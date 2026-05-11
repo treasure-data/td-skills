@@ -1,161 +1,148 @@
 ---
-name: schedule-task
-description: Use when the user wants to create, set up, or configure a scheduled task in Treasure Work. Covers TASK.md authoring, schedule.yaml configuration, script creation, and direct file-based task setup. Triggers on "create a scheduled task", "set up a recurring job", "automate daily report", "schedule a task", "cron job", etc.
+name: agent
+description: Use when the user wants to create, configure, schedule, or run an agent in Treasure Work. Covers AGENTS.md authoring, the `agent_*` MCP tools, on-demand vs scheduled agents, lifecycle (draft → active → paused), and chat-based result inspection. Triggers on "create an agent", "set up an agent", "schedule a task", "set up a recurring job", "automate daily report", "cron job", "run X every weekday", etc.
 ---
 
-# Schedule Task Creator
+# Agent Creator
 
-Create scheduled tasks in Treasure Work that mix deterministic script execution with agent-driven analysis and delivery.
+Create global agents in Treasure Work — either **on-demand** (invoked from the UI, chat, or `@mention`) or **scheduled** (cron-driven). Both share one `AGENTS.md` format and lifecycle. Setting a `schedule:` field is the single switch that turns an agent into a scheduled one.
 
-## Task Directory Placement
+## Agent Location
 
-Determine where to create the task based on your current working directory:
+Each agent is its own directory with a single `AGENTS.md`:
 
-1. **If inside a workspace**: find the nearest ancestor directory (including the current one) that contains a `tdx.json` file **and** at least one of `goals/` or `items/` folders. That directory is `{workspace}`.
-   - Create under `{workspace}/schedules/{task-name}/`
-   - Workspace context (accepted guides, goals) is automatically available at execution time
-   - `{workspace}` becomes the working directory during execution
+- **Global** (the only scope this skill creates): `~/.treasure-work/agents/{name}/AGENTS.md`
+- **Workspace** (read-only via MCP; edit through the AgentSettings UI): `{workspace}/agents/{name}/AGENTS.md`
 
-2. **Otherwise** (standalone):
-   - Create under `~/.tdx/schedule-tasks/{task-name}/`
+The directory is the agent's working directory at run time, so the body can reference relative paths and the agent can create supporting files as needed. No subdirectories are required.
 
 ## Workflow
 
-**CRITICAL: Never just create files and stop. Always run the task and iterate until it works.**
+**CRITICAL: Never just create and stop. Always run the agent and iterate until it works.**
 
-1. **Capture Intent** — What to automate, how often, what tools/data needed, where results go
-   - **Ask the user** for output format (Slack message, CSV, HTML report, etc.) and notification channels before creating files. Never assume a Slack channel — always confirm.
-2. **Create the Task** — **Always use the `create_schedule` MCP tool for the initial task scaffold**; do not hand-create `schedule.yaml`, `TASK.md`, or the standard subdirs (`data/`, `reference/`, `scripts/`, `results/`) with Write/Bash. The tool generates those files/directories and stamps the active Studio profile into schedule.yaml. Extra files under `scripts/` or `reference/` may be added afterwards with Write.
-3. **Validate** — Run `schedule_validate` to check schedule.yaml
-4. **Reload** — Run `schedule_reload` to pick up new/changed tasks
-5. **Review** — Load the `schedule-review` skill and run a full review (structure + quality checks in parallel)
-6. **Fix Issues** — Address any findings from the review
-7. **Test Run** — Run `schedule_run` to execute immediately
-8. **Check Results** — Use `schedule_results` to review output.md and check for errors
-9. **Fix & Retry** — If the run failed or output is wrong, edit the files and repeat from step 4
-10. **Enable** — Only after a successful test run, use `schedule_enable` to activate the cron schedule
+1. **Capture intent** — what the agent should do, how often (if scheduled), what tools / skills it needs, where results should go.
+   - **Ask the user** for notification channels (`notify.on_success` / `notify.on_failure`) before writing. Never assume a Slack channel — always confirm.
+2. **Create** — call `agent_create` with `name`, `body` (the system prompt), and the initial frontmatter (description, icon, skills, `schedule` if recurring, etc.). New agents default to `status: draft` so scheduled ones don't fire until activated.
+3. **Test run** — call `agent_run_now` to trigger an immediate run. It returns a `chatId`.
+4. **Inspect output** — call `chat_read` with that `chatId`. While `in_progress: true` the run is still streaming — poll until it goes false. Read the last assistant turn to confirm the agent did what was intended.
+5. **Review** — load the `agent-review` skill for a structure + quality audit.
+6. **Iterate** — call `agent_update` to patch any field (body, skills, `allowed_tools`, `schedule`, …). Re-run with `agent_run_now`.
+7. **Activate** — once the test run is clean, `agent_update` with `status: active`. Scheduled agents start firing on their cron; on-demand agents become first-class in the UI list.
 
-Steps 5-8 are **mandatory** — a task is not complete until it has been reviewed and executed successfully at least once.
+Steps 3–5 are **mandatory** — an agent is not done until it has been run and reviewed at least once.
 
-## Task Directory Structure
+## AGENTS.md Anatomy
 
-```text
-{task-dir}/
-├── TASK.md              # Instructions (frontmatter + markdown body)
-├── schedule.yaml        # Cron schedule, permissions, notifications
-├── scripts/             # Deterministic scripts (bash, python, etc.)
-├── reference/           # Immutable reference files (templates, specs, configs)
-├── data/                # Persistent data across runs (snapshots, state, caches)
-└── results/{run_id}/    # Auto-created per execution (pruned over time)
-    ├── metadata.json    # System-managed run metadata
-    └── output.md        # Execution summary (REQUIRED — agent writes this)
-```
-
-Use `create_schedule` to scaffold the directory — it generates schedule.yaml, TASK.md, and the four subdirs in one call and auto-registers the task. Add extra files under `scripts/` and `reference/` afterwards with Write. The system will pick up subsequent edits after `schedule_reload`.
-
-## TASK.md Anatomy
-
-YAML frontmatter with `name` and `description`, followed by markdown instructions:
+YAML frontmatter + Markdown body. **The body is the system prompt the agent sees on every run** — write it in the second person as instructions, not as a task description.
 
 ```markdown
 ---
 name: daily-sales-report
+display_name: Daily Sales Report
 description: Fetch sales data, analyze trends, and post to Slack
----
-
-## Steps
-
-1. Run `bash scripts/fetch-sales-data.sh` to download data
-2. Analyze the CSV: revenue, order count, top products
-3. Compare with previous run (check results/ for yesterday's output.md)
-4. Write results/{run_id}/output.md with findings
-5. Post summary to Slack, attach chart via slack_upload_file
-
-## Data Files
-
-- `data/previous-metrics.csv` — Yesterday's metrics for trend comparison. Update after analysis.
-
-## Notes
-
-- Revenue thresholds: flag if daily total < $10K
-- Use reference/report-template.html for formatting
-- If fetch script fails, retry once then report the error
-```
-
-Additional sections (`## Notes`, `## Constraints`, `## Data Files`, `## Output Format`, etc.) are welcome. The `run_id` is provided to the agent automatically in the prompt.
-
-**Do NOT write Slack channel names or notification targets in TASK.md.** Notification channels are configured in `schedule.yaml` (`notify.on_success` / `notify.on_failure`) and injected into the prompt automatically at execution time. Writing them in TASK.md causes conflicts when the yaml is updated.
-
-### Using data/ for Cross-Run State
-
-`data/` persists across runs (unlike `results/` which is pruned). When a task uses `data/`, **describe the files and their purpose in TASK.md** under a `## Data Files` section.
-
-## schedule.yaml Format
-
-```yaml
-name: daily-sales-report
-profile: "@tdx-studio:<site>:<account-id>:<user-id>"  # AUTO-STAMPED by create_schedule — DO NOT hand-author. Omit to make the task visible under every Studio account (reserved for system-installed templates).
-schedule: "0 9 * * 1-5"
-enabled: false
-status: configured       # "configured" = ready to run, "template" = needs customization
-catch_up: false          # true = run missed schedule once on next Studio startup
+icon: 📊
+color: blue
+status: draft            # draft | active | paused | resting
+schedule: "0 9 * * 1-5"  # 5-field cron, ≥5-minute granularity; omit for on-demand
+catch_up: false          # true = catch up one missed run after app restart
+model: claude-sonnet-4-6 # optional per-agent model override
+max_turns: 20
+timeout: 600             # seconds, max 3600
+autonomous: false        # true = Supervisor Agent auto-continues across turns
 skills:
   - sql-skills:trino
-permissions:
-  allow:
-    - Bash
-    - Write
-    - slack_post_message
-    - slack_upload_file
+allowed_tools:
+  - Bash
+  - Write
+  - slack_post_message
+  - slack_upload_file
 notify:
-  on_success: slack:channel-name   # or "slack:dm" for DM
-  on_failure: slack:channel-name   # or "slack:dm" for DM
-context:
-  max_turns: 20
-  timeout: 600
-  autonomous: false      # true = Supervisor Agent auto-continues until task complete
+  on_success: slack:channel-name   # or slack:dm
+  on_failure: slack:channel-name   # or slack:dm
+---
+
+You are the Daily Sales Report agent. Each weekday morning:
+
+1. Query yesterday's sales (`td_query` against the orders table) and gather revenue, order count, top products.
+2. Compare with the previous run by looking at the last successful chat (use `chat_read` if needed).
+3. Post a Slack summary; if revenue < $10K, flag the dip in the message.
+4. If anything fails, retry once then surface the error via `notify.on_failure`.
 ```
 
-Task name: lowercase, hyphens/underscores only, max 64 chars. Minimum cron interval: 5 minutes.
+### Frontmatter field reference
 
-### Workspace-Only Fields
+| Field | Purpose |
+|---|---|
+| `name` (required) | Slug (lowercase, hyphens / underscores, ≤64 chars). Becomes the directory name. Renaming is not supported — use `agent_create` + `agent_delete` to migrate. |
+| `display_name` | Human-readable label shown in the agent list. |
+| `description` | One-line summary for search / UI. |
+| `icon` | Single emoji shown in the agent list. |
+| `color` | UI accent: `blue` / `cyan` / `green` / `yellow` / `red` / `magenta`. |
+| `status` | Lifecycle: `draft` (default — not listed prominently, never auto-fires) / `active` (listed, fires schedule) / `paused` / `resting`. **Only `active` fires scheduled runs.** |
+| `schedule` | 5-field cron, ≥5-minute granularity. **Setting this turns the agent into a scheduled agent.** Empty string clears it. |
+| `catch_up` | When true, one missed run is caught up after the app restarts. |
+| `model` | Per-agent model override (e.g. `claude-sonnet-4-6`, `claude-opus-4-7`, `claude-haiku-4-5`). |
+| `max_turns` | Per-run turn cap. |
+| `timeout` | Per-run timeout in seconds (1–3600). |
+| `autonomous` | When true, runs in Supervisor / autonomous mode (no per-tool prompts). |
+| `skills` | Skill ids to load (max 20). |
+| `guides` | Guide ids to load (max 20). |
+| `allowed_tools` | Tool-permission allowlist. Omit / empty = allow all controllable tools. Read-only baseline tools are always allowed. |
+| `notify.on_success` / `notify.on_failure` | Notification target — `slack:channel-name` or `slack:dm`. |
+| `work_folder` | Working directory at run time (defaults to the agent dir). |
+| `profile` | TDX Studio profile (`@tdx-studio:<site>:<account-id>:<user-id>`) to scope the agent to. Omit for system-wide visibility. |
+| `site`, `database`, `parent_segment`, `llm_project`, `llm_agent` | TD context hints injected into the prompt. |
 
-These fields are only meaningful for tasks inside a workspace `schedules/` directory:
+**Do NOT write Slack channel names or notification targets in the body.** They belong in `notify.*` and are injected into the prompt at run time. Hard-coding them in the body causes drift when the frontmatter is updated.
 
-```yaml
-# Target Goal — agent scopes work to this goal's linked items
-goal: auth-redesign
+### Scheduled vs. on-demand
 
-# Workspace skill to invoke (different from `skills` which lists capability packs/MCP tools)
-skill: weekly-review
+| Trait | Scheduled (has `schedule:`) | On-demand (no `schedule:`) |
+|---|---|---|
+| Trigger | Cron tick (only while `status: active`) | UI Run button, `agent_run_now`, `@mention` |
+| Catch-up | `catch_up: true` retries one missed run after restart | n/a |
+| Best for | Daily reports, hourly checks, batch jobs | Reusable workflows, on-call helpers, manual triggers |
 
-# Output configuration — create a Note from execution results
-output:
-  note: true                    # Create a Note in workspace notes/ from output.md
-  note_tags: [weekly, auto]     # Tags added to the auto-created Note
-```
+### Permissions
 
-When `goal` is set, the agent receives the goal content and linked item statuses in its prompt. When `output.note: true` is set, a Note is automatically created in the workspace's `notes/` folder after successful execution.
+Use **short tool names** in `allowed_tools` — both SDK built-ins (`Bash`, `Write`, `Edit`, `WebFetch`, `WebSearch`, `NotebookEdit`) and Treasure Work MCP tools without the `mcp__work__` prefix (e.g. `slack_post_message`, `td_query`, `render_chart`).
 
-### Status Field
+Always allowed (no entry needed): `Read`, `Glob`, `Grep`, `ToolSearch`, `Skill`, `Task*`, `TodoWrite`, `mcp__td-docs__*`, plus the planning / MCP-resource tools.
 
-- `configured` — Task is ready to run. Use this when creating a task specific to the user's environment.
-- `template` — Task is a reusable template that needs customization before enabling. Use this when the user wants to create a shareable template with placeholder values (e.g., `GITHUB_REPO`, `SLACK_CHANNEL`) that others will customize later.
+### Notification targets
 
-Tasks with `status: template` should not be enabled directly. First customize them and change `status` to `configured` before enabling.
-
-Notification targets: use `slack:channel-name` for a Slack channel, or `slack:dm` for the user's DM. **Always use `slack:dm` exactly** — not "direct message", "DM", or other variations.
+Use `slack:channel-name` for a Slack channel, or `slack:dm` for the user's DM. **Always use `slack:dm` exactly** — not "direct message", "DM", or other variants.
 
 ## MCP Tools
 
 | Tool | Purpose |
-|------|---------|
-| `create_schedule` | **Preferred path** to create a new task — scaffolds schedule.yaml, TASK.md, and the standard subdirs; stamps the active Studio profile automatically |
-| `schedule_list` | List all tasks with status |
-| `schedule_get` | Full task details including TASK.md and recent results |
-| `schedule_validate` | Validate schedule.yaml against schema |
-| `schedule_reload` | Reload tasks from disk (after creating/editing files) |
-| `schedule_run` | Trigger immediate execution (for testing) |
-| `schedule_results` | View past run summaries and output files (optional `limit`, default 10) |
-| `schedule_enable` / `schedule_disable` | Toggle task on/off |
-| `schedule_delete` | Remove task and all files |
+|---|---|
+| `agent_create` | Create a new global agent (`name`, `body`, optional frontmatter). Defaults to `status: draft`. Validates frontmatter against the schema — rejects the write on failure. |
+| `agent_list` | Lightweight list of every agent (global + workspace), sorted with global first. |
+| `agent_get` | Full frontmatter + body for one agent. A short name resolves either scope. |
+| `agent_update` | Patch any frontmatter field and / or the body. Empty string clears scalars; empty array clears arrays. Omitted fields are unchanged. Renaming via `name` is not supported. |
+| `agent_delete` | Delete a global agent and its directory. **Confirm with the user first** when the agent is scheduled or has been used recently. |
+| `agent_run_now` | Trigger an immediate run of any agent (scheduled or on-demand, global or workspace). Returns `{ chatId }`. Does NOT advance the cron clock for scheduled agents. |
+| `chat_read` | Read a run's transcript by `chatId`. Use to inspect `agent_run_now` output; works on in-flight chats too — poll while `in_progress: true`. |
+
+### Important behaviors
+
+- **Mutations are global-only.** `agent_create` / `agent_update` / `agent_delete` operate on `~/.treasure-work/agents/` only. Workspace agents are read-only via MCP — edit them through the AgentSettings UI.
+- **No separate reload tool.** Every mutation broadcasts `AGENTS_CHANGED`, so the agent list and the open AgentSettings page refresh automatically.
+- **No separate validate tool.** Validation happens on `agent_create` / `agent_update`; the error message lists each invalid field.
+- **Unknown frontmatter keys are preserved.** If the file has keys outside the current schema (e.g. fields written by a future version), the writer leaves them alone.
+
+## What's gone from the Schedule era
+
+The Schedule-Task model has been retired. The fields and tools below **no longer exist** — do not write them, do not look them up:
+
+- `TASK.md` — the body lives directly in `AGENTS.md`.
+- `schedule.yaml` — the frontmatter lives directly in `AGENTS.md`.
+- Required subdirs `scripts/` / `reference/` / `data/` / `results/` — none. Create files only as needed.
+- `results/{run_id}/output.md` + `metadata.json` — every run produces a chat instead; read it with `chat_read`.
+- `enabled: true / false` — replaced by `status: active | paused`.
+- `permissions.allow` — flattened to `allowed_tools` at the top level.
+- `context.max_turns` / `context.timeout` / `context.autonomous` — flattened to top-level fields.
+- `cron:` — renamed to `schedule:`.
+- Storage roots `~/.tdx/schedule-tasks/` and `{workspace}/schedules/` — replaced by `~/.treasure-work/agents/` and `{workspace}/agents/`.
+- `schedule_*` MCP tools (`create_schedule`, `schedule_list`, `schedule_get`, `schedule_validate`, `schedule_reload`, `schedule_run`, `schedule_results`, `schedule_enable` / `schedule_disable`, `schedule_delete`, `schedule_kill`) — all replaced by the `agent_*` surface above.

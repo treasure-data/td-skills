@@ -109,8 +109,8 @@ Mirror of `studio-skills` updated for the renamed `mcp__work__*` MCP namespace (
 - **[treasure-work-skills/work](./treasure-work-skills/work)** - Manage workspace documents (items, goals, notes, guides, references) using file operations with YAML frontmatter, wiki-links, and status lifecycles
 - **[treasure-work-skills/skill-creator](./treasure-work-skills/skill-creator)** - Create, write, and optimize custom skills (SKILL.md files) in Treasure Work with description optimization and writing patterns
 - **[treasure-work-skills/react-dashboard](./treasure-work-skills/react-dashboard)** - Build interactive React dashboards in Treasure Work using `render_react` for custom components beyond `render_chart`
-- **[treasure-work-skills/schedule-task](./treasure-work-skills/schedule-task)** - Create and configure scheduled tasks in Treasure Work: TASK.md authoring, schedule.yaml, and cron setup
-- **[treasure-work-skills/schedule-review](./treasure-work-skills/schedule-review)** - Review and validate scheduled tasks before enabling, with structural and quality checks via parallel sub-agents
+- **[treasure-work-skills/agent](./treasure-work-skills/agent)** - Create and configure agents in Treasure Work: AGENTS.md authoring, `agent_*` MCP tools, on-demand vs scheduled (cron) lifecycle (draft → active → paused), and chat-based result inspection
+- **[treasure-work-skills/agent-review](./treasure-work-skills/agent-review)** - Review and validate agents before activating, with structural (AGENTS.md schema) and quality checks via parallel sub-agents
 - **[treasure-work-skills/web-search](./treasure-work-skills/web-search)** - Web search and URL content extraction using `web_search` with query optimization, search operators, and structured research patterns
 
 ### Reference
