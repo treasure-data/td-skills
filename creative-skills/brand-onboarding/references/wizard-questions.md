@@ -38,6 +38,8 @@ Ask: "Do you have existing brand documentation?"
 Example: "Knowledgeable, Enthusiastic, Respectful"
 Avoid: generic ("Good, Nice, Helpful"), more than 4 (dilutes identity)
 
+For each voice attribute, ask one at a time. Wait for the user's response before moving to the next attribute.
+
 For each brand voice, ask: "What does '{attribute}' mean for your brand?" Collect:
 - **What it means**: 1-sentence definition
 - **Language style**: How it's expressed

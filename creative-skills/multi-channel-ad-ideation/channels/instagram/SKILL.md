@@ -1,6 +1,6 @@
 ---
 name: instagram
-description: Generate Instagram ad concepts with visual descriptions, copy constraints, and HTML mockups. Supports Image and Carousel formats across Feed, Stories, Reels, Explore, and Explore Home placements. Visual-first, mobile-native ads.
+description: Generate Instagram ad concepts with visual descriptions, copy constraints, and HTML mockups. Supports Image and Carousel formats across Feed, Stories, Reels, Explore, and Explore Home placements. Use when creating Instagram image or carousel ads, generating Feed/Stories/Reels mockups, or adapting ad copy to placement-specific constraints.
 ---
 
 # Instagram Ad Ideation
@@ -142,9 +142,9 @@ After placement is confirmed, check the confirmed text concepts against placemen
    - If found: Read PNG as binary and convert to base64 string
    - If not found: Use placeholder/emoji approach (current behavior)
 3. Generate HTML mockup using the confirmed placement's aspect ratio:
-   - **1:1** (Profile Feed, Explore Carousel): `padding-bottom:100%`
+   - **1:1** (Profile Feed, Explore Image, Explore Carousel): `padding-bottom:100%`
    - **4:5** (Feed, Explore Home): `padding-bottom:125%`
-   - **9:16** (Stories, Reels, Explore Image): `padding-bottom:177.78%`
+   - **9:16** (Stories, Reels): `padding-bottom:177.78%`
    - For **Stories/Reels**: Apply safe zone overlays (see Ad Specifications)
    - For **Carousel**: Render 2-3 cards with dots indicator and swipe hint
    - If base64 image available: Use `background-image:url(data:image/png;base64,{base64_string})` with `background-size:cover;background-position:center` in image area
@@ -327,7 +327,7 @@ When the user selects **Carousel** format, adapt the Phase 1 table to show multi
 | Feed | 4:5 | 1440x1800 | Primary (125) + Headline (40) | — |
 | Stories | 9:16 | 1440x2560 | Primary (125) | Top 14%, Bottom 20% |
 | Reels | 9:16 | 1440x2560 | Primary (44) | Top 14%, Bottom 35%, Sides 6% |
-| Explore | 9:16 | 1080x1080 | Primary (125) | — |
+| Explore | 1:1 | 1080x1080 | Primary (125) | — |
 | Explore Home | 4:5 | 1440x1800 | Primary (125) + Headline (40) | — |
 
 ### Carousel Ad Specs
@@ -379,9 +379,9 @@ For complete HTML preview templates, reference `../references/html-preview-templ
 
 | Ratio | CSS | Placements |
 |-------|-----|------------|
-| 1:1 | `padding-bottom:100%` | Profile Feed, Explore Carousel |
+| 1:1 | `padding-bottom:100%` | Profile Feed, Explore Image, Explore Carousel |
 | 4:5 | `padding-bottom:125%` | Feed, Explore Home |
-| 9:16 | `padding-bottom:177.78%` | Stories, Reels, Explore Image |
+| 9:16 | `padding-bottom:177.78%` | Stories, Reels |
 
 **Basic Instagram mockup structure** (adjust `padding-bottom` per placement):
 

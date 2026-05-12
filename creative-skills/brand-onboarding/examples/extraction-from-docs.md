@@ -87,6 +87,20 @@ All Instagram sponsored posts need #ad or #sponsored
 
 ---
 
+## Extraction Patterns
+
+What counts as "found" for each category:
+
+**Colors**: Hex codes (`#2D5016`), RGB values (`rgb(45,80,22)`) → extractable. Named colors without codes ("green", "blue") → not extractable, ask user for hex.
+
+**Typography**: Named fonts with usage (`Poppins Bold`, `font-family: Lato`) → extractable. Vague references ("nice serif font") → not extractable.
+
+**Brand Voice**: Explicit attributes with definitions ("Authentic: honest about progress") → extractable. Long prose without clear attributes → not extractable.
+
+**Terminology**: Labeled lists ("Words we use: X, Y, Z", "Avoid: A, B, C") → extractable. Terms scattered in prose without labels → not extractable.
+
+---
+
 ## Extraction Results
 
 **Claude**:
