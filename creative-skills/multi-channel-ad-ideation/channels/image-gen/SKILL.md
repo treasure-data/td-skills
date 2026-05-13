@@ -1,6 +1,6 @@
 ---
 name: image-gen
-description: Generate real Instagram image ads with AI-generated visuals and text overlays. Combines mcp__tdx-studio__generate_image for AI image generation with headline compositing via Pillow. Use when user wants to create Instagram ad images, generate ad visuals with text, or produce shareable ad PNGs. Trigger keywords: instagram ad image, generate ad image, image ad with text, ad visual, create instagram ad.
+description: Generate real Instagram image ads with AI-generated visuals and text overlays. Combines mcp__work__generate_image for AI image generation with headline compositing via Pillow. Use when user wants to create Instagram ad images, generate ad visuals with text, or produce shareable ad PNGs. Trigger keywords: instagram ad image, generate ad image, image ad with text, ad visual, create instagram ad.
 ---
 
 # Instagram Image Ad Generation
@@ -14,11 +14,11 @@ This skill chains three systems together:
 ```
 Creative Ideation (concept + copy)
     ↓
-mcp__tdx-studio__generate_image (AI image generation from concept description)
+mcp__work__generate_image (AI image generation from concept description)
     ↓
 Pillow Text Compositor (headline overlay on generated image)
     ↓
-mcp__tdx-studio__generate_image (display final PNG in artifact panel)
+mcp__work__generate_image (display final PNG in artifact panel)
 ```
 
 **Key difference from standard Instagram skill**: The `Image Concept` description and `Primary Text` become the **image generation prompt**. The `Headline` becomes the **text overlay** composited onto the final image.
@@ -45,7 +45,7 @@ Generate **3-5 Instagram image ad concepts** in this text-only format:
 [Combine the visual concept description with the primary text theme into a rich,
 detailed prompt for AI image generation. **If Description text is provided, incorporate
 it into the prompt context.** Include composition, lighting, color palette, mood, style,
-and any specific visual elements. This is what gets sent to mcp__tdx-studio__generate_image.]
+and any specific visual elements. This is what gets sent to mcp__work__generate_image.]
 
 - **Dimensions**: 1024x1024 (will be generated at this size)
 - **Style**: [Photorealistic, illustration, flat design, etc.]
@@ -88,10 +88,10 @@ When triggered, execute the full pipeline for each confirmed concept.
 
 ### Step 1: Generate the Base Image
 
-Call `mcp__tdx-studio__generate_image` with the **Image Generation Prompt** from the confirmed concept:
+Call `mcp__work__generate_image` with the **Image Generation Prompt** from the confirmed concept:
 
 ```
-mcp__tdx-studio__generate_image(prompt: "<Image Generation Prompt from confirmed concept>")
+mcp__work__generate_image(prompt: "<Image Generation Prompt from confirmed concept>")
 ```
 
 The tool returns the generated image directly. Save the base64-encoded image data to a PNG file. See [`../references/compositor.md`](../references/compositor.md) Step 1 for the decode script.
@@ -230,7 +230,7 @@ Optional additional context, often hidden in feed.
 
 ## Image Generation Prompt Tips
 
-The `mcp__tdx-studio__generate_image` tool uses GPT Image 1.5.
+The `mcp__work__generate_image` tool uses GPT Image 1.5.
 
 - **Do**: Be descriptive (composition, lighting, colors, mood, textures), specify style explicitly ("photorealistic", "digital illustration"), include negative prompts, leave visual breathing room where headline will go
 - **Don't**: Request copyrighted characters/brand logos, use vague descriptions, forget to leave clean space in the text position area
@@ -244,7 +244,7 @@ The `mcp__tdx-studio__generate_image` tool uses GPT Image 1.5.
 | Primary Text | Instagram caption + informs image generation theme |
 | Headline | Text composited onto the generated image |
 | Description | Instagram ad description field + enriches image generation prompt when available |
-| Image Generation Prompt | Sent to mcp__tdx-studio__generate_image |
+| Image Generation Prompt | Sent to mcp__work__generate_image |
 | Headline Overlay Style | Controls Pillow text compositing parameters |
 
 ---

@@ -8,12 +8,12 @@ Python scripts for compositing logo overlays and headline text onto AI-generated
 
 ## Step 1: Save Base Image
 
-Save the base64-encoded image data returned by `mcp__tdx-studio__generate_image` to a PNG file:
+Save the base64-encoded image data returned by `mcp__work__generate_image` to a PNG file:
 
 ```python
 import base64
 
-# image_data = base64 string returned by mcp__tdx-studio__generate_image
+# image_data = base64 string returned by mcp__work__generate_image
 img_bytes = base64.b64decode(image_data)
 with open("<concept_name>_base.png", "wb") as out:
     out.write(img_bytes)
