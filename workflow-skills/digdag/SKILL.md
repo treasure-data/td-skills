@@ -1,13 +1,13 @@
 ---
 name: digdag
-description: Write .dig workflow files for Treasure Workflow. Covers creating new workflows (create_workflow MCP tool), importing existing workflows (register_workflow), digdag YAML syntax, td> operator, session variables, _parallel/_retry/_error directives, and TD platform constraints. Use when creating, editing, or deploying TD workflows. Also trigger on mentions of digdag, .dig files, td> operator, workflow scheduling, or any request to build a new data ETL pipeline on Treasure Data. For workflows with LLM processing or Slack/email notification, see the llm-workflow skill.
+description: Write .dig workflow files for Treasure Workflow. Covers creating new workflows (create_workflow MCP tool), importing existing workflows (register_workflow), digdag YAML syntax, td> operator, built-in variables, _parallel/_retry/_error directives, and TD platform constraints. Use when creating, editing, or deploying TD workflows. Also trigger on mentions of digdag, .dig files, td> operator, workflow scheduling, or any request to build a new data ETL pipeline on Treasure Data. For workflows with LLM processing or Slack/email notification, see the llm-workflow skill.
 ---
 
 # Treasure Workflow (Digdag)
 
 Write `.dig` workflow files for Treasure Data.
 
-> **Official docs**: https://docs.digdag.io/
+> **Official docs**: https://docs.treasure.ai/products/customer-data-platform/data-workbench/workflows
 
 ## Workflow Lifecycle
 
@@ -31,16 +31,19 @@ When the user asks about an existing workflow, check **local first**:
 
 ## TD Platform Constraints
 
-Full parameter reference for all operators: [operators.md](references/operators.md)
+TD-platform operator notes: [operators.md](references/operators.md). Parameter details are in the official TD docs.
 
 **Available operators:**
 
 | Category | Operators |
 |---|---|
-| Workflow control | `call>`, `if>`, `for_each>`, `for_range>`, `loop>`, `fail>`, `echo>`, `wait>`, `http_call>`, `require>` |
-| Treasure Data | `td>`, `td_run>`, `td_ddl>`, `td_load>`, `td_for_each>`, `td_wait>`, `td_wait_table>`, `td_partial_delete>`, `td_table_export>`, `td_result_export>` |
+| Control | `call>`, `http_call>`, `require>`, `loop>`, `for_each>`, `for_range>`, `if>`, `fail>`, `echo>`, `wait>` |
+| Treasure Data | `td>`, `td_run>`, `td_ddl>`, `td_load>`, `td_for_each>`, `td_wait>`, `td_wait_table>`, `td_table_export>`, `td_result_export>` |
+| Network | `mail>`, `http>` |
+| Database | `databricks>`, `pg>`, `snowflake>` |
+| Amazon Web Services | `s3_wait>`, `s3_copy>`, `s3_delete>`, `s3_move>`, `redshift>`, `redshift_load>`, `redshift_unload>` |
+| Google Cloud Platform | `gcs_wait>`, `bq>`, `bq_ddl>`, `bq_load>`, `bq_extract>` |
 | Scripting | `py>` (Python via Custom Script Docker image) |
-| Network | `http>`, `mail>` |
 
 **Not available on TD** (no shell access): `sh>`, `rb>`, `embulk>`.
 Use `py>` with Custom Script Docker images for arbitrary compute.
@@ -71,7 +74,9 @@ _export:
 - Tasks prefixed with `+`, execute top-to-bottom
 - `type>: command` is shorthand for `_type: type`, `_command: command`
 
-## Session Variables
+## Built-in Variables
+
+**Session:**
 
 | Variable | Example |
 |---|---|
@@ -79,10 +84,25 @@ _export:
 | `${session_date}` | `2026-01-30` |
 | `${session_date_compact}` | `20260130` |
 | `${session_unixtime}` | `1738159200` |
-| `${last_session_date}` | Previous scheduled date |
-| `${next_session_date}` | Next scheduled date |
+| `${session_local_time}` | `2026-01-30 00:00:00` |
+| `${session_tz_offset}` | `+0900` |
+| `${session_uuid}` | Unique UUID of this session |
+| `${session_id}` | Integer ID of this session |
+| `${last_session_time}` | Previous scheduled session time |
+| `${next_session_time}` | Next scheduled session time |
+
+`last_session_*` / `next_session_*` variants (`_date`, `_date_compact`, `_unixtime`, etc.) are also available for scheduled workflows.
 
 Date math via Moment.js: `${moment(session_time).subtract(1, 'days').format("YYYY-MM-DD")}`
+
+**Runtime:**
+
+| Variable | Example |
+|---|---|
+| `${attempt_id}` | Integer ID of this attempt |
+| `${task_name}` | `+my_workflow+parent+child` |
+| `${project_id}` | Integer ID of this project |
+| `${timezone}` | `Asia/Tokyo` |
 
 ## TD Operator
 
@@ -131,6 +151,8 @@ _error:
     text: "Workflow failed at ${moment().format('YYYY-MM-DD HH:mm')}"
 ```
 
+For the distinction between `job_retry` (operator-level) and `_retry` (task-level) and related runtime caveats, see [runtime.md](references/runtime.md#retry-semantics).
+
 ## Conditionals and Loops
 
 ```yaml
@@ -152,9 +174,9 @@ _error:
       td>: queries/by_region.sql
 ```
 
-## Variables and Secrets
+## py> Tasks
 
-For `py>` tasks — package installation, digdag Python API, argument mapping: [py-operator.md](references/py-operator.md)
+For `py>`, pass secrets via `_env` since the operator does not expand `${secret:}` in its own parameters.
 
 ```yaml
 _export:
@@ -170,7 +192,7 @@ _export:
     TD_API_KEY: ${secret:td.apikey}
 ```
 
-Runtime params: `tdx wf start project workflow -p target_date=2026-04-01`
+For `py>` details — package installation, digdag Python API, argument mapping: [py-operator.md](references/py-operator.md). For secret expansion rules, variable behavior, and related runtime caveats: [runtime.md](references/runtime.md).
 
 ## mail> on TD
 
@@ -193,20 +215,10 @@ For LLM calls (TD LLM Proxy, TD Agent) and notification patterns (Slack, email),
 - **`td.apikey` must be a Master API Key** in `ACCOUNT_ID/KEY` format. OAuth tokens cause 401. Never handle key values — present `tdx wf secrets set` commands with placeholders.
 - **`td_ddl>` `create_databases` requires `td.apikey`** — create the database via CLI first if the secret isn't set yet.
 
-## Schedule Options
+## Further References
 
-```yaml
-schedule:
-  daily>: "09:00:00"
-  # hourly>: 30:00
-  # weekly>: Mon,09:00:00
-  # monthly>: 1,09:00:00
-  # cron>: "*/15 * * * *"
-  # minutes_interval>: 30
-```
-
-## Building a Complete Pipeline
-
-For ETL pipeline patterns (idempotent write, wait-then-process, backfill, modular workflows): [patterns-etl.md](references/patterns-etl.md)
-
-For deploying to TD (manifest.yml, project structure, secrets, deployment checklist): [scaffold.md](references/scaffold.md)
+- [operators.md](references/operators.md) — TD-platform operator notes, output variables, Secrets Reference
+- [patterns-etl.md](references/patterns-etl.md) — ETL pipeline patterns (idempotent write, wait-then-process, data quality checks, modular workflows)
+- [scheduling.md](references/scheduling.md) — Schedule types, options (`start`/`end`, `skip_on_overtime`), SLA configuration
+- [runtime.md](references/runtime.md) — Variable behavior, retry semantics, secret expansion, concurrency, system limits
+- [scaffold.md](references/scaffold.md) — Deploying to TD (manifest.yml, project structure, secrets, deployment checklist)

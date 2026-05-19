@@ -67,9 +67,6 @@ tests:
   - prompt: "Manage workflows using tdx wf commands"
     expected: workflow
 
-  - prompt: "Debug a failing workflow and check session logs"
-    expected: workflow-management
-
   # === Workflow Skills ===
 
   - prompt: "Create a digdag workflow for daily ETL"
