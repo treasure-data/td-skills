@@ -2,11 +2,6 @@
 
 This example shows a complete brand guidelines onboarding session for "TechFlow Analytics" - a fictional B2B SaaS company, including both Phase 1 and Phase 2.
 
-**Total Time**: ~16 minutes
-- Phase 1 (Core Branding): ~8 minutes
-- Choice Point: ~1 minute
-- Phase 2 (Enhancement): ~7 minutes
-
 ---
 
 ## User Initiation
@@ -218,9 +213,9 @@ Example: "We use bank-level encryption. Your data never leaves our secure server
 
 **Claude**:
 ```
-✅ Core brand guidelines created! (Score: ~28/40)
+✅ Core brand guidelines created! (~70% complete)
 
-Phase 1 covers visual and voice. Phase 2 adds Messaging, Legal & Accessibility compliance for production-ready content (38/40).
+Phase 1 covers visual and voice. Phase 2 adds Messaging, Legal & Accessibility compliance for production-ready content (~100%).
 
 What would you like to do?
 1. Start using now (can enhance later)
@@ -385,7 +380,7 @@ Generating sample email for "Analytics Dashboard Update"...
 
 **Claude**: "Running brand compliance check on sample email..."
 
-Brand Compliance Score: 39/40 (Fully Compliant) ✅
+Brand Compliance Score: ~97% (Fully Compliant) ✅
 
 Dimension Breakdown:
 - Visual Compliance: 5/5 ✅
@@ -405,36 +400,23 @@ Minor note: Could add SMS legal requirements if planning to send SMS in future.
 
 **Claude**:
 ```
-✅ Your brand guidelines are ready!
+Your brand guidelines are ready!
 
-Sample email ad scored: 39/40 (Fully Compliant)
+Sample email ad scored: ~97% (Fully Compliant)
 
-📁 Saved to: ~/Documents/Brand Guidelines/TechFlow Analytics/brand-guidelines.md
+Saved to: ~/Documents/Brand Guidelines/TechFlow Analytics/brand-guidelines.md
 
 [Open Folder]  [View Guidelines]
 
 Your brand folder contains:
-✓ brand-guidelines.md
-✓ logos/ folder (for logo files)
-✓ assets/ folder (for fonts, images)
+- brand-guidelines.md
+- logos/ folder (for logo files)
+- assets/ folder (for fonts, images)
 
 You can now:
 - Generate brand-compliant ads: "Create email ads for dashboard update"
 - Validate existing content: "Review this email for brand compliance"
 - All creative skills will automatically use your guidelines!
-
-To update guidelines later: "Update my brand guidelines"
-
----
-
-**💡 What's Next?**
-
-Your brand guidelines are now saved and ready to use! All creative skills will automatically reference these guidelines:
-- Generate ads: "Create email ads for product launch"
-- Review content: "Check this Instagram post for brand compliance"
-- Multi-channel campaigns: "Create multi-channel campaign for summer sale"
-
-No need to re-run this wizard unless creating guidelines for a different brand.
 ```
 
 ---
@@ -477,31 +459,3 @@ We empower small businesses with enterprise-grade analytics tools they can actua
 [... rest of sections ...]
 ```
 
----
-
-## Timeline Breakdown
-
-**Phase 1: Core Branding (Minutes 0-8)**:
-- Foundation & Voice: 4 minutes
-- Tone: 2 minutes
-- Visual Identity: 2 minutes
-
-**Choice Point (Minute 8)**:
-- User decides: Continue or start using
-- This session: User chose "Continue"
-
-**Phase 2: Comprehensive Enhancement (Minutes 8-15)**:
-- Messaging: 3 minutes
-- Legal: 3 minutes
-- Accessibility: 1 minute
-
-**Validation (Minute 15-16)**:
-- File generation
-- Completeness check
-- Sample ad test
-
-**Total time**: ~16 minutes
-- Phase 1 only would be ~8-9 minutes
-- Phase 1 + Phase 2 = ~16 minutes
-
-**Result**: Comprehensive, validated brand guidelines ready for production use (Score: 39/40)

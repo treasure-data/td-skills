@@ -29,6 +29,14 @@ The interactive wizard takes ~15 minutes (or ~5 minutes if you have existing doc
 
 **Quick start:** Say "Set up brand guidelines" to begin the onboarding wizard.
 
+### Have Incomplete Brand Guidelines?
+
+If your brand guidelines have sections marked `*Optional - Not yet configured*` (Phase 1 only), the compliance review will:
+- Score only against configured sections (Visual, Voice, Tone)
+- Skip unconfigured dimensions (Messaging, Legal, Accessibility)
+- After the review, suggest completing your guidelines for full compliance:
+  "Your guidelines are missing [messaging/legal/accessibility]. Say 'Complete my brand guidelines' to add them."
+
 ### About Reference Files
 
 **Important note**: The Acme Corp examples in `references/` are for **structural learning only**. Do not use these example files as actual brand guidelines for user content.

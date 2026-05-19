@@ -24,15 +24,15 @@ Generate ad concepts, support iterative refinement, provide HTML previews, and s
 1. User request → Clarify missing inputs (brief, segment, channels)
 2. Ask about brand guidelines (optional but proactive)
 3. Creative direction ideation (3-5 strategic options in table format)
-4. **Checkpoint**: User selects direction
+4. **CHECKPOINT 1 — STOP and wait**: User selects direction. DO NOT continue until user responds.
 5. Ask for channel selection (all channels at once or work sequentially)
-6. **Checkpoint**: User confirms channel selection
+6. **CHECKPOINT 2 — STOP and wait**: User confirms channel selection. DO NOT continue until user responds.
 7. Generate text concepts (copy only, no HTML yet)
-8. **Checkpoint**: User confirms concepts
+8. **CHECKPOINT 3 — STOP and wait**: User confirms concepts. DO NOT continue until user responds.
 9. Generate HTML previews (only for confirmed concepts)
 10. Support iterative refinement at any phase
 
-At each checkpoint, briefly explain why you're pausing — help the user understand how the next step builds on their input.
+At each checkpoint, STOP and wait for the user to respond. Briefly explain why you're pausing — help the user understand how the next step builds on their input.
 
 **Benefits**: User-directed ideation, explore strategies before execution, multiple checkpoints, efficient (HTML only for confirmed concepts)
 
@@ -131,6 +131,8 @@ After presenting directions, highlight highest-scoring direction and ask user to
 
 **User can**: Select direction → proceed to Channel Selection | Request more → generate new | Iterate → adjust tone/angle | Combine → blend elements
 
+**CHECKPOINT 1 — STOP HERE. DO NOT proceed to Channel Selection until the user explicitly selects a creative direction by number or name. Wait for user response before continuing.**
+
 ## Channel Selection Step
 
 After user selects creative direction, ask these three questions:
@@ -148,6 +150,8 @@ After user selects creative direction, ask these three questions:
 - **Sequential**: Perfect one channel before moving to next. After completing a channel, return to generate text concepts for the next channel. Better for iterative refinement.
 
 **Default recommendation**: Sequential for first-timers, all-at-once for experienced users.
+
+**CHECKPOINT 2 — STOP HERE. DO NOT proceed to generate concepts until the user confirms their channel selection and workflow preference. Wait for user response before continuing.**
 
 ## Delegating to Channel Skills
 
@@ -217,6 +221,8 @@ After completing Channel Selection Step, follow this delegation workflow:
 ```
 
 **For detailed delegation workflows and patterns**, see [references/delegation-examples.md](references/delegation-examples.md).
+
+**CHECKPOINT 3 — STOP HERE. DO NOT proceed to Phase 2 (HTML/ASCII previews) until the user explicitly confirms the text concepts. Wait for user response before continuing.**
 
 ### Phase 2 Delegation
 

@@ -2,11 +2,6 @@
 
 This example shows how brand guidelines are extracted from pasted text, dramatically reducing onboarding time.
 
-**Time Savings**:
-- From scratch Phase 1: ~8 minutes
-- From scratch Phase 1+2: ~16 minutes
-- **With text extraction**: ~5 minutes (Phase 1) or ~8 minutes (Phase 1+2)
-
 ## Scenario
 
 User has existing brand guidelines in a Word document and wants to convert them to the brand-guidelines.md format for use with creative skills.
@@ -92,59 +87,17 @@ All Instagram sponsored posts need #ad or #sponsored
 
 ---
 
-## Extraction Process
+## Extraction Patterns
 
-**Claude**: "Analyzing your brand document..."
+What counts as "found" for each category:
 
-### Extraction Algorithm
+**Colors**: Hex codes (`#2D5016`), RGB values (`rgb(45,80,22)`) → extractable. Named colors without codes ("green", "blue") → not extractable, ask user for hex.
 
-**Step 1: Identify Sections**
-- Look for section headers (ALL CAPS, bold, or heading markers)
-- Detected: BRAND MISSION, OUR VALUES, BRAND VOICE, TONE BY CONTEXT, COLORS, etc.
+**Typography**: Named fonts with usage (`Poppins Bold`, `font-family: Lato`) → extractable. Vague references ("nice serif font") → not extractable.
 
-**Step 2: Extract Structured Data**
+**Brand Voice**: Explicit attributes with definitions ("Authentic: honest about progress") → extractable. Long prose without clear attributes → not extractable.
 
-**Colors** (Pattern: hex codes #RRGGBB):
-```
-Found:
-- #2D5016 (Primary Green) - logo, headers, primary CTAs
-- #D4AF37 (Accent Gold) - highlights, secondary CTAs
-- #FAF7F2 (Background Cream) - email/web backgrounds
-- #333333 (Text Charcoal) - body copy
-```
-
-**Typography** (Pattern: font names + usage):
-```
-Found:
-- Poppins Bold (Headlines)
-- Lato Regular, 16px minimum (Body)
-- Courier (Product certifications)
-```
-
-**Brand Voice** (Pattern: adjectives + definitions):
-```
-Found:
-- Authentic: "honest about progress, don't greenwash"
-- Optimistic: "focus on solutions, not problems"
-- Empowering: "give tools and knowledge"
-```
-
-**Approved/Prohibited Terms** (Pattern: lists with "love/use" or "avoid/don't"):
-```
-Approved: Sustainable, Circular, Refillable, Certified, Traceable, Transparent
-Prohibited: Eco-friendly, Green, Perfect, Cheap
-```
-
-**Legal Requirements** (Pattern: footer, address, disclosures):
-```
-Email:
-Company: Acme Corp
-Address: 789 Eco Street, Portland, OR 97201
-Footer elements: Unsubscribe, Privacy Policy
-
-Instagram:
-Disclosure: #ad or #sponsored for sponsored posts
-```
+**Terminology**: Labeled lists ("Words we use: X, Y, Z", "Avoid: A, B, C") → extractable. Terms scattered in prose without labels → not extractable.
 
 ---
 
@@ -273,7 +226,7 @@ Sample Email Generated: "New Refillable Shampoo Launch"
 
 **Claude**: "Running brand compliance check..."
 
-Brand Compliance Score: 37/40 (Mostly Compliant) ✅
+Brand Compliance Score: ~92% (Mostly Compliant) ✅
 
 Dimension Breakdown:
 - Visual Compliance: 5/5 ✅
@@ -298,7 +251,7 @@ Extraction Summary:
 - Quick questions: 4 sections (4 minutes)
 - Total time: ~5 minutes (vs 15 minutes from scratch)
 
-Sample email ad scored: 37/40 (Mostly Compliant)
+Sample email ad scored: ~92% (Mostly Compliant)
 
 📁 Saved to: ~/Documents/Brand Guidelines/Acme Corp/brand-guidelines.md
 
@@ -327,175 +280,3 @@ Your brand guidelines are now saved and ready to use! All creative skills will a
 No need to re-run this wizard unless creating guidelines for a different brand.
 ```
 
----
-
-## Extraction Patterns Reference
-
-### Colors
-
-**Patterns that work**:
-```
-✅ Primary Green: #2D5016
-✅ #D4AF37 (Accent Gold)
-✅ Background: #FAF7F2
-✅ rgb(45, 80, 22) → converts to hex
-✅ "Use #2D5016 for headers"
-```
-
-**Patterns that don't work**:
-```
-❌ "Green" (no hex code)
-❌ "Blue color" (too vague)
-❌ Colors in images (can't extract from screenshots)
-```
-
-### Typography
-
-**Patterns that work**:
-```
-✅ Poppins Bold
-✅ "Headlines: Poppins"
-✅ font-family: Lato, sans-serif
-✅ "16px minimum"
-```
-
-**Patterns that don't work**:
-```
-❌ "Nice serif font" (no name)
-❌ Fonts only in images
-```
-
-### Brand Voice
-
-**Patterns that work**:
-```
-✅ "We are Authentic, Optimistic, Empowering"
-✅ "Brand voice: Professional and Friendly"
-✅ "Authentic means..."
-```
-
-**Patterns that don't work**:
-```
-❌ Long paragraphs without clear attributes
-❌ "We have a good voice"
-```
-
-### Terminology Lists
-
-**Patterns that work**:
-```
-✅ "Words we use: X, Y, Z"
-✅ "Avoid: A, B, C"
-✅ "Power words: ..."
-✅ Bullet lists with terms
-```
-
-**Patterns that don't work**:
-```
-❌ Terms scattered throughout without labels
-❌ "We like good words"
-```
-
----
-
-## Tips for Better Extraction
-
-### Before Pasting
-
-1. **Ensure text is readable**: Copy as plain text, not images
-2. **Keep structure**: Headers and sections help extraction
-3. **Include hex codes**: Write "#2D5016" not just "green"
-4. **List terms**: Use bullets or commas for word lists
-5. **Provide examples**: Examples help Claude understand context
-
-### Best Source Formats
-
-**Excellent** (high extraction rate):
-- Markdown documents
-- Structured Word docs (with headings)
-- Website brand pages (HTML to text)
-- Notion exports
-- Confluence pages
-
-**Good** (moderate extraction):
-- PDFs (if text-based, not scanned images)
-- Plain text with clear sections
-- Google Docs
-
-**Poor** (low extraction):
-- Scanned PDFs (images of text)
-- PowerPoint slides (text in images)
-- Figma screenshots
-- Highly formatted documents with complex layouts
-
----
-
-## Extraction Confidence Levels
-
-**High Confidence (8-12 sections extracted)**:
-- Most information captured
-- 5-10 minutes to completion
-- Only gaps are typically logo files, imagery, or optional sections
-
-**Medium Confidence (5-7 sections extracted)**:
-- Core information captured (voice, colors, basic messaging)
-- 10-12 minutes to completion
-- Need to fill typography details, legal requirements
-
-**Low Confidence (0-4 sections extracted)**:
-- Minimal structured information found
-- 13-15 minutes to completion
-- Recommend starting from scratch might be faster
-
----
-
-## Time Savings Comparison
-
-### From Scratch (No Existing Docs)
-
-**Phase 1 Only**:
-- 8 question sets
-- ~8 minutes total
-- Result: 28/40 score (functional)
-
-**Phase 1 + Phase 2**:
-- 15 question sets total
-- ~16 minutes total (~8 min Phase 1 + ~8 min Phase 2)
-- Result: 38/40 score (comprehensive)
-
-### With Text Extraction (Existing Docs)
-
-**Typical Case (Phase 1 Complete)**:
-- Auto-extract: Phase 1 sections (~1 minute)
-- Fill gaps: 2-3 Phase 1 questions (~4 minutes)
-- **~5 minutes total for Phase 1**
-- Result: 28/40 score (functional)
-- **60% time savings** vs from-scratch Phase 1
-
-**Comprehensive (Phase 1 + Partial Phase 2)**:
-- Auto-extract: Phase 1 + some Phase 2 sections (~1 minute)
-- Fill gaps: 3-5 Phase 2 questions (~7 minutes)
-- **~8 minutes total for Phase 1+2**
-- Result: 35-38/40 score
-- **50% time savings** vs from-scratch comprehensive
-
-**Best Case (Comprehensive Docs)**:
-- Auto-extract: All sections (~1 minute)
-- Fill gaps: 1-2 minor questions (~2 minutes)
-- **~3 minutes total**
-- Result: 38/40 score
-- **80% time savings** vs from-scratch comprehensive
-
-### Summary
-
-| Scenario | Time | Score | Savings |
-|----------|------|-------|---------|
-| From scratch Phase 1 | ~8 min | 28/40 | Baseline |
-| Extraction Phase 1 | ~5 min | 28/40 | 60% faster |
-| From scratch Full | ~16 min | 38/40 | Baseline |
-| Extraction Full | ~8 min | 38/40 | 50% faster |
-| Best case extraction | ~3 min | 38/40 | 80% faster |
-
----
-
-This extraction capability makes brand onboarding accessible even for users with minimal time, as long as they have some existing brand documentation to work from.
