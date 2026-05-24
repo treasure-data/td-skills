@@ -1,0 +1,290 @@
+{
+  "type": "object",
+  "required": ["title", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title of this marketing segment"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Summary of this marketing segment"
+    },
+    "logic": {
+      "type": "string",
+      "enum": ["ALL", "ANY"],
+      "description": "All of the conditions must match (AND condition) or any of them should match (OR condition). Use 'ALL' as default when only conditions OR only baseSegmentIds are present."
+    },
+    "baseSegmentIds": {
+      "type": "object",
+      "description": "Base segments to reference and combine with new conditions",
+      "properties": {
+        "logic": {
+          "type": "string",
+          "enum": ["ALL", "ANY", "EXCLUDE"],
+          "description": "Logic for combining base segments: ALL (AND), ANY (OR), or EXCLUDE (NOT)"
+        },
+        "segmentIds": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Array of segment IDs to reference"
+        }
+      },
+      "required": ["logic", "segmentIds"],
+      "additionalProperties": false
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {"$ref": "#/definitions/mainCondition"},
+          {"$ref": "#/definitions/conditionGroup"}
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "definitions": {
+    "mainCondition": {
+      "type": "object",
+      "required": ["reason"],
+      "additionalProperties": false,
+      "properties": {
+        "left_value": {
+          "description": "left side condition to compare to the right value",
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Name of a column of the customers table which is used for attribute condition"
+            },
+            {"$ref": "#/definitions/behaviorCondition"}
+          ]
+        },
+        "operator": {
+          "type": "string",
+          "enum": ["=", "!=", "<", ">", ">=", "<=", "IS NOT NULL", "IS NULL", "IN", "BETWEEN", "REGEX", "NOT REGEX"],
+          "description": "Comparison operators. REGEX matches a string against a regular expression pattern. NOT REGEX is the negation."
+        },
+        "right_value": {
+          "anyOf": [
+            {"type": "string"},
+            {"type": "number"},
+            {
+              "type": "array",
+              "items": {
+                "anyOf": [{"type": "string"}, {"type": "number"}]
+              },
+              "description": "This is used when the operator is IN. Specify actual data the attribute column has"
+            }
+          ],
+          "description": "Right value to compare with the left value. This is used for operators other than 'IS NOT NULL', 'IS NULL', and 'BETWEEN'"
+        },
+        "min_value": {
+          "$ref": "#/definitions/rangeValue",
+          "description": "Min value used for specifying the range of BETWEEN"
+        },
+        "max_value": {
+          "$ref": "#/definitions/rangeValue",
+          "description": "Max value used for specifying the range of BETWEEN"
+        },
+        "reason": {
+          "type": "string",
+          "description": "A reason why this condition is set"
+        }
+      },
+      "allOf": [
+        {"required": ["left_value", "operator"]},
+        {
+          "if": {"properties": {"operator": {"enum": ["BETWEEN"]}}},
+          "then": {"required": ["min_value", "max_value"]}
+        },
+        {
+          "if": {"properties": {"operator": {"enum": ["=", "!=", "<", ">", ">=", "<=", "IN"]}}},
+          "then": {"required": ["right_value"]}
+        }
+      ]
+    },
+    "filterCondition": {
+      "type": "object",
+      "required": ["left_value", "operator", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "left_value": {
+          "type": "string",
+          "description": "Name of a column of the behavior table"
+        },
+        "operator": {
+          "type": "string",
+          "enum": ["=", "!=", "<", ">", ">=", "<=", "IS NOT NULL", "IS NULL", "IN", "TIME WITHIN PAST", "BETWEEN", "REGEX", "NOT REGEX"],
+          "description": "Comparison operators. TIME WITHIN PAST is time dedicated operator for filtering data within a relative time period. REGEX matches a string against a regular expression pattern."
+        },
+        "right_value": {
+          "anyOf": [
+            {"type": "string"},
+            {"type": "number"},
+            {
+              "type": "array",
+              "items": {
+                "anyOf": [{"type": "string"}, {"type": "number"}]
+              },
+              "description": "This is used when the operator is IN. Specify actual data the attribute column has"
+            },
+            {"$ref": "#/definitions/timeWithinPastValue"}
+          ],
+          "description": "Right value to compare with the left value. This is used for operators other than 'IS NOT NULL', 'IS NULL', and 'BETWEEN'"
+        },
+        "min_value": {
+          "$ref": "#/definitions/rangeValue",
+          "description": "Min value used for specifying the range of BETWEEN"
+        },
+        "max_value": {
+          "$ref": "#/definitions/rangeValue",
+          "description": "Max value used for specifying the range of BETWEEN"
+        },
+        "reason": {
+          "type": "string",
+          "description": "A reason why this condition is set"
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"operator": {"enum": ["BETWEEN"]}}},
+          "then": {"required": ["min_value", "max_value"]}
+        },
+        {
+          "if": {"properties": {"operator": {"enum": ["=", "!=", "<", ">", ">=", "<=", "IN", "TIME WITHIN PAST"]}}},
+          "then": {"required": ["right_value"]}
+        }
+      ]
+    },
+    "behaviorCondition": {
+      "type": "object",
+      "description": "Aggregated condition used for behavior condition",
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "The source table name of the SQL statement"
+        },
+        "aggregation": {"$ref": "#/definitions/aggregation"},
+        "filter": {"$ref": "#/definitions/filter"}
+      },
+      "required": ["from", "aggregation"],
+      "additionalProperties": false
+    },
+    "aggregation": {
+      "type": "object",
+      "description": "The aggregation condition used for behavior rule",
+      "oneOf": [
+        {
+          "properties": {
+            "type": {"type": "string", "enum": ["Count"]}
+          },
+          "required": ["type"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": {"type": "string", "enum": ["CountDistinct"]},
+            "column_name": {
+              "type": "string",
+              "description": "column name to use for this aggregation"
+            }
+          },
+          "required": ["type", "column_name"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["Average", "Max", "Min", "Sum", "First", "Last"]
+            },
+            "column_name": {
+              "type": "string",
+              "description": "column name to use for this aggregation"
+            },
+            "order_by_column_name": {
+              "type": "string",
+              "description": "column name to use for ordering. Optional for most aggregation types."
+            }
+          },
+          "required": ["type", "column_name"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "filter": {
+      "type": "object",
+      "description": "Filter condition of the behavior data",
+      "required": ["logic", "conditions"],
+      "additionalProperties": false,
+      "properties": {
+        "logic": {
+          "type": "string",
+          "enum": ["ALL", "ANY"],
+          "description": "All of the conditions must match (AND condition) or any of them should match (OR condition)"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/filterCondition"},
+          "minItems": 1
+        }
+      }
+    },
+    "timeWithinPastValue": {
+      "type": "object",
+      "description": "This is used when TIME WITHIN PAST is selected in operator",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 1,
+          "description": "A number for the period it's used with 'unit'. If it's 7 days, value is 7 and unit is 'day'"
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["day", "week", "month", "year"]
+        }
+      },
+      "required": ["value", "unit"],
+      "additionalProperties": false
+    },
+    "rangeValue": {
+      "anyOf": [
+        {"type": "string"},
+        {"type": "number"},
+        {
+          "type": "object",
+          "properties": {
+            "timestamp": {
+              "type": "string",
+              "format": "date",
+              "description": "This is used when the column type is timestamp, in ISO 8601 format"
+            }
+          },
+          "required": ["timestamp"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "conditionGroup": {
+      "type": "object",
+      "description": "A nested group of conditions with its own logic operator. Use this to create mixed logic expressions like 'A AND (B OR C)'.",
+      "required": ["logic", "conditions"],
+      "additionalProperties": false,
+      "properties": {
+        "logic": {
+          "type": "string",
+          "enum": ["ALL", "ANY"],
+          "description": "Logic for combining conditions in this group: ALL (AND) or ANY (OR)"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/mainCondition"},
+          "minItems": 1,
+          "description": "Array of conditions within this group (one level of nesting supported)"
+        }
+      }
+    }
+  }
+}
