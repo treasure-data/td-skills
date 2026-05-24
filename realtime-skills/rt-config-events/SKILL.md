@@ -318,5 +318,5 @@ After configuring events:
 
 ## Resources
 
-- [RT 2.0 Events Documentation](https://docs.treasuredata.com/display/public/PD/RT+Events)
-- [Regex Pattern Reference](https://docs.treasuredata.com/display/public/PD/Regular+Expressions)
+- [RT 2.0 Events Documentation](https://docs.treasuredata.com/products/customer-data-platform/real-time/real-time)
+- [Regex Pattern Reference](https://docs.treasuredata.com/products/customer-data-platform/real-time/real-time)
