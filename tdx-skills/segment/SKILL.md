@@ -1,6 +1,6 @@
 ---
 name: segment
-description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers Value/Behavior condition types, all operators (Equal, In, Between, TimeWithinPast, etc.), behavior aggregations with filters, and nested condition group restrictions. Use when creating audience segments with filtering rules, configuring behavior-based conditions, managing segment hierarchies, or exploring available fields with `tdx sg fields`.
+description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers Value/Behavior condition types, all operators (Equal, In, Between, TimeWithinPast, etc.), behavior aggregations with filters, and nested condition group restrictions. Use when creating audience segments with filtering rules, configuring behavior-based conditions, managing segment hierarchies, or exploring available fields with `tdx sg fields`. Generated YAML is designed to be Console-compatible — no validation errors when opened in the segment editor after push.
 ---
 
 # tdx Segment - CDP Child Segment Management
@@ -87,7 +87,7 @@ Five condition types can be used inside `conditions:`:
 | Range | `Between` | `min` and/or `max` | `min: 18, max: 65` |
 | Set | `In`, `NotIn` | `value` (array) | `value: ["US", "CA"]` |
 | Text | `Contain`, `StartWith`, `EndWith` | `value` (string array) | `value: ["@gmail.com"]` |
-| Pattern | `Regexp` | `value` (string) | `value: "^[A-Z]{2}[0-9]{4}$"` |
+| Pattern | `Regexp` | `value` (string — single regex pattern, **not** an array) | `value: "^(premium\|gold)"` |
 | Null | `IsNull` | (none) | `type: IsNull` (use `not: true` for "is not null") |
 | Time | `TimeWithinPast`, `TimeWithinNext` | `value` + `unit` | `value: 30, unit: day` (Past=recency, Next=future window) |
 | Time | `TimeRange` | `duration` + `from` | See example below |
@@ -121,8 +121,8 @@ Query behavior table data with aggregations. Use `type: Value` with `source` and
   attribute: ""                      # Empty string for behavior aggregations
   source: behavior_purchase_history  # behavior_<table_name> (prefix required)
   aggregation:
-    type: Sum                        # Count | Sum | Average | Min | Max
-    column: order_total              # Required for Sum/Average/Min/Max (not Count)
+    type: Sum                        # Count | CountDistinct | Sum | Average | Min | Max
+    column: order_total              # Required for all types except Count; required for CountDistinct too
   operator:
     type: Greater
     not: false
@@ -134,7 +134,7 @@ Query behavior table data with aggregations. Use `type: Value` with `source` and
     type: And
     conditions:
       - type: Column                 # Use Column (not Value) inside filter
-        column: category             # Use column (not attribute) field
+        column: category             # Use column (not attribute) field — required even for IsNull
         operator:
           type: Equal
           not: false
@@ -196,6 +196,84 @@ Or conditions across **different attributes** cannot be expressed without nested
 
 For such cases, consider creating separate segments and using `include` references, or restructuring the business logic.
 
+## Console Compatibility Constraints
+
+`tdx sg validate` catches CLI-level errors, but some conditions pass the CLI validator and are
+accepted by the API, yet cause validation errors when the segment is **opened in the Console
+segment editor**. Always apply these constraints so the generated YAML is editable in the Console
+after push.
+
+### No nested condition groups
+
+`And`/`Or` groups cannot contain another `And`/`Or` as a child — only `Value`, `include`, and
+`exclude` are allowed inside a group. (Covered by `NESTED_CONDITION_GROUP` above, but this also
+applies inside behavior `filter` blocks.)
+
+### Behavior filter conditions must be flat
+
+Inside a behavior `filter`, all conditions must be flat `Column` conditions — no sub-`And`/`Or`
+groups.
+
+```yaml
+# WRONG — nested group inside filter (API accepts, Console rejects)
+filter:
+  type: And
+  conditions:
+    - type: And
+      conditions: [...]
+
+# RIGHT — flat list only
+filter:
+  type: And
+  conditions:
+    - type: Column
+      column: category
+      operator: { type: Equal, value: "Electronics" }
+    - type: Column
+      column: status
+      operator: { type: Equal, value: "completed" }
+```
+
+### `CountDistinct` requires `column`
+
+```yaml
+# WRONG
+aggregation:
+  type: CountDistinct
+
+# RIGHT
+aggregation:
+  type: CountDistinct
+  column: product_id
+```
+
+### `Regexp` value must be a single string, not an array
+
+```yaml
+# WRONG — array causes Console validation error
+operator:
+  type: Regexp
+  value: ["^premium", "^gold"]
+
+# RIGHT — combine into one regex
+operator:
+  type: Regexp
+  value: "^(premium|gold)"
+```
+
+### `column` field is required in behavior filter conditions even for null checks
+
+```yaml
+# WRONG
+- type: Column
+  operator: { type: IsNull }
+
+# RIGHT
+- type: Column
+  column: opted_out_at
+  operator: { type: IsNull }
+```
+
 ## Array Matching
 
 Add `arrayMatching` to Value conditions: `any | all | { atLeast: N } | { atMost: N } | { exactly: N }`
@@ -220,6 +298,7 @@ segments/customer-360/
 | NESTED_CONDITION_GROUP | Use `In` operator or flatten; all nesting is rejected |
 | Segment reference not found | Segment must exist on server; use exact name from Console |
 | Non-interactive mode error | Add `-y` flag: `tdx sg push -y "<file>"` |
+| CLI validates / API accepts, but Console shows error | Check Console Compatibility Constraints section above |
 
 ## Related Skills
 
