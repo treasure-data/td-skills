@@ -87,7 +87,7 @@ Five condition types can be used inside `conditions:`:
 | Range | `Between` | `min` and/or `max` | `min: 18, max: 65` |
 | Set | `In`, `NotIn` | `value` (array) | `value: ["US", "CA"]` |
 | Text | `Contain`, `StartWith`, `EndWith` | `value` (string array) | `value: ["@gmail.com"]` |
-| Pattern | `Regexp` | `value` (string — single regex pattern, **not** an array) | `value: "^(premium\|gold)"` |
+| Pattern | `Regexp` | `value` (string — single regex pattern, **not** an array) | `value: "^(premium|gold)"` (in a YAML file, no escaping needed) |
 | Null | `IsNull` | (none) | `type: IsNull` (use `not: true` for "is not null") |
 | Time | `TimeWithinPast`, `TimeWithinNext` | `value` + `unit` | `value: 30, unit: day` (Past=recency, Next=future window) |
 | Time | `TimeRange` | `duration` + `from` | See example below |
@@ -205,9 +205,13 @@ after push.
 
 ### No nested condition groups
 
-`And`/`Or` groups cannot contain another `And`/`Or` as a child — only `Value`, `include`, and
-`exclude` are allowed inside a group. (Covered by `NESTED_CONDITION_GROUP` above, but this also
-applies inside behavior `filter` blocks.)
+`And`/`Or` groups cannot contain another `And`/`Or` as a child. Allowed child types differ by context:
+
+- **In `rule.conditions`**: `Value`, `include`, `exclude` only
+- **In behavior `filter.conditions`**: `Column` only
+
+This applies at both levels — the CLI `NESTED_CONDITION_GROUP` error covers `rule.conditions`, but
+the Console editor also rejects nested groups inside `filter.conditions` without a CLI-level error.
 
 ### Behavior filter conditions must be flat
 
@@ -219,8 +223,11 @@ groups.
 filter:
   type: And
   conditions:
-    - type: And
-      conditions: [...]
+    - type: And       # nesting itself is the problem
+      conditions:
+        - type: Column
+          column: category
+          operator: { type: Equal, value: "Electronics" }
 
 # RIGHT — flat list only
 filter:
