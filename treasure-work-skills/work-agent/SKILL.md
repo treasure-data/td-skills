@@ -1,5 +1,5 @@
 ---
-name: agent
+name: work-agent
 description: Use when the user wants to create, configure, schedule, or run an agent in Treasure Work. Covers AGENTS.md authoring, the `agent_*` MCP tools, on-demand vs scheduled agents, lifecycle (draft → active → paused), and chat-based result inspection. Triggers on "create an agent", "set up an agent", "schedule a task", "set up a recurring job", "automate daily report", "cron job", "run X every weekday", etc.
 ---
 

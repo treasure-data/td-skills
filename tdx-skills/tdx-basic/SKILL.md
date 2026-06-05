@@ -199,4 +199,4 @@ Each `tdx.json` stores context for its directory—commands run from any subdire
 ## Resources
 
 - Documentation: https://tdx.treasuredata.com/
-- Related: **sql-skills/time-filtering**, **segment**, **journey**, **agent**
+- Related: **sql-skills/time-filtering**, **segment**, **journey**, **foundry-agent**
