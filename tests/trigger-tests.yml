@@ -47,7 +47,7 @@ tests:
     expected: tdx-basic
 
   - prompt: "Build an AI agent with knowledge base tools"
-    expected: tdx-agent
+    expected: foundry-agent
 
   - prompt: "Write tests for my TD AI agent"
     expected: agent-test

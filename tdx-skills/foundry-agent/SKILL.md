@@ -1,11 +1,11 @@
 ---
-name: tdx-agent
-description: Build LLM agents using `tdx agent pull/push` with YAML/Markdown config. Covers agent.yml structure, tools (knowledge_base, agent, web_search, image_gen), @ref syntax, and knowledge bases. Use for TD AI agent development workflow.
+name: foundry-agent
+description: Build Treasure AI Foundry agents using `tdx agent pull/push` with YAML/Markdown config. Covers agent.yml structure, tools (knowledge_base, agent, web_search, image_gen), @ref syntax, and knowledge bases. Use for TD AI Foundry agent development workflow.
 ---
 
-# tdx Agent - LLM Agent Development
+# Foundry Agent - Treasure AI Foundry Agent Development
 
-Build and manage LLM agents using `tdx agent pull/push` with YAML/Markdown configuration files.
+Build and manage Treasure AI Foundry agents using `tdx agent pull/push` with YAML/Markdown configuration files.
 
 ## Key Commands
 
