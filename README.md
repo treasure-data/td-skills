@@ -68,8 +68,8 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[tdx-skills/validate-journey](./tdx-skills/validate-journey)** - Validate journey YAML configurations for correct step types, parameters, and segment references
 - **[tdx-skills/connector-config](./tdx-skills/connector-config)** - Configure connector_config for segment/journey activations using `tdx connection schema` to discover fields
 - **[tdx-skills/foundry-agent](./tdx-skills/foundry-agent)** - Build Treasure AI Foundry agents using `tdx agent pull/push` with YAML/Markdown config, tools, and knowledge bases
-- **[tdx-skills/agent-test](./tdx-skills/agent-test)** - Run automated tests for LLM agents using `tdx agent test` with test.yml format and judge evaluation
-- **[tdx-skills/agent-prompt](./tdx-skills/agent-prompt)** - Write effective system prompts for TD AI agents with role definition, constraints, and output formatting
+- **[tdx-skills/foundry-agent-test](./tdx-skills/foundry-agent-test)** - Run automated tests for Treasure AI Foundry agents using `tdx agent test` with test.yml format and judge evaluation
+- **[tdx-skills/foundry-agent-prompt](./tdx-skills/foundry-agent-prompt)** - Write effective system prompts for Treasure AI Foundry agents with role definition, constraints, and output formatting
 - **[tdx-skills/workflow](./tdx-skills/workflow)** - Manage TD workflows via `tdx wf` commands: project sync, run, sessions, timeline, attempts, retry, and secrets
 - **[tdx-skills/parent-segment-analysis](./tdx-skills/parent-segment-analysis)** - Query and analyze CDP parent segment output databases: customers table, behavior tables, and attribute exploration
 - **[tdx-skills/engage](./tdx-skills/engage)** - Manage Treasure Engage email templates and campaigns using `tdx engage` with YAML+HTML configs, preview, and deployment
@@ -191,8 +191,8 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the validate-journey skill to check my journey YAML for errors"
 "Use the connector-config skill to configure an SFMC activation"
 "Use the agent skill to create an LLM agent with knowledge base tools"
-"Use the agent-test skill to run automated tests for my agent"
-"Use the agent-prompt skill to write an effective system prompt for my agent"
+"Use the foundry-agent-test skill to run automated tests for my agent"
+"Use the foundry-agent-prompt skill to write an effective system prompt for my agent"
 "Use the workflow skill to debug a failing workflow session"
 "Use the deployment skill to set up a production publishing workflow"
 "Use the documentation skill to create comprehensive Field Agent documentation"
@@ -203,7 +203,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, identify-top-key-values, id-graph-canonical-id-size, id-graph-ids-to-canonical-id, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization, multi-channel-ad-ideation, brand-compliance, brand-onboarding)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, identify-top-key-values, id-graph-canonical-id-size, id-graph-ids-to-canonical-id, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, foundry-agent, foundry-agent-test, foundry-agent-prompt, deployment, documentation, visualization, multi-channel-ad-ideation, brand-compliance, brand-onboarding)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 

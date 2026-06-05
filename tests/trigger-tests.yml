@@ -50,10 +50,10 @@ tests:
     expected: foundry-agent
 
   - prompt: "Write tests for my TD AI agent"
-    expected: agent-test
+    expected: foundry-agent-test
 
   - prompt: "Write an effective system prompt for my agent"
-    expected: agent-prompt
+    expected: foundry-agent-prompt
 
   - prompt: "Configure connector_config for a Salesforce activation"
     expected: connector-config

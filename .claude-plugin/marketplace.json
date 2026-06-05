@@ -104,8 +104,8 @@
         "./tdx-skills/validate-journey",
         "./tdx-skills/connector-config",
         "./tdx-skills/foundry-agent",
-        "./tdx-skills/agent-test",
-        "./tdx-skills/agent-prompt",
+        "./tdx-skills/foundry-agent-test",
+        "./tdx-skills/foundry-agent-prompt",
         "./tdx-skills/workflow",
         "./tdx-skills/parent-segment-analysis",
         "./tdx-skills/engage"
