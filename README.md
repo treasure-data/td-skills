@@ -67,7 +67,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[tdx-skills/journey](./tdx-skills/journey)** - Create CDP journey definitions in YAML with stages, steps (wait, activation, decision_point, ab_test, merge, jump, end), and simulation workflow
 - **[tdx-skills/validate-journey](./tdx-skills/validate-journey)** - Validate journey YAML configurations for correct step types, parameters, and segment references
 - **[tdx-skills/connector-config](./tdx-skills/connector-config)** - Configure connector_config for segment/journey activations using `tdx connection schema` to discover fields
-- **[tdx-skills/agent](./tdx-skills/agent)** - Build LLM agents using `tdx agent pull/push` with YAML/Markdown config, tools, and knowledge bases
+- **[tdx-skills/tdx-agent](./tdx-skills/tdx-agent)** - Build LLM agents using `tdx agent pull/push` with YAML/Markdown config, tools, and knowledge bases
 - **[tdx-skills/agent-test](./tdx-skills/agent-test)** - Run automated tests for LLM agents using `tdx agent test` with test.yml format and judge evaluation
 - **[tdx-skills/agent-prompt](./tdx-skills/agent-prompt)** - Write effective system prompts for TD AI agents with role definition, constraints, and output formatting
 - **[tdx-skills/workflow](./tdx-skills/workflow)** - Manage TD workflows via `tdx wf` commands: project sync, run, sessions, timeline, attempts, retry, and secrets
@@ -108,7 +108,7 @@ Mirror of `studio-skills` updated for the renamed `mcp__work__*` MCP namespace (
 - **[treasure-work-skills/work](./treasure-work-skills/work)** - Manage workspace documents (items, goals, notes, guides, references) using file operations with YAML frontmatter, wiki-links, and status lifecycles
 - **[treasure-work-skills/skill-creator](./treasure-work-skills/skill-creator)** - Create, write, and optimize custom skills (SKILL.md files) in Treasure Work with description optimization and writing patterns
 - **[treasure-work-skills/react-dashboard](./treasure-work-skills/react-dashboard)** - Build interactive React dashboards in Treasure Work using `render_react` for custom components beyond `render_chart`
-- **[treasure-work-skills/agent](./treasure-work-skills/agent)** - Create and configure agents in Treasure Work: AGENTS.md authoring, `agent_*` MCP tools, on-demand vs scheduled (cron) lifecycle (draft → active → paused), and chat-based result inspection
+- **[treasure-work-skills/work-agent](./treasure-work-skills/work-agent)** - Create and configure agents in Treasure Work: AGENTS.md authoring, `agent_*` MCP tools, on-demand vs scheduled (cron) lifecycle (draft → active → paused), and chat-based result inspection
 - **[treasure-work-skills/agent-review](./treasure-work-skills/agent-review)** - Review and validate agents before activating, with structural (AGENTS.md schema) and quality checks via parallel sub-agents
 - **[treasure-work-skills/web-search](./treasure-work-skills/web-search)** - Web search and URL content extraction using `web_search` with query optimization, search operators, and structured research patterns
 

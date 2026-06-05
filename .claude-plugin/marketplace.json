@@ -103,7 +103,7 @@
         "./tdx-skills/journey",
         "./tdx-skills/validate-journey",
         "./tdx-skills/connector-config",
-        "./tdx-skills/agent",
+        "./tdx-skills/tdx-agent",
         "./tdx-skills/agent-test",
         "./tdx-skills/agent-prompt",
         "./tdx-skills/workflow",
@@ -203,7 +203,7 @@
         "./treasure-work-skills/react-dashboard",
         "./treasure-work-skills/grid-dashboard",
         "./treasure-work-skills/action-report",
-        "./treasure-work-skills/agent",
+        "./treasure-work-skills/work-agent",
         "./treasure-work-skills/agent-review",
         "./treasure-work-skills/web-search",
         "./treasure-work-skills/graflow"

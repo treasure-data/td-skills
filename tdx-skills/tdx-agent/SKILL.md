@@ -1,5 +1,5 @@
 ---
-name: agent
+name: tdx-agent
 description: Build LLM agents using `tdx agent pull/push` with YAML/Markdown config. Covers agent.yml structure, tools (knowledge_base, agent, web_search, image_gen), @ref syntax, and knowledge bases. Use for TD AI agent development workflow.
 ---
 

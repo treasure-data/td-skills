@@ -47,7 +47,7 @@ tests:
     expected: tdx-basic
 
   - prompt: "Build an AI agent with knowledge base tools"
-    expected: agent
+    expected: tdx-agent
 
   - prompt: "Write tests for my TD AI agent"
     expected: agent-test
@@ -236,6 +236,9 @@ tests:
 
   - prompt: "Create a new skill for Treasure Studio"
     expected: skill-creator
+
+  - prompt: "Set up a scheduled agent in Treasure Work to run a daily report"
+    expected: work-agent
 
   - prompt: "Create a Graflow workflow to scan accounts and alert for churn risk"
     expected: graflow
