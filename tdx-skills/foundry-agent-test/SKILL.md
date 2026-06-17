@@ -1,6 +1,6 @@
 ---
-name: agent-test
-description: Run automated tests for LLM agents using `tdx agent test`. Covers test.yml format with user_input/criteria, single and multi-round tests, evaluation by judge agent, and criteria development workflow.
+name: foundry-agent-test
+description: Run automated tests for Treasure AI Foundry agents using `tdx agent test`. Covers test.yml format with user_input/criteria, single and multi-round tests, evaluation by judge agent, and criteria development workflow.
 ---
 
 # tdx Agent Test
@@ -141,4 +141,4 @@ Cache is stored in `.cache/tdx/last_agent_test_run.json`.
 ## Related Skills
 
 - **agent** - Agent configuration and `pull/push` workflow
-- **agent-prompt** - Writing effective system prompts
+- **foundry-agent-prompt** - Writing effective system prompts

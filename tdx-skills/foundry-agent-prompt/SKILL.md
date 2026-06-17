@@ -1,6 +1,6 @@
 ---
-name: agent-prompt
-description: Write effective system prompts for TD AI agents. Covers role definition, constraint specification, output formatting, tool usage instructions, and prompt structure patterns.
+name: foundry-agent-prompt
+description: Write effective system prompts for Treasure AI Foundry agents. Covers role definition, constraint specification, output formatting, tool usage instructions, and prompt structure patterns.
 ---
 
 # Writing Effective Agent Prompts

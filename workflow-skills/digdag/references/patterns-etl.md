@@ -1,6 +1,6 @@
 # ETL Patterns
 
-Data pipeline patterns: extract-transform-load, idempotent writes, wait-then-process, parallel processing, backfill, modular workflows, and py> integration.
+Data pipeline patterns: extract-transform-load, idempotent writes, wait-then-process, data quality checks, parallel processing, modular workflows, and py> integration.
 
 ---
 
@@ -40,30 +40,33 @@ _export:
 
 ## Idempotent Write (DELETE + INSERT)
 
-Safely re-run without duplicates using `td_partial_delete>` + `td>`.
+**Do not combine DELETE and INSERT in a single `td>` job** — a single job does not guarantee transactions. If DELETE succeeds but INSERT fails, data is lost. Always split into separate tasks.
+
+Group-level `_retry` ensures that an INSERT failure triggers re-execution starting from DELETE:
 
 ```yaml
-+delete_existing:
-  td_partial_delete>: daily_summary
-  database: analytics
-  from: ${session_date}
-  to: ${next_session_date}
++refresh_daily:
+  _retry: 3
 
-+insert_fresh:
-  td>: queries/daily_summary.sql
-  insert_into: daily_summary
+  +delete_records:
+    td>:
+      query: |
+        delete from daily_summary
+        where date = '${session_date}'
+    database: analytics
+
+  +insert_records:
+    td>: queries/daily_summary.sql
+    insert_into: daily_summary
+    database: analytics
 ```
 
-Alternative using Presto (DELETE + INSERT in one workflow):
+For full table replacement, `create_table:` atomically replaces the entire table:
 
 ```yaml
-+delete_existing:
-  td>: queries/delete_partition.sql
-  # DELETE FROM daily_summary WHERE TD_TIME_RANGE(time, '${session_date}', '${next_session_date}')
-
-+insert_fresh:
-  td>: queries/daily_summary.sql
-  insert_into: daily_summary
++rebuild:
+  td>: queries/full_rebuild.sql
+  create_table: daily_summary
 ```
 
 ---
@@ -99,6 +102,38 @@ SELECT COUNT(*) > 10000
 FROM incoming_events
 WHERE TD_TIME_RANGE(time, '${session_time}')
 ```
+
+For external systems, use `http>` against an endpoint that returns `408` or `429` until conditions are met — `http>` retries on these status codes automatically (up to the 24h task limit).
+
+**Do not use `loop>` for polling** — it creates a task per iteration and can hit the 1,000-task-per-attempt limit.
+
+---
+
+## Data Quality Checks
+
+Validate results with `store_last_results` + `if>` + `fail>`:
+
+```yaml
++process:
+  td>: queries/process.sql
+  create_table: results
+
++validate:
+  td>:
+    query: |
+      select count(*) as cnt,
+             sum(case when id is null then 1 else 0 end) as nulls
+      from results
+  store_last_results: true
+
++check:
+  if>: ${td.last_results.cnt == 0}
+  _do:
+    +fail:
+      fail>: "No rows produced — data quality check failed"
+```
+
+`store_last_results: true` stores **only the first row** as `${td.last_results.column}`. Design validation queries to return a single row of metrics.
 
 ---
 
@@ -149,33 +184,6 @@ Query-driven loop: iterate over results of a query.
 SELECT DISTINCT client_id
 FROM contracts
 WHERE status = 'active'
-```
-
----
-
-## Backfill with loop>
-
-Reprocess past N days.
-
-```yaml
-+backfill:
-  loop>: 30
-  _do:
-    +process_day:
-      td>: queries/daily_etl.sql
-      insert_into: daily_metrics
-      _export:
-        target_date: ${moment(session_time).subtract(i, 'days').format("YYYY-MM-DD")}
-        target_date_next: ${moment(session_time).subtract(i - 1, 'days').format("YYYY-MM-DD")}
-```
-
-`queries/daily_etl.sql`:
-```sql
-SELECT
-  '${target_date}' AS dt,
-  COUNT(*) AS cnt
-FROM events
-WHERE TD_TIME_RANGE(time, '${target_date}', '${target_date_next}')
 ```
 
 ---

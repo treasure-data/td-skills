@@ -71,13 +71,12 @@
     },
     {
       "name": "workflow-skills",
-      "description": "Treasure Workflow orchestration and data transformation skills including workflow creation, management, debugging, optimization, and dbt (data build tool) for Treasure Data Trino",
+      "description": "Treasure Workflow orchestration and data transformation skills including workflow authoring and dbt (data build tool) for Treasure Data Trino",
       "source": "./",
       "strict": false,
       "skills": [
         "./workflow-skills/digdag",
         "./workflow-skills/llm-workflow",
-        "./workflow-skills/workflow-management",
         "./workflow-skills/dbt"
       ]
     },
@@ -104,9 +103,9 @@
         "./tdx-skills/journey",
         "./tdx-skills/validate-journey",
         "./tdx-skills/connector-config",
-        "./tdx-skills/agent",
-        "./tdx-skills/agent-test",
-        "./tdx-skills/agent-prompt",
+        "./tdx-skills/foundry-agent",
+        "./tdx-skills/foundry-agent-test",
+        "./tdx-skills/foundry-agent-prompt",
         "./tdx-skills/workflow",
         "./tdx-skills/parent-segment-analysis",
         "./tdx-skills/engage"
@@ -195,7 +194,7 @@
     },
     {
       "name": "treasure-work-skills",
-      "description": "Treasure Work-specific skills including workspace document management, skill creation, scheduled task management, and UI rendering formats for grid dashboards and action reports. Uses the renamed `mcp__work__*` MCP tool namespace.",
+      "description": "Treasure Work-specific skills including workspace document management, skill creation, agent authoring and review, and UI rendering formats for grid dashboards and action reports. Uses the renamed `mcp__work__*` MCP tool namespace.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -204,8 +203,8 @@
         "./treasure-work-skills/react-dashboard",
         "./treasure-work-skills/grid-dashboard",
         "./treasure-work-skills/action-report",
-        "./treasure-work-skills/schedule-task",
-        "./treasure-work-skills/schedule-review",
+        "./treasure-work-skills/work-agent",
+        "./treasure-work-skills/agent-review",
         "./treasure-work-skills/web-search",
         "./treasure-work-skills/graflow"
       ]

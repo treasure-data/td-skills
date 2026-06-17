@@ -1,15 +1,6 @@
 ---
 name: pptx
-description: >
-  Use this skill any time the user wants to create a new PowerPoint presentation, slide deck,
-  pitch deck, or .pptx file from scratch. Covers creating business presentations, quarterly
-  reports, project proposals, product roadmaps, training materials, and any multi-slide
-  document destined for PowerPoint. Works by generating HTML/CSS slides (which LLMs excel at),
-  rendering them in agent-browser for pixel-accurate DOM position extraction, and assembling
-  the final PPTX with native PowerPoint charts, tables, and images via PptxGenJS.
-  Includes bundled scripts for validation, DOM extraction, and PPTX assembly.
-  Do NOT use this skill for editing existing PPTX files, converting other formats to PPTX,
-  or extracting content from PPTX files.
+description: Use this skill any time the user wants to create a new PowerPoint presentation, slide deck, pitch deck, or .pptx file from scratch. Covers creating business presentations, quarterly reports, project proposals, product roadmaps, training materials, and any multi-slide document destined for PowerPoint. Works by generating HTML/CSS slides (which LLMs excel at), rendering them in agent-browser for pixel-accurate DOM position extraction, and assembling the final PPTX with native PowerPoint charts, tables, and images via PptxGenJS. Includes bundled scripts for validation, DOM extraction, and PPTX assembly. Do NOT use this skill for editing existing PPTX files, converting other formats to PPTX, or extracting content from PPTX files.
 ---
 
 # HTML-to-PPTX Presentation Generator

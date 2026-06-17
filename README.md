@@ -51,7 +51,6 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 ### Workflow Skills
 
 - **[workflow-skills/digdag](./workflow-skills/digdag)** - Design and implement Treasure Workflow with proper error handling
-- **[workflow-skills/workflow-management](./workflow-skills/workflow-management)** - Manage, debug, and optimize existing Treasure Workflows
 - **[workflow-skills/dbt](./workflow-skills/dbt)** - Use dbt (data build tool) with TD Trino, includes setup, TD-specific macros, and incremental models
 
 ### SDK Skills
@@ -68,9 +67,9 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[tdx-skills/journey](./tdx-skills/journey)** - Create CDP journey definitions in YAML with stages, steps (wait, activation, decision_point, ab_test, merge, jump, end), and simulation workflow
 - **[tdx-skills/validate-journey](./tdx-skills/validate-journey)** - Validate journey YAML configurations for correct step types, parameters, and segment references
 - **[tdx-skills/connector-config](./tdx-skills/connector-config)** - Configure connector_config for segment/journey activations using `tdx connection schema` to discover fields
-- **[tdx-skills/agent](./tdx-skills/agent)** - Build LLM agents using `tdx agent pull/push` with YAML/Markdown config, tools, and knowledge bases
-- **[tdx-skills/agent-test](./tdx-skills/agent-test)** - Run automated tests for LLM agents using `tdx agent test` with test.yml format and judge evaluation
-- **[tdx-skills/agent-prompt](./tdx-skills/agent-prompt)** - Write effective system prompts for TD AI agents with role definition, constraints, and output formatting
+- **[tdx-skills/foundry-agent](./tdx-skills/foundry-agent)** - Build Treasure AI Foundry agents using `tdx agent pull/push` with YAML/Markdown config, tools, and knowledge bases
+- **[tdx-skills/foundry-agent-test](./tdx-skills/foundry-agent-test)** - Run automated tests for Treasure AI Foundry agents using `tdx agent test` with test.yml format and judge evaluation
+- **[tdx-skills/foundry-agent-prompt](./tdx-skills/foundry-agent-prompt)** - Write effective system prompts for Treasure AI Foundry agents with role definition, constraints, and output formatting
 - **[tdx-skills/workflow](./tdx-skills/workflow)** - Manage TD workflows via `tdx wf` commands: project sync, run, sessions, timeline, attempts, retry, and secrets
 - **[tdx-skills/parent-segment-analysis](./tdx-skills/parent-segment-analysis)** - Query and analyze CDP parent segment output databases: customers table, behavior tables, and attribute exploration
 - **[tdx-skills/engage](./tdx-skills/engage)** - Manage Treasure Engage email templates and campaigns using `tdx engage` with YAML+HTML configs, preview, and deployment
@@ -109,8 +108,8 @@ Mirror of `studio-skills` updated for the renamed `mcp__work__*` MCP namespace (
 - **[treasure-work-skills/work](./treasure-work-skills/work)** - Manage workspace documents (items, goals, notes, guides, references) using file operations with YAML frontmatter, wiki-links, and status lifecycles
 - **[treasure-work-skills/skill-creator](./treasure-work-skills/skill-creator)** - Create, write, and optimize custom skills (SKILL.md files) in Treasure Work with description optimization and writing patterns
 - **[treasure-work-skills/react-dashboard](./treasure-work-skills/react-dashboard)** - Build interactive React dashboards in Treasure Work using `render_react` for custom components beyond `render_chart`
-- **[treasure-work-skills/schedule-task](./treasure-work-skills/schedule-task)** - Create and configure scheduled tasks in Treasure Work: TASK.md authoring, schedule.yaml, and cron setup
-- **[treasure-work-skills/schedule-review](./treasure-work-skills/schedule-review)** - Review and validate scheduled tasks before enabling, with structural and quality checks via parallel sub-agents
+- **[treasure-work-skills/work-agent](./treasure-work-skills/work-agent)** - Create and configure agents in Treasure Work: AGENTS.md authoring, `agent_*` MCP tools, on-demand vs scheduled (cron) lifecycle (draft → active → paused), and chat-based result inspection
+- **[treasure-work-skills/agent-review](./treasure-work-skills/agent-review)** - Review and validate agents before activating, with structural (AGENTS.md schema) and quality checks via parallel sub-agents
 - **[treasure-work-skills/web-search](./treasure-work-skills/web-search)** - Web search and URL content extraction using `web_search` with query optimization, search operators, and structured research patterns
 
 ### Reference
@@ -181,7 +180,6 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the id-graph-canonical-id-size skill to analyze canonical ID group sizes for parent segment 394649"
 "Use the id-graph-ids-to-canonical-id skill to detect over-stitching issues for parent segment 394649"
 "Use the digdag skill to create a workflow that runs every morning"
-"Use the workflow-management skill to debug this failing workflow"
 "Use the dbt skill to create an incremental model for user events"
 "Use the JavaScript SDK skill to implement event tracking on my website"
 "Use the pytd skill to query TD from Python and load results into pandas"
@@ -193,8 +191,8 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the validate-journey skill to check my journey YAML for errors"
 "Use the connector-config skill to configure an SFMC activation"
 "Use the agent skill to create an LLM agent with knowledge base tools"
-"Use the agent-test skill to run automated tests for my agent"
-"Use the agent-prompt skill to write an effective system prompt for my agent"
+"Use the foundry-agent-test skill to run automated tests for my agent"
+"Use the foundry-agent-prompt skill to write an effective system prompt for my agent"
 "Use the workflow skill to debug a failing workflow session"
 "Use the deployment skill to set up a production publishing workflow"
 "Use the documentation skill to create comprehensive Field Agent documentation"
@@ -205,7 +203,7 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, identify-top-key-values, id-graph-canonical-id-size, id-graph-ids-to-canonical-id, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, agent, agent-test, agent-prompt, deployment, documentation, visualization, multi-channel-ad-ideation, brand-compliance, brand-onboarding)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, identify-top-key-values, id-graph-canonical-id-size, id-graph-ids-to-canonical-id, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, foundry-agent, foundry-agent-test, foundry-agent-prompt, deployment, documentation, visualization, multi-channel-ad-ideation, brand-compliance, brand-onboarding)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
