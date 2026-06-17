@@ -139,7 +139,7 @@ The poller snapshots the initial clipboard and only triggers on **new** valid co
 
 ## Step 2: React Editor Component
 
-Call `mcp__tdx-studio__render_react` with title `"Instagram Ad Editor V2"`, the data prop from Step 1, and the component code below.
+Call `mcp__work__render_react` with title `"Instagram Ad Editor V2"`, the data prop from Step 1, and the component code below.
 
 **Sandbox rules** — the `render_react` sandbox mangles JSX, template literals, and spread syntax. Use these alternatives:
 - `React.createElement()` (aliased as `e`) instead of JSX
@@ -299,7 +299,7 @@ out_path = "/tmp/instagram_ad_edited.png"
 img.convert("RGB").save(out_path, "PNG", quality=95)
 ```
 
-Then: `mcp__tdx-studio__open_file(path="/tmp/instagram_ad_edited.png")`
+Then: `mcp__work__open_file(path="/tmp/instagram_ad_edited.png")`
 
 ---
 

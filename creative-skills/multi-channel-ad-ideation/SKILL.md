@@ -227,7 +227,7 @@ After completing Channel Selection Step, follow this delegation workflow:
 ### Phase 2 Delegation
 
 After user confirms text concepts, delegate preview generation:
-- **Email**: Read email/SKILL.md Phase 2, generate HTML, write file, call `mcp__tdx-studio__open_file`
+- **Email**: Read email/SKILL.md Phase 2, generate HTML, write file, call `mcp__work__open_file`
 - **SMS**: Read sms/SKILL.md Phase 2, generate ASCII mobile screen mockups
 - **Instagram**: Read instagram/SKILL.md Phase 2, generate HTML mockup, auto-detect AI images if available
 

@@ -31,20 +31,6 @@ Use this context to create visual-first concepts where image quality and mobile-
 
 ## Instagram Ad Best Practices
 
-### The Instagram Advantage
-- **Visual-first platform** - Image quality matters most
-- **Mobile-native** - 100% mobile usage
-- **High engagement** - Users actively browse and interact
-- **Precise targeting** - Detailed audience options
-- **Seamless shopping** - Direct product tags, checkout
-
-### Key Success Factors
-1. **Eye-catching image** - Stops the scroll
-2. **Concise copy** - Primary text max 125 characters
-3. **Clear CTA** - Instagram's preset button options
-4. **Brand consistency** - Recognizable visual style
-5. **Mobile-optimized** - Looks good on small screens
-
 ### Supported Formats
 - **Image ads**: Single static image for any placement
 - **Carousel ads**: 2-10 image cards per ad, each with its own link
@@ -75,17 +61,6 @@ Generate **3-5 Instagram ad concepts** using **table format** for easy side-by-s
 |  |  |  |  |  |  |
 | **Lifestyle Focus**<br>"Your perfect workout companion" | Your perfect workout companion. Designed for athletes who demand more. Sweat-proof, secure fit, exceptional sound. Train harder. | Fitness-First Audio | Engineered for performance | Learn More | 29/35 💪 |
 | ↳ **Image Concept**: Colors: #10b981 (Success Green) → #059669 (Dark Green), Composition: Action shot with dynamic movement, Focal Point: Athlete mid-workout wearing headphones, Typography: "BUILT TOUGH" text overlay, Style: Energetic, bold, athletic ||||||
-
-**Key Benefits of Table Format**:
-- Side-by-side comparison of primary text, headlines, descriptions
-- All copy visible without clicking (Instagram has short fields that fit in columns)
-- Image concept details organized in consistent inline format
-- Quality scores easily compared across concepts
-- Renders reliably in all markdown contexts
-- Simple structure, no HTML compatibility issues
-- Blank separator rows improve scannability between concepts
-
-**Note**: The markdown table format above is the default. Always use standard markdown tables for Instagram concepts to enable easy horizontal comparison while ensuring reliable rendering.
 
 ### CHECKPOINT: Placement & Format Selection
 
@@ -127,7 +102,7 @@ After placement is confirmed, check the confirmed text concepts against placemen
 
 ### Phase 2: HTML Preview Format (After Placement Confirmation)
 
-**Required workflow**: Every time you generate HTML for Instagram, write the HTML to a file and call `mcp__tdx-studio__open_file` to open the preview. Complete both the file writing and preview opening steps automatically.
+**Required workflow**: Every time you generate HTML for Instagram, write the HTML to a file and call `mcp__work__open_file` to open the preview. Complete both the file writing and preview opening steps automatically.
 
 **ONLY generate HTML mockups AFTER the Placement & Format Selection checkpoint is complete.** The user must have:
 1. Confirmed text concepts (Phase 1)
@@ -150,10 +125,10 @@ After placement is confirmed, check the confirmed text concepts against placemen
    - If base64 image available: Use `background-image:url(data:image/png;base64,{base64_string})` with `background-size:cover;background-position:center` in image area
    - If no image: Use `background:{color}` with emoji/text placeholder
 4. Use the Write tool to save HTML to file: `instagram-{placement}-{format}-preview-{timestamp}.html` in working directory (use YYYYMMDD-HHMMSS format for timestamp, lowercase placement/format)
-5. Immediately call `mcp__tdx-studio__open_file` with the absolute file path to open preview in artifact panel
+5. Immediately call `mcp__work__open_file` with the absolute file path to open preview in artifact panel
 6. Display HTML code block (optional, for reference)
 
-**Important workflow requirement**: After generating HTML for Instagram, always complete steps 4 and 5 automatically. Write the HTML to a file and immediately open it with `mcp__tdx-studio__open_file`. This ensures the user sees the preview without needing to ask for it.
+**Important workflow requirement**: After generating HTML for Instagram, always complete steps 4 and 5 automatically. Write the HTML to a file and immediately open it with `mcp__work__open_file`. This ensures the user sees the preview without needing to ask for it.
 
 **Image Integration Note**: If you previously generated an image using the image-gen skill, this workflow will automatically detect the most recent `instagram-ad-*.png` file and use it as the background image in the HTML preview. This creates a more realistic preview with actual AI-generated visuals instead of placeholders.
 
@@ -164,7 +139,7 @@ Example:
 [Generated HTML mockup]
 ```
 
-*Preview automatically opened in artifact panel via `mcp__tdx-studio__open_file`*
+*Preview automatically opened in artifact panel via `mcp__work__open_file`*
 
 ### When to Generate HTML Mockups
 
@@ -418,43 +393,3 @@ For complete HTML preview templates, reference `../references/html-preview-templ
 </div>
 ```
 
-## Example Instagram Ad Concepts
-
-### Feed Image Example (4:5)
-
-| Concept | Primary Text | Headline | Description | CTA Button | Quality |
-|---------|--------------|----------|-------------|------------|---------|
-| **Product Hero - Minimal**<br>"Introducing the UltraFit Pro" | Introducing the UltraFit Pro. Wireless. Waterproof. 48-hour battery. Your new workout essential. 🎧 | Meet UltraFit Pro Headphones | Free shipping + 30-day returns | Shop Now | 34/35 |
-| ↳ **Image Concept**: Colors: #FFFFFF (Clean White) → #1a1a1a (Matte Black) → #0095f6 (Vibrant Blue accent), Composition: Centered product shot with rule of thirds, Focal Point: Sleek black headphones at 30° angle, Typography: "NEW" badge top-right (Helvetica Bold, blue), Style: Clean, minimal, premium tech aesthetic ||||||
-
-### Stories Image Example (9:16)
-
-| Concept | Primary Text | CTA Button | Quality |
-|---------|--------------|------------|---------|
-| **Flash Sale Vertical**<br>"24-hour drop" | 🔥 UltraFit Pro — 50% off for 24 hours only. Tap to grab yours before it's gone. | Shop Now | 32/35 |
-| ↳ **Image Concept**: Colors: #E63946 (Urgent Red) → #1a1a1a (Black), Composition: Full-bleed vertical, product centered in safe zone, Focal Point: Headphones with "50% OFF" overlay, Typography: Bold sans-serif "FLASH SALE" in top-third safe area, Style: High-energy, urgency-driven. **Safe zones**: No content in top 14% or bottom 20%. ||||
-
-### Feed Carousel Example (4:5)
-
-| Concept | Primary Text | Card | Headline | Landing URL | CTA Button |
-|---------|--------------|------|----------|-------------|------------|
-| **Collection Showcase**<br>"Three styles, one mission" | Meet the UltraFit family. Three styles designed for every moment. Which one is yours? 🎧 | Card 1 | UltraFit Pro | /products/pro | Shop Now |
-| | | Card 2 | UltraFit Sport | /products/sport | Shop Now |
-| | | Card 3 | UltraFit Studio | /products/studio | Shop Now |
-| ↳ **Card Image Concepts**: Card 1: Product on white, centered, minimal premium feel. Card 2: Athlete mid-run wearing headphones, outdoor setting. Card 3: Person in home studio, warm lighting, lifestyle. ||||||
-
-## Common Pitfalls to Avoid
-
-**Busy images** - Too many elements compete for attention
-**Unreadable text** - Low contrast or too small on mobile
-**Generic stock photos** - Looks inauthentic, doesn't stand out
-**Exceeding character limits** - Copy gets cut off
-**No clear focal point** - Eye doesn't know where to look
-**Brand elements too large** - Logo shouldn't dominate
-**Ignoring mobile preview** - Looks great on desktop, tiny on phone
-
-**Do this instead**: Single clear focal point, high contrast text, authentic imagery, respect 125/40/30 limits, test on mobile, subtle branding, mobile-first design
-
----
-
-**Tip**: Instagram ads work best when they don't look like ads. Aim for content that fits naturally in users' feeds while clearly communicating your offer.

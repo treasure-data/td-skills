@@ -164,7 +164,7 @@ Generate **3-5 email concepts** using **collapsed card format** from `../referen
 
 ### Phase 2: HTML Preview Format (After Confirmation)
 
-**Required workflow**: Every time you generate HTML for email, write the HTML to a file and call `mcp__tdx-studio__open_file` to open the preview. Complete both the file writing and preview opening steps automatically.
+**Required workflow**: Every time you generate HTML for email, write the HTML to a file and call `mcp__work__open_file` to open the preview. Complete both the file writing and preview opening steps automatically.
 
 **ONLY generate HTML previews AFTER user confirms text concepts** with phrases like:
 - "These look good, show me the HTML"
@@ -175,10 +175,10 @@ Generate **3-5 email concepts** using **collapsed card format** from `../referen
 1. Read `../references/html-preview-templates.md`
 2. Generate HTML email template with inline CSS and actual content from confirmed concepts
 3. Use the Write tool to save HTML to file: `email-preview-{timestamp}.html` in working directory (use YYYYMMDD-HHMMSS format for timestamp)
-4. Immediately call `mcp__tdx-studio__open_file` with the absolute file path to open preview in artifact panel
+4. Immediately call `mcp__work__open_file` with the absolute file path to open preview in artifact panel
 5. Display HTML code block (optional, for reference)
 
-**Important workflow requirement**: After generating HTML for email, always complete steps 3 and 4 automatically. Write the HTML to a file and immediately open it with `mcp__tdx-studio__open_file`. This ensures the user sees the preview without needing to ask for it.
+**Important workflow requirement**: After generating HTML for email, always complete steps 3 and 4 automatically. Write the HTML to a file and immediately open it with `mcp__work__open_file`. This ensures the user sees the preview without needing to ask for it.
 
 Example:
 ```markdown
@@ -187,7 +187,7 @@ Example:
 [Generated HTML email template]
 ```
 
-*Preview automatically opened in artifact panel via `mcp__tdx-studio__open_file`*
+*Preview automatically opened in artifact panel via `mcp__work__open_file`*
 
 For complete Phase 1 and Phase 2 example workflows, see [examples.md](examples.md).
 

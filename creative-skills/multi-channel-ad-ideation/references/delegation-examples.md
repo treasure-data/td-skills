@@ -166,7 +166,7 @@ After user confirms text concepts, delegate Phase 2 to channel skills:
 
 [Read channels/email/SKILL.md Phase 2 section]
 [Follow HTML Generation and Preview Workflow]
-[MANDATORY: Write HTML file + call mcp__tdx-studio__open_file]
+[MANDATORY: Write HTML file + call mcp__work__open_file]
 ```
 
 ### SMS ASCII
@@ -185,7 +185,7 @@ After user confirms text concepts, delegate Phase 2 to channel skills:
 
 [Read channels/instagram/SKILL.md Phase 2 section]
 [Follow HTML Generation and Preview Workflow]
-[MANDATORY: Write HTML file + call mcp__tdx-studio__open_file]
+[MANDATORY: Write HTML file + call mcp__work__open_file]
 [Auto-detect instagram-ad-*.png if using image-gen skill]
 ```
 

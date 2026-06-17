@@ -133,11 +133,11 @@ Claude: "I'll delegate Phase 2 to each channel skill:
 
 [Delegates to email skill Phase 2]
 [Email skill writes email-preview-20260316-143022.html]
-[Email skill calls mcp__tdx-studio__open_file to open email preview]
+[Email skill calls mcp__work__open_file to open email preview]
 
 [Delegates to Instagram skill Phase 2]
 [Instagram skill writes instagram-preview-20260316-143045.html]
-[Instagram skill calls mcp__tdx-studio__open_file to open Instagram preview]
+[Instagram skill calls mcp__work__open_file to open Instagram preview]
 
 All HTML previews generated and opened in artifact panel!"
 ```
@@ -189,7 +189,7 @@ User: "Perfect! Show me the HTML"
 
 Claude: [Delegates email Phase 2]
 [Email skill writes email-preview-20260316-150122.html]
-[Email skill calls mcp__tdx-studio__open_file to open preview]
+[Email skill calls mcp__work__open_file to open preview]
 
 "Email complete! Ready to move to SMS?"
 
