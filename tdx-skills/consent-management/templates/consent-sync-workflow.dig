@@ -1,0 +1,210 @@
+# Consent Sync & Compliance Workflow
+# Validates consent and syncs preferences across systems
+
+timezone: UTC
+
+_export:
+  td:
+    database: customer_db
+  notification_email: compliance@company.com
+
+# ============================================================
+# DAILY CONSENT VALIDATION & SYNC
+# ============================================================
+
++validate_consent_coverage:
+  td>: queries/consent_coverage_check.sql
+  store_last_results: true
+
++check_consent_compliance:
+  if>: ${td.last_results.expired_consents > 100}
+  _do:
+    +send_alert:
+      mail>:
+        subject: "Consent Expiry Alert: ${td.last_results.expired_consents} customers need renewal"
+        to: [${notification_email}]
+        body: |
+          Consent Status Report:
+          - Total customers: ${td.last_results.total_customers}
+          - Email opt-in rate: ${td.last_results.email_opt_in_rate}%
+          - Expired consents (>24 months): ${td.last_results.expired_consents}
+
+          Action Required: Send consent renewal campaign to expired users.
+
++refresh_parent_segment:
+  td>: |
+    -- Trigger parent segment refresh to sync consent attributes
+    SELECT 'Parent segment refresh triggered' AS status
+  _parallel: true
+
++sync_to_destinations:
+  _parallel: true
+
+  +sync_to_sfmc:
+    td_load>: config/sfmc_consent_sync.yml
+    database: customer_db
+
+  +sync_to_google_ads:
+    td_load>: config/google_ads_consent_sync.yml
+    database: customer_db
+
+# ============================================================
+# CONSENT RENEWAL CAMPAIGN (Triggered for Expired Consents)
+# ============================================================
+
++identify_expired_consents:
+  td>: queries/expired_consents.sql
+  store_last_results: all
+  engine: presto
+
++create_renewal_segment:
+  if>: ${td.last_results.rows.length > 0}
+  _do:
+    td>: |
+      -- Create segment for consent renewal campaign
+      INSERT INTO customer_db.segments (segment_name, customer_id, created_at)
+      SELECT
+        'consent_renewal_needed' AS segment_name,
+        customer_id,
+        CURRENT_TIMESTAMP AS created_at
+      FROM customer_db.consent_wide
+      WHERE consent_updated_at < CAST(EXTRACT(EPOCH FROM NOW() - INTERVAL '24' MONTH) AS BIGINT)
+        AND email_marketing_consent = 'given'
+
++trigger_renewal_email:
+  if>: ${td.last_results.rows.length > 0}
+  _do:
+    http>: https://api.company.com/campaigns/trigger
+    method: POST
+    content:
+      campaign_id: "consent_renewal_2024"
+      segment: "consent_renewal_needed"
+
+# ============================================================
+# PRE-ACTIVATION CONSENT VALIDATION
+# ============================================================
+
++validate_activation_consent:
+  td>: queries/validate_activation_consent.sql
+  store_last_results: true
+
++check_invalid_consents:
+  if>: ${td.last_results.rows_with_invalid_consent > 0}
+  _do:
+    +block_activation:
+      fail>: "Activation blocked: ${td.last_results.rows_with_invalid_consent} records without valid consent"
+
+    +alert_compliance_team:
+      mail>:
+        subject: "CRITICAL: Activation Compliance Failure"
+        to: [${notification_email}]
+        body: |
+          Activation validation failed!
+
+          Invalid consent records: ${td.last_results.rows_with_invalid_consent}
+
+          The activation has been blocked to prevent GDPR/CCPA violation.
+
++proceed_with_activation:
+  if>: ${td.last_results.rows_with_invalid_consent == 0}
+  _do:
+    td_load>: config/sfmc_email_export.yml
+    database: customer_db
+
+    +log_activation:
+      td>: |
+        INSERT INTO customer_db.activation_log
+        SELECT
+          UUID() AS activation_id,
+          customer_id,
+          'SFMC' AS destination_name,
+          'email' AS activation_type,
+          CAST(EXTRACT(EPOCH FROM NOW()) AS BIGINT) AS activation_date,
+          TRUE AS consent_validated,
+          email_marketing_consent AS consent_status_at_activation,
+          '["email", "first_name", "ltv"]' AS data_fields_shared,
+          'email_campaign' AS activation_purpose,
+          CAST(EXTRACT(EPOCH FROM NOW()) AS BIGINT) AS time
+        FROM customer_db.consent_wide
+        WHERE email_marketing_consent = 'given'
+
+# ============================================================
+# WEEKLY CONSENT AUDIT REPORT
+# ============================================================
+
++weekly_audit_report:
+  td>: queries/consent_audit_report.sql
+  store_last_results: all
+
++send_audit_report:
+  mail>:
+    subject: "Weekly Consent Audit Report"
+    to: [${notification_email}]
+    html_body: |
+      <h2>Consent Management - Weekly Audit</h2>
+
+      <h3>Consent Coverage</h3>
+      <table border="1" style="border-collapse: collapse; width: 600px;">
+        <tr>
+          <th>Metric</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Total Customers</td>
+          <td>${td.last_results.total_customers}</td>
+        </tr>
+        <tr>
+          <td>Email Opt-In Rate</td>
+          <td>${td.last_results.email_opt_in_rate}%</td>
+        </tr>
+        <tr>
+          <td>SMS Opt-In Rate</td>
+          <td>${td.last_results.sms_opt_in_rate}%</td>
+        </tr>
+        <tr style="background-color: #fff3cd;">
+          <td>Expired Consents</td>
+          <td>${td.last_results.expired_consents}</td>
+        </tr>
+      </table>
+
+      <h3>Recent Changes (Last 7 Days)</h3>
+      <ul>
+        <li>New Consents: ${td.last_results.new_consents}</li>
+        <li>Withdrawn: ${td.last_results.withdrawn_consents}</li>
+        <li>Updated: ${td.last_results.updated_consents}</li>
+      </ul>
+
+      <h3>Compliance Status</h3>
+      <p style="color: ${td.last_results.compliance_status == 'OK' ? 'green' : 'red'};">
+        ${td.last_results.compliance_status}
+      </p>
+
+# ============================================================
+# SUPPORTING QUERY FILES (Create in queries/ directory)
+# ============================================================
+
+# queries/consent_coverage_check.sql
+# SELECT
+#   COUNT(DISTINCT customer_id) AS total_customers,
+#   COUNT(DISTINCT CASE WHEN email_marketing_consent = 'given' THEN customer_id END) AS email_opted_in,
+#   ROUND(100.0 * COUNT(DISTINCT CASE WHEN email_marketing_consent = 'given' THEN customer_id END) / COUNT(DISTINCT customer_id), 2) AS email_opt_in_rate,
+#   COUNT(DISTINCT CASE WHEN consent_updated_at < CAST(EXTRACT(EPOCH FROM NOW() - INTERVAL '24' MONTH) AS BIGINT) THEN customer_id END) AS expired_consents
+# FROM customer_db.consent_wide
+
+# queries/expired_consents.sql
+# SELECT
+#   customer_id,
+#   email,
+#   email_marketing_consent,
+#   FROM_UNIXTIME(consent_updated_at) AS last_consent_date,
+#   DATEDIFF(CURRENT_DATE, FROM_UNIXTIME(consent_updated_at)) AS days_since_consent
+# FROM customer_db.consent_wide
+# WHERE consent_updated_at < CAST(EXTRACT(EPOCH FROM NOW() - INTERVAL '24' MONTH) AS BIGINT)
+#   AND email_marketing_consent = 'given'
+
+# queries/validate_activation_consent.sql
+# SELECT
+#   COUNT(*) AS total_rows,
+#   COUNT(CASE WHEN email_marketing_consent != 'given' THEN 1 END) AS rows_with_invalid_consent
+# FROM customer_db.email_marketing_segment seg
+# LEFT JOIN customer_db.consent_wide c ON seg.customer_id = c.customer_id
