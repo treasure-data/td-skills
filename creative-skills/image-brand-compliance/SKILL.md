@@ -97,6 +97,14 @@ For detailed scoring criteria per dimension, see [`references/image-scoring-rubr
 
 Generate an HTML compliance dashboard and save it as `brand-compliance-report-{asset-name}.html` in the working directory.
 
+**Image embedding:** When including the reviewed image or any reference images in the HTML dashboard, always embed them as base64 data URIs (`data:image/png;base64,...`) directly in the `src` attribute. Never use local file paths — the viewer cannot resolve them. Use Python to encode:
+
+```python
+import base64
+with open("image.png", "rb") as f:
+    src = "data:image/png;base64," + base64.b64encode(f.read()).decode()
+```
+
 **Dashboard structure:**
 1. **Header** — Brand name, asset filename, overall score (large, color-coded by tier), tier label
 2. **Dimension breakdown** — 8 rows, each with score badge (0–5) and labeled progress bar
