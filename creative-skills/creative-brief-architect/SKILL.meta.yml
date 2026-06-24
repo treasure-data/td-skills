@@ -1,0 +1,12 @@
+# Re-validation log for creative-brief-architect
+# Record each validation run: date, model, result, and notes.
+
+validations:
+  - date: 2026-06-24
+    model: claude-sonnet-4-6
+    result: pass
+    tester: greg.williams@treasure.ai
+    notes: >
+      Initial validation. Tested full 5-phase conversational flow with Purina
+      dog food campaign prompt. All phases completed, dashboard generated
+      successfully.

@@ -1,6 +1,17 @@
 ---
 name: creative-brief-architect
 description: Conversational workflow to build a comprehensive creative brief. Guides users through brief intake, brand guidelines, trend-informed creative ideation, and asset requirements — then outputs a workspace note and visual grid dashboard. Use when asked to create a creative brief, plan a campaign's creative strategy, or build a brief for ad ideation.
+owner: greg.williams@treasure.ai
+tier: 2
+classification: product
+phase: 1
+demo-video: TBD
+last-validated: 2026-06-24
+validation-model: claude-sonnet-4-6
+known-limitations: |
+  Requires user to provide brand guidelines manually; no auto-fetch from Brand Hub.
+  Trend research depends on web search availability; falls back to general suggestions without it.
+  Dashboard output is static HTML; no live editing or real-time collaboration.
 ---
 
 # Creative Brief Architect

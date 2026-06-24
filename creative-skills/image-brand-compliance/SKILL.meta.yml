@@ -1,0 +1,12 @@
+# Re-validation log for image-brand-compliance
+# Record each validation run: date, model, result, and notes.
+
+validations:
+  - date: 2026-06-24
+    model: claude-sonnet-4-6
+    result: pass
+    tester: greg.williams@treasure.ai
+    notes: >
+      Initial validation. Tested 8-dimension scoring against brand guidelines,
+      HTML dashboard generation with base64 image embedding, and fix-application
+      workflow via Pillow.

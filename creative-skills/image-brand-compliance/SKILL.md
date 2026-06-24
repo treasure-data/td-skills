@@ -1,6 +1,17 @@
 ---
 name: image-brand-compliance
 description: Review image files (PNG/JPEG) against brand guidelines — score visual compliance across 8 dimensions, identify violations with exact fixes, and apply corrections via Pillow or AI regeneration. Use when reviewing ad creatives, social media images, or AI-generated visuals for brand alignment. Triggers on "check this image against brand", "review this ad image", "score this creative", "is this image on-brand", "fix brand violations on this image". For HTML/email/SMS content review, use the brand-compliance skill instead.
+owner: greg.williams@treasure.ai
+tier: 2
+classification: product
+phase: 1
+demo-video: TBD
+last-validated: 2026-06-24
+validation-model: claude-sonnet-4-6
+known-limitations: |
+  Requires Pillow (pip install Pillow) for automated image fixes; prompts user if missing.
+  AI image regeneration depends on mcp__work__generate_image availability.
+  Color matching is visual estimate, not pixel-exact sampling.
 ---
 
 # Image Brand Compliance
