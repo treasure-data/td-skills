@@ -64,7 +64,7 @@ tdx sg move 12345 12346 --folder 67890        # move several at once
 tdx sg move 12345 --folder 67890 --dry-run    # preview, makes no changes
 ```
 
-- **Get the IDs from `tdx sg list --json`** (read the `id` field; or the Console URL) — not from the IDs returned by `tdx sg create`.
+- **Get the IDs from `tdx sg list -r --json`** (use `-r` so segments nested in folders are included; read the `id` field — or the Console URL) — not from the IDs returned by `tdx sg create`.
 
 ## YAML Configuration
 
