@@ -64,8 +64,7 @@ tdx sg move 12345 12346 --folder 67890        # move several at once
 tdx sg move 12345 --folder 67890 --dry-run    # preview, makes no changes
 ```
 
-- **Segment and folder IDs come from `tdx sg list`** (or the Console URL) — not from the IDs returned by `tdx sg create`.
-- ⚠️ **Never move a segment with a raw `tdx api` PUT/PATCH.** A partial v4 PUT can drop the segment's filtering rule. `tdx sg move` is the only safe path; it preserves the rule.
+- **Get the IDs from `tdx sg list --json`** (read the `id` field; or the Console URL) — not from the IDs returned by `tdx sg create`.
 
 ## YAML Configuration
 
