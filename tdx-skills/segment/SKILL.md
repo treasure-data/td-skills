@@ -38,9 +38,24 @@ tdx sg fields                         # List available fields
 tdx sg show "Segment Name"            # Preview segment data
 tdx sg sql "Segment Name" | tdx query -  # Pipe segment SQL to query
 tdx sg sql --path <file>              # Get SQL from local YAML (requires tdx.json)
+
+tdx sg move <segment_id...> --folder <folder_id>  # Safely move segment(s) to a folder (preserves rules)
 ```
 
 **Note**: `--path` requires a project directory created by `tdx sg pull`. The file must be inside a folder with `tdx.json`.
+
+## Moving segments between folders
+
+To move one or more segments to a different folder, use `tdx sg move`. It changes **only** the folder — the segment's rule and activations are left untouched (it re-reads and verifies the rule survived).
+
+```bash
+tdx sg move 12345 --folder 67890              # move one segment
+tdx sg move 12345 12346 --folder 67890        # move several at once
+tdx sg move 12345 --folder 67890 --dry-run    # preview, makes no changes
+```
+
+- **Segment and folder IDs come from `tdx sg list`** (or the Console URL) — not from the IDs returned by `tdx sg create`.
+- ⚠️ **Never move a segment with a raw `tdx api` PUT/PATCH.** A partial v4 PUT can drop the segment's filtering rule. `tdx sg move` is the only safe path; it preserves the rule.
 
 ## YAML Configuration
 
