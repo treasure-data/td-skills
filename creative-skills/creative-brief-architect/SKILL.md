@@ -5,7 +5,7 @@ owner: greg.williams@treasure.ai
 tier: 2
 classification: product
 phase: 1
-demo-video: https://treasure-data.zoom.us/clips/share/GWcoCJRDS3yx4TVMbF1oNg
+demo-video: https://treasure-data.zoom.us/clips/share/_9ps4bvkSUKXd80X2XiS-w
 last-validated: 2026-06-24
 validation-model: claude-sonnet-4-6
 known-limitations: |
