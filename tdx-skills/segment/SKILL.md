@@ -23,6 +23,16 @@ After push succeeds, display the Console link:
 https://console.treasuredata.com/app/audiences/<parent_id>/segments/<segment_id>
 ```
 
+## Editing segments safely — read this first
+
+All segment edits go through the typed `tdx sg` commands. **Never** edit a segment with raw `tdx api` HTTP calls.
+
+- **Never `tdx api` PUT/PATCH a segment.** Raw writes skip validation and can erase a segment's rule. Use the typed command for the change you want: `tdx sg move` to change folder, `tdx sg push` to change rules/activations.
+- **Never read-modify-write a segment.** Do not GET a segment and write the object back — rule fields can come back empty from list/`entities` reads, so writing it back **erases the rule**. Always use the dedicated command for the specific change.
+- **To change only the folder, use `tdx sg move`** (below). It changes the folder and nothing else.
+
+If a typed command seems not to exist for what you need, ask the user — do not fall back to raw `tdx api`.
+
 ## Core Commands
 
 ```bash
