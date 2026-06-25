@@ -23,6 +23,16 @@ After push succeeds, display the Console link:
 https://console.treasuredata.com/app/audiences/<parent_id>/segments/<segment_id>
 ```
 
+## Editing segments safely — read this first
+
+All segment edits go through the typed `tdx sg` commands. **Never** edit a segment with raw `tdx api` HTTP calls.
+
+- **Never `tdx api` PUT/PATCH a segment.** Raw writes skip validation and can erase a segment's rule. Use the typed command for the change you want: `tdx sg move` to change folder, `tdx sg push` to change rules/activations.
+- **Never read-modify-write a segment.** Do not GET a segment and write the object back — rule fields can come back empty from list/`entities` reads, so writing it back **erases the rule**. Always use the dedicated command for the specific change.
+- **To change only the folder, use `tdx sg move`** (below). It changes the folder and nothing else.
+
+If a typed command seems not to exist for what you need, ask the user — do not fall back to raw `tdx api`.
+
 ## Core Commands
 
 ```bash
@@ -38,9 +48,23 @@ tdx sg fields                         # List available fields
 tdx sg show "Segment Name"            # Preview segment data
 tdx sg sql "Segment Name" | tdx query -  # Pipe segment SQL to query
 tdx sg sql --path <file>              # Get SQL from local YAML (requires tdx.json)
+
+tdx sg move <segment_id...> --folder <folder_id>  # Safely move segment(s) to a folder (preserves rules)
 ```
 
 **Note**: `--path` requires a project directory created by `tdx sg pull`. The file must be inside a folder with `tdx.json`.
+
+## Moving segments between folders
+
+To move one or more segments to a different folder, use `tdx sg move`. It changes **only** the folder — the segment's rule and activations are left untouched (it re-reads and verifies the rule survived).
+
+```bash
+tdx sg move 12345 --folder 67890              # move one segment
+tdx sg move 12345 12346 --folder 67890        # move several at once
+tdx sg move 12345 --folder 67890 --dry-run    # preview, makes no changes
+```
+
+- **Get the IDs from `tdx sg list -r --json`** (use `-r` so segments nested in folders are included; read the `id` field — or the Console URL) — not from the IDs returned by `tdx sg create`.
 
 ## YAML Configuration
 
