@@ -49,7 +49,7 @@ tdx sg show "Segment Name"            # Preview segment data
 tdx sg sql "Segment Name" | tdx query -  # Pipe segment SQL to query
 tdx sg sql --path <file>              # Get SQL from local YAML (requires tdx.json)
 
-tdx sg move <segment_id...> --folder <folder_id>  # Safely move segment(s) to a folder (preserves rules)
+tdx sg move <segment...> --folder <folder>  # Safely move segment(s) by ID or name to a folder (preserves rules)
 ```
 
 **Note**: `--path` requires a project directory created by `tdx sg pull`. The file must be inside a folder with `tdx.json`.
@@ -59,12 +59,19 @@ tdx sg move <segment_id...> --folder <folder_id>  # Safely move segment(s) to a 
 To move one or more segments to a different folder, use `tdx sg move`. It changes **only** the folder — the segment's rule and activations are left untouched (it re-reads and verifies the rule survived).
 
 ```bash
-tdx sg move 12345 --folder 67890              # move one segment
-tdx sg move 12345 12346 --folder 67890        # move several at once
+tdx sg move 12345 --folder 67890              # by ID
+tdx sg move 12345 12346 --folder 67890        # several at once
 tdx sg move 12345 --folder 67890 --dry-run    # preview, makes no changes
+
+# By name — needs a parent segment context:
+tdx sg use "Customer 360"
+tdx sg move "VIP Customers" --folder "Archive"                       # by name
+tdx sg move "Marketing/VIP Customers" --folder "Marketing/Archive"   # nested path
 ```
 
-- **Get the IDs from `tdx sg list -r --json`** (use `-r` so segments nested in folders are included; read the `id` field — or the Console URL) — not from the IDs returned by `tdx sg create`.
+- Segments and the target folder can be given by **numeric ID or by name/path** (names resolve within the current parent segment context).
+- **Get IDs/names from `tdx sg list -r --json`** (use `-r` so segments nested in folders are included; read the `id`/`name` field — or the Console URL) — not from the IDs returned by `tdx sg create`.
+- Name matching is **exact and case-sensitive**; an ambiguous name errors and lists the matches with their IDs so you can pass the ID instead.
 
 ## YAML Configuration
 
