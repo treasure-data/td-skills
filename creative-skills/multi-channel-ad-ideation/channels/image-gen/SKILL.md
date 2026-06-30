@@ -287,6 +287,29 @@ img.convert("RGB").save("<concept_name>_final.png", "PNG", quality=95)
 open_file(path: "<concept_name>_final.png")
 ```
 
+### Step 5b: HTML Ad — Embed Image as Base64 (Required)
+
+When generating an HTML ad mockup, **never reference the PNG via a relative file path**. The HTML must be fully self-contained so it renders correctly regardless of where it is opened.
+
+Always embed the final PNG as a base64 data URI:
+
+```python
+import base64
+
+with open("<concept_name>_final.png", "rb") as f:
+    b64 = base64.b64encode(f.read()).decode()
+
+data_uri = f"data:image/png;base64,{b64}"
+```
+
+Then write the HTML with the data URI inline:
+
+```html
+<img src="data:image/png;base64,{{ b64 }}" alt="..." />
+```
+
+**Why**: A relative `src="image.png"` breaks whenever the HTML file is opened from a different directory, sent via email, or viewed in an artifact panel. A self-contained data URI works everywhere, first time, every time.
+
 ### Step 6: Iteration Support
 
 After displaying, offer the user iteration options:
