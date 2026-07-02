@@ -70,7 +70,7 @@ tdx sg move "Marketing/VIP Customers" --folder "Marketing/Archive"   # nested pa
 ```
 
 - Segments and the target folder can be given by **numeric ID or by name/path** (names resolve within the current parent segment context).
-- **Find a segment or folder by name with `tdx sg list --name '<pattern>'`** — it searches the whole tree (regex, case-insensitive) and prints each match with its **full folder path + id**, ready to pass to `tdx sg move`. On several matches it lists them all — pass the intended path/id, don't assume the first. (For a full tree dump instead, use `tdx sg list -r --json`.) Do not use the ids returned by `tdx sg create`.
+- **Find a segment or folder by name with `tdx sg list --name '<text>'`** — it searches the whole tree for names that **contain** `<text>` (case-insensitive, **literal** — so `--name 'VIP (US)'` matches that name as-is) and prints each match with its **full folder path + id**, ready to pass to `tdx sg move`. On several matches it lists them all — pass the intended path/id, don't assume the first. (Need a real pattern? use `--name-regex '<pattern>'`. For a full tree dump, use `tdx sg list -r --json`.) Do not use the ids returned by `tdx sg create`.
 - Name matching is **exact and case-sensitive**; an ambiguous name errors and lists the matches with their IDs so you can pass the ID instead.
 
 ## YAML Configuration
