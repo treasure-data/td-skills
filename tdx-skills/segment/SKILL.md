@@ -72,7 +72,9 @@ tdx sg move "Marketing/VIP Customers" --folder "Marketing/Archive"   # nested pa
 - Segments and the target folder can be given by **numeric ID or by name/path** (names resolve within the current parent segment context).
 - **Get IDs/names from `tdx sg list -r --json`** (use `-r` so segments nested in folders are included; read the `id`/`name` field — or the Console URL) — not from the IDs returned by `tdx sg create`.
 - Name matching is **case-insensitive**; an ambiguous name errors and lists the matches with their IDs so you can pass the ID instead.
-- Names are **relative to the parent segment** — do not prefix the parent segment name. A nested segment needs its **folder path** (`Folder/Sub/Segment Name`); a bare name matches only segments at the parent's top level (those not inside any folder under it).
+- Names are **relative to the parent segment** — do not prefix the parent segment name.
+- **A bare name only matches a segment at the parent's top level — it never searches inside folders.** If the segment is nested, or you are not sure where it lives, first run `tdx sg list -r --json`, find the segment's **folder path**, and move by that path (`Folder/Sub/Segment Name`). A bare name that isn't at the top level returns `segment not found` — read that as "it's inside a folder, go find the path", not "it doesn't exist".
+- **Footgun:** the same name can exist both at the top level and inside a folder (names are unique only within a folder). A bare name then silently resolves the **top-level** one. When a name may not be unique, use the full folder path so you move the intended segment.
 
 ## YAML Configuration
 
