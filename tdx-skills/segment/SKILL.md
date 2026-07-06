@@ -71,7 +71,11 @@ tdx sg move "Marketing/VIP Customers" --folder "Marketing/Archive"   # nested pa
 
 - Segments and the target folder can be given by **numeric ID or by name/path** (names resolve within the current parent segment context).
 - **Find a segment or folder by name with `tdx sg list '<pattern>' -r`** — it searches the whole tree for names matching `<pattern>` (a case-insensitive **regex**; a plain string matches as a substring) and prints each match with its **full folder path + id**, ready to pass to `tdx sg move`. On several matches it lists them all — pass the intended path/id, don't assume the first. (`tdx sg list -r` alone dumps the full tree. Note: because `<pattern>` is a regex, a name with regex characters like `VIP (US)` must be escaped — `'VIP \(US\)'`.) Do not use the ids returned by `tdx sg create`.
-- Name matching is **exact and case-sensitive**; an ambiguous name errors and lists the matches with their IDs so you can pass the ID instead.
+- In `tdx sg move`, name matching is **case-insensitive**; an ambiguous name errors and lists the matches with their IDs so you can pass the ID instead.
+- Names are **relative to the parent segment** — do not prefix the parent segment name.
+- **A bare name in `sg move` only matches a segment at the parent's top level — it never searches inside folders.** If the segment is nested, or you are not sure where it lives, find it first with `tdx sg list '<name>' -r`, then move by the full folder path it prints (`Folder/Sub/Segment Name`). A bare name that isn't at the top level returns `segment not found` — read that as "it's inside a folder, go find the path", not "it doesn't exist".
+- **Footgun:** the same name can exist both at the top level and inside a folder (names are unique only within a folder). A bare `sg move` name then silently resolves the **top-level** one. When a name may not be unique, use the full folder path so you move the intended segment.
+- **The same name can appear in several different folders.** If `tdx sg list '<pattern>' -r` returns more than one match, do **not** pick one — show the user each with its full folder path and id, and ask which they mean. Only move once you have a single unambiguous path. Never move "the first one you found".
 
 ## YAML Configuration
 
