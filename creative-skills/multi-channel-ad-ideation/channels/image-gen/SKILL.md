@@ -87,6 +87,8 @@ When triggered, execute the full pipeline for each confirmed concept.
 
 ## Execution Pipeline
 
+**Output filename contract:** Save the **final** composited image as `<placement>-ad-<concept-slug>-<timestamp>.png` — e.g. `instagram-feed-ad-summer-sale-20260708-143022.png`. `<placement>` is derived from the target size (`instagram-feed` for 1080×1080, `instagram-story` for 1080×1920 stories/reels), `<concept-slug>` is the kebab-cased concept name, and `<timestamp>` is `YYYYMMDD-HHMMSS`. Downstream skills auto-detect this output by globbing `instagram-*-ad-*.png` and picking the most recent by modification time — the placement prefix keeps Instagram assets distinct from other channels' images. Intermediate working files (`_base.png`, `_with_logo.png`) are transient and keep the concept slug.
+
 ### Step 1: Generate the Base Image (Primary — `tas-imggen` CLI)
 
 Send the **Image Generation Prompt** from the confirmed concept to the `tas-imggen` tool, which writes the PNG directly to the output path — no project context, chat session, or extraction step required:
@@ -278,13 +280,13 @@ if SUBTITLE_TEXT:
         draw.text((sx+ox, sy+oy), SUBTITLE_TEXT, fill=(0,0,0,180), font=subtitle_font)
     draw.text((sx, sy), SUBTITLE_TEXT, fill=SUBTITLE_COLOR, font=subtitle_font)
 
-img.convert("RGB").save("<concept_name>_final.png", "PNG", quality=95)
+img.convert("RGB").save("<placement>-ad-<concept-slug>-<timestamp>.png", "PNG", quality=95)  # e.g. instagram-feed-ad-summer-sale-20260708-143022.png
 ```
 
 ### Step 5: Display the Final Image
 
 ```
-open_file(path: "<concept_name>_final.png")
+open_file(path: "<placement>-ad-<concept-slug>-<timestamp>.png")
 ```
 
 ### Step 5b: HTML Ad — Embed Image as Base64 (Required)
@@ -296,7 +298,7 @@ Always embed the final PNG as a base64 data URI:
 ```python
 import base64
 
-with open("<concept_name>_final.png", "rb") as f:
+with open("<placement>-ad-<concept-slug>-<timestamp>.png", "rb") as f:
     b64 = base64.b64encode(f.read()).decode()
 
 data_uri = f"data:image/png;base64,{b64}"
