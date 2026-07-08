@@ -1,6 +1,17 @@
 ---
 name: segment
 description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers Value/Behavior condition types, all operators (Equal, In, Between, TimeWithinPast, etc.), behavior aggregations with filters, and nested condition group restrictions. Use when creating audience segments with filtering rules, configuring behavior-based conditions, managing segment hierarchies, or exploring available fields with `tdx sg fields`.
+owner: william.gonzalez@treasure.ai
+tier: 1
+classification: product
+phase: 1
+last-validated: 2026-07-07
+validation-model: claude-opus-4-8
+known-limitations: |
+  `tdx sg move` by bare name only resolves segments at the parent's top level; nested
+  segments require the full folder path. The same name can exist in multiple folders — if a
+  bare name matches more than one, `sg move` refuses and lists the matches (pass the full
+  path or id). Find a segment's path with `tdx sg list '<pattern>' -r`.
 ---
 
 # tdx Segment - CDP Child Segment Management
