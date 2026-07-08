@@ -47,13 +47,13 @@ tests:
     expected: tdx-basic
 
   - prompt: "Build an AI agent with knowledge base tools"
-    expected: foundry-agent
+    expected: agent
 
   - prompt: "Write tests for my TD AI agent"
-    expected: foundry-agent-test
+    expected: agent-test
 
   - prompt: "Write an effective system prompt for my agent"
-    expected: foundry-agent-prompt
+    expected: agent-prompt
 
   - prompt: "Configure connector_config for a Salesforce activation"
     expected: connector-config
@@ -66,6 +66,9 @@ tests:
 
   - prompt: "Manage workflows using tdx wf commands"
     expected: workflow
+
+  - prompt: "Debug a failing workflow and check session logs"
+    expected: workflow-management
 
   # === Workflow Skills ===
 
@@ -146,6 +149,15 @@ tests:
 
   - prompt: "Manage Engage campaigns using tdx engage commands"
     expected: engage
+
+  - prompt: "Create a dashboard based on my audit logs"
+    expected: audit-dashboard
+
+  - prompt: "Show me a report of platform activity from td_audit_log"
+    expected: audit-dashboard
+
+  - prompt: "Who has been doing what in Treasure Data? Visualize the audit logs"
+    expected: audit-dashboard
 
   # === Document Skills ===
 
@@ -236,9 +248,6 @@ tests:
 
   - prompt: "Create a new skill for Treasure Studio"
     expected: skill-creator
-
-  - prompt: "Set up a scheduled agent in Treasure Work to run a daily report"
-    expected: work-agent
 
   - prompt: "Create a Graflow workflow to scan accounts and alert for churn risk"
     expected: graflow
