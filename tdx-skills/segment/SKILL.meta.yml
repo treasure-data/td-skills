@@ -1,0 +1,20 @@
+# Re-validation log for segment
+# Record each validation run: date, model, result, and notes.
+
+validations:
+  - date: 2026-07-07
+    model: claude-opus-4-8
+    result: pass
+    tester: william.gonzalez@treasure.ai
+    notes: >
+      Validated the name-resolution guidance against a live dev CDP environment,
+      including a ~6000-segment parent. Confirmed: (1) `tdx sg list '<pattern>' -r`
+      finds segments/folders by name (case-insensitive substring; * / ? wildcards)
+      and prints each match with its full folder path + id; (2) `tdx sg move` by that
+      full path previews safely with `--dry-run` and preserves the rule; (3) a bare
+      name that matches several segments is refused by `sg move` (lists the matches,
+      makes no change) rather than guessing. Blind end-to-end trials (no skill loaded)
+      across Haiku, Sonnet, and Opus (low/default/max effort) completed the
+      find -> move flow from CLI help + errors alone; the discovery cross-link and
+      ambiguity refusal held. Guidance in SKILL.md matches shipped CLI behavior
+      (paired with tdx #2808 search + the sg move ambiguity gate).
