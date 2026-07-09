@@ -1,0 +1,39 @@
+# Regression happy-path for the segment skill's name-resolution guidance.
+# Proves the find -> move flow the skill documents. Generic example names only
+# (no real resources) — substitute a live parent segment / names to run.
+skill: segment
+scenarios:
+  - name: find a segment by name (substring, whole tree)
+    description: >
+      `sg list "<pattern>" -r` searches the whole tree by name (case-insensitive
+      substring; * and ? wildcards) and prints each match with its full folder path.
+    setup:
+      - tdx sg use "Customer 360"
+    run:
+      - tdx sg list "VIP" -r
+    expect: >
+      Lists every folder/segment whose name contains "VIP", each with its full
+      folder path and id. Exit 0.
+
+  - name: move a segment by its full folder path
+    description: >
+      Move by the path printed by the search — the safe, rule-preserving move.
+    setup:
+      - tdx sg use "Customer 360"
+    run:
+      - tdx sg move "Marketing/VIP Customers" --folder "Marketing/Archive" --dry-run
+    expect: >
+      Previews the move (rule preserved); no data changed with --dry-run. Exit 0.
+
+  - name: ambiguous bare name is refused (no silent guess)
+    description: >
+      A bare name that matches several segments must not move the first — the CLI
+      refuses and lists the matches.
+    setup:
+      - tdx sg use "Customer 360"
+    run:
+      - tdx sg move "VIP Customers" --folder "Archive" --dry-run
+    expect: >
+      If more than one segment is named "VIP Customers" across folders, the move
+      refuses (non-zero exit) and lists each match's full path + id; nothing moves.
+      If exactly one exists at the top level, it previews normally.

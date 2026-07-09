@@ -1,6 +1,17 @@
 ---
 name: segment
 description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers Value/Behavior condition types, all operators (Equal, In, Between, TimeWithinPast, etc.), behavior aggregations with filters, and nested condition group restrictions. Use when creating audience segments with filtering rules, configuring behavior-based conditions, managing segment hierarchies, or exploring available fields with `tdx sg fields`.
+owner: william.gonzalez@treasure.ai
+tier: 1
+classification: product
+phase: 1
+last-validated: 2026-07-07
+validation-model: claude-opus-4-8
+known-limitations: |
+  `tdx sg move` by bare name only resolves segments at the parent's top level; nested
+  segments require the full folder path. The same name can exist in multiple folders — if a
+  bare name matches more than one, `sg move` refuses and lists the matches (pass the full
+  path or id). Find a segment's path with `tdx sg list '<pattern>' -r`.
 ---
 
 # tdx Segment - CDP Child Segment Management
@@ -70,8 +81,13 @@ tdx sg move "Marketing/VIP Customers" --folder "Marketing/Archive"   # nested pa
 ```
 
 - Segments and the target folder can be given by **numeric ID or by name/path** (names resolve within the current parent segment context).
-- **Get IDs/names from `tdx sg list -r --json`** (use `-r` so segments nested in folders are included; read the `id`/`name` field — or the Console URL) — not from the IDs returned by `tdx sg create`.
-- Name matching is **exact and case-sensitive**; an ambiguous name errors and lists the matches with their IDs so you can pass the ID instead.
+- **Find a segment or folder by name with `tdx sg list '<pattern>' -r`** — it searches the whole tree for names matching `<pattern>` (case-insensitive; a plain string matches as a **substring**, so `'VIP (US)'` matches that name as-is; `*` and `?` are wildcards) and prints each match with its **full folder path + id**, ready to pass to `tdx sg move`. On several matches it lists them all — **pass the intended path/id, and if more than one matches, ask the user which; never assume the first.** If it returns too many matches, narrow the pattern. (`tdx sg list -r` alone dumps the full tree.) Do not use the ids returned by `tdx sg create`.
+- If you skip the search and run `tdx sg move '<name>'` with a name that matches **several** segments, the move **refuses** and lists them — pick the intended full path/id (or ask the user); it will not guess.
+- In `tdx sg move`, name matching is **case-insensitive**; an ambiguous name errors and lists the matches with their IDs so you can pass the ID instead.
+- Names are **relative to the parent segment** — do not prefix the parent segment name.
+- **A bare name in `sg move` only resolves a segment at the parent's top level.** If the name is nested, `sg move` won't move the wrong thing: it tells you the segment is nested and prints its full path (or, if the name matches several, lists them all and refuses). Either way, take the full folder path it shows — or find it up front with `tdx sg list '<name>' -r` — and move by that path (`Folder/Sub/Segment Name`).
+- **Footgun:** the same name can exist both at the top level and inside a folder (names are unique only within a folder). A bare `sg move` name then silently resolves the **top-level** one. When a name may not be unique, use the full folder path so you move the intended segment.
+- **The same name can appear in several different folders.** If `tdx sg list '<pattern>' -r` returns more than one match, do **not** pick one — show the user each with its full folder path and id, and ask which they mean. Only move once you have a single unambiguous path. Never move "the first one you found".
 
 ## YAML Configuration
 
