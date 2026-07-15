@@ -21,11 +21,11 @@ Each workspace root contains a `tdx.json` config file. The current working direc
 |--------|------|------------------|
 | `goals/` | goal | `{slug}.md` (no date prefix) |
 | `items/` | item | `YYYY-MM-DD-{slug}.md` |
-| `schedules/` | schedule | `{task-name}/` (subdirectory with TASK.md + schedule.yaml) |
 | `guides/` | guide | `YYYY-MM-DD-{slug}.md` |
 | `notes/` | note | `YYYY-MM-DD-{slug}.md` |
 | `notes/weekly/` | weekly note | `YYYY-WNN.md` |
 | `references/` | reference | `YYYY-MM-DD-{slug}.md` |
+| `agents/` | agent | `{name}/AGENTS.md` (see §Agents) |
 
 ## Frontmatter
 
@@ -101,7 +101,7 @@ Use wiki-links for bidirectional linking:
 1. In the goal body, add `- [[item-slug|Display Title]]`
 2. In the item body, add `Part of [[goal-slug]].`
 
-Wiki-link format: `[[slug]]`, `[[slug|Display Text]]`, or just `[[Page Title]]` for placeholders (the target's date-prefixed slug is generated when the page is created — the resolver normalizes the link text to a slug and strips the date prefix at match time, so a raw title matches an existing page or opens the create-page prompt on click).
+See §Wiki-Links for the full format and placeholder behavior.
 
 ### Move Status
 
@@ -123,7 +123,7 @@ Use Grep to search across notes, guides, and references:
 ### Goal Progress
 
 1. Read the goal file
-2. Parse wiki-links from the body: `[[slug]]` or `[[slug|Display Text]]`
+2. Parse wiki-links from the body (see §Wiki-Links)
 3. For each linked slug, find the matching item file (Glob for `items/*{slug}.md`)
 4. Read each item's `status` field
 5. Calculate: done count / total, percentage, list in-progress items
@@ -132,26 +132,22 @@ Use Grep to search across notes, guides, and references:
 
 Find the first linked item in a goal that isn't `done` or `void`.
 
-## Wiki-Link Resolution
+## Wiki-Links
 
-When resolving `[[text]]`:
+**Format**
+- `[[Page Title]]` — placeholder or title-based link (preferred for new sub-tasks; see resolution below).
+- `[[slug]]` — link by an existing page's slug (e.g. `[[fix-login-bug]]`).
+- `[[slug|Display Text]]` — override the rendered text (e.g. `[[fix-login-bug|Login regression]]`).
+
+Do **not** hard-code the `YYYY-MM-DD-` date prefix in a placeholder. The date is stamped at file-creation time, so `[[2026-03-26-add-auth-refresh]]` freezes the link to a filename that may never exist.
+
+**Resolution** — for `[[text]]`:
 1. Normalize `text` to a slug (lowercase, non-alphanumeric → hyphens) so `[[Page Title]]` and `[[page-title]]` collapse to the same target.
-2. Try exact filename match: `Glob("{goals,items,guides,notes,references}/{slug}.md")` or `Glob("{goals,items,guides,notes,references}/*-{slug}.md")` (the `*-` prefix absorbs the `YYYY-MM-DD-` date stamp on items/guides/notes/references).
-3. Priority: goals > items > guides > notes > references.
-4. Unresolved links are valid — they render as placeholder links and, on click, open the create-page prompt with the link text as the title.
+2. Match a filename in `{goals,items,guides,notes,references}/`: try `{slug}.md` first (goals), then `*-{slug}.md` (the `*-` prefix absorbs the `YYYY-MM-DD-` date stamp on items/guides/notes/references).
+3. Priority when multiple folders match: goals > items > guides > notes > references.
+4. Unresolved links are valid — they render as placeholder links and, on click, open the create-page prompt with the link text as the title. Creating the page writes `items/YYYY-MM-DD-{slug}.md` (or the folder you pick), and the same placeholder link resolves to it thereafter.
 
-For backlinks (who links to this document): `Grep("\\[\\[{slug}", glob: "**/*.md")`
-
-## Git Conventions
-
-When committing workspace changes, use this message format:
-- Status changes: `work: move "Title" old_status → new_status`
-- New documents: `work: create "Title"`
-- Updates: `work: update "Title"`
-
-## Sub-item Wiki-links
-
-When an item has sub-tasks, use `[[wiki-link]]` in checklists — even if the target page doesn't exist yet. For **placeholders**, use `[[Page Title]]` (the human-readable title). Do **not** invent a `YYYY-MM-DD-` date prefix — the date is stamped at file-creation time, so guessing today's date fixes the placeholder to a filename that may never exist:
+**Sub-task checklist** — use placeholders freely; convert to real files when work starts:
 
 ```markdown
 - [ ] [[Add Auth Refresh]] — Token refresh logic
@@ -159,7 +155,14 @@ When an item has sub-tasks, use `[[wiki-link]]` in checklists — even if the ta
 - [x] [[Fix Session Expiry]] — Session timeout fix
 ```
 
-When starting work on a sub-task, create the actual `.md` file in `items/` so it becomes a trackable item with its own status and links — the filename will be `YYYY-MM-DD-{slugified-title}.md`, and the placeholder link resolves to it automatically. Existing pages can also be linked by their slug (e.g. `[[add-auth-refresh]]`) or with a display override (`[[add-auth-refresh|Refresh flow]]`) when you want the rendered text to differ from the slug.
+**Backlinks** — find pages linking to a given slug: `Grep("\\[\\[{slug}", glob: "**/*.md")`.
+
+## Git Conventions
+
+When committing workspace changes, use this message format:
+- Status changes: `work: move "Title" old_status → new_status`
+- New documents: `work: create "Title"`
+- Updates: `work: update "Title"`
 
 ## External Tracker Links
 
@@ -185,18 +188,42 @@ github: <owner>/<repo>#<number>       # e.g., acme-corp/my-app#456
 4. **Accepted guides** are auto-injected into future sessions — promote guides when patterns are validated
 5. **Before creating** — search existing docs to avoid duplicates
 
-## Schedule Tasks
+## Agents
 
-Workspace schedules live in `schedules/{task-name}/` with TASK.md + schedule.yaml.
-Built-in schedules (weekly-review, synthesize-knowledge, stale-item-cleanup) are auto-created.
+Workspace agents live in `{workspace}/agents/{name}/AGENTS.md` — one directory per agent, one file per definition. Global agents use the same shape at `~/.treasure-work/agents/{name}/AGENTS.md`. The legacy `schedules/{task-name}/` split (`TASK.md` + `schedule.yaml`, `schedule_reload` / `schedule_run` / `schedule_enable`) has been retired — do not write to `schedules/` and do not call the old `schedule_*` tools.
 
-To create a new workspace schedule:
-1. Write `schedules/{task-name}/TASK.md` and `schedules/{task-name}/schedule.yaml`
-2. Run `schedule_reload` to register the task
-3. Use `schedule_run` to test, then `schedule_enable` to activate
+`AGENTS.md` is YAML frontmatter + a markdown body (the agent's system prompt):
 
-Workspace-only schedule.yaml fields:
-- `goal: {slug}` — scope to a goal's linked items
-- `skill: {name}` — invoke a workspace skill (different from `skills` which lists capability packs)
-- `output.note: true` — auto-create a Note from results
-- `output.note_tags: [tag1, tag2]` — tags added to the auto-created Note
+```markdown
+---
+name: segment-builder
+description: Builds and validates CDP segments
+status: active                      # draft | active | paused | resting
+schedule: "0 9 * * 1-5"             # 5-field vixie cron; omit to make on-demand
+triggers:                            # workspace event triggers (optional)
+  - on: note_created
+    tags: [meeting]
+  - on: item_status_changed
+    from: [design_review, review]
+    to: [in_progress]
+skills: [segment, journey]
+guides: [cdp-best-practices]
+goal: ship-v2-audience               # scope to a goal's linked items
+allowed_tools: [Write, Bash]         # optional allowlist
+---
+
+You are the Segment Builder agent...
+```
+
+An agent fires on `schedule:` (cron), on any matching `triggers:` (event-driven), or manually — the three are independent, so an agent may have any combination. A scheduled agent runs iff `status: active` AND the user hasn't paused it. New agents default to `status: draft`; promote to `active` when ready.
+
+Manage agents through the `agent_*` MCP tools (server: `work`):
+
+- `agent_list` — list every agent (workspace + global) with scope, status, schedule, description
+- `agent_get` — full frontmatter + system prompt body for one agent
+- `agent_create` — create a new `{name}/AGENTS.md`. Set `schedule:` to make it scheduled, omit for on-demand
+- `agent_update` — patch any subset of frontmatter and/or the body. Set `status: active` to enable scheduled runs
+- `agent_delete` — remove the agent's directory
+- `agent_run_now` — fire a one-off run (does not advance the cron)
+
+Prefer the MCP tools — they validate frontmatter and emit lifecycle events. Direct `Read`/`Edit` of `agents/{name}/AGENTS.md` is fine for tweaks the tools don't cover.
