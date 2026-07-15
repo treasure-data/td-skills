@@ -101,7 +101,7 @@ Use wiki-links for bidirectional linking:
 1. In the goal body, add `- [[item-slug|Display Title]]`
 2. In the item body, add `Part of [[goal-slug]].`
 
-Wiki-link format: `[[slug]]` or `[[slug|Display Text]]`
+Wiki-link format: `[[slug]]`, `[[slug|Display Text]]`, or just `[[Page Title]]` for placeholders (the target's date-prefixed slug is generated when the page is created — the resolver normalizes the link text to a slug and strips the date prefix at match time, so a raw title matches an existing page or opens the create-page prompt on click).
 
 ### Move Status
 
@@ -134,9 +134,11 @@ Find the first linked item in a goal that isn't `done` or `void`.
 
 ## Wiki-Link Resolution
 
-When resolving `[[slug]]`:
-1. Try exact filename match: `Glob("{goals,items,guides,notes,references}/{slug}.md")` or `Glob("{goals,items,guides,notes,references}/*-{slug}.md")`
-2. Priority: goals > items > guides > notes > references
+When resolving `[[text]]`:
+1. Normalize `text` to a slug (lowercase, non-alphanumeric → hyphens) so `[[Page Title]]` and `[[page-title]]` collapse to the same target.
+2. Try exact filename match: `Glob("{goals,items,guides,notes,references}/{slug}.md")` or `Glob("{goals,items,guides,notes,references}/*-{slug}.md")` (the `*-` prefix absorbs the `YYYY-MM-DD-` date stamp on items/guides/notes/references).
+3. Priority: goals > items > guides > notes > references.
+4. Unresolved links are valid — they render as placeholder links and, on click, open the create-page prompt with the link text as the title.
 
 For backlinks (who links to this document): `Grep("\\[\\[{slug}", glob: "**/*.md")`
 
@@ -149,15 +151,15 @@ When committing workspace changes, use this message format:
 
 ## Sub-item Wiki-links
 
-When an item has sub-tasks, use `[[wiki-link]]` in checklists — even if the target page doesn't exist yet:
+When an item has sub-tasks, use `[[wiki-link]]` in checklists — even if the target page doesn't exist yet. For **placeholders**, use `[[Page Title]]` (the human-readable title). Do **not** invent a `YYYY-MM-DD-` date prefix — the date is stamped at file-creation time, so guessing today's date fixes the placeholder to a filename that may never exist:
 
 ```markdown
-- [ ] [[2026-03-26-add-auth-refresh]] — Token refresh logic
-- [ ] [[2026-03-26-update-api-docs]] — Update REST docs
-- [x] [[2026-03-26-fix-session-expiry]] — Session timeout fix
+- [ ] [[Add Auth Refresh]] — Token refresh logic
+- [ ] [[Update API Docs]] — Update REST docs
+- [x] [[Fix Session Expiry]] — Session timeout fix
 ```
 
-When starting work on a sub-task, create the actual `.md` file in `items/` so it becomes a trackable item with its own status and links.
+When starting work on a sub-task, create the actual `.md` file in `items/` so it becomes a trackable item with its own status and links — the filename will be `YYYY-MM-DD-{slugified-title}.md`, and the placeholder link resolves to it automatically. Existing pages can also be linked by their slug (e.g. `[[add-auth-refresh]]`) or with a display override (`[[add-auth-refresh|Refresh flow]]`) when you want the rendered text to differ from the slug.
 
 ## External Tracker Links
 
