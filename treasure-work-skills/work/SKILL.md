@@ -15,6 +15,31 @@ Workspaces are stored under `~/tdx/work/`:
 
 Each workspace root contains a `tdx.json` config file. The current working directory is typically set to the active workspace.
 
+## Wiki-Links
+
+Wiki-links connect pages inside a workspace. Use them anywhere in a document body — checklists, goal linked-items lists, notes.
+
+**Format**
+- `[[Page Title]]` — link by the human-readable title. Works for both existing pages and pages that don't exist yet.
+- `[[slug]]` — link by an existing page's slug (e.g. `[[fix-login-bug]]`).
+- `[[Page Title|Display Text]]` or `[[slug|Display Text]]` — override the rendered link text.
+
+**Resolution** — for `[[text]]`:
+1. Normalize the link text to a slug (lowercase, non-alphanumeric → hyphens), so `[[Page Title]]` and `[[page-title]]` resolve identically.
+2. Match against page filenames in the kind folders (goals, items, guides, notes, references). Any leading `YYYY-MM-DD-` date stamp on the filename is ignored — so `[[Page Title]]` matches a file named `items/2026-07-14-page-title.md`.
+3. When multiple folders match, priority is: goals > items > guides > notes > references.
+4. Unresolved links render as placeholder links — clicking one opens the create-page prompt with the link text as the title. Once the page is created, the same placeholder link resolves to it automatically.
+
+**Sub-task checklist** — placeholders let you plan before every page exists:
+
+```markdown
+- [ ] [[Add Auth Refresh]] — Token refresh logic
+- [ ] [[Update API Docs]] — Update REST docs
+- [x] [[Fix Session Expiry]] — Session timeout fix
+```
+
+**Backlinks** — find pages linking to a given slug: `Grep("\\[\\[{slug}", glob: "**/*.md")`.
+
 ## Folder Structure
 
 | Folder | Kind | Filename Pattern |
@@ -101,8 +126,6 @@ Use wiki-links for bidirectional linking:
 1. In the goal body, add `- [[item-slug|Display Title]]`
 2. In the item body, add `Part of [[goal-slug]].`
 
-See §Wiki-Links for the full format and placeholder behavior.
-
 ### Move Status
 
 Read the file, update the `status` field in frontmatter, set `updated` to today.
@@ -123,7 +146,7 @@ Use Grep to search across notes, guides, and references:
 ### Goal Progress
 
 1. Read the goal file
-2. Parse wiki-links from the body (see §Wiki-Links)
+2. Parse wiki-links from the body
 3. For each linked slug, find the matching item file (Glob for `items/*{slug}.md`)
 4. Read each item's `status` field
 5. Calculate: done count / total, percentage, list in-progress items
@@ -131,31 +154,6 @@ Use Grep to search across notes, guides, and references:
 ### What's Next
 
 Find the first linked item in a goal that isn't `done` or `void`.
-
-## Wiki-Links
-
-**Format**
-- `[[Page Title]]` — placeholder or title-based link (preferred for new sub-tasks; see resolution below).
-- `[[slug]]` — link by an existing page's slug (e.g. `[[fix-login-bug]]`).
-- `[[slug|Display Text]]` — override the rendered text (e.g. `[[fix-login-bug|Login regression]]`).
-
-Do **not** hard-code the `YYYY-MM-DD-` date prefix in a placeholder. The date is stamped at file-creation time, so `[[2026-03-26-add-auth-refresh]]` freezes the link to a filename that may never exist.
-
-**Resolution** — for `[[text]]`:
-1. Normalize `text` to a slug (lowercase, non-alphanumeric → hyphens) so `[[Page Title]]` and `[[page-title]]` collapse to the same target.
-2. Match a filename in `{goals,items,guides,notes,references}/`: try `{slug}.md` first (goals), then `*-{slug}.md` (the `*-` prefix absorbs the `YYYY-MM-DD-` date stamp on items/guides/notes/references).
-3. Priority when multiple folders match: goals > items > guides > notes > references.
-4. Unresolved links are valid — they render as placeholder links and, on click, open the create-page prompt with the link text as the title. Creating the page writes `items/YYYY-MM-DD-{slug}.md` (or the folder you pick), and the same placeholder link resolves to it thereafter.
-
-**Sub-task checklist** — use placeholders freely; convert to real files when work starts:
-
-```markdown
-- [ ] [[Add Auth Refresh]] — Token refresh logic
-- [ ] [[Update API Docs]] — Update REST docs
-- [x] [[Fix Session Expiry]] — Session timeout fix
-```
-
-**Backlinks** — find pages linking to a given slug: `Grep("\\[\\[{slug}", glob: "**/*.md")`.
 
 ## Git Conventions
 
