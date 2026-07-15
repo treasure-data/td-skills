@@ -48,7 +48,7 @@ Wiki-links connect pages inside a workspace. Use them anywhere in a document bod
 | `items/` | item | `YYYY-MM-DD-{slug}.md` |
 | `guides/` | guide | `YYYY-MM-DD-{slug}.md` |
 | `notes/` | note | `YYYY-MM-DD-{slug}.md` |
-| `notes/weekly/` | weekly note | `YYYY-WNN.md` |
+| `notes/weekly/` | weekly note | `YYYY-MM-DD-WNN.md` (date = the week's start day, e.g. Monday; `WNN` = ISO week number) |
 | `references/` | reference | `YYYY-MM-DD-{slug}.md` |
 | `agents/` | agent | `{name}/AGENTS.md` (see §Agents) |
 
@@ -188,7 +188,7 @@ github: <owner>/<repo>#<number>       # e.g., acme-corp/my-app#456
 
 ## Agents
 
-Workspace agents live in `{workspace}/agents/{name}/AGENTS.md` — one directory per agent, one file per definition. Global agents use the same shape at `~/.treasure-work/agents/{name}/AGENTS.md`. The legacy `schedules/{task-name}/` split (`TASK.md` + `schedule.yaml`, `schedule_reload` / `schedule_run` / `schedule_enable`) has been retired — do not write to `schedules/` and do not call the old `schedule_*` tools.
+Workspace agents live in `{workspace}/agents/{name}/AGENTS.md` — one directory per agent, one file per definition. Global agents use the same shape at `~/.treasure-work/agents/{name}/AGENTS.md`.
 
 `AGENTS.md` is YAML frontmatter + a markdown body (the agent's system prompt):
 
