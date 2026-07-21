@@ -1,0 +1,21 @@
+# Re-validation log for cas
+# Record each validation run: date, model, result, and notes.
+
+validations:
+  - date: 2026-07-21
+    model: claude-sonnet-5
+    result: pass
+    tester: william.gonzalez@treasure.ai
+    notes: >
+      Validated the push-safety guidance against a live dev CDP environment. Confirmed:
+      (1) pushing an audience a second time unchanged updates the existing one rather than
+      creating a duplicate; (2) pushing a YAML missing an attribute/behavior the server has
+      refuses before any write, naming the exact field, and the field is confirmed still
+      present server-side afterward; (3) `--delete` authorizes the removal and reports it;
+      (4) re-pushing an unchanged child segment updates rather than duplicates; (5) segment/
+      activation/folder failures return specific error messages (naming the field/attribute
+      involved) rather than a generic failure. The composable child segment rule DSL
+      (`leftValue`/`rightValue`/`operator`, nested And/Or supported) was confirmed against a
+      real existing segment's pulled YAML, since it isn't otherwise documented — differs from
+      standard `tdx sg`'s `attribute`/`operator: {type, value}` shape and lack of nesting
+      support.

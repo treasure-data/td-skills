@@ -1,0 +1,63 @@
+# Regression happy-path for the cas skill's push-safety guidance.
+# Proves the idempotency + drift-check flow the skill documents. Generic example
+# names/paths only (no real resources) — substitute a live composable audience to run.
+skill: cas
+scenarios:
+  - name: dry-run preview shows create vs update accurately
+    description: >
+      `cas push --dry-run` reports "would create" for a brand-new audience name and
+      "would update" for one that already exists — never assumes create.
+    setup: []
+    run:
+      - tdx cas push ./cas-audience/ --dry-run
+    expect: >
+      Prints "Would create: ..." or "Would update: ..." matching whether an audience
+      with that name already exists. No changes made. Exit 0.
+
+  - name: repeat push is idempotent, not duplicating
+    description: >
+      Pushing the same unchanged audience YAML twice updates the existing audience
+      both times — it never creates a second audience with the same name.
+    setup:
+      - tdx cas push ./cas-audience/ -y
+    run:
+      - tdx cas push ./cas-audience/ -y
+    expect: >
+      Reports "Updated: 1 audience(s)", not "Created". `tdx cas list` still shows only
+      one audience with that name. Exit 0.
+
+  - name: drift is refused before any write
+    description: >
+      A local YAML missing an attribute/behavior the server currently has must not
+      silently delete it — push refuses before writing, naming the field.
+    setup:
+      - tdx cas push ./cas-audience-full/ -y   # audience with attributes A and B
+    run:
+      - tdx cas push ./cas-audience-partial/ -y   # same audience YAML, missing attribute B
+    expect: >
+      Refuses with a message naming attribute B specifically and instructing to use
+      `--delete` if the removal is intentional. Non-zero exit. Attribute B is still
+      present on the server afterward (`tdx cas desc <name>` still shows it).
+
+  - name: --delete authorizes the removal
+    description: >
+      Re-running the same refused push with `--delete` applies the removal and reports it.
+    setup:
+      - tdx cas push ./cas-audience-full/ -y
+    run:
+      - tdx cas push ./cas-audience-partial/ -y --delete
+    expect: >
+      Succeeds, reports "Removed (--delete): attribute(s) B". `tdx cas desc <name>` no
+      longer shows attribute B. Exit 0.
+
+  - name: child segment repeat push is idempotent
+    description: >
+      Pushing the same unchanged child segment YAML twice updates the existing segment
+      both times — it never creates a duplicate segment under the audience.
+    setup:
+      - tdx cas push ./cas-segment/ -y
+    run:
+      - tdx cas push ./cas-segment/ -y
+    expect: >
+      Reports "Updated: 1 segment(s)", not "Created". The audience still has only one
+      segment with that name. Exit 0.
