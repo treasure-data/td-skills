@@ -87,7 +87,7 @@ behaviors:
 
 The `connection:` field is a single generic value in the YAML, but what it means depends on the platform:
 
-- **Snowflake**: a federated query config (zero-copy config) **ID**, e.g. `'204'` — never a connector name. This resource is never listed by `tdx connections`, so there's no name to look up; `tdx cas pull` on an existing Snowflake audience shows the exact ID in use. Passing a value that happens to match a registered connector name on a Snowflake field is always a mistake — `tdx cas validate`/`push` catch this and fail fast rather than silently misrouting the ID.
+- **Snowflake**: a federated query config (zero-copy config) **ID** — a raw numeric ID, never a connector name. This resource is never listed by `tdx connections`, so there's no name to look up; `tdx cas pull` on an existing Snowflake audience shows the exact ID in use. Passing a value that happens to match a registered connector name on a Snowflake field is always a mistake — `tdx cas validate`/`push` catch this and fail fast rather than silently misrouting the ID.
 - **Databricks/BigQuery**: a connector name or ID from `tdx connections`, plus a required `catalog:` field alongside `connection:` in the same block (master, or per-attribute/behavior).
 
 ## Child segment YAML — different rule DSL from `tdx sg`
