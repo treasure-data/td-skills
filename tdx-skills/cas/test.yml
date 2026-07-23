@@ -61,3 +61,15 @@ scenarios:
     expect: >
       Reports "Updated: 1 segment(s)", not "Created". The audience still has only one
       segment with that name. Exit 0.
+
+  - name: standalone segment push resolves the parent audience by name, no audience.yml needed
+    description: >
+      `tdx cas sg push` creates or updates one child segment on its own, resolving the
+      parent audience via `--audience <name>` — no co-located audience.yml required the
+      way the generic `tdx cas push <dir>` needs one.
+    setup: []
+    run:
+      - tdx cas sg push ./high-value-customers.yml --audience "Customer360 Snowflake" -y
+    expect: >
+      Reports segment created or updated under "Customer360 Snowflake". Re-running the
+      same command updates in place — never creates a duplicate segment.

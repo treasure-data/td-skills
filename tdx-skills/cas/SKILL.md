@@ -5,7 +5,7 @@ owner: william.gonzalez@treasure.ai
 tier: 1
 classification: product
 phase: 1
-last-validated: 2026-07-21
+last-validated: 2026-07-23
 validation-model: claude-sonnet-5
 known-limitations: |
   A push target can only contain one composable audience YAML file — every segment/activation
@@ -13,7 +13,11 @@ known-limitations: |
   connector-specific and not validated by `tdx cas validate`/`push` ahead of the API call; always
   run `tdx connection schema <type>` first (see the connector-config skill) rather than guessing
   field names. Snowflake schema/table name matching is case-sensitive; a lowercase `schema`/`table`
-  pulled from an older audience may not match the CDW's actual (often uppercase) names.
+  pulled from an older audience may not match the CDW's actual (often uppercase) names. Composable
+  segment YAML has no schema validation ahead of push (unlike composable audience YAML) — a
+  missing/malformed `rule:` surfaces as a raw backend error, not a clean client-side message.
+  `type: composable_segment` must be present verbatim or the file is validated against the wrong
+  (audience) schema entirely.
 ---
 
 # tdx CAS - Composable Audience Studio Management
@@ -40,6 +44,7 @@ tdx cas push <file_or_dir>                # Preview, confirm, then push
 tdx cas push <file_or_dir> --dry-run      # Preview only, no writes
 tdx cas push <file_or_dir> -y             # Skip confirmation (CI/CD)
 tdx cas push <file_or_dir> --delete       # Also apply a detected attribute/behavior removal
+tdx cas sg push <segment_file> --audience <name>  # Push one child segment standalone
 tdx cas preview <segment_name> --audience <name>  # Preview a segment query on the CDW
 ```
 
@@ -122,6 +127,22 @@ activations:
 
 For `activations[].connector_config` fields, **don't guess the field names** — run `tdx connection schema <connector_type>` first (see the **connector-config** skill) to discover them for the specific connector.
 
+**`type: composable_segment` at the top level is mandatory, exact literal** — not just documentation, it's how `tdx` tells this file apart from a composable audience file. Omit it and the file gets validated against the *audience* schema instead, producing a confusing error about an unrelated field (e.g. a missing `master:`) rather than anything about the segment itself. If you see an error naming `master` or other audience-only fields while pushing something you intend as a segment, check `type:` first.
+
+Composable segment YAML currently has **no schema validation ahead of push** (unlike composable audience YAML, which does). A missing `rule:` reaches the backend and comes back as a raw database error, not a clean client-side message — if you hit an unfamiliar low-level error pushing a segment, suspect a missing/malformed `rule` block first before assuming something else is wrong.
+
+## Pushing a single child segment standalone
+
+`tdx cas sg push <segment_file> --audience <name>` creates or updates **one** child segment without needing a co-located `audience.yml` in the same directory — the parent audience is resolved by name (via `--audience`, or the session context set by `tdx use cas <name>`). Same idempotent-by-name behavior as `tdx cas push`: pushing the same segment name again updates it in place, never creates a duplicate.
+
+```bash
+tdx cas sg push high-value-customers.yml --audience "Customer360 Snowflake"
+tdx cas sg push high-value-customers.yml --audience "Customer360 Snowflake" --dry-run
+tdx cas sg push high-value-customers.yml --audience "Customer360 Snowflake" -y
+```
+
+Use this instead of `tdx cas push <dir>` when you only need to manage one segment file independently — e.g. a CI/CD pipeline that touches one segment at a time, or when the parent audience is managed elsewhere and shouldn't be re-pushed alongside every segment change.
+
 ## Legacy endpoint toggle
 
 `tdx cas` requests go to the current default CAS backend host. If a composable audience only exists on the older, standalone legacy host (rare — most accounts are fully migrated), set `TDX_CAS_LEGACY_ENDPOINT=1` before running the command. The two hosts do **not** share data — an audience visible on one is invisible on the other, so only toggle this if `tdx cas list` genuinely doesn't show an audience you expect to find.
@@ -136,6 +157,8 @@ For `activations[].connector_config` fields, **don't guess the field names** —
 | 400 naming a `type` mismatch on an attribute/behavior column | The YAML `type:` doesn't match the real CDW column type — check the source table's actual column type. |
 | `catalog is required` | Databricks/BigQuery connections need `catalog:` set alongside `connection:` in the same block. |
 | Segment rule 400 naming `leftValue`/`rightValue`/`operator` | Composable segment rules use a different shape than standard `tdx sg` — see "Child segment YAML" above, don't reuse a standard segment's rule YAML as-is. |
+| `cas sg push` fails naming `master` or another audience-only field | The file is missing `type: composable_segment` at the top level and got validated as an audience file instead. Add the field — this isn't about the field the error names. |
+| Unfamiliar low-level/database error pushing a segment | Composable segment YAML has no schema validation ahead of push — check for a missing or malformed `rule:` block first. |
 | Non-interactive mode error | Add `-y`: `tdx cas push -y <path>` |
 | An audience you expect isn't in `tdx cas list` | It may only exist on the other host — try again with `TDX_CAS_LEGACY_ENDPOINT=1`. |
 
