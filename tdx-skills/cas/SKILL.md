@@ -1,6 +1,6 @@
 ---
 name: cas
-description: Manages Composable Audience Studio (CAS) zero-copy audiences using `tdx cas` commands — audiences that query customer Cloud Data Warehouses (Snowflake, Databricks, BigQuery) directly instead of copying data into Treasure Data. Covers audience/attribute/behavior YAML, the composable segment rule DSL (distinct from standard `tdx sg` rules), connection resolution per CDW platform, and push safety (idempotent create/update, drift detection, `--delete`). Use when creating or updating composable parent segments, composable child segments, or composable activations, or when a task mentions zero-copy, Snowflake/Databricks/BigQuery audiences, or Composable Audience Studio.
+description: Manages Composable Audience Studio (CAS) zero-copy audiences using `tdx cas` commands — audiences that query customer Cloud Data Warehouses (Snowflake, Databricks, BigQuery) directly instead of copying data into Treasure Data. Covers audience/attribute/behavior YAML, the composable segment rule DSL (distinct from standard `tdx sg` rules), connection resolution per CDW platform, and push safety (idempotent create/update, drift detection, `--delete` for both audience attribute/behavior drift and single-named-target child segment deletion). Use when creating, updating, or deleting composable parent segments, composable child segments, or composable activations, or when a task mentions zero-copy, Snowflake/Databricks/BigQuery audiences, or Composable Audience Studio.
 owner: william.gonzalez@treasure.ai
 tier: 1
 classification: product
@@ -45,6 +45,7 @@ tdx cas push <file_or_dir> --dry-run      # Preview only, no writes
 tdx cas push <file_or_dir> -y             # Skip confirmation (CI/CD)
 tdx cas push <file_or_dir> --delete       # Also apply a detected attribute/behavior removal
 tdx cas sg push <segment_file> --audience <name>  # Push one child segment standalone
+tdx cas sg push <segment_file> --audience <name> --delete  # Delete that one named segment
 tdx cas preview <segment_name> --audience <name>  # Preview a segment query on the CDW
 ```
 
@@ -143,6 +144,18 @@ tdx cas sg push high-value-customers.yml --audience "Customer360 Snowflake" -y
 
 Use this instead of `tdx cas push <dir>` when you only need to manage one segment file independently — e.g. a CI/CD pipeline that touches one segment at a time, or when the parent audience is managed elsewhere and shouldn't be re-pushed alongside every segment change.
 
+### Deleting a single child segment
+
+`tdx cas sg push <segment_file> --audience <name> --delete` deletes **exactly the one segment** named in that file's `name:` field. This is **single-named-target delete only** — not a directory/bulk prune. Passing a directory with `--delete` is rejected outright, not silently interpreted as "delete everything not in this directory."
+
+```bash
+tdx cas sg push high-value-customers.yml --audience "Customer360 Snowflake" --delete
+tdx cas sg push high-value-customers.yml --audience "Customer360 Snowflake" --delete --dry-run
+tdx cas sg push high-value-customers.yml --audience "Customer360 Snowflake" --delete -y
+```
+
+This `--delete` means something different from `tdx cas push`'s own `--delete` (which authorizes removing audience attributes/behaviors detected as drift) — each is scoped to its own command's domain. Don't assume `--delete` always means the same thing across `cas push` and `cas sg push`. The confirmation prompt names the segment and audience explicitly since this is destructive and irreversible — never skip the confirmation (`-y`) on a segment you didn't write the YAML for yourself without confirming with the user first.
+
 ## Legacy endpoint toggle
 
 `tdx cas` requests go to the current default CAS backend host. If a composable audience only exists on the older, standalone legacy host (rare — most accounts are fully migrated), set `TDX_CAS_LEGACY_ENDPOINT=1` before running the command. The two hosts do **not** share data — an audience visible on one is invisible on the other, so only toggle this if `tdx cas list` genuinely doesn't show an audience you expect to find.
@@ -158,6 +171,7 @@ Use this instead of `tdx cas push <dir>` when you only need to manage one segmen
 | `catalog is required` | Databricks/BigQuery connections need `catalog:` set alongside `connection:` in the same block. |
 | Segment rule 400 naming `leftValue`/`rightValue`/`operator` | Composable segment rules use a different shape than standard `tdx sg` — see "Child segment YAML" above, don't reuse a standard segment's rule YAML as-is. |
 | `cas sg push` fails naming `master` or another audience-only field | The file is missing `type: composable_segment` at the top level and got validated as an audience file instead. Add the field — this isn't about the field the error names. |
+| `cas sg push --delete` against a directory is rejected | Single-named-target delete only — point it at the one segment file to delete, not a directory. |
 | Unfamiliar low-level/database error pushing a segment | Composable segment YAML has no schema validation ahead of push — check for a missing or malformed `rule:` block first. |
 | Non-interactive mode error | Add `-y`: `tdx cas push -y <path>` |
 | An audience you expect isn't in `tdx cas list` | It may only exist on the other host — try again with `TDX_CAS_LEGACY_ENDPOINT=1`. |

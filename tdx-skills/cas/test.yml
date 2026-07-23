@@ -73,3 +73,28 @@ scenarios:
     expect: >
       Reports segment created or updated under "Customer360 Snowflake". Re-running the
       same command updates in place — never creates a duplicate segment.
+
+  - name: sg push --delete removes exactly the one named segment
+    description: >
+      `tdx cas sg push <file> --delete` deletes the single segment named in that file —
+      single-named-target only, not a directory/bulk prune.
+    setup:
+      - tdx cas sg push ./high-value-customers.yml --audience "Customer360 Snowflake" -y
+    run:
+      - tdx cas sg push ./high-value-customers.yml --audience "Customer360 Snowflake" --delete -y
+    expect: >
+      Reports the segment deleted. `tdx cas sg list "Customer360 Snowflake"` no longer
+      shows it. Exit 0. Re-running the same delete command a second time fails cleanly
+      (segment not found) rather than crashing.
+
+  - name: sg push --delete against a directory is rejected, not silently guessed at
+    description: >
+      Passing a directory instead of a single file with `--delete` must not be
+      interpreted as "delete everything not in this directory" — there is no bulk-prune
+      mode for composable child segments.
+    setup: []
+    run:
+      - tdx cas sg push ./cas-segment/ --audience "Customer360 Snowflake" --delete -y
+    expect: >
+      Fails with a message saying it's a directory and `cas sg push` takes a single
+      file. Non-zero exit. Nothing on the server is touched.
