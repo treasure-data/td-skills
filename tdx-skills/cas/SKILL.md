@@ -98,7 +98,7 @@ The `connection:` field is a single generic value in the YAML, but what it means
 
 ## Child segment YAML — different rule DSL from `tdx sg`
 
-Composable segment conditions use `leftValue`/`rightValue`/`operator` — **not** the `attribute`/`operator: {type, value}` shape standard `tdx sg` segments use. Get this wrong and the API returns a 400 naming exactly which field is missing/invalid.
+Composable segment conditions use `leftValue` (the attribute) and `operator` (the comparison, which itself nests `type`, `not`, and `rightValue`) — **not** the `attribute`/`operator: {type, value}` shape standard `tdx sg` segments use. `rightValue` is not a sibling of `leftValue`/`operator`; it nests inside `operator`, as shown below. Get this wrong and the API returns a 400 naming exactly which field is missing/invalid.
 
 ```yaml
 type: composable_segment
