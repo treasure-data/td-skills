@@ -31,6 +31,12 @@ tests:
   - prompt: "Create a segment for users who purchased in the last 30 days"
     expected: segment
 
+  - prompt: "I need a nested segment that builds on an existing segment"
+    expected: segment
+
+  - prompt: "Help me handle nested logic during segment creation"
+    expected: segment
+
   - prompt: "Create a parent segment with customer attributes"
     expected: parent-segment
 
