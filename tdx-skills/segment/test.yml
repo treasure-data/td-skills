@@ -1,6 +1,6 @@
-# Regression happy-path for the segment skill's name-resolution guidance.
-# Proves the find -> move flow the skill documents. Generic example names only
-# (no real resources) — substitute a live parent segment / names to run.
+# Regression happy-path for the segment skill's name-resolution guidance and for
+# nested/composed segments via `include`/`exclude` references. Generic example
+# names only (no real resources) — substitute a live parent segment / names to run.
 skill: segment
 scenarios:
   - name: find a segment by name (substring, whole tree)
@@ -37,3 +37,59 @@ scenarios:
       If more than one segment is named "VIP Customers" across folders, the move
       refuses (non-zero exit) and lists each match's full path + id; nothing moves.
       If exactly one exists at the top level, it previews normally.
+
+  - name: nested segment via an include reference
+    description: >
+      A segment built on top of another segment — `type: include` with the referenced
+      segment's exact server name. This is the supported form of "nested segment".
+    setup:
+      - tdx sg use "Customer 360"
+      - |
+        cat > /tmp/vip-recent.yml <<'YAML'
+        name: VIP Recent Buyers
+        rule:
+          type: And
+          conditions:
+            - type: include
+              segment: "VIP Customers"
+            - type: Behavior
+              # ...purchased in the last 30 days
+        YAML
+    run:
+      - tdx sg validate /tmp/vip-recent.yml
+      - tdx sg push --dry-run -y /tmp/vip-recent.yml
+    expect: >
+      `validate` passes on syntax but does NOT resolve the reference (see
+      validate-segment: segment references are server-side only). `push --dry-run`
+      resolves "VIP Customers" against the server and previews the composed segment.
+      Exit 0 for both when the referenced segment exists.
+
+  - name: reference to a non-existent segment fails at push, not validate
+    description: >
+      Guards the documented limitation — unpushed/local-only segments cannot be
+      referenced, and the error surfaces only at push time.
+    setup:
+      - tdx sg use "Customer 360"
+    run:
+      - tdx sg push --dry-run -y /tmp/refs-missing-segment.yml
+    expect: >
+      Non-zero exit with a "segment reference not found" style error naming the
+      unresolved segment. `tdx sg validate` on the same file would have passed —
+      that asymmetry is the point of this scenario.
+
+  - name: cross-attribute Or decomposed into referenced segments
+    description: >
+      Nested Or is rejected by the validator (NESTED_CONDITION_GROUP). The documented
+      workaround is to push each branch as its own segment and compose with `include`.
+      Order matters: branches before the composition.
+    setup:
+      - tdx sg use "Customer 360"
+    run:
+      - tdx sg push -y segments/us-visitors.yml
+      - tdx sg push -y segments/over-30.yml
+      - tdx sg validate segments/us-or-over-30.yml
+      - tdx sg push --dry-run -y segments/us-or-over-30.yml
+    expect: >
+      The composed segment is a flat `Or` of two `include` references and is accepted —
+      no NESTED_CONDITION_GROUP error. Pushing the composition first (before its
+      branches) fails with an unresolved reference.

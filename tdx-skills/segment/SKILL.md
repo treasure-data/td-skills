@@ -1,6 +1,6 @@
 ---
 name: segment
-description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers Value/Behavior condition types, all operators (Equal, In, Between, TimeWithinPast, etc.), behavior aggregations with filters, and nested condition group restrictions. Use when creating audience segments with filtering rules, configuring behavior-based conditions, managing segment hierarchies, or exploring available fields with `tdx sg fields`.
+description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers Value/Behavior condition types, all operators (Equal, In, Between, TimeWithinPast, etc.), behavior aggregations with filters, nested/composed segments via `include`/`exclude` segment references, and how to express nested AND/OR logic that the Console rejects. Use when creating audience segments with filtering rules, building a segment on top of or excluding another existing segment, configuring behavior-based conditions, managing segment hierarchies, or exploring available fields with `tdx sg fields`.
 owner: william.gonzalez@treasure.ai
 tier: 1
 classification: product
@@ -192,7 +192,8 @@ Query behavior table data with aggregations. Use `type: Value` with `source` and
 
 ## Segment References (Include/Exclude)
 
-Reference segments that already exist on the server by their exact name.
+This is how you build a **nested/composed segment** — a segment defined on top of another
+segment. Reference segments that already exist on the server by their exact name.
 
 ```yaml
 rule:
@@ -241,7 +242,28 @@ Or conditions across **different attributes** cannot be expressed without nested
 # (country = "US") OR (age > 30)
 ```
 
-For such cases, consider creating separate segments and using `include` references, or restructuring the business logic.
+### Workaround: decompose into referenced segments
+
+Push each branch of the Or into its own segment, then compose them with `include`. The
+composed rule is a flat `Or` of references, so it is not a nested condition group and
+`tdx sg validate` accepts it.
+
+```yaml
+# 1. us-visitors.yml        -> country = "US"
+# 2. over-30.yml            -> age > 30
+# 3. us-or-over-30.yml      -> the composition:
+rule:
+  type: Or
+  conditions:
+    - type: include
+      segment: "US Visitors"
+    - type: include
+      segment: "Over 30"
+```
+
+Push the branch segments before the composed one — a reference to an unpushed local segment
+fails. Prefer this over restructuring the business logic: it keeps the customer's original
+segment definition intact and reviewable.
 
 ## Array Matching
 
@@ -264,7 +286,7 @@ segments/customer-360/
 | Field not available | `tdx sg fields` or run parent workflow |
 | Between missing bounds | At least one of `min` or `max` required |
 | Behavior source unknown | Check parent segment behavior table names |
-| NESTED_CONDITION_GROUP | Use `In` operator or flatten; all nesting is rejected |
+| NESTED_CONDITION_GROUP | Use `In` operator, split into separate segments + `include` references, or flatten; all nesting is rejected |
 | Segment reference not found | Segment must exist on server; use exact name from Console |
 | Non-interactive mode error | Add `-y` flag: `tdx sg push -y "<file>"` |
 
