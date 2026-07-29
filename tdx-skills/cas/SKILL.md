@@ -129,7 +129,7 @@ activations:
       timezone: UTC
 ```
 
-**Unlike standard `tdx sg` rules, nested `And`/`Or` condition groups ARE supported** here (composable segments don't have the nested-group restriction `validate-segment` documents for standard segments).
+Nested `And`/`Or` condition groups are supported here, same as standard `tdx sg` rules (nesting there only produces a validator *warning* about the Console UI's SQL preview, not a rejection — segment execution isn't affected either way).
 
 For `activations[].connector_config` fields, **don't guess the field names** — run `tdx connection schema <connector_type>` first (see the **connector-config** skill) to discover them for the specific connector.
 
