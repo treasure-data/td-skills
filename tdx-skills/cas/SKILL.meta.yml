@@ -35,3 +35,16 @@ validations:
       behavior that already has it — this last case could not be live-tested further (the
       backend rejects `all_columns` on any creation path now, even bypassing tdx), so it's
       documented as a known limitation rather than demonstrated end-to-end.
+  - date: 2026-07-30
+    model: claude-sonnet-5
+    result: pass
+    tester: william.gonzalez@treasure.ai
+    notes: >
+      Documentation-only follow-up from a live agent-generated segment reported as silently
+      matching zero rows. Root cause confirmed against source (`src/sdk/cas/validate-files.ts`,
+      `src/sdk/types/cas.ts`): composable segment rules have no client-side schema, so
+      `leftValue.name` is passed through unchecked. It must exactly match the parent audience's
+      attribute/behavior `name:` (case-sensitive) rather than the underlying CDW column name —
+      a mismatch pushes successfully with no error and shows a blank rule in Console. Added an
+      explicit warning and a Common Issues entry; no code change, since the gap is the complete
+      absence of a schema for this YAML shape (also noted as a pre-existing limitation above).
