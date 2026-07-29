@@ -5,7 +5,7 @@ owner: william.gonzalez@treasure.ai
 tier: 1
 classification: product
 phase: 1
-last-validated: 2026-07-23
+last-validated: 2026-07-29
 validation-model: claude-sonnet-5
 known-limitations: |
   A push target can only contain one composable audience YAML file — every segment/activation
@@ -29,6 +29,7 @@ known-limitations: |
 All CAS writes go through the typed `tdx cas` commands. **Never** create or update a composable audience/segment/activation with raw `tdx api` HTTP calls — the request shapes below have real footguns that the typed command handles for you.
 
 - **Audience updates are a full replace of `attributes`/`behaviors`, not a merge.** If you push a YAML that's missing an attribute/behavior the server currently has, `tdx cas push` **refuses before writing anything** and names exactly what would be removed. This is intentional — it is not a bug to work around. Either update the local YAML to include the missing field (pull first if it might be stale: `tdx cas pull`), or, if removing it is genuinely intended, re-run with `--delete`. Never assume `--delete` is safe to add reflexively just to make the refusal go away — confirm with the user first if you didn't write the YAML yourself.
+- **Renaming an attribute/behavior (same source `schema`/`table`/`column`, new `name`) does NOT need `--delete`.** `tdx cas push` detects this as a rename, not a removal, and applies it directly. Under the hood the backend recreates the attribute/behavior with a new server-side id every time (it can't rename in place) — push output reports this explicitly, e.g. `Renamed attribute: "email" → "email_updated" (server id changed 10095 → 10096)`. If anything else is keyed on that id (an activation, an external system), it needs to be updated separately; `tdx cas push` has no way to know about or update such references.
 - **Repeat pushes are idempotent by name.** Pushing the same audience/segment/activation name again updates the existing one — it does not create a duplicate. There's no need to check existence yourself before pushing.
 - **No confirmation prompt on drift or errors.** Both the drift refusal above and any other push failure exit non-zero with a specific message (never a generic "push failed"). Read the message — it names the exact field/attribute/behavior involved.
 - If a typed command seems not to exist for what you need, ask the user — do not fall back to raw `tdx api`.
@@ -87,7 +88,11 @@ behaviors:
         column: AMOUNT
 ```
 
-**Attribute/behavior `type` must match the real CDW column type** (`string`, `number`, `timestamp`, `string_array`, `number_array`) — a string-typed attribute over a numeric CDW column is rejected by the API (400) even though it's syntactically valid YAML. If unsure, pull an existing audience over the same table and copy its types.
+**Attribute/behavior `type` must match the real CDW column type** (`string`, `number`, `boolean`, `date`, `timestamp`, `string_array`, `number_array`) — a string-typed attribute over a numeric CDW column is rejected by the API (400) even though it's syntactically valid YAML. If unsure, pull an existing audience over the same table and copy its types.
+
+**Every audience needs at least one attribute.** `tdx cas validate`/`push` reject an audience with an empty or missing `attributes:` list — the backend requires at least one.
+
+**`all_columns: true` for a behavior only works if that behavior already has it set server-side.** The backend rejects `all_columns: true` for a brand-new behavior, or when flipping an existing behavior from explicit `columns:` to `all_columns: true` — this only succeeds on a behavior that was already created with it (e.g. an older audience predating this restriction). For any new or changed behavior, use an explicit `columns:` list instead; don't reach for `all_columns: true` as a shortcut. (Note: this is different from segment activations below, which do support `all_columns: true` freely.)
 
 ## Connection resolution — differs by CDW platform
 
@@ -173,6 +178,7 @@ This `--delete` means something different from `tdx cas push`'s own `--delete` (
 | `cas sg push` fails naming `master` or another audience-only field | The file is missing `type: composable_segment` at the top level and got validated as an audience file instead. Add the field — this isn't about the field the error names. |
 | `cas sg push --delete` against a directory is rejected | Single-named-target delete only — point it at the one segment file to delete, not a directory. |
 | Unfamiliar low-level/database error pushing a segment | Composable segment YAML has no schema validation ahead of push — check for a missing or malformed `rule:` block first. |
+| `all_columns: true` rejected for a behavior | Only works on a behavior that already has it set server-side — use an explicit `columns:` list for any new or changed behavior instead. |
 | Non-interactive mode error | Add `-y`: `tdx cas push -y <path>` |
 | An audience you expect isn't in `tdx cas list` | It may only exist on the other host — try again with `TDX_CAS_LEGACY_ENDPOINT=1`. |
 

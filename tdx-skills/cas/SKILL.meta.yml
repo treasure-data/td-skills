@@ -19,3 +19,20 @@ validations:
       real existing segment's pulled YAML, since it isn't otherwise documented — differs from
       standard `tdx sg`'s `attribute`/`operator: {type, value}` shape and lack of nesting
       support.
+  - date: 2026-07-29
+    model: claude-sonnet-5
+    result: pass
+    tester: william.gonzalez@treasure.ai
+    notes: >
+      Re-validated against live dev-us01 following a round of client-side validation
+      hardening fixes to `tdx cas push`/`validate`. Confirmed live: (1) `boolean` and `date`
+      are genuinely accepted CDW column types, not just client-side schema additions;
+      (2) an empty/missing `attributes:` list is rejected before any API call; (3) renaming
+      an attribute/behavior (same source column, new name) is detected and pushed without
+      `--delete`, and the server-side id always changes on rename (backend destroys and
+      rebuilds the whole attributes/behaviors collection on any update — confirmed against
+      the backend's own source, not assumed); (4) `all_columns: true` for a behavior is
+      rejected for a brand-new behavior or a false->true flip, but accepted unchanged on a
+      behavior that already has it — this last case could not be live-tested further (the
+      backend rejects `all_columns` on any creation path now, even bypassing tdx), so it's
+      documented as a known limitation rather than demonstrated end-to-end.
