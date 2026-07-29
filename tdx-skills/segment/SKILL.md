@@ -1,6 +1,6 @@
 ---
 name: segment
-description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers Value/Behavior condition types, all operators (Equal, In, Between, TimeWithinPast, etc.), behavior aggregations with filters, and nested condition group restrictions. Use when creating audience segments with filtering rules, configuring behavior-based conditions, managing segment hierarchies, or exploring available fields with `tdx sg fields`.
+description: Manages CDP child segments using `tdx sg` commands with YAML rule configs. Covers Value/Behavior condition types, all operators (Equal, In, Between, TimeWithinPast, etc.), behavior aggregations with filters, and nested condition group support/caveats. Use when creating audience segments with filtering rules, configuring behavior-based conditions, managing segment hierarchies, or exploring available fields with `tdx sg fields`.
 owner: william.gonzalez@treasure.ai
 tier: 1
 classification: product
@@ -124,7 +124,7 @@ Five condition types can be used inside `conditions:`:
 |------|---------|
 | `Value` | Filter by attribute column (also used for behavior with `source`) |
 | `include` / `exclude` | Reference another segment |
-| `And` / `Or` | Condition group (nesting not supported — see below) |
+| `And` / `Or` | Condition group (nesting supported, triggers a warning — see below) |
 
 ## Operators
 
@@ -208,14 +208,14 @@ rule:
 
 ## Nested Condition Groups
 
-**Not supported.** Console UI silently ignores nested Or/And groups, causing local/server discrepancy. `tdx sg validate` rejects all nested condition groups with `NESTED_CONDITION_GROUP` error.
+**Supported, but flagged.** `tdx sg validate` flags nested Or/And groups with a `NESTED_CONDITION_GROUP` *warning* — the segment still validates and pushes successfully. The warning exists because the Console UI's SQL preview doesn't render nested groups correctly; segment execution itself is unaffected.
 
-### Workaround: Use `In` operator instead of nested Or
+### Alternative for same-attribute Or: the `In` operator
 
-When you need "value A OR value B" on the **same attribute**, use the `In` operator:
+When you need "value A OR value B" on the **same attribute**, `In` is simpler and avoids the warning entirely:
 
 ```yaml
-# Instead of nested Or (rejected by validator):
+# Nested Or (works, but triggers the Console-preview warning):
 - type: Or
   conditions:
     - type: Value
@@ -225,7 +225,7 @@ When you need "value A OR value B" on the **same attribute**, use the `In` opera
       attribute: activities
       operator: { type: Equal, value: "Advanced" }
 
-# Use In operator (works correctly):
+# In operator (equivalent result, no warning):
 - type: Value
   attribute: activities
   operator:
@@ -233,15 +233,9 @@ When you need "value A OR value B" on the **same attribute**, use the `In` opera
     value: ["Intermediate", "Advanced"]
 ```
 
-### Limitation
+### Or across different attributes
 
-Or conditions across **different attributes** cannot be expressed without nested Or:
-```yaml
-# This CANNOT be expressed without nested Or:
-# (country = "US") OR (age > 30)
-```
-
-For such cases, consider creating separate segments and using `include` references, or restructuring the business logic.
+Unlike same-attribute Or, there's no `In`-style alternative for combining **different attributes** (e.g. `(country = "US") OR (age > 30)`) — nesting is the only way to express it, and it's fine to use; just expect the `NESTED_CONDITION_GROUP` warning and know the Console's SQL preview won't render it correctly even though it runs correctly.
 
 ## Array Matching
 
@@ -264,7 +258,7 @@ segments/customer-360/
 | Field not available | `tdx sg fields` or run parent workflow |
 | Between missing bounds | At least one of `min` or `max` required |
 | Behavior source unknown | Check parent segment behavior table names |
-| NESTED_CONDITION_GROUP | Use `In` operator or flatten; all nesting is rejected |
+| NESTED_CONDITION_GROUP | Warning only, not a rejection; use `In` operator for same-attribute Or to avoid it |
 | Segment reference not found | Segment must exist on server; use exact name from Console |
 | Non-interactive mode error | Add `-y` flag: `tdx sg push -y "<file>"` |
 

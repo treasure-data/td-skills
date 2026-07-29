@@ -72,7 +72,7 @@ Use `type: Value` with `source`, `aggregation`, and `filter`. Inside `filter`, u
 
 ## Nested Condition Groups
 
-**Not supported.** Console UI silently ignores nested Or/And groups, causing local/server discrepancy. All nesting triggers `NESTED_CONDITION_GROUP` error. Use `In` operator instead. See **segment** skill for details and workarounds.
+**Supported, but flagged.** Nesting triggers a `NESTED_CONDITION_GROUP` *warning*, not a rejection — the segment still validates and pushes successfully. The warning exists because the Console UI's SQL preview doesn't render nested groups correctly; segment execution itself is unaffected. For same-attribute Or conditions, `In` is simpler and avoids the warning. See **segment** skill for details and workarounds.
 
 ## Array Matching
 
@@ -98,7 +98,7 @@ Invalid keys trigger `INVALID_ARRAY_MATCHING`.
 | `MISSING_TIME_UNIT` | Time operator missing `unit` | Add `unit: day` (singular) |
 | `INVALID_ARRAY_MATCHING` | `arrayMatching` has invalid format | Use `any`, `all`, or object form |
 | `MISSING_SEGMENT_REFERENCE` | `include`/`exclude` missing `segment` field | Add `segment:` with exact name |
-| `NESTED_CONDITION_GROUP` | Any nested Or/And condition group | Use `In` operator or flatten |
+| `NESTED_CONDITION_GROUP` | Any nested Or/And condition group (warning, not a rejection) | Use `In` operator or flatten if you want to avoid the warning |
 | `SEGMENT_SCHEMA_ERROR` | Server rejected the schema | Check field names (`column` vs `attribute` in filter) |
 
 ## Local vs Server Validation
@@ -108,7 +108,7 @@ Invalid keys trigger `INVALID_ARRAY_MATCHING`.
 | YAML syntax | Yes | Yes |
 | Operator types | Yes | Yes |
 | Required fields | Yes | Yes |
-| Nested groups rejected | Yes | Yes |
+| Nested groups flagged (warning only) | Yes | Yes |
 | Segment references | No | Yes |
 | Behavior schema | Partial | Yes |
 | Field availability | No | Yes |
