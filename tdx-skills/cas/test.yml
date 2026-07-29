@@ -1,0 +1,100 @@
+# Regression happy-path for the cas skill's push-safety guidance.
+# Proves the idempotency + drift-check flow the skill documents. Generic example
+# names/paths only (no real resources) — substitute a live composable audience to run.
+skill: cas
+scenarios:
+  - name: dry-run preview shows create vs update accurately
+    description: >
+      `cas push --dry-run` reports "would create" for a brand-new audience name and
+      "would update" for one that already exists — never assumes create.
+    setup: []
+    run:
+      - tdx cas push ./cas-audience/ --dry-run
+    expect: >
+      Prints "Would create: ..." or "Would update: ..." matching whether an audience
+      with that name already exists. No changes made. Exit 0.
+
+  - name: repeat push is idempotent, not duplicating
+    description: >
+      Pushing the same unchanged audience YAML twice updates the existing audience
+      both times — it never creates a second audience with the same name.
+    setup:
+      - tdx cas push ./cas-audience/ -y
+    run:
+      - tdx cas push ./cas-audience/ -y
+    expect: >
+      Reports "Updated: 1 audience(s)", not "Created". `tdx cas list` still shows only
+      one audience with that name. Exit 0.
+
+  - name: drift is refused before any write
+    description: >
+      A local YAML missing an attribute/behavior the server currently has must not
+      silently delete it — push refuses before writing, naming the field.
+    setup:
+      - tdx cas push ./cas-audience-full/ -y   # audience with attributes A and B
+    run:
+      - tdx cas push ./cas-audience-partial/ -y   # same audience YAML, missing attribute B
+    expect: >
+      Refuses with a message naming attribute B specifically and instructing to use
+      `--delete` if the removal is intentional. Non-zero exit. Attribute B is still
+      present on the server afterward (`tdx cas desc <name>` still shows it).
+
+  - name: --delete authorizes the removal
+    description: >
+      Re-running the same refused push with `--delete` applies the removal and reports it.
+    setup:
+      - tdx cas push ./cas-audience-full/ -y
+    run:
+      - tdx cas push ./cas-audience-partial/ -y --delete
+    expect: >
+      Succeeds, reports "Removed (--delete): attribute(s) B". `tdx cas desc <name>` no
+      longer shows attribute B. Exit 0.
+
+  - name: child segment repeat push is idempotent
+    description: >
+      Pushing the same unchanged child segment YAML twice updates the existing segment
+      both times — it never creates a duplicate segment under the audience.
+    setup:
+      - tdx cas push ./cas-segment/ -y
+    run:
+      - tdx cas push ./cas-segment/ -y
+    expect: >
+      Reports "Updated: 1 segment(s)", not "Created". The audience still has only one
+      segment with that name. Exit 0.
+
+  - name: standalone segment push resolves the parent audience by name, no audience.yml needed
+    description: >
+      `tdx cas sg push` creates or updates one child segment on its own, resolving the
+      parent audience via `--audience <name>` — no co-located audience.yml required the
+      way the generic `tdx cas push <dir>` needs one.
+    setup: []
+    run:
+      - tdx cas sg push ./high-value-customers.yml --audience "Customer360 Snowflake" -y
+    expect: >
+      Reports segment created or updated under "Customer360 Snowflake". Re-running the
+      same command updates in place — never creates a duplicate segment.
+
+  - name: sg push --delete removes exactly the one named segment
+    description: >
+      `tdx cas sg push <file> --delete` deletes the single segment named in that file —
+      single-named-target only, not a directory/bulk prune.
+    setup:
+      - tdx cas sg push ./high-value-customers.yml --audience "Customer360 Snowflake" -y
+    run:
+      - tdx cas sg push ./high-value-customers.yml --audience "Customer360 Snowflake" --delete -y
+    expect: >
+      Reports the segment deleted. `tdx cas sg list "Customer360 Snowflake"` no longer
+      shows it. Exit 0. Re-running the same delete command a second time fails cleanly
+      (segment not found) rather than crashing.
+
+  - name: sg push --delete against a directory is rejected, not silently guessed at
+    description: >
+      Passing a directory instead of a single file with `--delete` must not be
+      interpreted as "delete everything not in this directory" — there is no bulk-prune
+      mode for composable child segments.
+    setup: []
+    run:
+      - tdx cas sg push ./cas-segment/ --audience "Customer360 Snowflake" --delete -y
+    expect: >
+      Fails with a message saying it's a directory and `cas sg push` takes a single
+      file. Non-zero exit. Nothing on the server is touched.

@@ -37,6 +37,12 @@ tests:
   - prompt: "Validate my segment YAML configuration"
     expected: validate-segment
 
+  - prompt: "Push a composable audience for our Snowflake zero-copy setup"
+    expected: cas
+
+  - prompt: "Create a child segment under a Composable Audience Studio parent segment"
+    expected: cas
+
   - prompt: "Create a customer journey with decision points and activations"
     expected: journey
 

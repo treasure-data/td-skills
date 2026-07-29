@@ -92,7 +92,7 @@
     },
     {
       "name": "tdx-skills",
-      "description": "tdx CLI for managing Treasure Data from the command line including database management, table operations, queries, context configuration, CDP parent segments, child segments with activations, segment validation, journey orchestration, and workflow management",
+      "description": "tdx CLI for managing Treasure Data from the command line including database management, table operations, queries, context configuration, CDP parent segments, child segments with activations, segment validation, journey orchestration, workflow management, and Composable Audience Studio (zero-copy Snowflake/Databricks/BigQuery audiences)",
       "source": "./",
       "strict": false,
       "skills": [
@@ -100,6 +100,7 @@
         "./tdx-skills/parent-segment",
         "./tdx-skills/segment",
         "./tdx-skills/validate-segment",
+        "./tdx-skills/cas",
         "./tdx-skills/journey",
         "./tdx-skills/validate-journey",
         "./tdx-skills/connector-config",
