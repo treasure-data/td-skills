@@ -120,7 +120,7 @@ Join event/history from **behavior tables** alongside audience columns. Use the 
 ```yaml
 behaviors:                         # Up to 4 entries
   - behavior_table: purchase_history
-    join_strategy: Last            # All | First | Last | Top-N
+    join_strategy: Top-N           # All | First | Last | Top-N
     join_row: 10                   # Row limit for Top-N (defaults to 1 for First/Last; unset for All)
     formatting: rows               # rows | cols
     order_by:
