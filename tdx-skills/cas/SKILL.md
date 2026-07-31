@@ -105,6 +105,8 @@ The `connection:` field is a single generic value in the YAML, but what it means
 
 Composable segment conditions use `leftValue` (the attribute) and `operator` (the comparison, which itself nests `type`, `not`, and `rightValue`) — **not** the `attribute`/`operator: {type, value}` shape standard `tdx sg` segments use. `rightValue` is not a sibling of `leftValue`/`operator`; it nests inside `operator`, as shown below. Get this wrong and the API returns a 400 naming exactly which field is missing/invalid.
 
+**`leftValue.name` must exactly match the parent audience's attribute/behavior `name:` field — not the underlying CDW column, and not a lowercased or otherwise reformatted version of it.** For example, if the audience attribute is `name: STATE` (mapped to CDW column `STATE`), the rule must use `leftValue: { name: STATE }`, not `name: state`. This match is case-sensitive. **There is no client- or push-time validation for this** — composable segment rules have no schema (unlike composable audience YAML), so a mismatched name doesn't error at all: the segment pushes successfully, then silently matches zero rows and shows a blank rule in the Console UI. If a pushed segment's rule looks blank in Console or a preview returns zero rows unexpectedly, check `leftValue.name` against the audience's actual attribute/behavior names (`tdx cas pull` the parent audience to see them) before assuming anything else is wrong.
+
 ```yaml
 type: composable_segment
 name: High Value Customers
@@ -175,6 +177,7 @@ This `--delete` means something different from `tdx cas push`'s own `--delete` (
 | 400 naming a `type` mismatch on an attribute/behavior column | The YAML `type:` doesn't match the real CDW column type — check the source table's actual column type. |
 | `catalog is required` | Databricks/BigQuery connections need `catalog:` set alongside `connection:` in the same block. |
 | Segment rule 400 naming `leftValue`/`rightValue`/`operator` | Composable segment rules use a different shape than standard `tdx sg` — see "Child segment YAML" above, don't reuse a standard segment's rule YAML as-is. |
+| Segment pushes fine but shows a blank rule in Console / preview returns 0 rows | `leftValue.name` doesn't exactly match the audience's attribute/behavior `name:` (case-sensitive) — there's no validation to catch this. `tdx cas pull` the parent audience and check the real attribute/behavior names. |
 | `cas sg push` fails naming `master` or another audience-only field | The file is missing `type: composable_segment` at the top level and got validated as an audience file instead. Add the field — this isn't about the field the error names. |
 | `cas sg push --delete` against a directory is rejected | Single-named-target delete only — point it at the one segment file to delete, not a directory. |
 | Unfamiliar low-level/database error pushing a segment | Composable segment YAML has no schema validation ahead of push — check for a missing or malformed `rule:` block first. |
