@@ -67,6 +67,9 @@ tests:
   - prompt: "Set up an activation to export segment data to Google Ads"
     expected: activation
 
+  - prompt: "Export my segment to S3 and join in each customer's recent purchases and page views alongside the profile columns"
+    expected: activation
+
   - prompt: "Query parent segment data to analyze customer behaviors"
     expected: parent-segment-analysis
 
