@@ -1,11 +1,11 @@
 ---
 name: instagram
-description: Generate Instagram image ad concepts with visual descriptions, copy constraints (125/40/30 chars), and HTML mockups. Visual-first, mobile-native single-image ads for Feed and Stories.
+description: Generate Instagram ad concepts with visual descriptions, copy constraints, and HTML mockups. Supports Image and Carousel formats across Feed, Stories, Reels, Explore, and Explore Home placements. Use when creating Instagram image or carousel ads, generating Feed/Stories/Reels mockups, or adapting ad copy to placement-specific constraints.
 ---
 
-# Instagram Image Ad Ideation
+# Instagram Ad Ideation
 
-Generate Instagram image ad concepts with vivid visual descriptions and HTML mockups. Instagram is visual-first: the image is the hero, copy supports it.
+Generate Instagram ad concepts with vivid visual descriptions and HTML mockups. Supports Image and Carousel formats across multiple placements (Feed, Stories, Reels, Explore, Explore Home). Instagram is visual-first: the image is the hero, copy supports it.
 
 ## Integration with Multi-Channel Skill
 
@@ -23,8 +23,9 @@ This skill can be used **standalone** or **delegated from multi-channel-ad-ideat
 - **Creative Brief**: Offer, visual style, brand tone
 - **Target Segment**: Audience demographics and preferences
 - **Brand Guidelines**: Path to brand.md (optional)
-- **Image Specs**: Default 1080x1080px square
 - **Number of Concepts**: Usually 3-5
+
+Placement and format (Image vs Carousel) are determined after Phase 1 text concepts are confirmed, via the Placement & Format Selection checkpoint.
 
 Use this context to create visual-first concepts where image quality and mobile-native design align with the creative direction.
 
@@ -44,23 +45,22 @@ Use this context to create visual-first concepts where image quality and mobile-
 4. **Brand consistency** - Recognizable visual style
 5. **Mobile-optimized** - Looks good on small screens
 
-### Image-Only Constraint
-**Image constraint**: Generate concepts for **single static images only**. No:
-- Carousel ads (multiple images)
-- Video ads
-- Collection ads
-- Stories-only formats requiring motion
+### Supported Formats
+- **Image ads**: Single static image for any placement
+- **Carousel ads**: 2-10 image cards per ad, each with its own link
+
+**Not supported**: Video ads, Collection ads, motion-only formats
 
 ## Output Format
 
 ### Phase 1: Text Concept Format (Initial Generation)
 
-Generate **3-5 Instagram image ad concepts** using **table format** for easy side-by-side comparison:
+Generate **3-5 Instagram ad concepts** using **table format** for easy side-by-side comparison:
 
 **Format requirements - Table Format**:
 - Use **markdown table** with 6 columns: **Concept | Primary Text | Headline | Description | CTA Button | Quality**
 - Each concept takes **2 rows**: main concept row (all 6 cells filled) + image concept row (spans all 6 columns)
-- Image concept row starts with "↳ **Image Concept (1080x1080px)**:" followed by inline details spanning the full width
+- Image concept row starts with "↳ **Image Concept**:" followed by inline details spanning the full width
 - Image details format: `Colors: ..., Composition: ..., Focal Point: ..., Typography: ..., Style: ...`
 - Add blank separator row (`|  |  |  |  |  |  |`) between concept pairs for visual spacing
 - **Do NOT include character counts** - validated internally but not shown to user
@@ -71,10 +71,10 @@ Generate **3-5 Instagram image ad concepts** using **table format** for easy sid
 | Concept | Primary Text | Headline | Description | CTA Button | Quality |
 |---------|--------------|----------|-------------|------------|---------|
 | **Bold Visual Impact**<br>"Transform your morning routine with UltraFit Pro" | Transform your morning routine with UltraFit Pro. Premium sound, all-day comfort, seamless connectivity. Available now. | UltraFit Pro - Now Available | Premium wireless headphones | Shop Now | 31/35 |
-| ↳ **Image Concept (1080x1080px)**: Colors: #667eea (Deep Purple) → #764ba2 (Violet), Composition: Product centered with rule of thirds, Focal Point: Headphones at 30-degree angle, Typography: "NEW" badge in top-right corner, Style: Clean, minimal, premium aesthetic ||||||
+| ↳ **Image Concept**: Colors: #667eea (Deep Purple) → #764ba2 (Violet), Composition: Product centered with rule of thirds, Focal Point: Headphones at 30-degree angle, Typography: "NEW" badge in top-right corner, Style: Clean, minimal, premium aesthetic ||||||
 |  |  |  |  |  |  |
 | **Lifestyle Focus**<br>"Your perfect workout companion" | Your perfect workout companion. Designed for athletes who demand more. Sweat-proof, secure fit, exceptional sound. Train harder. | Fitness-First Audio | Engineered for performance | Learn More | 29/35 💪 |
-| ↳ **Image Concept (1080x1080px)**: Colors: #10b981 (Success Green) → #059669 (Dark Green), Composition: Action shot with dynamic movement, Focal Point: Athlete mid-workout wearing headphones, Typography: "BUILT TOUGH" text overlay, Style: Energetic, bold, athletic ||||||
+| ↳ **Image Concept**: Colors: #10b981 (Success Green) → #059669 (Dark Green), Composition: Action shot with dynamic movement, Focal Point: Athlete mid-workout wearing headphones, Typography: "BUILT TOUGH" text overlay, Style: Energetic, bold, athletic ||||||
 
 **Key Benefits of Table Format**:
 - Side-by-side comparison of primary text, headlines, descriptions
@@ -87,14 +87,52 @@ Generate **3-5 Instagram image ad concepts** using **table format** for easy sid
 
 **Note**: The markdown table format above is the default. Always use standard markdown tables for Instagram concepts to enable easy horizontal comparison while ensuring reliable rendering.
 
-### Phase 2: HTML Preview Format (After Confirmation)
+### CHECKPOINT: Placement & Format Selection
+
+**STOP and wait for user response. Do NOT proceed to Phase 2 or generate HTML until the user confirms placement and format.**
+
+This checkpoint fires **after the user confirms Phase 1 text concepts** and **before any HTML generation**.
+
+**Step 1: Infer from the original prompt**
+
+Scan the user's original request for placement/format keywords:
+
+| Keyword(s) in prompt | Inferred Placement | Inferred Format |
+|---|---|---|
+| "reel", "reels" | Reels | Image |
+| "story", "stories" | Stories | Image |
+| "feed" | Feed | Image |
+| "explore" | Explore | Image |
+| "carousel" | (keep current or ask) | Carousel |
+| "carousel story/stories" | Stories | Carousel |
+| "carousel feed" | Feed | Carousel |
+
+**Step 2: Confirm or ask**
+
+- **If inferred**: Present the inference and ask for confirmation:
+  > "Based on your request, I'll create this for **[Placement] [Format]** (e.g., Feed Image, 1440x1800px, 4:5 ratio). Does that work, or would you prefer a different placement?"
+- **If not inferable**: Ask two-step:
+  1. "Would you like an **Image** ad or a **Carousel** ad?" → Wait for response
+  2. "Which placement? **Feed** / **Stories** / **Reels** / **Explore** / **Explore Home**" → Wait for response
+- **If user says "proceed" or similar without specifying**: Suggest Feed Image as default, but still ask for confirmation
+
+**Step 3: Validate copy against placement constraints**
+
+After placement is confirmed, check the confirmed text concepts against placement-specific limits (see Ad Specifications tables below). If any copy exceeds limits:
+- Flag the specific fields that need adjustment
+- Offer condensed alternatives
+- Note any fields that don't apply to the placement (e.g., Stories has no Headline/Description)
+
+**Only proceed to Phase 2 after the user confirms placement, format, and any copy adaptations.**
+
+### Phase 2: HTML Preview Format (After Placement Confirmation)
 
 **Required workflow**: Every time you generate HTML for Instagram, write the HTML to a file and call `mcp__tdx-studio__open_file` to open the preview. Complete both the file writing and preview opening steps automatically.
 
-**ONLY generate HTML mockups AFTER user confirms text concepts** with phrases like:
-- "These look good, show me the HTML"
-- "Let's see the mockups"
-- "Generate HTML previews"
+**ONLY generate HTML mockups AFTER the Placement & Format Selection checkpoint is complete.** The user must have:
+1. Confirmed text concepts (Phase 1)
+2. Confirmed placement and format (Checkpoint)
+3. Approved any copy adaptations for the selected placement
 
 **HTML Generation and Preview Workflow** (complete all steps):
 1. Read `../references/html-preview-templates.md`
@@ -103,10 +141,15 @@ Generate **3-5 Instagram image ad concepts** using **table format** for easy sid
    - Sort by modification time (most recent first)
    - If found: Read PNG as binary and convert to base64 string
    - If not found: Use placeholder/emoji approach (current behavior)
-3. Generate HTML mockup (square 1:1 ratio Instagram post with image concept and copy)
+3. Generate HTML mockup using the confirmed placement's aspect ratio:
+   - **1:1** (Profile Feed, Explore Image, Explore Carousel): `padding-bottom:100%`
+   - **4:5** (Feed, Explore Home): `padding-bottom:125%`
+   - **9:16** (Stories, Reels): `padding-bottom:177.78%`
+   - For **Stories/Reels**: Apply safe zone overlays (see Ad Specifications)
+   - For **Carousel**: Render 2-3 cards with dots indicator and swipe hint
    - If base64 image available: Use `background-image:url(data:image/png;base64,{base64_string})` with `background-size:cover;background-position:center` in image area
    - If no image: Use `background:{color}` with emoji/text placeholder
-4. Use the Write tool to save HTML to file: `instagram-preview-{timestamp}.html` in working directory (use YYYYMMDD-HHMMSS format for timestamp)
+4. Use the Write tool to save HTML to file: `instagram-{placement}-{format}-preview-{timestamp}.html` in working directory (use YYYYMMDD-HHMMSS format for timestamp, lowercase placement/format)
 5. Immediately call `mcp__tdx-studio__open_file` with the absolute file path to open preview in artifact panel
 6. Display HTML code block (optional, for reference)
 
@@ -126,14 +169,13 @@ Example:
 ### When to Generate HTML Mockups
 
 **Generate HTML when**:
-- User explicitly confirms text concepts and image descriptions
-- User says "show me the HTML" or "generate mockups"
-- User is ready to see visual previews
+- Placement & Format Selection checkpoint is complete
+- User has confirmed text concepts, placement, format, and any copy adaptations
 
 **Do NOT generate HTML when**:
-- This is the first concept generation
+- This is the first concept generation (Phase 1)
 - User is still exploring creative directions
-- User hasn't confirmed the text concepts and image descriptions yet
+- User hasn't confirmed placement and format yet (checkpoint not cleared)
 - User is iterating on copy or visual concepts
 
 ### Integration with Instagram Image Generation
@@ -162,7 +204,14 @@ Result: HTML preview displays with the actual generated hiking boots image as ba
 
 ## Copy Constraints
 
-### Primary Text (125 characters max)
+**Phase 1 uses the maximum constraints below for all placements.** After the Placement & Format Selection checkpoint, copy is validated against placement-specific limits and adapted if needed.
+
+**Placement-specific overrides**:
+- **Reels**: Primary Text max **44 characters** (no Headline or Description)
+- **Stories**: Primary Text 125 chars (no Headline or Description)
+- **Carousel**: Shared Primary Text across all cards; per-card Landing URL required
+
+### Primary Text (125 characters max — 44 for Reels)
 This is the caption text that appears below the image.
 
 **Formula**: [Hook] + [Benefit/Value] + [CTA hint]
@@ -230,143 +279,111 @@ Instagram provides preset CTA buttons. Choose the most appropriate:
 
 **Avoid**: Vague CTAs like "Learn More" when "Shop Now" is more specific
 
+## Carousel Concept Format
+
+When the user selects **Carousel** format, adapt the Phase 1 table to show multiple cards per concept.
+
+**Key carousel rules**:
+- **Shared Primary Text**: One caption for the entire carousel (125 chars max)
+- **Per-card elements**: Each card has its own image concept, optional headline, and landing URL
+- **Show 3 sample cards** per concept in Phase 1 (user can request 2-10 in final)
+
+**Carousel Table Format**:
+
+| Concept | Primary Text | Card | Headline | Landing URL | CTA Button |
+|---------|--------------|------|----------|-------------|------------|
+| **Product Showcase**<br>"Discover the full collection" | Discover the full UltraFit collection. Three styles, one mission: perfect sound. 🎧 | Card 1 | UltraFit Pro | /products/pro | Shop Now |
+| | | Card 2 | UltraFit Sport | /products/sport | Shop Now |
+| | | Card 3 | UltraFit Studio | /products/studio | Shop Now |
+| ↳ **Card Image Concepts**: Card 1: Product on white, centered, minimal. Card 2: Athlete wearing headphones, action shot. Card 3: Studio setting, warm lighting, lifestyle. ||||||
+
 ## Image Concept Development
 
 ### Composition Approaches
 
-**1. Rule of Thirds**
-Focal point at intersection of 1/3 grid lines.
-**Best for**: Product photography, lifestyle shots
-**Example**: Product in left third, empty space right third with text overlay
+| Approach | Best For |
+|----------|----------|
+| Rule of Thirds | Product photography, lifestyle shots |
+| Centered & Symmetrical | Minimalist aesthetic, bold statements |
+| Full-Bleed Product | E-commerce, fashion, food |
+| Text-Dominant | Announcements, sales, bold statements |
+| Lifestyle Context | Demonstrating use case, aspirational |
 
-**2. Centered & Symmetrical**
-Subject perfectly centered, balanced composition.
-**Best for**: Minimalist aesthetic, bold statements, symmetry
-**Example**: Coffee cup centered, clean background, text below
+### Instagram-Specific Image Guidelines
 
-**3. Full-Bleed Product**
-Product fills entire frame, no empty space.
-**Best for**: E-commerce, fashion, food
-**Example**: Close-up of product with vibrant colors edge-to-edge
+- **On-image text**: Max 5-10 words, 48px+ for mobile readability, bold sans-serif (Helvetica, Futura, Montserrat)
+- **When to use on-image text**: Announce offers ("50% OFF", "NEW ARRIVAL"), reinforce brand message ("Handmade with Love"), create urgency ("Ends Tonight")
+- **Logo**: Top-left or bottom-right, small and subtle, white/black version for contrast
+- **Colors**: Match brand palette; use high-contrast for feed standout (e.g., #E63946 red, #FFD700 yellow, #6A0DAD purple)
+- **Emotional tone**: Urgency → red/orange, Trust → blue/navy, Luxury → black/gold, Fresh → green/white, Playful → bright pastels
 
-**4. Text-Dominant**
-Large text overlay, image as background.
-**Best for**: Announcements, quotes, bold statements
-**Example**: "50% OFF" huge text, subtle background pattern
+## Ad Specifications by Placement
 
-**5. Lifestyle Context**
-Product in real-world setting with person/environment.
-**Best for**: Demonstrating use case, aspirational lifestyle
-**Example**: Person using product in beautiful setting
+### Image Ad Specs
 
-### Color Palette Guidance
+| Placement | Ratio | Resolution | Text Fields | Safe Zones |
+|-----------|-------|------------|-------------|------------|
+| Profile Feed | 1:1 (supports 1.91:1–4:5) | 1080x1080 | Primary (125) + Headline (40) | — |
+| Feed | 4:5 | 1440x1800 | Primary (125) + Headline (40) | — |
+| Stories | 9:16 | 1440x2560 | Primary (125) | Top 14%, Bottom 20% |
+| Reels | 9:16 | 1440x2560 | Primary (44) | Top 14%, Bottom 35%, Sides 6% |
+| Explore | 1:1 | 1080x1080 | Primary (125) | — |
+| Explore Home | 4:5 | 1440x1800 | Primary (125) + Headline (40) | — |
 
-**High-Contrast** (stands out in feed):
-- Black text on bright yellow (#FFD700)
-- White text on deep purple (#6A0DAD)
-- Bold red (#E63946) on white background
+### Carousel Ad Specs
 
-**Brand-Consistent**:
-- Use brand's primary + secondary colors
-- Ensure colors work on mobile screens
-- Test contrast for text readability
+| Placement | Ratio | Resolution | Cards | Text Fields |
+|-----------|-------|------------|-------|-------------|
+| Profile Feed | 1:1 (1.91:1–4:5) | 1080x1080 | 2–10 | Primary (125) + Headline (40) + Landing URL |
+| Feed | 4:5 | 1080x1080 | 2–10 | Primary (125) + Headline (40) + Landing URL |
+| Stories | 9:16 | 1080x1920 | 2–10 | Primary (125) + Landing URL |
+| Reels | 9:16 | 1080x1080 | 2–10 | — |
+| Explore | 1:1 | 1080x1080 | 2–10 | Primary (125) + Headline (40) + Landing URL |
+| Explore Home | 1:1 | 1080x1080 | 2–10 | Primary (125) + Headline (40) + Landing URL |
 
-**Emotional Tone**:
-- **Urgency**: Red, orange, bright yellow
-- **Trust**: Blue, navy, teal
-- **Luxury**: Black, gold, deep purple
-- **Fresh/Natural**: Green, earth tones, white
-- **Playful**: Bright multi-color, pastels
+**Technical specs (all placements)**: File type JPG or PNG, max 30MB (aim for <1MB for fast loading).
 
-### Typography on Images
+### Safe Zones
 
-**When to use on-image text**:
-- Announce offers ("50% OFF", "NEW ARRIVAL")
-- Reinforce brand message ("Handmade with Love")
-- Create urgency ("Ends Tonight")
+**Stories** — Keep text, logos, and CTAs out of these areas to avoid overlap with Instagram's UI layer:
+```
+┌─────────────────┐
+│░░░░░ TOP 14% ░░░│  ← Avoid: overlaps with profile icon, status bar
+│                 │
+│                 │
+│   SAFE AREA     │
+│                 │
+│                 │
+│░░░ BOTTOM 20% ░░│  ← Avoid: overlaps with CTA overlay, swipe-up
+└─────────────────┘
+```
 
-**Typography best practices**:
-- **Font size**: Large enough to read on mobile (48px+ for headlines)
-- **Contrast**: Text must stand out from background
-- **Simplicity**: Max 5-10 words on image
-- **Font style**: Bold, sans-serif works best (Helvetica, Futura, Montserrat)
-- **Placement**: Don't cover focal point, leave breathing room
-
-### Brand Elements Integration
-
-**Logo placement**:
-- Top-left or bottom-right corner
-- Small and subtle (doesn't compete with focal point)
-- White or black version for contrast
-
-**Brand colors**:
-- Use consistently across campaigns
-- Apply to text overlays, backgrounds, accents
-
-**Visual identity**:
-- Consistent filter/editing style
-- Repeatable composition approach
-- Recognizable aesthetic
-
-## Visual Styles
-
-### 1. Clean & Minimal
-- White or light backgrounds
-- Lots of negative space
-- Single focal point
-- Simple sans-serif fonts
-**Best for**: Premium products, tech, modern brands
-
-### 2. Bold & Vibrant
-- Bright, saturated colors
-- High contrast
-- Energetic composition
-- Eye-catching patterns
-**Best for**: Youth brands, fashion, entertainment
-
-### 3. Lifestyle & Aspirational
-- Real people in beautiful settings
-- Natural lighting
-- Emotional connection
-- Storytelling composition
-**Best for**: Travel, wellness, luxury goods
-
-### 4. Flat Lay & Product Grid
-- Overhead shot, organized layout
-- Multiple products arranged aesthetically
-- Symmetry and balance
-- Curated feel
-**Best for**: E-commerce, beauty, food
-
-### 5. Text-Heavy Announcement
-- Large typography dominates
-- Minimal imagery (texture/pattern background)
-- High contrast colors
-- Clear message hierarchy
-**Best for**: Sales, announcements, events
-
-## Image Specifications
-
-**Feed Image (Square)**:
-- **Dimensions**: 1080 x 1080 pixels (1:1 ratio)
-- **File type**: JPG or PNG
-- **Max file size**: 30MB (but aim for <1MB for fast loading)
-
-**Feed Image (Portrait)**:
-- **Dimensions**: 1080 x 1350 pixels (4:5 ratio)
-- **Use when**: Vertical product shots, full-body fashion, want more screen space
-
-**Stories (optional, but same creative)**:
-- **Dimensions**: 1080 x 1920 pixels (9:16 ratio)
-- Can adapt square concept to vertical format
-
-**Recommendation**: Default to **1080x1080px square** unless portrait makes sense for the product.
+**Reels** — More restricted safe area to avoid overlap with Reels UI controls:
+```
+┌─────────────────┐
+│░░░░░ TOP 14% ░░░│  ← Avoid: overlaps with camera, status bar
+│                 │
+│                 │
+│ 6%│ SAFE AREA │6%│  ← Avoid: overlaps with like, comment, share buttons
+│                 │
+│░░░░░░░░░░░░░░░░░│
+│░░░ BOTTOM 35% ░░│  ← Avoid: overlaps with caption, nav bar
+└─────────────────┘
+```
 
 ## HTML Preview Template
 
 For complete HTML preview templates, reference `../references/html-preview-templates.md`.
 
-**Basic Instagram mockup structure**:
+**Aspect ratio CSS** — Set `padding-bottom` based on confirmed placement:
+
+| Ratio | CSS | Placements |
+|-------|-----|------------|
+| 1:1 | `padding-bottom:100%` | Profile Feed, Explore Image, Explore Carousel |
+| 4:5 | `padding-bottom:125%` | Feed, Explore Home |
+| 9:16 | `padding-bottom:177.78%` | Stories, Reels |
+
+**Basic Instagram mockup structure** (adjust `padding-bottom` per placement):
 
 ```html
 <div style="max-width:375px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
@@ -377,8 +394,8 @@ For complete HTML preview templates, reference `../references/html-preview-templ
       <strong style="font-size:14px;color:#262626;">brand_name</strong>
     </div>
 
-    <!-- Image (1:1 ratio) -->
-    <div style="position:relative;width:100%;padding-bottom:100%;background:{{image_bg}};overflow:hidden;">
+    <!-- Image area (adjust padding-bottom for ratio: 100%=1:1, 125%=4:5, 177.78%=9:16) -->
+    <div style="position:relative;width:100%;padding-bottom:{{ratio_percent}};background:{{image_bg}};overflow:hidden;">
       <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:40px;text-align:center;">
         {{image_content}}
       </div>
@@ -401,14 +418,30 @@ For complete HTML preview templates, reference `../references/html-preview-templ
 </div>
 ```
 
-## Example Instagram Image Ad Concepts
+## Example Instagram Ad Concepts
 
-**Format reminder**: Always use the markdown table format shown in "Phase 1: Text Concept Format" above. Here's an example:
+### Feed Image Example (4:5)
 
 | Concept | Primary Text | Headline | Description | CTA Button | Quality |
 |---------|--------------|----------|-------------|------------|---------|
 | **Product Hero - Minimal**<br>"Introducing the UltraFit Pro" | Introducing the UltraFit Pro. Wireless. Waterproof. 48-hour battery. Your new workout essential. 🎧 | Meet UltraFit Pro Headphones | Free shipping + 30-day returns | Shop Now | 34/35 |
-| ↳ **Image Concept (1080x1080px)**: Colors: #FFFFFF (Clean White) → #1a1a1a (Matte Black) → #0095f6 (Vibrant Blue accent), Composition: Centered product shot with rule of thirds, Focal Point: Sleek black headphones at 30° angle, Typography: "NEW" badge top-right (Helvetica Bold, blue), Style: Clean, minimal, premium tech aesthetic ||||||
+| ↳ **Image Concept**: Colors: #FFFFFF (Clean White) → #1a1a1a (Matte Black) → #0095f6 (Vibrant Blue accent), Composition: Centered product shot with rule of thirds, Focal Point: Sleek black headphones at 30° angle, Typography: "NEW" badge top-right (Helvetica Bold, blue), Style: Clean, minimal, premium tech aesthetic ||||||
+
+### Stories Image Example (9:16)
+
+| Concept | Primary Text | CTA Button | Quality |
+|---------|--------------|------------|---------|
+| **Flash Sale Vertical**<br>"24-hour drop" | 🔥 UltraFit Pro — 50% off for 24 hours only. Tap to grab yours before it's gone. | Shop Now | 32/35 |
+| ↳ **Image Concept**: Colors: #E63946 (Urgent Red) → #1a1a1a (Black), Composition: Full-bleed vertical, product centered in safe zone, Focal Point: Headphones with "50% OFF" overlay, Typography: Bold sans-serif "FLASH SALE" in top-third safe area, Style: High-energy, urgency-driven. **Safe zones**: No content in top 14% or bottom 20%. ||||
+
+### Feed Carousel Example (4:5)
+
+| Concept | Primary Text | Card | Headline | Landing URL | CTA Button |
+|---------|--------------|------|----------|-------------|------------|
+| **Collection Showcase**<br>"Three styles, one mission" | Meet the UltraFit family. Three styles designed for every moment. Which one is yours? 🎧 | Card 1 | UltraFit Pro | /products/pro | Shop Now |
+| | | Card 2 | UltraFit Sport | /products/sport | Shop Now |
+| | | Card 3 | UltraFit Studio | /products/studio | Shop Now |
+| ↳ **Card Image Concepts**: Card 1: Product on white, centered, minimal premium feel. Card 2: Athlete mid-run wearing headphones, outdoor setting. Card 3: Person in home studio, warm lighting, lifestyle. ||||||
 
 ## Common Pitfalls to Avoid
 
