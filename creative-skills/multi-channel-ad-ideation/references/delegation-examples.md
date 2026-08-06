@@ -186,7 +186,7 @@ After user confirms text concepts, delegate Phase 2 to channel skills:
 [Read channels/instagram/SKILL.md Phase 2 section]
 [Follow HTML Generation and Preview Workflow]
 [MANDATORY: Write HTML file + call mcp__tdx-studio__open_file]
-[Auto-detect instagram-ad-*.png if using image-gen skill]
+[Auto-detect instagram-*-ad-*.png if using image-gen skill]
 ```
 
 ## Maintaining Context Across Delegations
