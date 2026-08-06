@@ -93,7 +93,7 @@ tdx ps rt list --json | jq '.[] | {
 tdx tables "<event_db>.*" --json | jq -r '.[].name'
 ```
 
-**Step 5:** Define ID stitching keys (td_client_id, email, canonical_id)
+**Step 5:** Define ID stitching keys (td_client_id, email, canonical_id) — only use columns that exist in event tables (verify with tdx describe <db> <table>)
 
 **Step 6:** Define RT attributes based on use case (single, list, counter types)
 
@@ -130,12 +130,16 @@ tdx api "/audiences/<ps_id>/realtime_key_events" --type cdp -X POST --data '{
 ```
 
 **7b. Configure ID Stitching**
+**⚠️ CRITICAL: `extLookupKey` must be the Profile Key column from the Parent Segment master table (e.g., `guest_id`, `customer_id`), NOT a stitching key like `email`. Find it with:**
+```bash
+tdx ps desc <ps_id> --json | jq '.master'
+
 ```bash
 tdx api "/audiences/<ps_id>/realtime_setting" --type cdp -X PATCH --data '{
   "keyColumns": [
     {"name": "td_client_id", "validRegexp": null, "invalidTexts": [], "internal": false}
   ],
-  "extLookupKey": "<primary_key>"
+  "extLookupKey": "<profile_key>"
 }'
 ```
 
@@ -210,9 +214,13 @@ Error: "sections[0].payload.node_id.definition.attribute_payload": ["Attribute p
 ```json
 // ❌ FAILS
 "stringBuilder": []
+"segmentPayload": []
+"keyEventFilters": {"type": "And", "conditions": []}
 
 // ✅ WORKS
 "stringBuilder": null
+"segmentPayload": null
+"keyEventFilters": null
 ```
 
 **REQUIRED VALIDATION STEP:**
@@ -271,8 +279,9 @@ curl -X POST 'https://api-cdp.treasuredata.com/entities/realtime_personalization
         \"entryCriteria\": {
           \"keyEventCriteria\": {
             \"keyEventId\": \"<key_event_id>\",
-            \"keyEventFilters\": {\"type\": \"And\", \"conditions\": []}
-          }
+            \"keyEventFilters\": null
+          },
+          \"profileCriteria\": null
         },
         \"payload\": {
           \"$PAYLOAD_NODE_ID\": {
@@ -280,10 +289,13 @@ curl -X POST 'https://api-cdp.treasuredata.com/entities/realtime_personalization
             \"definition\": {
               \"attributePayload\": [
                 {\"realtimeAttributeId\": \"<attr_id>\", \"outputName\": \"last_product\"}
-              ]
+              ],
+              \"segmentPayload\": null,
+              \"stringBuilder\": null
             }
           }
-        }
+        },
+        \"includeSensitive\": false
       }]
     },
     \"relationships\": {
