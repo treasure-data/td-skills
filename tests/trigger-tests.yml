@@ -148,9 +148,12 @@ tests:
   # === Email & Engage Skills ===
 
   - prompt: "Create an email campaign for my segment"
-    expected: email-campaign
+    expected: engage
 
   - prompt: "Manage Engage campaigns using tdx engage commands"
+    expected: engage
+
+  - prompt: "Build an HTML email template and push it to Engage"
     expected: engage
 
   # === Document Skills ===
