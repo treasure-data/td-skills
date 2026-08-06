@@ -1,6 +1,6 @@
 ---
 name: activation
-description: Configures CDP activations for exporting segment/journey audiences to external destinations. Covers connection discovery, activation YAML structure, schedule options (daily/weekly/monthly/cron), column selection with masking, behavior data export, and notifications. Use when setting up destination exports for segments, configuring journey activation steps, or setting up schedules and column mappings. Always run `tdx connection list` and `tdx connection schema` first.
+description: Configures CDP activations for exporting segment/journey audiences to external destinations. Covers connection discovery, activation YAML structure, schedule options (daily/weekly/monthly/cron), column selection with masking, multi-table behavior data export (join up to 4 behavior tables via `behaviors:`), and notifications. Use when setting up destination exports for segments, configuring journey activation steps, or setting up schedules and column mappings. Always run `tdx connection list` and `tdx connection schema` first.
 ---
 
 # tdx Activation - CDP Activation Configuration
@@ -115,19 +115,29 @@ notification:
 
 ## Behavior Data Export
 
+Join event/history from **behavior tables** alongside audience columns. Use the plural `behaviors:` list — each entry is its own mini-export (pick a table, how many rows per customer, which columns). Up to **4** behavior tables per activation.
+
 ```yaml
-behavior:
-  behavior_table: purchase_history
-  join_strategy: Last              # All | First | Last | Top-N
-  join_row: 10                     # Rows for Top-N
-  formatting: rows                 # rows | cols
-  order_by:
-    - key: timestamp
-      order: desc
-  columns:
-    - name: product_name
-    - name: order_total
+behaviors:                         # Up to 4 entries
+  - behavior_table: purchase_history
+    join_strategy: Top-N           # All | First | Last | Top-N
+    join_row: 10                   # Row limit for Top-N (defaults to 1 for First/Last; unset for All)
+    formatting: rows               # rows | cols
+    order_by:
+      - key: timestamp
+        order: descending          # ascending | descending — applied before the join
+    columns:                       # Plain strings, or `- name: col` with `visibility: masked`
+      - product_name
+      - order_total
+  - behavior_table: page_views     # Combine multiple tables in one export
+    join_strategy: Top-N
+    join_row: 5
+    columns:
+      - url
+      - timestamp
 ```
+
+**Prefer `behaviors:` (plural).** The singular `behavior:` (a single object, no list) is deprecated backward-compat and will be removed — emit `behaviors:` for new configs. Setting both `behavior` and `behaviors` is an error.
 
 ## Common Issues
 
