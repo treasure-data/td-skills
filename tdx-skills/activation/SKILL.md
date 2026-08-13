@@ -1,6 +1,17 @@
 ---
 name: activation
 description: Configures CDP activations for exporting segment/journey audiences to external destinations. Covers connection discovery, activation YAML structure, schedule options (daily/weekly/monthly/cron), column selection with masking, multi-table behavior data export (join up to 4 behavior tables via `behaviors:`), and notifications. Use when setting up destination exports for segments, configuring journey activation steps, or setting up schedules and column mappings. Always run `tdx connection list` and `tdx connection schema` first.
+owner: tomohiro.ogoke@treasure.ai
+tier: 1
+classification: product
+phase: 1
+known-limitations: |
+  - `behaviors:` supports up to 4 tables; exceeding this limit causes an API error
+  - Setting both `behavior:` (singular, deprecated) and `behaviors:` in the same YAML is an error
+  - `join_row` is ignored for `All` strategy and defaults to 1 for `First`/`Last` — only meaningful for `Top-N`
+  - `order_by` is required on every entry (all strategies); `formatting` is required for `Top-N` but defaults to `rows` for `First`/`Last`. Omitting a required field is an API error
+  - `behavior_table` must be the behavior source name from `tdx sg fields` (e.g. `behavior_purchase_history`), not the console display name
+  - Each behavior table in `behaviors:` must also be referenced by a `Behavior` condition in the segment `rule:`, and the `order_by` key must be one of the entry's `columns`
 ---
 
 # tdx Activation - CDP Activation Configuration
@@ -117,24 +128,35 @@ notification:
 
 Join event/history from **behavior tables** alongside audience columns. Use the plural `behaviors:` list — each entry is its own mini-export (pick a table, how many rows per customer, which columns). Up to **4** behavior tables per activation.
 
+Rules the API enforces (each surfaces as a push error otherwise):
+- `order_by` is required on **every** entry (all strategies). `formatting` is required for `Top-N`; for `First`/`Last` it defaults to `rows` when omitted.
+- `behavior_table` must be the exact behavior source name from `tdx sg fields` (e.g. `behavior_purchase_history`).
+- The `order_by` `key` must also appear in that entry's `columns` (else: `'<key>' is not included in export columns`).
+- Each behavior table used here must also be referenced by a `Behavior` condition in the segment `rule:` (else: `is not included in Segment rules`).
+
 ```yaml
 behaviors:                         # Up to 4 entries
-  - behavior_table: purchase_history
+  - behavior_table: behavior_purchase_history   # Source name from `tdx sg fields`
     join_strategy: Top-N           # All | First | Last | Top-N
     join_row: 10                   # Row limit for Top-N (defaults to 1 for First/Last; unset for All)
-    formatting: rows               # rows | cols
-    order_by:
+    formatting: rows               # rows | cols — required for Top-N
+    order_by:                      # Required on every entry
       - key: timestamp
         order: descending          # ascending | descending — applied before the join
     columns:                       # Plain strings, or `- name: col` with `visibility: masked`
+      - timestamp                  # order_by key must be among the columns
       - product_name
       - order_total
-  - behavior_table: page_views     # Combine multiple tables in one export
+  - behavior_table: behavior_page_views         # Combine multiple tables in one export
     join_strategy: Top-N
     join_row: 5
+    formatting: rows
+    order_by:
+      - key: timestamp
+        order: descending
     columns:
-      - url
       - timestamp
+      - url
 ```
 
 **Prefer `behaviors:` (plural).** The singular `behavior:` (a single object, no list) is deprecated backward-compat and will be removed — emit `behaviors:` for new configs. Setting both `behavior` and `behaviors` is an error.

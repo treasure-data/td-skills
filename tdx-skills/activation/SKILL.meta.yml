@@ -1,0 +1,22 @@
+# Re-validation log for activation
+# Record each validation run: date, model, result, and notes.
+
+validations:
+  - date: 2026-08-13
+    model: claude-sonnet-5
+    result: pass
+    tester: tomohiro.ogoke@treasure.ai
+    notes: >
+      Independent BLIND validation (skill not loaded) on a live production CDP environment:
+      a Sonnet 5 agent, given only the tdx CLI's help/describe/error output, authored and
+      pushed a real segment activation whose `behaviors:` list joins two behavior tables in
+      one export. The production activation API accepted it (activation created,
+      `scheduleType: none`, did not auto-run). Independently reproduced the schema facts now
+      in SKILL.md: `behavior_table` must equal the `tdx sg fields` source name; `order_by`
+      (a `{key, order}` list) is required on every entry including `All`; `formatting`
+      (`rows`|`cols`) required; `join_row` is numeric for `Top-N` and null otherwise. Two
+      constraints newly surfaced and added to SKILL.md: (1) the `order_by` `key` must appear
+      in the entry's `columns` (else "'<key>' is not included in export columns"); (2) each
+      behavior table used in `behaviors:` must also be referenced by a `Behavior` condition in
+      the segment `rule:` (else "is not included in Segment rules"). One throwaway test segment
+      created on the dedicated test parent is being removed via the CDP console.
