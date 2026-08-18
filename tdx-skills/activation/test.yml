@@ -1,0 +1,89 @@
+# Regression happy-path for the activation skill's multi-table behavior export guidance.
+# Proves the plural `behaviors:` schema the skill documents. Generic example
+# names/paths only (no real resources) — substitute a live segment/connection to run.
+#
+# Trigger matching lives in tests/trigger-tests.yml (multi-table prompt at "Export my
+# segment to S3 and join in each customer's recent purchases and page views ..." ->
+# expected: activation). The scenarios below cover the YAML/CLI behaviors the skill teaches.
+skill: activation
+scenarios:
+  - name: activation with no behaviors at all (baseline)
+    description: >
+      Behavior export is optional — a plain segment activation that exports only audience
+      columns (no `behavior:` and no `behaviors:` block) is valid.
+    setup: []
+    run:
+      - tdx sg validate ./segment-activation-no-behavior.yml
+    expect: >
+      Validates cleanly. The activation exports only the selected audience columns (or
+      `all_columns: true`); no behavior join is added. Exit 0.
+
+  - name: single behavior table via plural behaviors:
+    description: >
+      A segment activation with one behavior entry uses the plural `behaviors:` list
+      (not the deprecated singular `behavior:`), with `join_strategy`, `order_by`, and
+      plain-string `columns`. `join_row` is unset for the `All` strategy.
+    setup: []
+    run:
+      - tdx sg validate ./segment-activation-single-behavior.yml
+    expect: >
+      Validates cleanly. The activation exports audience columns plus the one behavior
+      table's columns. `order_by` is present; `join_row` is absent for `join_strategy: All`.
+      Exit 0.
+
+  - name: multi-table (2+) behaviors: config
+    description: >
+      Up to 4 behavior tables can be joined in one activation — e.g. purchase_history +
+      page_views — each its own entry under `behaviors:` with its own strategy/columns.
+      `Top-N` entries carry `formatting` and `order_by`.
+    setup: []
+    run:
+      - tdx sg validate ./segment-activation-multi-behavior.yml
+    expect: >
+      Validates cleanly with 2 entries under `behaviors:`. Each entry keeps its own
+      `behavior_table`, `join_strategy`, `join_row`, `formatting`, `order_by`, and
+      `columns`. Exit 0.
+
+  - name: Top-N entry without formatting/order_by is rejected by the API
+    description: >
+      `order_by` is required on every behavior entry; `formatting` is additionally
+      required for `Top-N` (unlike `First`/`Last`, where it defaults to `rows`). A Top-N
+      entry omitting both must be refused.
+    setup: []
+    run:
+      - tdx sg push ./segment-activation-topn-missing-fields.yml -y
+    expect: >
+      The activation is refused with `formatting` / `order_by` "can't be blank" errors
+      naming the Top-N behavior entry. Non-zero exit.
+
+  - name: deprecated singular behavior: is accepted with a deprecation warning
+    description: >
+      The singular `behavior:` object remains accepted for backward compat but is
+      deprecated — validation warns and points to the plural form rather than failing.
+    setup: []
+    run:
+      - tdx sg validate ./segment-activation-singular-behavior.yml
+    expect: >
+      Validates (exit 0) but emits a deprecation warning naming `behavior:` and advising
+      migration to the plural `behaviors:` list.
+
+  - name: setting both behavior: and behaviors: is an error
+    description: >
+      A single activation must not carry both the singular and plural forms — the two
+      are mutually exclusive.
+    setup: []
+    run:
+      - tdx sg validate ./segment-activation-both-behavior-forms.yml
+    expect: >
+      Refuses with a message that `behavior` and `behaviors` cannot both be set. Non-zero
+      exit. Nothing is pushed.
+
+  - name: exceeding 4 behavior tables is rejected
+    description: >
+      The `behaviors:` list caps at 4 entries per activation; a fifth is refused rather
+      than silently truncated.
+    setup: []
+    run:
+      - tdx sg validate ./segment-activation-five-behaviors.yml
+    expect: >
+      Refuses with a message stating the 4-table limit for `behaviors:`. Non-zero exit.
