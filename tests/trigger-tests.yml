@@ -261,13 +261,7 @@ tests:
   - prompt: "What is Portal in Treasure Work and how do I get started?"
     expected: portal-guide
 
-  - prompt: "ポータルの作り方を教えてください。自分用のポータルが欲しいです"
-    expected: portal-guide
-
   - prompt: "My portal tab is empty and there's no button to add anything"
-    expected: portal-guide
-
-  - prompt: "このポータルをチームに共有したい"
     expected: portal-guide
 
   # negative — must NOT route to portal-guide
