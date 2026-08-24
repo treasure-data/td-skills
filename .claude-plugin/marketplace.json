@@ -197,7 +197,7 @@
     },
     {
       "name": "treasure-work-skills",
-      "description": "Treasure Work-specific skills including workspace document management, skill creation, agent authoring and review, and UI rendering formats for grid dashboards and action reports. Uses the renamed `mcp__work__*` MCP tool namespace.",
+      "description": "Treasure Work-specific skills including workspace document management, skill creation, agent authoring and review, Portal onboarding guidance, and UI rendering formats for grid dashboards and action reports. Uses the renamed `mcp__work__*` MCP tool namespace.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -209,7 +209,8 @@
         "./treasure-work-skills/work-agent",
         "./treasure-work-skills/agent-review",
         "./treasure-work-skills/web-search",
-        "./treasure-work-skills/graflow"
+        "./treasure-work-skills/graflow",
+        "./treasure-work-skills/portal-guide"
       ]
     }
   ]

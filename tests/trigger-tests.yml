@@ -257,3 +257,16 @@ tests:
 
   - prompt: "Set up a multi-step automation pipeline with AI decision points"
     expected: graflow
+
+  - prompt: "What is Portal in Treasure Work and how do I get started?"
+    expected: portal-guide
+
+  - prompt: "My portal tab is empty and there's no button to add anything"
+    expected: portal-guide
+
+  # negative — must NOT route to portal-guide
+  - prompt: "Build me a dashboard of last month's revenue with KPI tiles"
+    expected: grid-dashboard
+
+  - prompt: "Build an interactive dashboard component to visualize ingestion volume"
+    expected: react-dashboard
