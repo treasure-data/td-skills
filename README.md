@@ -80,6 +80,10 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[field-agent-skills/documentation](./field-agent-skills/documentation)** - Comprehensive templates and guidelines for documenting Field Agents with standardized structure, system prompts, and tool specifications
 - **[field-agent-skills/visualization](./field-agent-skills/visualization)** - Professional Plotly visualization best practices with TD color palette, chart specifications, and formatting standards for executive-ready visualizations
 
+### AI Signals Skills
+
+- **[ai-signals-skills/ai-signals](./ai-signals-skills/ai-signals)** - Set up AI Signals (PrecisionML) via the ML Batch API: RFM segmentation, CLTV prediction with churn, Next Best Action, and Next Best Product - source data discovery, workflow generation, output verification, and activation
+
 ### Analysis Skills
 
 - **[analysis-skills/grid-dashboard](./analysis-skills/grid-dashboard)** - YAML format reference for grid dashboards rendered via `preview_grid_dashboard`: page structure, cell types, layout rules
@@ -150,6 +154,7 @@ Mirror of `studio-skills` updated for the renamed `mcp__work__*` MCP namespace (
    /plugin install studio-skills@td-skills
    /plugin install treasure-work-skills@td-skills
    /plugin install creative-skills@td-skills
+   /plugin install ai-signals-skills@td-skills
    ```
 
 ### Invoking Skills
@@ -200,10 +205,13 @@ Once installed, explicitly reference skills using the `skill` keyword to trigger
 "Use the multi-channel-ad-ideation skill to brainstorm ad concepts for our product launch"
 "Use the brand-compliance skill to review this email for brand guideline compliance"
 "Use the brand-onboarding skill to set up brand guidelines for my company"
+"Use the ai-signals skill to set up RFM segmentation on my orders table"
+"Use the ai-signals skill to predict customer lifetime value and churn"
+"Use the ai-signals skill to build next best product recommendations"
 ```
 
 Tips for triggering skills:
-- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, identify-top-key-values, id-graph-canonical-id-size, id-graph-ids-to-canonical-id, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, foundry-agent, foundry-agent-test, foundry-agent-prompt, deployment, documentation, visualization, multi-channel-ad-ideation, brand-compliance, brand-onboarding)
+- Include the skill name (Trino, Hive, time-filtering, Trino CLI, TD MCP, rt-setup-personalization, rt-setup-triggers, rt-config-setup, rt-config-events, rt-config-attributes, rt-config-id-stitching, rt-personalization, rt-journey-create, rt-journey-activations, rt-journey-monitor, activations, identity, identify-top-key-values, id-graph-canonical-id-size, id-graph-ids-to-canonical-id, digdag, workflow, dbt, JavaScript SDK, pytd, tdx, tdx-basic, validate-segment, journey, validate-journey, connector-config, foundry-agent, foundry-agent-test, foundry-agent-prompt, deployment, documentation, visualization, multi-channel-ad-ideation, brand-compliance, brand-onboarding, ai-signals)
 - Use the word "skill" in your request
 - Be specific about what you want to accomplish
 
