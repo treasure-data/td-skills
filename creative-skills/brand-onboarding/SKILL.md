@@ -40,7 +40,7 @@ Once created, the `brand-guidelines.md` file is automatically used by:
 
 ### Brand Folder Structure
 
-Your brand guidelines are organized in a dedicated, easy-to-find location:
+Your brand guidelines are organized in a dedicated, well-organized, easy-to-find location:
 
 ```
 ~/Documents/Brand Guidelines/{Company Name}/
@@ -51,13 +51,7 @@ Your brand guidelines are organized in a dedicated, easy-to-find location:
   └── assets/                      # Future brand assets (fonts, images)
 ```
 
-**Benefits**:
-- **Easy to find**: Documents folder is familiar to all users
-- **Well-organized**: Each brand has its own folder
-- **Portable**: Zip and share the entire brand package
-- **Asset management**: Keep logos and brand files together
-
-When brand files are created, you'll receive clickable **[Open Folder]** and **[View Guidelines]** links to easily access your brand materials.
+When brand files are created, you'll receive clickable **[Open Folder]** and **[View Guidelines]** links to access your brand materials.
 
 ---
 
@@ -68,12 +62,12 @@ The wizard uses a two-phase approach to reduce overwhelm and let you start quick
 **Phase 1: Core Branding (Required - ~8 minutes)**
 - Get functional brand guidelines fast
 - Start using creative skills immediately
-- Score: ~28/40 (functional)
+- ~70% complete (functional)
 
 **Phase 2: Comprehensive Enhancement (Optional - ~7 minutes)**
 - Add messaging, legal, accessibility standards
 - Production-ready compliance
-- Score: 35-40/40 (fully compliant)
+- 100% complete (fully compliant)
 
 After Phase 1, you choose: start using now or enhance with Phase 2.
 
@@ -99,28 +93,11 @@ Options:
    → 15-minute wizard asks all questions step-by-step
 ```
 
-**Path A: Paste Text Extraction** (Fastest - ~5 minutes)
-- Paste your existing brand guidelines, style guide, or brand deck text
-- Claude automatically extracts:
-  - Colors (hex codes, rgb values, color names)
-  - Fonts (font-family names, weights, sizes)
-  - Brand voice/tone (personality descriptors)
-  - Approved/prohibited terminology (word lists)
-  - Legal requirements (footer templates, disclaimers)
-- Wizard pre-fills extracted data
-- You only answer questions for MISSING sections
+**Path A: Paste Text** (~5 min) — Paste existing brand docs. Claude auto-extracts colors, fonts, voice, terms, and legal requirements. You only answer questions for missing sections.
 
-**Path B: File/URL Extraction**
-- Provide file path (e.g., `./brand-deck.pdf`) or URL (e.g., `https://acme.com/brand`)
-- Claude reads file or fetches URL content
-- Same extraction logic as Path A
-- Review and confirm extracted data
+**Path B: File/URL** (~5 min) — Provide a file path or URL. Same extraction as Path A.
 
-**Path C: Guided Wizard** (From Scratch - ~15 minutes)
-- No existing documentation needed
-- Claude asks all questions step-by-step
-- Interactive guidance with examples
-- Perfect for new brands or brand refreshes
+**Path C: From Scratch** (~15 min) — No existing docs needed. Claude asks all questions step-by-step.
 
 ---
 
@@ -148,9 +125,9 @@ Specify how tone adapts by context (Product Specs, Social Media, Support, etc.).
 After completing Phase 1 questions, you'll see:
 
 ```
-Core brand guidelines created! (Score: ~28/40)
+Core brand guidelines created! (~70% complete)
 
-Phase 1 covers visual and voice. Phase 2 adds Messaging, Legal & Accessibility compliance for production-ready content (38/40).
+Phase 1 covers visual and voice. Phase 2 adds Messaging, Legal & Accessibility compliance for production-ready content (100%).
 
 What would you like to do?
 1. Start using now (can enhance later)
@@ -167,7 +144,7 @@ Choice: ___
 
 **If you choose "Continue to Phase 2":**
 - Phase 2 questions (~7 minutes)
-- Complete all sections for 35-40/40 score
+- Complete all sections for 100% completeness
 
 ---
 
@@ -192,125 +169,51 @@ WCAG 2.1 AA compliance: color contrast (4.5:1), alt text requirement, min font s
 
 ### Step 16: Generate, Validate & Test
 
-Different validation based on which phase(s) completed:
-
-**After Phase 1 Only:**
-
 **1. Generate File**
-- Create `brand-guidelines.md` with Sections 1-4 complete
-- Sections 5-7 marked as "Optional - not configured"
+- Create/update `brand-guidelines.md` with completed sections
+- Phase 1 only: Sections 5-7 marked "Optional - not configured"
 
-**2. Quick Validation**
-- Brand voice defined (2-4 attributes)
-- At least 2 brand colors with hex codes
-- Typography defined (heading + body fonts)
-- At least 1 contextual tone defined
+**2. Validate**
+- Phase 1: Voice (2-4 attributes), 2+ colors with hex codes, typography, 1+ tone
+- Phase 2 adds: 5+ approved terms, 3+ prohibited terms, 1+ legal requirement, accessibility standards
 
-**3. Quick Test**
-- Generate mini sample email ad
-- Run quick compliance check
-- Expected score: 25-30/40 (Functional)
+**3. Test**
+- Generate sample email ad using the guidelines
+- Run brand-compliance check
+- Phase 1 expected: ~70% compliant | Phase 2 target: ~100% compliant
 
-**4. Success Message**
-```
-Core brand guidelines created!
+**4. Refinement** (if < ~100%)
+- Identify missing/weak sections, ask follow-up questions, re-test
 
-Sample ad scored: 28/40 (Functional)
+**5. Logo Files**
+- Ask user to provide logo files via one of:
+  - Upload in chat — Claude saves to `~/Documents/Brand Guidelines/{Company Name}/logos/`
+  - Add directly to the folder: `~/Documents/Brand Guidelines/{Company Name}/logos/`
+- If no logos available yet, note the folder location for later
 
-📁 Saved to: ~/Documents/Brand Guidelines/{Company Name}/brand-guidelines.md
-
-[Open Folder]  [View Guidelines]
-
-Your brand folder contains:
--brand-guidelines.md
--logos/ folder (for logo files)
-
-You can now start using creative skills!
-
-To make guidelines comprehensive later:
-- Say: "Complete my brand guidelines"
-- Or: "Add legal compliance to my brand guidelines"
-
----
+**6. Completion**
+- Save to `~/Documents/Brand Guidelines/{Company Name}/brand-guidelines.md`
+- Show **[Open Folder]** and **[View Guidelines]** links
+- Phase 1 only: suggest completing Phase 2 later
 
 **What's Next?**
 
-Your brand guidelines are now saved and ready to use! All creative skills will automatically reference these guidelines:
+All creative skills automatically reference your brand guidelines:
 - Generate ads: "Create email ads for product launch"
 - Review content: "Check this Instagram post for brand compliance"
 - Multi-channel campaigns: "Create multi-channel campaign for summer sale"
+- Update guidelines: "Update my brand guidelines"
 
 No need to re-run this wizard unless creating guidelines for a different brand.
-```
 
-**After Phase 1 + Phase 2:**
-
-**1. Generate/Update File**
-- Update `brand-guidelines.md` with all 8 sections complete
-
-**2. Full Validation**
-- All Phase 1 elements
-- Approved terminology list (min 5 terms)
-- Prohibited terms list (min 3 terms)
-- At least one legal requirement
-- Accessibility standards defined
-
-**3. Comprehensive Test**
-- Generate comprehensive sample email ad
-- Run full brand-compliance check
-- Target score: 35+/40 (Mostly/Fully Compliant)
-
-**4. Refinement Loop** (if needed)
-- If sample scores < 35/40: "Let's improve your guidelines"
-- Identify missing/weak sections
-- Ask follow-up questions
-- Re-test until 35+/40
-
-**5. Success Confirmation**
-```
-Comprehensive brand guidelines complete!
-
-Sample ad scored: 38/40 (Fully Compliant)
-
-Your guidelines now include:
--Core branding (voice, tone, visual identity)
--Messaging standards (approved/prohibited terms)
--Legal compliance (CAN-SPAM, TCPA, FTC)
--Accessibility standards (WCAG 2.1 AA)
-
-📁 Saved to: ~/Documents/Brand Guidelines/{Company Name}/brand-guidelines.md
-
-[Open Folder]  [View Guidelines]
-
-Your brand folder contains:
--brand-guidelines.md
--logos/ folder
--assets/ folder
-
-You can now create fully compliant branded content!
-
-To update guidelines: "Update my brand guidelines"
-
----
-
-**What's Next?**
-
-Your brand guidelines are now saved and ready to use! All creative skills will automatically reference these guidelines:
-- Generate ads: "Create email ads for product launch"
-- Review content: "Check this Instagram post for brand compliance"
-- Multi-channel campaigns: "Create multi-channel campaign for summer sale"
-
-No need to re-run this wizard unless creating guidelines for a different brand.
-```
-
-**See**: [extraction-from-docs.md](examples/extraction-from-docs.md) for text extraction patterns, confidence levels, and time savings examples.
+**See**: [extraction-from-docs.md](examples/extraction-from-docs.md) for text extraction patterns and time savings examples.
 
 ---
 
 ## Common Usage Patterns
 
-- **Quick Start (Phase 1 only)**: 8-minute setup → functional guidelines (28/40 score)
-- **Comprehensive (Phase 1+2)**: 16-minute setup → production-ready (38/40 score)
+- **Quick Start (Phase 1 only)**: 8-minute setup → functional guidelines (~70% complete)
+- **Comprehensive (Phase 1+2)**: 16-minute setup → production-ready (100% complete)
 - **Text Extraction**: 5-8 minutes with existing docs (auto-fills wizard questions)
 - **Enhance Later**: Add Phase 2 to existing Phase 1 guidelines anytime
 - **Update Existing**: Modify specific elements (colors, fonts, voice) as needed
@@ -349,7 +252,7 @@ All creative skills auto-detect `brand-guidelines.md` in project root and use it
 
 ## Troubleshooting
 
-**Low score (< 35/40)**: Wizard identifies missing sections and asks follow-up questions (common: CTA color, prohibited terms, legal footer).
+**Low score (< 100%)**: Wizard identifies missing sections and asks follow-up questions (common: CTA color, prohibited terms, legal footer).
 
 **Extraction didn't find my colors**: Colors need hex codes, not just names. Wizard asks for missing colors manually.
 
@@ -365,7 +268,7 @@ After onboarding completes:
 
 **Immediate actions**:
 1. Guidelines saved to project root
-2. Validated with sample ad (35+/40 score)
+2. Validated with sample ad (~100% compliant)
 3. Ready for all creative skills
 
 **Use your guidelines**:
@@ -388,33 +291,3 @@ After onboarding completes:
 - **instagram skill**: Generate Instagram posts with your brand identity
 - **sms skill**: Create SMS campaigns following your brand voice
 
----
-
-## Summary
-
-**brand-onboarding skill**: Interactive wizard to create brand guidelines with flexible two-phase approach.
-
-**Two-Phase Approach**:
-- **Phase 1 (Core - ~8 min)**: Get functional guidelines fast (28/40 score)
-- **Phase 2 (Enhancement - ~7 min)**: Add comprehensive compliance (38/40 score)
-- **Choice point**: Decide after Phase 1 whether to continue or start using
-
-**Setup time**:
-- Quick start (Phase 1 only): ~8 minutes → 28/40 score
-- Comprehensive (Phase 1 + 2): ~16 minutes → 38/40 score
-- With text extraction: ~5-8 minutes (pre-fills both phases)
-
-**Output**: `brand-guidelines.md` in project root with up to 8 sections
-
-**Flexibility**:
-- Start using immediately after Phase 1
-- Enhance with Phase 2 anytime later
-- Lower barrier to entry, progressive enhancement
-
-**Validation**: Tests with sample ad, validates based on phase completion
-
-**Integration**: All creative skills auto-detect and use guidelines
-
-**Paths**: Paste text (fastest), file/URL extraction, or guided wizard
-
-**One-time setup**: Guidelines persist across all sessions and projects
