@@ -353,6 +353,6 @@ After configuring ID stitching:
 
 ## Resources
 
-- [ID Stitching Documentation](https://docs.treasuredata.com/display/public/PD/ID+Stitching)
-- [Profile Merging Guide](https://docs.treasuredata.com/display/public/PD/Profile+Merging)
-- [Regex Pattern Reference](https://docs.treasuredata.com/display/public/PD/Regular+Expressions)
+- [ID Stitching Documentation](https://docs.treasuredata.com/products/customer-data-platform/real-time/real-time)
+- [Profile Merging Guide](https://docs.treasuredata.com/products/customer-data-platform/real-time/real-time)
+- [Regex Pattern Reference](https://docs.treasuredata.com/products/customer-data-platform/real-time/real-time)

@@ -384,5 +384,5 @@ After configuring attributes:
 
 ## Resources
 
-- [RT Attributes Documentation](https://docs.treasuredata.com/display/public/PD/RT+Attributes)
-- [Data Sensitivity Guide](https://docs.treasuredata.com/display/public/PD/Data+Privacy)
+- [RT Attributes Documentation](https://docs.treasuredata.com/products/customer-data-platform/real-time/real-time)
+- [Data Sensitivity Guide](https://docs.treasuredata.com/products/customer-data-platform/real-time/real-time)

@@ -97,4 +97,4 @@ select count(*) from mydb.events where td_interval(time, '-1d', 'JST') -- JST
 
 ## Resources
 
-- https://api-docs.treasuredata.com/en/tools/presto/api#td_interval
+- https://docs.treasuredata.com/products/customer-data-platform/data-workbench/queries/sql-reference/td_trino_function_reference#td_interval
