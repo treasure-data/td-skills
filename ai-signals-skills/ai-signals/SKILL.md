@@ -112,7 +112,31 @@ The **llm-workflow** skill is the closest structural precedent for this `td>` pr
 minimum history, per-action or per-item volume) and report pass/fail. No signal performs
 missing-value handling, so fix problems in the prep SQL first.
 
-**4. Generate the project.** Ask the user which case applies before writing any files:
+Then **post the plan** and get explicit confirmation. This is the single sign-off gate - it
+replaces the confirmation at the end of [data-discovery.md](references/data-discovery.md), which
+only covers the source data. Post it in the conversation, not as a file in the project directory:
+`tdx wf push` uploads the whole directory as one revision, so a `plan.md` beside the `.dig` is
+deployed to TD and then drifts as the workflow changes.
+
+| Section | Content |
+|---|---|
+| Source | table, column mapping, status and negative filters, verification numbers with pass/fail |
+| Prep | prep-SQL output table name and the column schema handed to the API |
+| Signal | `solution_name`, and every `solution_arguments` value with the reason for it |
+| Output | output table name and schema, from the signal's reference file |
+| Files | project directory, the `.dig` files to create or edit, and which step-4 case applies |
+| Cadence | one workflow or two, `model_name`, and the schedule for each |
+
+The cadence row decides the **file layout**, which is why it belongs here and not at step 7. Ask
+how fresh the scores need to be and how often the user can afford to retrain - not "what
+schedule?". Combined train and predict is right when those two intervals match (CLTV monthly is
+the common case). Split them when the affordable retrain interval is longer than the needed
+refresh interval (NBP: train weekly, predict daily). Splitting also forces a **fixed**
+`model_name` - the references' `${session_id}` names do not resolve across sessions - so deciding
+after generation means editing both files. RFM is single-stage and always one workflow.
+
+**4. Generate the project.** Once the plan is confirmed, ask the user which case applies before
+writing any files:
 
 | Case | Before generating |
 |---|---|
@@ -143,9 +167,10 @@ distribution sanity. For sessions, attempts, task timeline, logs, and retry-from
 **workflow** skill (`tdx wf`).
 
 **7. Schedule** at the signal's recommended cadence. Training is expensive and infrequent;
-prediction is cheap and frequent, so split stages into separate workflows with a fixed
-`model_name` when the cadences differ - that is the pull-first case in step 4. `schedule:` syntax
-and options: **digdag** skill, `references/scheduling.md`.
+prediction is cheap and frequent; whether the stages are split into separate workflows with a
+fixed `model_name` was decided in step 3. Adding the split to an already-generated project is the
+pull-first case in step 4. `schedule:` syntax and options: **digdag** skill,
+`references/scheduling.md`.
 
 **8. Report results** using the reference's analysis queries. Always pair scores with their
 quality metrics - CLTV gini and calibration, NBA lift and ESS, NBP map and ndcg.

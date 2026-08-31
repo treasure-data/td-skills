@@ -157,9 +157,10 @@ order by 2 desc
 Aim for a few hundred interactions per action. A reward rate below roughly 1% weakens tuning -
 consider layered rewards or consolidating rare actions.
 
-## Step 4: Confirm
+## Step 4: Hand Off to the Plan
 
-Present the table, the mapped columns, any status filter, and the verification numbers. Get
-explicit confirmation before generating the workflow. If no single suitable table exists, the
-user prepares one by joining or unioning their data - that is input preparation, not part of the
-signal workflow.
+Carry the table, the mapped columns, any status filter, and the verification numbers into the plan
+block at the end of step 3 of `SKILL.md`. That block is the single confirmation gate - it also
+covers the files to be generated and the train/predict cadence - so do not ask for a separate
+sign-off here. If no single suitable table exists, the user prepares one by joining or unioning
+their data - that is input preparation, not part of the signal workflow.
