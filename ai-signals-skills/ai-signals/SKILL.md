@@ -7,30 +7,21 @@ classification: product
 phase: 1
 last-validated: 2026-08-25
 validation-model: claude-opus-5
-known-limitations: |
-  Authored from the public AI Signals documentation, not from live runs against a TD account -
-  re-verify parameter defaults and output column names against docs.treasure.ai before release.
-  Historical/backfill scoring is expressed via `tdx wf run --session-time`; the ML Batch API
-  documents no first-class backfill. NBA `n_predictions` is fixed at 1 (multi-action planned).
 ---
 
 # AI Signals - RFM, CLTV, NBA, NBP
 
-AI Signals (also called PrecisionML) is Treasure AI's packaged ML suite. Each signal is a
-Treasure Workflow that POSTs a job to the **ML Batch API** and writes scored results to a TD
-table, ready for parent-segment attributes, segments, journeys, and activations.
-
-AutoML is a **separate product** - this skill does not cover it.
+AI Signals is Treasure AI's packaged ML suite. Each signal is a Treasure Workflow that POSTs a job to the **ML Batch API** and writes scored results to a TD table, ready for parent-segment attributes, segments, journeys, and activations.
 
 ## When to Use This Skill
 
-- Choosing which signal answers a business question
-- Discovering and validating the source table for a signal
-- Generating, deploying, and scheduling a signal's workflow
+- Choosing which ai signals model achieves a business goal
+- Discovering, planning, and validating the source table for an ai signals model training or prediction
+- Generating, deploying, and scheduling ai signals workflow
 - Verifying, interpreting, and reporting on signal output tables
 - Troubleshooting failed or low-quality runs
 
-## Choosing a Signal
+## Choosing a solution
 
 | Business question | Signal | Input | Output | Reference |
 |---|---|---|---|---|
@@ -39,14 +30,13 @@ AutoML is a **separate product** - this skill does not cover it.
 | Which channel / send time / offer per customer? | **NBA** | Interaction log (user, action, reward, numeric features) | Recommended action per user | [nba.md](references/nba.md) |
 | Which products should I recommend? | **NBP** | Item-level transactions (user, item, timestamp) | Ranked `rec_items` per user | [nbp.md](references/nbp.md) |
 
-Read the matching reference before generating anything - it holds the input schema, complete
-workflow, parameter tables, verification and analysis queries, and troubleshooting.
+Read the matching reference in the /references folder before solutioning.
 
 ## Prerequisites
 
 1. **AI Signals enabled on the account.** If ML Batch API calls return authorization errors,
-   the account team must enable AI Signals / PrecisionML.
-2. **`td.apikey` secret** set on the workflow project after the first push:
+   let the user know to contact the account team to first enable the AI Signals feature flag.
+2. **`td.apikey` secret** set once per workflow project, after that project's first push:
    ```bash
    tdx wf secrets set <project-name> "td.apikey=YOUR_MASTER_API_KEY"
    ```
@@ -130,13 +120,28 @@ validity - and confirm the mapping with the user before generating anything.
 minimum history, per-action or per-item volume) and report pass/fail. No signal performs
 missing-value handling, so fix problems in the prep SQL first.
 
-**4. Generate the project.** Final `.dig` plus `queries/*.sql` with the confirmed values filled
-in. The reference files carry complete working workflows. Project layout and naming conventions:
-**digdag** skill, `references/scaffold.md`.
+**4. Generate the project.** Check which case applies before writing any files:
 
-**5. Deploy**, then set the secret:
+| Case | Before generating |
+|---|---|
+| New project | Create the directory fresh |
+| New workflow in an existing project | `tdx wf pull <project>` first, then add a new `.dig` beside the existing ones |
+| Updating an existing workflow | `tdx wf pull <project>` first, then edit in place |
+
+`tdx wf push` uploads the **whole local directory as one revision** - any workflow or file not
+present locally is dropped from the project - and it resolves the target project from the
+`tdx.json` that `pull` writes. Never push a hand-built directory over an existing project. The
+reference files carry complete working workflows; for project layout and naming conventions, see
+the `scaffold.md` reference in the **workflow-skills:digdag** skill.
+
+**5. Deploy.**
 ```bash
-tdx wf push                 # from the project directory
+tdx wf push --dry-run       # from the project directory - check the deleted count is 0
+tdx wf push
+```
+New project only, once - `td.apikey` is project-scoped and survives later revisions, so confirm
+with `tdx wf secrets list <project>` before asking again:
+```bash
 tdx wf secrets set <project-name> "td.apikey=YOUR_MASTER_API_KEY"
 ```
 
@@ -147,8 +152,8 @@ distribution sanity. For sessions, attempts, task timeline, logs, and retry-from
 
 **7. Schedule** at the signal's recommended cadence. Training is expensive and infrequent;
 prediction is cheap and frequent, so split stages into separate workflows with a fixed
-`model_name` when the cadences differ. `schedule:` syntax and options: **digdag** skill,
-`references/scheduling.md`.
+`model_name` when the cadences differ - that is the pull-first case in step 4. `schedule:` syntax
+and options: **digdag** skill, `references/scheduling.md`.
 
 **8. Report results** using the reference's analysis queries. Always pair scores with their
 quality metrics - CLTV gini and calibration, NBA lift and ESS, NBP map and ndcg.
@@ -171,6 +176,8 @@ recency in particular) resolves to that date. Use `output_mode: append` to accum
   confirms `time` is the event time.
 - **Nulls and negatives reach the model.** Clean them in prep SQL - no signal imputes.
 - **Wrong regional endpoint** silently fails auth. Match the account site.
+- **`tdx wf push` replaces the entire revision.** Pull the project before adding or editing a
+  workflow in it, or the other workflows vanish.
 - **Retraining every prediction run** wastes compute. Split cadences.
 - **Model expiry** - NBP models persist about 6 months; retrain before then.
 - **Reporting raw scores without metrics.** A model with low `label_gini` or low ESS has no
