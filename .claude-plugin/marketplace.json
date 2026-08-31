@@ -212,6 +212,15 @@
         "./treasure-work-skills/graflow",
         "./treasure-work-skills/portal-guide"
       ]
+    },
+    {
+      "name": "ai-signals-skills",
+      "description": "AI Signals (PrecisionML) machine learning skills for Treasure AI. Covers RFM segmentation, CLTV prediction with churn, Next Best Action, and Next Best Product - source data discovery, ML Batch API workflow generation, deployment, output verification, and activation into parent segments.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./ai-signals-skills/ai-signals"
+      ]
     }
   ]
 }

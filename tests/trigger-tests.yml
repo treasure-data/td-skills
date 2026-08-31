@@ -270,3 +270,20 @@ tests:
 
   - prompt: "Build an interactive dashboard component to visualize ingestion volume"
     expected: react-dashboard
+
+  # === AI Signals Skills ===
+
+  - prompt: "Set up RFM customer segmentation on my transaction data"
+    expected: ai-signals
+
+  - prompt: "Predict customer lifetime value and churn risk for my customers"
+    expected: ai-signals
+
+  - prompt: "Recommend the next best product for each customer"
+    expected: ai-signals
+
+  - prompt: "Which channel should I contact each customer on - set up next best action"
+    expected: ai-signals
+
+  - prompt: "Run an ml-batch-api job to score my customers"
+    expected: ai-signals
