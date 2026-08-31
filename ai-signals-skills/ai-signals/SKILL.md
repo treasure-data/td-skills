@@ -34,8 +34,7 @@ Read the matching reference in the /references folder before solutioning.
 
 ## Prerequisites
 
-1. **AI Signals enabled on the account.** If ML Batch API calls return authorization errors,
-   let the user know to contact the account team to first enable the AI Signals feature flag.
+1. **AI Signals enabled on the account.** If ML Batch API calls return authorization errors, let the user know to contact the account team to first enable the AI Signals feature flag.
 2. **`td.apikey` secret** set once per workflow project, after that project's first push:
    ```bash
    tdx wf secrets set <project-name> "td.apikey=YOUR_MASTER_API_KEY"
@@ -62,9 +61,7 @@ Match the account's site:
 
 ## The ML Batch API Call Pattern
 
-Every signal is the same two tasks - submit, then poll. This is the only part of the workflow
-that is AI-Signals-specific; for `.dig` structure, `_export`, session variables, `td>`/`td_ddl>`,
-`_parallel`, and `_error`, see the **digdag** skill.
+Every signal is the same two tasks - submit, then poll. This is the only part of the workflow that is AI-Signals-specific; for `.dig` structure, `_export`, session variables, `td>`/`td_ddl>`, `_parallel`, and `_error`, see the **digdag** skill.
 
 ```yaml
 +run_signal:
@@ -99,28 +96,23 @@ that is AI-Signals-specific; for `.dig` structure, `_export`, session variables,
 
 - `POST /v1/runs` returns a run `id`; `store_content: true` exposes it as
   `${JSON.parse(http.last_content)['id']}`.
-- `GET /v1/runs/{id}/status` returns **408 while running**, **200 when complete**. Size
-  `_retry` to the expected runtime - jobs reach ~90 minutes at 100M rows, so `limit: 60` /
-  `interval: 60` covers roughly an hour. `timeout:` defaults to 30s and must be raised.
-- Multi-stage signals chain submit+poll pairs; `http.last_content` is scoped per task, so
-  parallel algorithm branches are safe.
+- `GET /v1/runs/{id}/status` returns **408 while running**, **200 when complete**. Size `_retry` to the expected runtime - jobs reach ~90 minutes at 100M rows, so `limit: 60` / `interval: 60` covers roughly an hour. `timeout:` defaults to 30s and must be raised.
+- Multi-stage signals chain submit+poll pairs; `http.last_content` is scoped per task, so parallel algorithm branches are safe.
 
-The **llm-workflow** skill is the closest structural precedent for this
-`td>` prep -> `http>` external API -> parse response chassis.
+The **llm-workflow** skill is the closest structural precedent for this `td>` prep -> `http>` external API -> parse response chassis.
 
 ## Setup Flow
 
 **1. Pick the signal** from the table above and read its reference file.
 
-**2. Discover the source data.** If the user has not named a table, follow
-[data-discovery.md](references/data-discovery.md) - candidate tables, column mapping, per-signal
-validity - and confirm the mapping with the user before generating anything.
+**2. Discover the source data.** Follow
+[data-discovery.md](references/data-discovery.md) - it branches on whether the user already named a table - candidate tables, column mapping, per-signal validity - and confirm the mapping with the user before generating anything.
 
 **3. Verify data quality.** Run the reference's checks (nulls, negative amounts, date range,
 minimum history, per-action or per-item volume) and report pass/fail. No signal performs
 missing-value handling, so fix problems in the prep SQL first.
 
-**4. Generate the project.** Check which case applies before writing any files:
+**4. Generate the project.** Ask the user which case applies before writing any files:
 
 | Case | Before generating |
 |---|---|

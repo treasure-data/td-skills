@@ -1,10 +1,8 @@
 # AI Signals Data Discovery
 
-Find and validate the source table before configuring any signal. Confirm the column mapping
-with the user before generating workflow files.
+Find and validate the source table before configuring any signal. Confirm the column mapping with the user before generating workflow files.
 
-For `tdx` auth, sites, and the exploration commands themselves, see the **tdx-basic** skill.
-For `td_interval` semantics and partition pruning, see the **time-filtering** skill.
+For `tdx` auth, sites, and the exploration commands themselves, see the **tdx-basic** skill. For `td_interval` semantics and partition pruning, see the **time-filtering** skill.
 
 ## What Each Signal Accepts
 
@@ -15,47 +13,52 @@ For `td_interval` semantics and partition pruning, see the **time-filtering** sk
 | NBP | Item-level transactions: user, item, timestamp | Aggregated tables, profile tables, anything without an item id |
 | NBA | Interaction log: user, action taken, observed reward, numeric context features | Anything without a per-event action and outcome |
 
-Row grain matters. RFM and CLTV want one row per **order** - aggregate line items first. NBP
-wants one row per **user-item** interaction, so line items are correct there.
+Row grain matters. RFM and CLTV want one row per **order** - aggregate line items first. NBP wants one row per **user-item** interaction, so line items are correct there.
 
 ## Step 1: Find Candidate Tables
 
+**Ask before scanning** - "do you know which table holds the source data, or should I search the
+account?" The user usually knows, and a blind account scan is the slow path.
+
+**If they name a table or database** - go straight to it, then continue at Step 2:
+
 ```bash
-tdx databases                      # list databases
-tdx use database prod_cdp          # set context (avoids expensive cross-database wildcards)
-tdx tables "*order*"               # then: *purchase*, *transaction*, *sale*, *event*, *interaction*
-tdx describe prod_cdp.orders       # column names and types
-tdx show prod_cdp.orders --limit 10  # eyeball actual values
+tdx tables "prod_cdp.*"               # skip if they already named the table
+tdx describe prod_cdp.orders          # column names and types
+tdx show prod_cdp.orders --limit 10   # eyeball actual values
 ```
 
-Prefer `enriched_orders`, `orders`, `purchases`, `transactions`, `sales`, `order_events`. For NBA,
-look for campaign or engagement logs that record both the action sent and the outcome.
+**If they do not know** - narrow to databases first. Accounts hold hundreds, many opaquely named:
+
+```bash
+tdx databases "*cdp*"   # then *prod*, *raw*, *shopify*, *segment*; bare `tdx databases` for everything
+```
+
+Show the shortlist and **ask which one or two databases to search** - do not guess. Then list
+tables, always dot-qualified - an unscoped pattern like `tdx tables "*order*"` scans every database
+and hangs, and `--limit` does not stop it:
+
+```bash
+tdx tables "prod_cdp.*"
+```
+
+Prefer `enriched_orders`, `orders`, `purchases`, `transactions`, `sales`, `order_events`. For NBA, look for campaign or engagement logs that record both the action sent and the outcome. `tdx describe` returns no row counts or freshness, so rank candidates with the Step 3 queries, not from the listing.
 
 ## Step 2: Map Columns
 
 **User id** - `canonical_id` or `cdp_profile_id` (TD CDP standards), else `user_id`,
-`customer_id`, `member_id`. `email` works but carries duplicates and formatting drift. Never mix
-id types across tables in one signal.
+`customer_id`, `member_id`. `email` works but carries duplicates and formatting drift. Never mix id types across tables in one signal.
 
-**Timestamp** - `event_time`, `timestamp`, `created_at`, `order_time`, `purchase_date`. TD's `time`
-column is the **ingestion** time on every table; only use it as event time if the user confirms
-they match. Skip `updated_at` and `modified_at`. Must be unix seconds or castable.
+**Timestamp** - `event_time`, `timestamp`, `created_at`, `order_time`, `purchase_date`. TD's `time` column is the **ingestion** time on every table; only use it as event time if the user confirms they match. Skip `updated_at` and `modified_at`. Must be unix seconds or castable.
 
-**Amount** (RFM, CLTV) - `total_amount`, `order_amount`, `revenue`, `amount`, `grand_total`,
-`total_price`. Not `tax`, `shipping`, `discount` (components) or `quantity` (item count).
+**Amount** (RFM, CLTV) - `total_amount`, `order_amount`, `revenue`, `amount`, `grand_total`, `total_price`. Not `tax`, `shipping`, `discount` (components) or `quantity` (item count).
 
-**Item** (NBP) - `item_id`, `product_id`, `sku`. Note name and category columns if present, for
-enriching recommendations later.
+**Item** (NBP) - `item_id`, `product_id`, `sku`. Note name and category columns if present, for enriching recommendations later.
 
 **Action and reward** (NBA) - action is the treatment (`action`, `channel`, `offer`,
-`campaign_type`); reward is the binary outcome (`reward`, `converted`, `clicked`, `opened`).
-Every remaining column becomes a context feature and **must be numeric** - encode categoricals
-before ingestion. A column like `pscore`, `propensity`, or `action_probability` can be passed as
-the true propensity instead of having one estimated.
+`campaign_type`); reward is the binary outcome (`reward`, `converted`, `clicked`, `opened`). Every remaining column becomes a context feature and **must be numeric** - encode categoricals before ingestion. A column like `pscore`, `propensity`, or `action_probability` can be passed as the true propensity instead of having one estimated.
 
-**Order status** - if present (`order_status`, `status`, `financial_status`), filter in prep SQL:
-include `completed`, `shipped`, `delivered`, `paid`, `confirmed`; exclude `cancelled`, `returned`,
-`refunded`, `failed`, `abandoned`, `test`.
+**Order status** - if present (`order_status`, `status`, `financial_status`), filter in prep SQL: include `completed`, `shipped`, `delivered`, `paid`, `confirmed`; exclude `cancelled`, `returned`, `refunded`, `failed`, `abandoned`, `test`.
 
 ### Platform patterns
 
