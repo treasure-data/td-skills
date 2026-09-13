@@ -123,7 +123,7 @@ Task name: lowercase, hyphens/underscores only, max 64 chars. Minimum cron inter
 These fields are only meaningful for tasks inside a workspace `schedules/` directory:
 
 ```yaml
-# Target Goal — agent scopes work to this goal's linked items
+# Target Goal — agent scopes work to this goal's items, including its sub-goals
 goal: auth-redesign
 
 # Workspace skill to invoke (different from `skills` which lists capability packs/MCP tools)
