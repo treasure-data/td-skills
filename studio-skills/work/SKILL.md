@@ -42,7 +42,6 @@ assignee: Name            # items/goals only
 due: 2026-04-01           # items/goals only
 github: owner/repo#123    # link to GitHub issue or PR (items/goals only)
 jira: atlassian-org/PROJ-456   # link to Jira ticket (items/goals only)
-goal: parent-slug         # goals: parent goal; items: goal this item belongs to
 created: 2026-03-23
 updated: 2026-03-23
 ---
@@ -102,8 +101,6 @@ Use wiki-links for bidirectional linking:
 1. In the goal body, add `- [[item-slug|Display Title]]`
 2. In the item body, add `Part of [[goal-slug]].`
 
-A goal nests under another goal with `goal: <parent-slug>`; the parent's scope and progress include every sub-goal.
-
 Wiki-link format: `[[slug]]` or `[[slug|Display Text]]`
 
 ### Move Status
@@ -129,8 +126,7 @@ Use Grep to search across notes, guides, and references:
 2. Parse wiki-links from the body: `[[slug]]` or `[[slug|Display Text]]`
 3. For each linked slug, find the matching item file (Glob for `items/*{slug}.md`)
 4. Read each item's `status` field
-5. Repeat for goals whose `goal:` names this goal and merge the item sets, counting each item once.
-6. Calculate: done count / total, percentage, list in-progress items
+5. Calculate: done count / total, percentage, list in-progress items
 
 ### What's Next
 
@@ -198,7 +194,7 @@ To create a new workspace schedule:
 3. Use `schedule_run` to test, then `schedule_enable` to activate
 
 Workspace-only schedule.yaml fields:
-- `goal: {slug}` — scope to a goal's items, including its sub-goals
+- `goal: {slug}` — scope to a goal's linked items
 - `skill: {name}` — invoke a workspace skill (different from `skills` which lists capability packs)
 - `output.note: true` — auto-create a Note from results
 - `output.note_tags: [tag1, tag2]` — tags added to the auto-created Note
