@@ -127,7 +127,7 @@ Use wiki-links for bidirectional linking:
 1. In the goal body, add `- [[item-slug|Display Title]]`
 2. In the item body, add `Part of [[goal-slug]].`
 
-A goal nests under another goal with `goal: <parent-slug>`; the parent's scope and progress include every sub-goal.
+A goal nests under another goal with `goal: <parent-slug>`; the parent's scope and progress cover every sub-goal and its items, at any depth.
 
 ### Move Status
 
@@ -210,7 +210,7 @@ triggers:                            # workspace event triggers (optional)
     to: [in_progress]
 skills: [segment, journey]
 guides: [cdp-best-practices]
-goal: ship-v2-audience               # scope to a goal's items, including its sub-goals
+goal: ship-v2-audience               # scope to the items of a goal and its sub-goals
 allowed_tools: [Write, Bash]         # optional allowlist
 ---
 
