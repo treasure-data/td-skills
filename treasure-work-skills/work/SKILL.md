@@ -67,6 +67,7 @@ assignee: Name            # items/goals only
 due: 2026-04-01           # items/goals only
 github: owner/repo#123    # link to GitHub issue or PR (items/goals only)
 jira: atlassian-org/PROJ-456   # link to Jira ticket (items/goals only)
+goal: parent-slug         # goals: parent goal; items: goal this item belongs to
 created: 2026-03-23
 updated: 2026-03-23
 ---
@@ -126,6 +127,8 @@ Use wiki-links for bidirectional linking:
 1. In the goal body, add `- [[item-slug|Display Title]]`
 2. In the item body, add `Part of [[goal-slug]].`
 
+A goal nests under another goal with `goal: <parent-slug>`; the parent's scope and progress cover every sub-goal and its items, at any depth.
+
 ### Move Status
 
 Read the file, update the `status` field in frontmatter, set `updated` to today.
@@ -149,7 +152,8 @@ Use Grep to search across notes, guides, and references:
 2. Parse wiki-links from the body
 3. For each linked slug, find the matching item file (Glob for `items/*{slug}.md`)
 4. Read each item's `status` field
-5. Calculate: done count / total, percentage, list in-progress items
+5. Repeat steps 1–5 for each goal whose `goal:` names this goal and merge the item sets, counting each item once.
+6. Calculate: done count / total, percentage, list in-progress items
 
 ### What's Next
 
@@ -206,7 +210,7 @@ triggers:                            # workspace event triggers (optional)
     to: [in_progress]
 skills: [segment, journey]
 guides: [cdp-best-practices]
-goal: ship-v2-audience               # scope to a goal's linked items
+goal: ship-v2-audience               # scope to the items of a goal and its sub-goals
 allowed_tools: [Write, Bash]         # optional allowlist
 ---
 
