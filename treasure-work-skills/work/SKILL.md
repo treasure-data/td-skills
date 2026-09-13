@@ -152,7 +152,7 @@ Use Grep to search across notes, guides, and references:
 2. Parse wiki-links from the body
 3. For each linked slug, find the matching item file (Glob for `items/*{slug}.md`)
 4. Read each item's `status` field
-5. Repeat for goals whose `goal:` names this goal and merge the item sets, counting each item once.
+5. Repeat steps 1–5 for each goal whose `goal:` names this goal and merge the item sets, counting each item once.
 6. Calculate: done count / total, percentage, list in-progress items
 
 ### What's Next
