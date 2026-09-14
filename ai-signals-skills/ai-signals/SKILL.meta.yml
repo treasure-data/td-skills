@@ -1,0 +1,20 @@
+# Re-validation log for ai-signals
+# Record each validation run: date, model, result, and notes.
+
+validations:
+  - date: 2026-08-25
+    model: claude-opus-5
+    result: pass
+    tester: hanzhen.liu@treasure-data.com
+    notes: >
+      Authored from the four public AI Signals documentation pages on docs.treasure.ai
+      (RFM, CLTV, NBA, NBP). Parameter names, defaults, required flags, output column
+      names, segment definitions, model types, scheduling guidance, and troubleshooting
+      matrices were transcribed from those pages and cross-checked against them. The
+      ML Batch API call chassis (POST /v1/runs with solution_name + solution_arguments,
+      408-while-running status polling, regional endpoints) matches the documented
+      contract. NOT yet validated end-to-end against a live TD account: no workflow in
+      this skill has been pushed and run, so runtime behavior (auth, polling cadence,
+      actual output schemas) is doc-asserted rather than observed. Next validation
+      should push one RFM and one NBP workflow to a dev account and confirm the output
+      table columns and the poll-retry sizing.
