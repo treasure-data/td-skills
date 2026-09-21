@@ -5,7 +5,7 @@ owner: william.gonzalez@treasure.ai
 tier: 1
 classification: product
 phase: 1
-last-validated: 2026-07-29
+last-validated: 2026-08-26
 validation-model: claude-sonnet-5
 known-limitations: |
   A push target can only contain one composable audience YAML file — every segment/activation
@@ -14,10 +14,12 @@ known-limitations: |
   run `tdx connection schema <type>` first (see the connector-config skill) rather than guessing
   field names. Snowflake schema/table name matching is case-sensitive; a lowercase `schema`/`table`
   pulled from an older audience may not match the CDW's actual (often uppercase) names. Composable
-  segment YAML has no schema validation ahead of push (unlike composable audience YAML) — a
-  missing/malformed `rule:` surfaces as a raw backend error, not a clean client-side message.
-  `type: composable_segment` must be present verbatim or the file is validated against the wrong
-  (audience) schema entirely.
+  segment YAML now gets structural validation ahead of push (a missing/malformed `rule:` is
+  caught client-side with a clear error) plus a `leftValue.name` check against the parent
+  audience's real attribute/behavior names — but only condition/operator shapes `tdx` recognizes
+  are checked; unrecognized condition types pass through unvalidated by design, so a malformed
+  unrecognized shape can still reach the backend as a raw error. `type: composable_segment` must
+  be present verbatim or the file is validated against the wrong (audience) schema entirely.
 ---
 
 # tdx CAS - Composable Audience Studio Management
@@ -105,7 +107,7 @@ The `connection:` field is a single generic value in the YAML, but what it means
 
 Composable segment conditions use `leftValue` (the attribute) and `operator` (the comparison, which itself nests `type`, `not`, and `rightValue`) — **not** the `attribute`/`operator: {type, value}` shape standard `tdx sg` segments use. `rightValue` is not a sibling of `leftValue`/`operator`; it nests inside `operator`, as shown below. Get this wrong and the API returns a 400 naming exactly which field is missing/invalid.
 
-**`leftValue.name` must exactly match the parent audience's attribute/behavior `name:` field — not the underlying CDW column, and not a lowercased or otherwise reformatted version of it.** For example, if the audience attribute is `name: STATE` (mapped to CDW column `STATE`), the rule must use `leftValue: { name: STATE }`, not `name: state`. This match is case-sensitive. **There is no client- or push-time validation for this** — composable segment rules have no schema (unlike composable audience YAML), so a mismatched name doesn't error at all: the segment pushes successfully, then silently matches zero rows and shows a blank rule in the Console UI. If a pushed segment's rule looks blank in Console or a preview returns zero rows unexpectedly, check `leftValue.name` against the audience's actual attribute/behavior names (`tdx cas pull` the parent audience to see them) before assuming anything else is wrong.
+**`leftValue.name` must exactly match the parent audience's attribute/behavior `name:` field — not the underlying CDW column, and not a lowercased or otherwise reformatted version of it.** For example, if the audience attribute is `name: STATE` (mapped to CDW column `STATE`), the rule must use `leftValue: { name: STATE }`, not `name: state`. This match is case-sensitive. **`tdx cas sg push` and `tdx cas validate` now catch a mismatched name before it reaches the backend** — `tdx cas sg push` resolves the live parent audience to check it, and `tdx cas validate` checks it too when a sibling `audience.yml` is present in the same directory (which `tdx cas pull` always writes). The error suggests the real name when it looks like a case-only typo. If you're validating a lone segment file with no sibling audience YAML, this check can't run (there's nothing to check the name against) — in that case a mismatched name still silently matches zero rows and shows a blank rule in the Console UI, so if that happens, check `leftValue.name` against the audience's actual attribute/behavior names (`tdx cas pull` the parent audience to see them) before assuming anything else is wrong.
 
 ```yaml
 type: composable_segment
@@ -137,7 +139,7 @@ For `activations[].connector_config` fields, **don't guess the field names** —
 
 **`type: composable_segment` at the top level is mandatory, exact literal** — not just documentation, it's how `tdx` tells this file apart from a composable audience file. Omit it and the file gets validated against the *audience* schema instead, producing a confusing error about an unrelated field (e.g. a missing `master:`) rather than anything about the segment itself. If you see an error naming `master` or other audience-only fields while pushing something you intend as a segment, check `type:` first.
 
-Composable segment YAML currently has **no schema validation ahead of push** (unlike composable audience YAML, which does). A missing `rule:` reaches the backend and comes back as a raw database error, not a clean client-side message — if you hit an unfamiliar low-level error pushing a segment, suspect a missing/malformed `rule` block first before assuming something else is wrong.
+Composable segment YAML now gets structural validation ahead of push — a missing or malformed `rule:` is caught client-side with a clear error, same as composable audience YAML. This only covers condition/operator shapes `tdx` recognizes (`Value` conditions, `And`/`Or` groups); an unrecognized condition type (e.g. a `Behavior`-style condition) passes through unvalidated by design, so a malformed shape of that kind can still reach the backend as a raw error — if you hit an unfamiliar low-level error pushing a segment with an unusual condition type, suspect that first.
 
 ## Pushing a single child segment standalone
 
@@ -177,10 +179,11 @@ This `--delete` means something different from `tdx cas push`'s own `--delete` (
 | 400 naming a `type` mismatch on an attribute/behavior column | The YAML `type:` doesn't match the real CDW column type — check the source table's actual column type. |
 | `catalog is required` | Databricks/BigQuery connections need `catalog:` set alongside `connection:` in the same block. |
 | Segment rule 400 naming `leftValue`/`rightValue`/`operator` | Composable segment rules use a different shape than standard `tdx sg` — see "Child segment YAML" above, don't reuse a standard segment's rule YAML as-is. |
-| Segment pushes fine but shows a blank rule in Console / preview returns 0 rows | `leftValue.name` doesn't exactly match the audience's attribute/behavior `name:` (case-sensitive) — there's no validation to catch this. `tdx cas pull` the parent audience and check the real attribute/behavior names. |
+| `cas sg push`/`cas validate` reports a `leftValue.name` mismatch | `leftValue.name` doesn't exactly match the audience's attribute/behavior `name:` (case-sensitive). Use the suggested name if one is offered, or `tdx cas pull` the parent audience to check the real attribute/behavior names. |
+| Segment pushes fine but shows a blank rule in Console / preview returns 0 rows | Only happens now when validating a lone segment file with no sibling `audience.yml` (the name-mismatch check has nothing to check against). `leftValue.name` doesn't exactly match the audience's attribute/behavior `name:` — `tdx cas pull` the parent audience and check the real attribute/behavior names. |
 | `cas sg push` fails naming `master` or another audience-only field | The file is missing `type: composable_segment` at the top level and got validated as an audience file instead. Add the field — this isn't about the field the error names. |
 | `cas sg push --delete` against a directory is rejected | Single-named-target delete only — point it at the one segment file to delete, not a directory. |
-| Unfamiliar low-level/database error pushing a segment | Composable segment YAML has no schema validation ahead of push — check for a missing or malformed `rule:` block first. |
+| Unfamiliar low-level/database error pushing a segment | Structural validation catches `Value`/`And`/`Or` shape mistakes (missing/malformed `rule:`), but not unrecognized condition types (e.g. `Behavior`-style) — check those first if the error is unfamiliar. |
 | `all_columns: true` rejected for a behavior | Only works on a behavior that already has it set server-side — use an explicit `columns:` list for any new or changed behavior instead. |
 | Non-interactive mode error | Add `-y`: `tdx cas push -y <path>` |
 | An audience you expect isn't in `tdx cas list` | It may only exist on the other host — try again with `TDX_CAS_LEGACY_ENDPOINT=1`. |
