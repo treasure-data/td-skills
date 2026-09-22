@@ -31,7 +31,7 @@ The database name contains the parent segment ID and has this format cdp_audienc
 
 Identity logging on the event-processing path is enabled for every instance and requires no opt-in. Logging on the personalization request path is off by default because it adds latency to a latency-sensitive path.
 
-To enable it for a specific instance, set the `ATTRIBUTE_REPLICATION_PERSONALIZATION_ENABLED` environment variable to `true` on the personalization Lambda. This is configured per-instance through the provisioner instance change schema (added in RT-1643). The setting can also be toggled via the `enable_sqs_logging_p13n` value in the `EXPERIMENTAL_FEATURES` environment variable, though the provisioner path is preferred.
+To enable it for a specific instance, set `attributeReplicationPersonalizationEnabled` to `true` on the reactor instance via Active Admin in the provisioner. This is an internal-only field (not customer-visible). The provisioner maps it to the Lambda environment variable `ATTRIBUTE_REPLICATION_PERSONALIZATION_ENABLED`.
 
 When enabled, the personalization Lambda emits the same `id_changes` and `validation_failures` records as the event-processing path. When disabled, identity records are accumulated internally but silently discarded before being sent to SQS.
 
