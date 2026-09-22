@@ -266,35 +266,88 @@ tdx ps rt validate rt_config.yaml
 
 ## Monitor Profile Merging
 
-Check profile merge activity:
+Check profile merge activity using the `id_changes` table in the parent segment's real-time database (`cdp_audience_<parent_segment_id>_rt`):
 
 ```bash
-# Query ID change log
+# Count identity events by type
 tdx query "
-select
-  operation,
-  count(*) as merge_count
-from cdp_audience_<parent_segment_id>_rt.id_change_log
-where td_interval(time, '-1d')
-group by operation
-order by merge_count desc
+SELECT
+  profile_change_type,
+  COUNT(*) AS event_count
+FROM cdp_audience_<parent_segment_id>_rt.id_changes
+WHERE TD_INTERVAL(time, '-1d/now')
+GROUP BY profile_change_type
+ORDER BY event_count DESC
 "
 
-# Check recent merges
+# Check recent merges (profile_updated_by_stitching with non-empty merged_rids)
 tdx query "
-select
-  time,
-  operation,
-  from_id,
-  to_id,
-  merge_reason
-from cdp_audience_<parent_segment_id>_rt.id_change_log
-where td_interval(time, '-1h')
-  and operation = 'merge'
-order by time desc
-limit 20
+SELECT
+  TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm:ss', 'GMT') AS ts,
+  current_rid,
+  merged_rids,
+  current_id_attributes,
+  key_values,
+  td_rt_tracking_id
+FROM cdp_audience_<parent_segment_id>_rt.id_changes
+WHERE TD_INTERVAL(time, '-1h/now')
+  AND profile_change_type = 'profile_updated_by_stitching'
+  AND cardinality(CAST(json_parse(merged_rids) AS ARRAY(VARCHAR))) > 0
+ORDER BY time DESC
+LIMIT 20
+"
+
+# Check for 200-association limit evictions
+tdx query "
+SELECT
+  TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm:ss', 'GMT') AS ts,
+  current_rid,
+  evicted_ids,
+  current_id_attributes,
+  td_rt_tracking_id
+FROM cdp_audience_<parent_segment_id>_rt.id_changes
+WHERE TD_INTERVAL(time, '-1d/now')
+  AND profile_change_type = 'profile_ids_evicted'
+ORDER BY time DESC
+LIMIT 20
 "
 ```
+
+## Diagnose Stitching-Key Misconfigurations
+
+When you suspect a stitching-key misconfiguration (wrong key name, wrong type, bad values), check the `validation_failures` table. It logs every key/value pair that failed validation and was excluded from stitching, along with the reason.
+
+```bash
+# Check for validation failures
+tdx query "
+SELECT
+  TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm:ss', 'GMT') AS ts,
+  json_extract_scalar(invalid_key, '$.key') AS key_name,
+  json_extract_scalar(invalid_key, '$.value') AS key_value,
+  json_extract_scalar(invalid_key, '$.reason') AS reason,
+  td_rt_tracking_id
+FROM cdp_audience_<parent_segment_id>_rt.validation_failures
+CROSS JOIN UNNEST(CAST(invalid_keys AS ARRAY(JSON))) AS t(invalid_key)
+WHERE TD_INTERVAL(time, '-1d/now')
+ORDER BY time DESC
+LIMIT 50
+"
+
+# Count failures by reason to identify the most common misconfiguration
+tdx query "
+SELECT
+  json_extract_scalar(invalid_key, '$.reason') AS reason,
+  json_extract_scalar(invalid_key, '$.key') AS key_name,
+  COUNT(*) AS failure_count
+FROM cdp_audience_<parent_segment_id>_rt.validation_failures
+CROSS JOIN UNNEST(CAST(invalid_keys AS ARRAY(JSON))) AS t(invalid_key)
+WHERE TD_INTERVAL(time, '-1d/now')
+GROUP BY 1, 2
+ORDER BY failure_count DESC
+"
+```
+
+A non-empty `validation_failures` table means something needs fixing. Common causes: key name not in the config, key name case mismatch (e.g. `User_ID` vs `user_id`), non-string values, empty values, values failing `valid_regexp` or matching `invalid_texts`.
 
 ## Common Errors
 
@@ -347,7 +400,7 @@ limit 20
 
 After configuring ID stitching:
 - **Push Configuration**: Deploy RT config with `tdx ps push`
-- **Monitor Merges**: Check ID change log for merge activity
+- **Monitor Merges**: Check `id_changes` table for merge and eviction activity
 - **RT Personalization**: Use unified profiles → Use `rt-pz-service` skill
 - **RT Triggers**: Trigger on unified profile events → Use `rt-journey-create` skill
 
