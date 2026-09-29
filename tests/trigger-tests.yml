@@ -159,6 +159,12 @@ tests:
   - prompt: "List contact-list campaigns in the Marketing workspace using tdx engage"
     expected: engage
 
+  - prompt: "Create a ListCampaign YAML definition for a workspace contact-list email send"
+    expected: engage
+
+  - prompt: "Show and safely launch a ListCampaign after reviewing its contact-list audience"
+    expected: engage
+
   # === Document Skills ===
 
   - prompt: "Create a PowerPoint presentation about our Q4 results"
