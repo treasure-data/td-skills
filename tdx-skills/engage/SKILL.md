@@ -1,18 +1,19 @@
 ---
 name: engage
-description: Manage Treasure Engage email templates and campaigns using `tdx engage` commands with YAML+HTML configs. Use when creating, editing, previewing, validating, or deploying email templates, email/push campaigns, managing workspaces, or any task involving Engage email content — even if the user only mentions "create an email" or "build an HTML email". Always write YAML definition files alongside HTML — never push raw HTML without a YAML wrapper.
+description: Manage Treasure Engage templates and campaigns with `tdx engage` commands. Use for YAML+HTML email/template workflows, workspace management, or listing contact-list ListCampaign resources with `--campaign-type list-campaign`, even if the user only asks to create an email. Always use YAML wrappers for template and regular campaign writes; never push raw HTML.
 ---
 
 # tdx Engage
 
 ## First: What Are You Building?
 
-| User says... | Write this | Reference to read first |
+| User says... | Use this | Reference to read first |
 |---|---|---|
 | "create an email template", "build an email" | `type: template` YAML + HTML | `references/template-yaml.md` |
 | "create a campaign", "set up an email send" | `type: campaign` YAML + HTML | `references/campaign-yaml.md` |
+| "list contact-list campaigns", "ListCampaign" | `tdx engage campaign list --campaign-type list-campaign` | None — read-only |
 
-Always produce **YAML + HTML together**. The YAML is what `tdx engage template push` or `tdx engage campaign push` consumes — HTML alone can't be pushed. This is the most common mistake: generating beautiful HTML, then realizing there's no YAML to push it with.
+For template and regular campaign writes, always produce **YAML + HTML together**. The YAML is what `tdx engage template push` or `tdx engage campaign push` consumes — HTML alone can't be pushed. Listing ListCampaigns is read-only and does not require YAML or HTML.
 
 ## After writing YAML+HTML, execute the full pipeline yourself
 
@@ -42,9 +43,12 @@ tdx engage campaign pause "Name"
 
 # Discovery
 tdx engage templates                            # List templates
-tdx engage campaigns                            # List campaigns
+tdx engage campaigns                            # List regular campaigns (default)
+tdx engage campaign list --campaign-type list-campaign --workspace "Name"
 tdx delivery senders --workspace "Name"          # List email senders
 ```
+
+`--campaign-type` defaults to `campaign`; `list-campaign` selects workspace-scoped contact-list campaigns. ListCampaign listing requires `--workspace` or a session workspace set with `tdx engage workspace use "Name"`. For ListCampaign, use `--type email`; valid statuses are `DRAFT`, `PLANNED`, `ACTIVE`, `SUSPENDED`, and `FINISHED`.
 
 ## Workspace Discovery
 
