@@ -170,15 +170,6 @@
       ]
     },
     {
-      "name": "email-campaign-skills",
-      "description": "Generate enterprise-grade HTML email campaigns with strategy briefs, live preview in Treasure Studio, iterative natural language editing, and push to Treasure Engage",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./email-campaign-skills/email-campaign"
-      ]
-    },
-    {
       "name": "studio-skills",
       "description": "Treasure Studio-specific skills including workspace document management, skill creation, scheduled task management, and UI rendering formats for grid dashboards and action reports",
       "source": "./",
