@@ -1,3 +1,8 @@
+---
+status: in-review
+pr: https://github.com/treasure-data/td-skills/pull/216
+---
+
 # CAS-994: Update tdx-skills for composable journey list/view/pull/push
 
 ## Goals
