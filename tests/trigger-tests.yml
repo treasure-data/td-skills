@@ -46,6 +46,9 @@ tests:
   - prompt: "Create a customer journey with decision points and activations"
     expected: journey
 
+  - prompt: "Pull and push journeys for our composable Snowflake audience"
+    expected: cas
+
   - prompt: "Validate my journey YAML file"
     expected: validate-journey
 
