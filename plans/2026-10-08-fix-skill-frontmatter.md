@@ -1,3 +1,7 @@
+---
+status: implemented
+pr: https://github.com/treasure-data/td-skills/pull/218
+---
 # Fix skill frontmatter warnings
 
 ## Goals
