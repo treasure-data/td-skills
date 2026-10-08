@@ -1,6 +1,7 @@
 ---
 name: llm-workflow
-description: Use when building TD workflows that include LLM processing steps — data pipeline with LLM summarization, Slack/email notification, or any end-to-end automation. Covers patterns for query data, LLM analysis via TD LLM Proxy or TD Agent, and notification via Slack (Webhook/Bot API) or email. Also trigger on: LLM in workflow, workflow with Slack notification, automated report workflow, KPI summary pipeline, data-to-insight workflow.
+description: >-
+  Use when building TD workflows that include LLM processing steps — data pipeline with LLM summarization, Slack/email notification, or any end-to-end automation. Covers patterns for query data, LLM analysis via TD LLM Proxy or TD Agent, and notification via Slack (Webhook/Bot API) or email. Also trigger on: LLM in workflow, workflow with Slack notification, automated report workflow, KPI summary pipeline, data-to-insight workflow.
 ---
 
 # LLM Workflow

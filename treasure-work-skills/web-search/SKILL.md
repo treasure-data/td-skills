@@ -1,6 +1,7 @@
 ---
 name: web-search
-description: Use when performing web searches, extracting content from URLs, or researching topics requiring up-to-date information. Triggers on: "search", "look up", "find out", "what's the latest", "extract from URL", "fetch this page", "research", "check online".
+description: >-
+  Use when performing web searches, extracting content from URLs, or researching topics requiring up-to-date information. Triggers on: "search", "look up", "find out", "what's the latest", "extract from URL", "fetch this page", "research", "check online".
 ---
 
 # Web Search
