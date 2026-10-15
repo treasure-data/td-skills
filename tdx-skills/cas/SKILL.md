@@ -169,6 +169,8 @@ This `--delete` means something different from `tdx cas push`'s own `--delete` (
 
 ## Journeys
 
+**Requires tdx v2026.10.3 or later.** Before using composable journey commands, check `tdx --version` and `tdx cas journey --help`. If the commands are unavailable, explain the version requirement and stop. Ask for explicit confirmation before upgrading to a prerelease; do not fall back to top-level `tdx journey`, which supports complete audiences only.
+
 Composable audience journeys use `tdx cas journey`, not top-level `tdx journey` — `tdx journey push` resolves complete audiences only and refuses a composable audience name outright (`SEGMENT_NOT_FOUND`). Composable stays under `tdx cas` until the core `tdx journey` commands reach parity with it. YAML format, the 5-step build process, and templates are otherwise identical — see the **journey** skill for authoring; this section covers only the composable-specific command surface and constraints.
 
 ```bash

@@ -5,7 +5,7 @@ description: Load when the client wants to create, edit, or manage a CDP custome
 
 # tdx Journey - CDP Journey Orchestration
 
-**The commands on this page (`tdx journey ...`) work with complete audiences only.** A composable audience's journeys (Snowflake/Databricks/BigQuery, zero-copy) are pulled/pushed with `tdx cas journey pull`/`push` instead — same YAML format, same 5-step build process below — and `tdx journey push` refuses a composable audience and points you at `tdx cas journey push`. See the **cas** skill's Journeys section for the composable command reference and constraints (account enablement, one version per journey, no custom entry criteria on stages after the first).
+**The commands on this page (`tdx journey ...`) work with complete audiences only.** A composable audience's journeys (Snowflake/Databricks/BigQuery, zero-copy) are pulled/pushed with `tdx cas journey pull`/`push` instead — same YAML format, same 5-step build process below — and `tdx journey push` refuses a composable audience and points you at `tdx cas journey push`. Composable journey commands require tdx v2026.10.3 or later; follow the version and command availability checks in the **cas** skill's Journeys section before using them. That section also covers the composable command reference and constraints (account enablement, one version per journey, no custom entry criteria on stages after the first).
 
 ## Quick Reference
 
