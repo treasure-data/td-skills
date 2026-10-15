@@ -1,0 +1,17 @@
+{
+  "name": "ai-signals-skills",
+  "owner": {
+    "name": "Unknown",
+    "email": ""
+  },
+  "plugins": [
+    {
+      "name": "ai-signals",
+      "description": "Sets up Treasure AI's AI Signals (PrecisionML) machine learning solutions via Treasure Workflow and the ML Batch API - RFM customer segmentation, CLTV (customer lifetime value) prediction with churn, NBA (Next Best Action) channel and offer recommendations, and NBP (Next Best Product) recommendations. Covers source data discovery and validation, generating the `.dig` workflow with `solution_name` and `solution_arguments`, regional endpoints, output table schemas, model-quality interpretation, verification queries, and activation into parent segments. Use when setting up RFM, predicting customer lifetime value or churn, recommending next best action or next best product, or running ml-batch-api jobs.",
+      "source": "./",
+      "skills": [
+        "./ai-signals"
+      ]
+    }
+  ]
+}
