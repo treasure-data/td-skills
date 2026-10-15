@@ -76,6 +76,12 @@ tests:
   - prompt: "Manage workflows using tdx wf commands"
     expected: workflow
 
+  - prompt: "Classify last week's customer reviews from mydb.feedback as positive or negative with AI"
+    expected: ai-decision
+
+  - prompt: "Use tdx ai decision to score the urgency of each support ticket from a query"
+    expected: ai-decision
+
   # === Workflow Skills ===
 
   - prompt: "Create a digdag workflow for daily ETL"
