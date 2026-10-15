@@ -6,6 +6,7 @@
 type: template
 name: "Spring Promotion 2026"
 subject: "{{profile.first_name}}, 20% OFF this week only!"
+preheader: "{{profile.first_name}}, your offer is waiting"
 workspace: Marketing Team
 editor_type: grapesjs
 html_file: "spring-promotion-2026.html"
@@ -32,6 +33,7 @@ variables:
 | `type` | Yes | `template` |
 | `name` | Yes | Template display name |
 | `subject` | No | Supports `{{profile.<name>}}` Liquid tags |
+| `preheader` | No | Inbox preview text; supports Liquid; API limit 220 characters; use `null` to clear an existing value |
 | `workspace` | No | Can use `--workspace` flag or `tdx.json` instead |
 | `editor_type` | Yes | Always `grapesjs` — `beefree` uses proprietary JSON, not compatible with raw HTML |
 | `html_file` | No | Relative path to companion HTML |
