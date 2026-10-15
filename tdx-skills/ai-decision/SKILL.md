@@ -35,16 +35,36 @@ Requires a tdx release newer than v2026.10.3. Earlier versions used `--questions
 
 Choice values are strings or booleans; numbers are rejected.
 
-## Input Modes
+## Single Decision vs. Batch Decisions
 
-| Input | Behavior | Default output |
-| --- | --- | --- |
-| `--input "text"` | One decision | Full JSON response (`--table` for a summary) |
-| Text file (any other extension) | Whole file is one input | Full JSON response (`--table`) |
-| `--image <path>` (repeatable) | PNG/JPEG/GIF/WebP, inline; no URLs | Full JSON response |
-| `-` (stdin), `.jsonl`, `.json` | One request **per record** | JSONL, one result per record |
+The input source decides the mode:
 
-Stdin must be JSON/JSONL records (objects or strings) — raw text on stdin is not accepted. `-` is required explicitly. Images cannot be combined with record input.
+- **Single decision:** one input gives one answer set. Use `--input "text"`, a plain text file, or `--image` alone. The output is one JSON response, or a summary table with `--table`. The command makes one API call.
+- **Batch decisions:** many records give one result per record. Use `-` (stdin) or a `.json` / `.jsonl` file. The output is JSONL, one line per record. The command makes one API call per record.
+
+| Input source | Mode | Output | API calls |
+| --- | --- | --- | --- |
+| `--input "text"` | Single | One JSON response (`--table` for a summary) | 1 |
+| Plain text file (e.g. `review.txt`) | Single | One JSON response (`--table`) | 1 |
+| `--image` with no input file | Single | One JSON response | 1 |
+| `-` (stdin), or a `.json` / `.jsonl` file | Batch | One JSONL line per record | 1 per record |
+
+A **record** is one JSON value: an object (a query row, sent as JSON) or a string (sent as its text). A blank string record is rejected.
+
+```bash
+# Single decision
+tdx ai decision questions.yml --input "Arrived late and the box was crushed"
+
+# Batch decisions: 100 rows from a query, one result line each
+tdx query "select id, review from mydb.feedback limit 100" --jsonl \
+  | tdx ai decision questions.yml -
+```
+
+Rules:
+
+- Batch input must be records. Raw text on stdin is rejected; use `--input` for one piece of text.
+- `--image` attaches to a single decision, alone or with `--input` or a text file. It cannot be combined with batch input.
+- `-` must be given explicitly; the command never reads stdin by default.
 
 ## Classify Query Rows
 
