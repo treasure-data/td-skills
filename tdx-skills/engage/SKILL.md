@@ -1,6 +1,6 @@
 ---
 name: engage
-description: Manage Treasure Engage email templates and campaigns using `tdx engage` commands with YAML+HTML configs. Use when creating, editing, previewing, validating, or deploying email templates, email/push campaigns, managing workspaces, or any task involving Engage email content — even if the user only mentions "create an email" or "build an HTML email". Always write YAML definition files alongside HTML — never push raw HTML without a YAML wrapper.
+description: Manage Treasure Engage email templates, campaigns, workspaces, and DAM media using `tdx engage` commands with YAML+HTML configs. Use when creating, editing, previewing, validating, or deploying email templates, email/push campaigns, managing workspaces, or locating Engage media assets — even if the user only mentions "create an email" or "build an HTML email". Always write YAML definition files alongside HTML — never push raw HTML without a YAML wrapper.
 ---
 
 # tdx Engage
@@ -45,6 +45,32 @@ tdx engage templates                            # List templates
 tdx engage campaigns                            # List campaigns
 tdx delivery senders --workspace "Name"          # List email senders
 ```
+
+## DAM Media Discovery
+
+Use DAM listing before selecting image assets for Engage content. Filter server-side instead of fetching an unbounded directory.
+
+```bash
+# List a directory or find a recent matching image
+# Use --sort=-updatedAt when the sort value begins with a hyphen.
+tdx engage media ls campaigns/images --name hero --node-type media_file --date-range last_30_days --sort=-updatedAt
+
+# Page through files uploaded by a specific user
+# --limit is global and must be between 1 and 100.
+tdx engage media ls --uploaded-by "Admin User" --limit 20 --offset 20 --json
+```
+
+| Option | Accepted values / behavior |
+|---|---|
+| `--name <text>` | Case-insensitive partial name match. |
+| `--node-type <type>` | `media_file` or `media_folder`. |
+| `--uploaded-by <name>` | Case-insensitive uploader match; returns files only. |
+| `--date-range <range>` | `last_7_days`, `last_30_days`, or `all`. |
+| `--sort <order>` | `updatedAt`, `-updatedAt`, `name`, or `-name`. |
+| `--limit <number>` | Global option; integer from 1 through 100. |
+| `--offset <number>` | Non-negative number of matching items to skip. |
+
+JSON and JSONL output preserve the API pagination metadata and navigation links with the listed directory data.
 
 ## Workspace Discovery
 
