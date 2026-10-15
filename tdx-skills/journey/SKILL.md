@@ -5,7 +5,9 @@ description: Load when the client wants to create, edit, or manage a CDP custome
 
 # tdx Journey - CDP Journey Orchestration
 
-**The commands on this page (`tdx journey ...`) work with complete audiences only.** A composable audience's journeys (Snowflake/Databricks/BigQuery, zero-copy) are pulled/pushed with `tdx cas journey pull`/`push` instead — same YAML format, same 5-step build process below — and `tdx journey push` refuses a composable audience and points you at `tdx cas journey push`. Composable journey commands require tdx v2026.10.3 or later; follow the version and command availability checks in the **cas** skill's Journeys section before using them. That section also covers the composable command reference and constraints (account enablement, one version per journey, no custom entry criteria on stages after the first).
+**Choose the audience type before discovery.** Complete audiences use `tdx journey ...`; composable audiences (Snowflake/Databricks/BigQuery, zero-copy) use `tdx cas journey ...`. Composable journey commands require tdx v2026.10.3 or later; follow the version and command availability checks in the **cas** skill's Journeys section before using them.
+
+For composable journeys, read the **cas** skill's **Composable authoring overrides** before following the 5-step build process or its templates. Those overrides take precedence over complete-audience discovery commands, segment rule examples, file locations, and validation/push commands. Reuse the step order and journey structure, with the composable constraints in the **cas** skill.
 
 ## Quick Reference
 
@@ -40,22 +42,27 @@ Build journey YAML **incrementally** through 5 steps.
 
 **Workflow for EACH step:**
 1. **Read the template file** (MANDATORY — use Read tool on the template path)
-2. **Run the discovery commands** listed in the template (MANDATORY — do NOT guess values)
+2. **Run discovery for the selected audience type** (MANDATORY — do NOT guess values). For complete audiences, use the template commands. For composable audiences, use the **cas** skill's discovery overrides in Steps 1 and 2 instead.
 3. Ask the client for the required information (if not already provided)
 4. **Show the design/plan and get client confirmation** — this is the ONE confirmation point per step
 5. Write the updated YAML to the journey file
 6. **Immediately proceed to the next step** — do NOT ask "shall we proceed?" or "please review". The client already confirmed in step 4.
 
-**File location**: `./segments/(parent-segment-name)/journey-name.yml`
+**File location**: complete audiences use `./segments/(parent-segment-name)/journey-name.yml`; composable audiences use `cas/<audience>/<folder path>/<name>.journey.yml` under the audience root from `tdx cas pull` (or the explicit `--dir` root).
 
 ## Prerequisites
 
+For composable audiences, use the **cas** skill's discovery overrides; explicitly select the composable audience rather than using complete-audience session context.
+
+For complete audiences:
 
 ```bash
 tdx sg pull "Parent Segment Name"   # Pull parent segment data (sets context)
 ```
 
 ## Commands
+
+The commands below are for complete audiences. Use the **cas** skill's Journeys commands for composable audiences.
 
 ```bash
 tdx journey pull                             # Pull all journeys to YAML
@@ -86,20 +93,40 @@ tdx journey view "Journey Name" --include-stats
 After completing Step 4:
 
 **1. Validate**
+
+For complete audiences:
 ```bash
 tdx journey validate path/to/journey.yml   # Local validation
 tdx journey push --dry-run                 # API validation
 ```
-Fix any errors before proceeding.
+
+For composable audiences, validate locally, then preview the exact journey file against the selected audience:
+```bash
+tdx cas journey validate cas/<audience>/<folder path>/<name>.journey.yml
+tdx cas journey push cas/<audience>/<folder path>/<name>.journey.yml --audience "Audience Name" --dry-run
+```
+
+For a custom audience root, use its exact file path for local validation and pass the same `--dir` used during discovery to the push dry-run. The local validator has no `--dir` flag. Fix any errors before proceeding.
 
 **2. Preview (MANDATORY before push)**
 
 Call `preview_journey` with the YAML file path. Ask the client to verify the visual flow structure (stage names, branch paths, merge and end points) before pushing. Do NOT skip this step.
 
 **3. Push**
+
+After client confirmation, use the command for the selected audience type.
+
+For complete audiences:
 ```bash
 tdx journey push path/to/journey.yml --yes
 ```
+
+For composable audiences:
+```bash
+tdx cas journey push cas/<audience>/<folder path>/<name>.journey.yml --audience "Audience Name" --yes
+```
+
+Pass the same `--dir` as the dry-run when using a custom audience root.
 
 Use TD Console "Simulation Mode" to validate before launching.
 

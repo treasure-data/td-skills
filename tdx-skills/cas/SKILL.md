@@ -169,9 +169,9 @@ This `--delete` means something different from `tdx cas push`'s own `--delete` (
 
 ## Journeys
 
-**Requires tdx v2026.10.3 or later.** Before using composable journey commands, check `tdx --version` and `tdx cas journey --help`. If the commands are unavailable, explain the version requirement and stop. Ask for explicit confirmation before upgrading to a prerelease; do not fall back to top-level `tdx journey`, which supports complete audiences only.
+**Requires tdx v2026.10.3 or later.** Before using composable journey commands, check `tdx --version`, `tdx cas journey --help`, and `tdx cas journey validate --help`. If the commands are unavailable, explain the version requirement and stop. Ask for explicit confirmation before upgrading to a prerelease; do not fall back to top-level `tdx journey`, which supports complete audiences only.
 
-Composable audience journeys use `tdx cas journey`, not top-level `tdx journey` — `tdx journey push` resolves complete audiences only and refuses a composable audience name outright (`SEGMENT_NOT_FOUND`). Composable stays under `tdx cas` until the core `tdx journey` commands reach parity with it. YAML format, the 5-step build process, and templates are otherwise identical — see the **journey** skill for authoring; this section covers only the composable-specific command surface and constraints.
+Composable audience journeys use `tdx cas journey`, not top-level `tdx journey` — `tdx journey push` resolves complete audiences only and refuses a composable audience name outright (`SEGMENT_NOT_FOUND`). Composable stays under `tdx cas` until the core `tdx journey` commands reach parity with it. Reuse the **journey** skill's 5-step order and journey structure, applying the **Composable authoring overrides** below before following its templates.
 
 ```bash
 tdx cas journey list [pattern] --audience <name>              # List journeys (glob filter on name)
@@ -186,6 +186,44 @@ tdx cas journey push [file] --audience <name> -y              # Skip confirmatio
 `--audience` can be omitted once the `composable_audience` session context is set — `tdx cas pull` and `cas journey pull` both set it.
 
 **File layout**: `cas/<audience>/<folder path>/<name>.journey.yml` — journeys land next to the audience and segment files `tdx cas pull` writes in that same tree. `--dir` overrides the audience root (default `cas/<audience>`); a single file passed to `push` must sit under it, since folder paths are read relative to that root. `tdx cas validate`/`push` skip `*.journey.yml` files — they belong to `cas journey push`, not the audience/segment push.
+
+### Composable authoring overrides
+
+These instructions take precedence over the **journey** skill's prerequisites, template discovery commands in Steps 1 and 2, file location, and Step 5 commands.
+
+**Initial discovery (before Step 1):** explicitly select the composable audience and pull its definition before editing local files:
+
+```bash
+tdx cas list
+tdx cas desc "Audience Name"
+tdx cas pull "Audience Name"
+tdx cas journey pull --audience "Audience Name"
+```
+
+Read the pulled `audience.yml` for exact attribute/behavior names, types, source tables, and connections. Inspect pulled segments and journeys for existing rule examples. In Step 2, reread these local definitions to design decision branches; do not pull again into the authoring root after Step 1, which would overwrite local journey edits. If a refresh is needed, pull into a separate discovery directory. Replace the templates' `tdx sg pull`, `tdx ps desc -o`, `tdx sg fields`, and TD output-table queries with this discovery; complete-audience session context does not identify the composable audience. If real CDW values or distributions are needed, use an available read-only tool for that CDW connection or ask the user for sample values before choosing thresholds; do not guess or query an unrelated TD table.
+
+**File location (Steps 1–4):** write `cas/<audience>/<folder path>/<name>.journey.yml` under the root created by `tdx cas pull`, alongside any existing journeys. For a custom root, use the same `--dir` on audience pull, journey pull, and journey push. Do not use the complete-audience `segments/<parent-segment>/` location. Apply the composable constraints below while building each stage.
+
+**Embedded segment rules (Steps 1 and 2):** composable `.journey.yml` files use the shared journey rule format from the templates (`attribute` and `operator.value`). Use the exact exposed attribute/behavior names from audience discovery. Standalone `type: composable_segment` files use the CAS `leftValue`/`operator.rightValue` format; do not copy those rules into the journey unchanged. Reuse embedded rule examples from pulled journeys rather than standalone segment files.
+
+**Supported structure (Steps 2–4):** complete-audience templates include condition waits and cross-journey jumps that composable journeys do not support. Use supported duration waits and decision points; if the client's design requires an unsupported feature, explain the limitation before proposing an alternative. Local composable validation checks these restrictions and activation String Builder mappings as well as the shared journey structure.
+
+**Local validation (Step 5):** replace `tdx journey validate` with the composable validator before API reconciliation:
+
+```bash
+tdx cas journey validate cas/<audience>/<folder path>/<name>.journey.yml
+```
+
+Use the exact local file path for custom roots; this command has no `--dir` flag and performs no API calls. Fix errors before proceeding.
+
+**API dry-run, visual preview, and push (Step 5):** use the **journey** skill's visual `preview_journey` step and obtain client confirmation. Replace both its API dry-run and real push commands with the exact composable journey file and audience:
+
+```bash
+tdx cas journey push cas/<audience>/<folder path>/<name>.journey.yml --audience "Audience Name" --dry-run
+tdx cas journey push cas/<audience>/<folder path>/<name>.journey.yml --audience "Audience Name" --yes
+```
+
+Run the dry-run and fix errors before visual confirmation and real push. Add the same `--dir` to both commands when using a custom root. The real push requires client confirmation; a dry-run or visual preview does not deploy anything. `tdx cas preview` queries a saved server segment on the CDW; it does not accept a local journey file or an unsaved embedded segment and cannot replace these validation and preview steps.
 
 **Push never deletes.** A server journey with no local file is reported, not removed. Repeat pushes are idempotent by name, same as `tdx cas push`. A server-side rejection (an unsupported journey feature) can land mid-write — whatever was already created (folder, journey, its segments, an activation) stays; fix the YAML and push again, which reuses what exists rather than duplicating it.
 
@@ -235,7 +273,7 @@ tdx cas journey push cas/customer360-snowflake/Welcome/onboarding.journey.yml -y
 - **connector-config** - Discover `connector_config` fields per connector type for activations
 - **segment** - Standard (non-composable) child segment management — note the different rule DSL
 - **parent-segment** - Standard (non-composable) parent segment management
-- **journey** - YAML authoring (5-step build process, templates) for composable journeys too — this skill only covers the composable `tdx cas journey` command surface
+- **journey** - 5-step authoring process and journey structure — apply this skill's Composable authoring overrides when using its templates
 
 ## Resources
 
