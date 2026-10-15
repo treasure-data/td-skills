@@ -255,7 +255,7 @@ cp /tmp/email_campaign_preview.html ~/email_exports/campaign_name_2025-01-15.htm
 
 ## Resources
 
-- [Treasure Engage documentation](https://docs.treasuredata.com/articles/#!int/engage-overview)
+- [Treasure Engage documentation](https://docs.treasuredata.com/products/marketing-cloud/engage-studio/)
 - [Email design patterns reference](references/email-design-patterns.md)
 - [Engage integration guide](references/engage-integration.md)
 - [Sample campaign email](examples/sample-campaign.html)

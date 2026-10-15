@@ -364,5 +364,5 @@ After RT configuration:
 
 ## Resources
 
-- [RT 2.0 Documentation](https://docs.treasuredata.com/display/public/PD/RT+2.0)
-- [Parent Segment Guide](https://docs.treasuredata.com/display/public/PD/Parent+Segments)
+- [RT 2.0 Documentation](https://docs.treasuredata.com/products/customer-data-platform/real-time/real-time)
+- [Parent Segment Guide](https://docs.treasuredata.com/products/customer-data-platform/data-workbench/parent-segments)

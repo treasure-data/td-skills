@@ -481,6 +481,6 @@ POST   /entities/realtime_journeys/:id/disable  # Disable journey
 
 ## Resources
 
-- [RT Triggers Documentation](https://docs.treasuredata.com/display/public/PD/RT+Triggers)
-- [CDP API Reference](https://docs.treasuredata.com/display/public/PD/CDP+API)
+- [RT Triggers Documentation](https://docs.treasuredata.com/products/customer-data-platform/journey-orchestration/realtime/creating-a-real-time-triggered-activation)
+- [CDP API Reference](https://docs.treasuredata.com/apis/td_cdp_api-public)
 - [Batch Journey Skill](../../../tdx-skills/journey) - For YAML-based stage journeys
