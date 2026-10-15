@@ -61,6 +61,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 ### TDX CLI Skills
 
 - **[tdx-skills/tdx-basic](./tdx-skills/tdx-basic)** - Core [tdx](https://tdx.treasuredata.com) CLI operations for managing TD from command line: databases, tables, queries, and context management
+- **[tdx-skills/ai-decision](./tdx-skills/ai-decision)** - Classify and score text, images, or query result rows with structured questions using `tdx ai decision`
 - **[tdx-skills/parent-segment](./tdx-skills/parent-segment)** - Manage CDP parent segments with YAML-based configuration for master tables, attributes, and behaviors
 - **[tdx-skills/segment](./tdx-skills/segment)** - Manage CDP child segments with rules, activations, and folder organization
 - **[tdx-skills/validate-segment](./tdx-skills/validate-segment)** - Validate segment YAML configurations against CDP API spec for correct operators, time units, and field names

@@ -200,3 +200,4 @@ Each `tdx.json` stores context for its directory—commands run from any subdire
 
 - Documentation: https://tdx.treasuredata.com/
 - Related: **sql-skills/time-filtering**, **segment**, **journey**, **foundry-agent**
+- For structured AI classification or scoring of text, images, or query rows with `tdx ai decision`, use **ai-decision**.
