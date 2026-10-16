@@ -170,6 +170,21 @@ tests:
 
   # === Document Skills ===
 
+  - prompt: "Turn this note into a six-slide Markdown presentation in Treasure Work"
+    expected: treasure-deck
+
+  - prompt: "Create a presentation in Treasure Work about this project update"
+    expected: treasure-deck
+
+  - prompt: "Use treasure-deck to draft a short talk from these notes"
+    expected: treasure-deck
+
+  - prompt: "Open the live slide editor for deck/2026-10-15-q4-review/2026-10-15-q4-review.md in the right dock"
+    expected: treasure-deck
+
+  - prompt: "Update the comparison slide in my Markdown file with deck: true frontmatter"
+    expected: treasure-deck
+
   - prompt: "Create a PowerPoint presentation about our Q4 results"
     expected: pptx
 
