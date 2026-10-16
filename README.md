@@ -104,11 +104,12 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 
 ### Treasure Work Skills
 
-Mirror of `studio-skills` updated for the renamed `mcp__work__*` MCP namespace (formerly `mcp__tdx-studio__*`). Use this plugin with builds that ship the `work` MCP server name.
+Workspace, agent, presentation, and rendering workflows for Treasure Work using the `mcp__work__*` MCP namespace. Use this plugin with builds that ship the `work` MCP server name.
 
 - **[treasure-work-skills/work](./treasure-work-skills/work)** - Manage workspace documents (items, goals, notes, guides, references) using file operations with YAML frontmatter, wiki-links, and status lifecycles
 - **[treasure-work-skills/skill-creator](./treasure-work-skills/skill-creator)** - Create, write, and optimize custom skills (SKILL.md files) in Treasure Work with description optimization and writing patterns
 - **[treasure-work-skills/react-dashboard](./treasure-work-skills/react-dashboard)** - Build interactive React dashboards in Treasure Work using `render_react` for custom components beyond `render_chart`
+- **[treasure-work-skills/treasure-deck](./treasure-work-skills/treasure-deck)** - Create dated Markdown slide decks with the npm Treasure Deck CLI and open its live editor in the right-dock Browser
 - **[treasure-work-skills/work-agent](./treasure-work-skills/work-agent)** - Create and configure agents in Treasure Work: AGENTS.md authoring, `agent_*` MCP tools, on-demand vs scheduled (cron) lifecycle (draft → active → paused), and chat-based result inspection
 - **[treasure-work-skills/agent-review](./treasure-work-skills/agent-review)** - Review and validate agents before activating, with structural (AGENTS.md schema) and quality checks via parallel sub-agents
 - **[treasure-work-skills/web-search](./treasure-work-skills/web-search)** - Web search and URL content extraction using `web_search` with query optimization, search operators, and structured research patterns
