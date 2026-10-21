@@ -198,6 +198,11 @@ function fmtPct(v) {
   return num(v).toFixed(1) + '%';
 }
 
+// JSON for inline <script>: escape "<" so data containing "</script>" cannot end the block
+function safeJson(value, ...args) {
+  return JSON.stringify(value, ...args).replace(/</g, "\\u003c");
+}
+
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)
@@ -430,9 +435,9 @@ async function main() {
   // ── Tab 2: Top Items and Ranks ──────────────────────────────────────────────
   const top10Rank1 = q2aRows.slice(0, 10);
   const topItemsAsc = [...top10Rank1].reverse();
-  const top_items_labels_json = JSON.stringify(topItemsAsc.map(r => r.item));
-  const top_items_values_json = JSON.stringify(topItemsAsc.map(r => num(r.user_count)));
-  const top_items_text_json = JSON.stringify(topItemsAsc.map(r => fmtInt(r.user_count)));
+  const top_items_labels_json = safeJson(topItemsAsc.map(r => r.item));
+  const top_items_values_json = safeJson(topItemsAsc.map(r => num(r.user_count)));
+  const top_items_text_json = safeJson(topItemsAsc.map(r => fmtInt(r.user_count)));
 
   // Top-3 side-by-side table rows
   const maxTableRows = Math.max(
@@ -458,8 +463,8 @@ async function main() {
   const catRank1Rows = q3Rows
     .filter(r => r.rank_label === 'rank_1')
     .sort((a, b) => num(b.user_count) - num(a.user_count));
-  const cat_rank1_labels_json = JSON.stringify(catRank1Rows.map(r => r.category));
-  const cat_rank1_values_json = JSON.stringify(catRank1Rows.map(r => num(r.user_count)));
+  const cat_rank1_labels_json = safeJson(catRank1Rows.map(r => r.category));
+  const cat_rank1_values_json = safeJson(catRank1Rows.map(r => num(r.user_count)));
 
   // Stacked Bar across Ranks 1–3
   const distinctCats = [];
@@ -486,19 +491,19 @@ async function main() {
   const rank2Vals = distinctCats.map(c => rank2Map[c] || 0);
   const rank3Vals = distinctCats.map(c => rank3Map[c] || 0);
 
-  const rank_categories_json = JSON.stringify(distinctCats);
-  const rank1_values_json = JSON.stringify(rank1Vals);
-  const rank2_values_json = JSON.stringify(rank2Vals);
-  const rank3_values_json = JSON.stringify(rank3Vals);
+  const rank_categories_json = safeJson(distinctCats);
+  const rank1_values_json = safeJson(rank1Vals);
+  const rank2_values_json = safeJson(rank2Vals);
+  const rank3_values_json = safeJson(rank3Vals);
 
   // ── Tab 3: Catalog & Popularity ─────────────────────────────────────────────
-  const catalog_cat_labels_json = JSON.stringify(q4aRows.map(r => r.item_category));
-  const catalog_cat_values_json = JSON.stringify(q4aRows.map(r => num(r.item_count)));
+  const catalog_cat_labels_json = safeJson(q4aRows.map(r => r.item_category));
+  const catalog_cat_values_json = safeJson(q4aRows.map(r => num(r.item_count)));
 
   const mostOrderedAsc = [...q4bRows.slice(0, 10)].reverse();
-  const most_ordered_labels_json = JSON.stringify(mostOrderedAsc.map(r => r.item_name));
-  const most_ordered_values_json = JSON.stringify(mostOrderedAsc.map(r => num(r.times_ordered)));
-  const most_ordered_text_json = JSON.stringify(mostOrderedAsc.map(r => fmtInt(r.times_ordered)));
+  const most_ordered_labels_json = safeJson(mostOrderedAsc.map(r => r.item_name));
+  const most_ordered_values_json = safeJson(mostOrderedAsc.map(r => num(r.times_ordered)));
+  const most_ordered_text_json = safeJson(mostOrderedAsc.map(r => fmtInt(r.times_ordered)));
 
   const most_rec_labels_json = top_items_labels_json;
   const most_rec_values_json = top_items_values_json;
@@ -749,21 +754,21 @@ async function main() {
     '{{most_rec_text_json}}': most_rec_text_json,
     '{{tab3_insights_html_li}}': tab3InsightsHtml,
 
-    '{{historic_run_labels_json}}': JSON.stringify(historicRunLabels),
-    '{{historic_coverage_pct_json}}': JSON.stringify(historicCoveragePct),
-    '{{historic_items_rec_json}}': JSON.stringify(historicItemsRec),
-    '{{historic_users_rec_json}}': JSON.stringify(historicUsersRec),
+    '{{historic_run_labels_json}}': safeJson(historicRunLabels),
+    '{{historic_coverage_pct_json}}': safeJson(historicCoveragePct),
+    '{{historic_items_rec_json}}': safeJson(historicItemsRec),
+    '{{historic_users_rec_json}}': safeJson(historicUsersRec),
     '{{historic_single_run_callout}}': historic_single_run_callout,
     '{{tab4_insights_html_li}}': tab4InsightsHtml,
 
     '{{testset_tab_content}}': testsetTabContent,
     '{{testset_available}}': hasTestset ? 'true' : 'false',
-    '{{testset_bar_model_json}}': JSON.stringify(testsetBarModel),
-    '{{testset_bar_random_json}}': JSON.stringify(testsetBarRandom),
-    '{{testset_prec_labels_json}}': JSON.stringify(testsetPrecLabels),
-    '{{testset_prec_values_json}}': JSON.stringify(testsetPrecValues),
-    '{{testset_rec_labels_json}}': JSON.stringify(testsetRecLabels),
-    '{{testset_rec_values_json}}': JSON.stringify(testsetRecValues)
+    '{{testset_bar_model_json}}': safeJson(testsetBarModel),
+    '{{testset_bar_random_json}}': safeJson(testsetBarRandom),
+    '{{testset_prec_labels_json}}': safeJson(testsetPrecLabels),
+    '{{testset_prec_values_json}}': safeJson(testsetPrecValues),
+    '{{testset_rec_labels_json}}': safeJson(testsetRecLabels),
+    '{{testset_rec_values_json}}': safeJson(testsetRecValues)
   };
 
   const templateContent = fs.readFileSync(templatePath, 'utf-8');
@@ -828,7 +833,7 @@ async function main() {
     } : null
   };
 
-  const rawInjection = `<script id="nbp-data-payload">\n  window.RAW = ${JSON.stringify(rawPayload, null, 2)};\n</script>\n`;
+  const rawInjection = `<script id="nbp-data-payload">\n  window.RAW = ${safeJson(rawPayload, null, 2)};\n</script>\n`;
   renderedHtml = renderedHtml.replace('</head>', `${rawInjection}</head>`);
 
   // Write output

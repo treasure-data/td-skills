@@ -151,7 +151,8 @@ function escapeHtml(value) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
-function json(value) { return JSON.stringify(value); }
+// JSON for inline <script>: escape "<" so data containing "</script>" cannot end the block
+function json(value, ...args) { return JSON.stringify(value, ...args).replace(/</g, "\\u003c"); }
 function pill(kind, text) { return `<span class="pill ${kind}">${escapeHtml(text)}</span>`; }
 
 async function run() {
@@ -237,7 +238,7 @@ async function run() {
   if (leftovers?.length) console.warn(`Warning: unreplaced tokens: ${leftovers.slice(0, 5).join(', ')}`);
 
   const raw = { project: { name: projectName, slug: projectSlug, database: sinkDatabase, predTable }, meta: { sessionId: train.session_id, predSessionId: prediction.pred_session_id, modelType: train.model_type, threshold, thresholdApplied, recordsScored, psi }, training: { latest: train, trainSplit: trainCheck, historic: historicTrain }, prediction: { latest: prediction, buckets: bins, historic: historicPred }, features: { importance: featureRows, directional: directionalRows } };
-  html = html.replace('</head>', `<script id="classifier-data-payload">\nwindow.RAW = ${JSON.stringify(raw, null, 2)};\n</script>\n</head>`);
+  html = html.replace('</head>', `<script id="classifier-data-payload">\nwindow.RAW = ${json(raw, null, 2)};\n</script>\n</head>`);
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   // Make sure agent_outputs/ ignores itself so customer data is never committed
   const outputsIgnore = path.resolve(workRoot, 'agent_outputs', '.gitignore');

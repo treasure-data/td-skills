@@ -96,7 +96,7 @@ Record the column names and findings in `project_state.md` (Phase 1) — they ar
 | Default project name | `rfm_ais` (from `tdx.json`) |
 | Entry point | `rfm_launch` |
 | Secrets | None to set. `rfm_ai_signals.dig` sends `${secret:td.apikey}`, which the AI Signals architecture provides — never ask the user to set it, and keep the header exactly as in the template |
-| API endpoint | The template uses the US endpoint. For an account in another region (`tdx status`), use that region's endpoint (`ai-signals-guide.md` §3) in `+run_rfm` and `+poll_status` of `rfm_ai_signals.dig` |
+| API endpoint | `ml_batch_api_endpoint` in the config: US by default; for an account in another region (`tdx status`), set that region's endpoint (`ai-signals-guide.md` §3) |
 | Schedule | Commented out in `rfm_launch.dig`. Ask whether the customer wants scheduled runs; leave it commented for a test account |
 | Sink database | Created by the first step of `rfm_launch.dig` (`+create_sink_database`, `td_ddl>`) if missing. Keep that step and the `td: database:` export above it — `td_ddl>` in the launch file fails with "Parameter 'database' is required" without it. If the project owner can't create databases, the user creates it in the TD Console before the first run |
 

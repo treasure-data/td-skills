@@ -1,21 +1,21 @@
-WITH BASE AS (
-SELECT ${unique_user_id},
-MAX(IF(${next_best_campaign.ad_engagement_logic}, 1, 0)) AS ad_engagement_flag,
-MAX(IF(${next_best_campaign.conversion_logic}, 1, 0)) as conversion_flag,
+with base as (
+select ${unique_user_id},
+max(if(${next_best_campaign.ad_engagement_logic}, 1, 0)) as ad_engagement_flag,
+max(if(${next_best_campaign.conversion_logic}, 1, 0)) as conversion_flag,
 count(*) as num_visits,
-MIN(date_time) AS first_visit,
-MAX(date_time) AS last_visit,
-MAX(CASE WHEN ${next_best_campaign.conversion_logic} THEN date_time END) AS last_purchase_date,
-MAX(CASE WHEN ${next_best_campaign.ad_engagement_logic} THEN date_time END) AS last_ad_engagement_date,
-MAX(CASE WHEN ${next_best_campaign.abandon_regexp} THEN date_time END) AS last_cart_add_date
-FROM ${next_best_campaign.src_table}
-GROUP BY 1
+min(date_time) as first_visit,
+max(date_time) as last_visit,
+max(case when ${next_best_campaign.conversion_logic} then date_time end) as last_purchase_date,
+max(case when ${next_best_campaign.ad_engagement_logic} then date_time end) as last_ad_engagement_date,
+max(case when ${next_best_campaign.abandon_regexp} then date_time end) as last_cart_add_date
+from ${next_best_campaign.src_table}
+group by 1
 )
-SELECT
-BASE.*,
-IF(ad_engagement_flag = 0 AND conversion_flag = 0, 1, 0) AS no_ads_or_purchases_flag,
-IF(ad_engagement_flag = 0 AND conversion_flag = 0 AND date_diff('day', CAST(first_visit AS TIMESTAMP), CURRENT_TIMESTAMP) <= ${next_best_campaign.new_customers_days}, 1, 0) AS new_visitor_flag,
-IF(date_diff('day', CAST(last_ad_engagement_date AS TIMESTAMP), CURRENT_TIMESTAMP) <= ${next_best_campaign.event_lookback}, 1, 0) AS recent_ad_engagement_flag,
-IF(date_diff('day', CAST(last_purchase_date AS TIMESTAMP), CURRENT_TIMESTAMP) <= ${next_best_campaign.event_lookback}, 1, 0) AS recent_purchase_flag,
-IF(last_cart_add_date > COALESCE(last_purchase_date, '1970-01-01') AND date_diff('day', CAST(last_cart_add_date AS TIMESTAMP), CURRENT_TIMESTAMP) <= ${next_best_campaign.event_lookback}, 1, 0) AS cart_abandon_flag
-FROM BASE
+select
+base.*,
+if(ad_engagement_flag = 0 and conversion_flag = 0, 1, 0) as no_ads_or_purchases_flag,
+if(ad_engagement_flag = 0 and conversion_flag = 0 and date_diff('day', cast(first_visit as timestamp), current_timestamp) <= ${next_best_campaign.new_customers_days}, 1, 0) as new_visitor_flag,
+if(date_diff('day', cast(last_ad_engagement_date as timestamp), current_timestamp) <= ${next_best_campaign.event_lookback}, 1, 0) as recent_ad_engagement_flag,
+if(date_diff('day', cast(last_purchase_date as timestamp), current_timestamp) <= ${next_best_campaign.event_lookback}, 1, 0) as recent_purchase_flag,
+if(last_cart_add_date > coalesce(last_purchase_date, '1970-01-01') and date_diff('day', cast(last_cart_add_date as timestamp), current_timestamp) <= ${next_best_campaign.event_lookback}, 1, 0) as cart_abandon_flag
+from base

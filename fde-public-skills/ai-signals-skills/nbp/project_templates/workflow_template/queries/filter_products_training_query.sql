@@ -1,5 +1,5 @@
 -- this select products NOT to be included in training 
-SELECT 
-  DISTINCT itemid
-FROM ${prefix}transaction_unfiltered
-WHERE REGEXP_LIKE(item_name, 'Backpack')
+select 
+  distinct itemid
+from ${prefix}transaction_unfiltered
+where regexp_like(item_name, 'Backpack')

@@ -13,7 +13,7 @@ mkdir -p agent_outputs/<project_slug>/intake
 python3 "<skill_dir>/tools/dash_to_html.py" "<path to .dash>" --out agent_outputs/<project_slug>/intake/dash --db <confirmed database>
 ```
 
-Use only `widget_audit.json` (per widget: title, type, chart type, table, SQL, measures, dimension, global filters, warnings) to fill the spec. Ignore the converter's `render.js` / `template.html`.
+Use only `widget_audit.json` (per widget: title, type, chart type, table, SQL, measures, dimension, global filters, warnings) to fill the spec.
 
 - Converter warnings need a decision: unconverted formulas (rewrite the measure), heuristic auto-JOINs (fan-out risk — validate in data discovery), global filters across tables with no join (scope the filter to the tables that have the column).
 - The database inside the `.dash` file is a hint only — confirm it with the user.

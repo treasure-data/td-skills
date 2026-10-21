@@ -1,31 +1,31 @@
-WITH AGG AS (
-  SELECT
+with agg as (
+  select
 ${unique_user_id}, time,  order_id, order_status, order_type, coupon_used, 
-ARRAY_JOIN(ARRAY_DISTINCT(ARRAY_AGG(item_name)), ', ') AS item_name,
-ARRAY_JOIN(ARRAY_DISTINCT(ARRAY_AGG(item_category)), ', ') AS item_category,
-SUM(unit_price) as total_spend
-FROM ${td.each.src_table}
-WHERE order_status IN ('COMPLETE', 'PROCESSING')
-GROUP BY ${unique_user_id}, time,  order_id, order_status, order_type, coupon_used
+array_join(array_distinct(array_agg(item_name)), ', ') as item_name,
+array_join(array_distinct(array_agg(item_category)), ', ') as item_category,
+sum(unit_price) as total_spend
+from ${td.each.src_table}
+where order_status in ('COMPLETE', 'PROCESSING')
+group by ${unique_user_id}, time,  order_id, order_status, order_type, coupon_used
 )
-SELECT time,
-  TD_TIME_STRING(time, 's!') AS date_time,
-  TD_TIME_STRING(time, 'd!') AS event_date,
+select time,
+  td_time_string(time, 's!') as date_time,
+  td_time_string(time, 'd!') as event_date,
   ${unique_user_id},
-  '${td.each.src_table}' AS src_table,
-  CONCAT('Order - ', order_type)  AS event_type,
-  CAST(NULL AS VARCHAR) AS url,
-  CAST(NULL AS VARCHAR) AS path,
-  CAST(NULL AS VARCHAR) AS referral_page,
-  CAST(NULL AS VARCHAR) AS referral_domain,
-  CAST(NULL AS VARCHAR) as channel,
-  CAST(NULL AS VARCHAR) as source,
+  '${td.each.src_table}' as src_table,
+  concat('Order - ', order_type)  as event_type,
+  cast(null as varchar) as url,
+  cast(null as varchar) as path,
+  cast(null as varchar) as referral_page,
+  cast(null as varchar) as referral_domain,
+  cast(null as varchar) as channel,
+  cast(null as varchar) as source,
   coupon_used as campaign,
-  CAST(NULL AS VARCHAR) as utm_mailing,
-  order_type AS context_col,
-  1.0 AS conversion_flag,
-  total_spend AS item_price
-  FROM AGG
+  cast(null as varchar) as utm_mailing,
+  order_type as context_col,
+  1.0 as conversion_flag,
+  total_spend as item_price
+  from agg
 
 
 

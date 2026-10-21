@@ -13,7 +13,7 @@ KEY IDEAS
    partition, producing channel_final/source_final for attribution modeling.
 */
 
-WITH SESH AS (
+with sesh as (
   /* 
   CTE: SESH (Sessionization / Journey grouping)
   -------------------------------------------
@@ -22,14 +22,14 @@ WITH SESH AS (
   - Concatenates the session window token with unique_user_id to ensure session_id uniqueness across users.
   - Output: all original touchpoint rows + derived session_id.
   */
-  SELECT
-    TD_SESSIONIZE_WINDOW(time, ${session_length})
-      OVER (PARTITION BY ${unique_user_id} ORDER BY time) || ${unique_user_id} AS session_id,
-    BASE.*
-  FROM ${src_union_base_to_session_table} BASE
+  select
+    td_sessionize_window(time, ${session_length})
+      over (partition by ${unique_user_id} order by time) || ${unique_user_id} as session_id,
+    base.*
+  from ${src_union_base_to_session_table} base
 ),
 
-STEP2 AS (
+step2 as (
   /*
   CTE: STEP2 (Normalize / infer channel + source)
   -----------------------------------------------
@@ -58,112 +58,112 @@ STEP2 AS (
   - Normalize certain known patterns (e.g., 'karma' remove spaces).
   - Else keep original source.
   */
-  SELECT
-    SESH.*,
+  select
+    sesh.*,
 
     /* channel_new: best-effort normalized channel for each touchpoint */
-    CASE
+    case
       /* 1) If channel missing, infer from referral_domain or source */
-      WHEN channel IS NULL OR channel = '' THEN (
-        CASE
-      WHEN REGEXP_LIKE(LOWER(referral_domain), 'sfmc|braze|klaviyo|mailchimp|sendgrid|constantcontact|hubspot|marketo|pardot|iterable|sailthru|customer\.io|activecampaign|campaignmonitor|getresponse|aweber')
-        OR REGEXP_LIKE(LOWER(source),          'sfmc|braze|klaviyo|mailchimp|sendgrid|constantcontact|hubspot|marketo|pardot|iterable|sailthru|customer\.io|activecampaign|campaignmonitor|getresponse|aweber')
-        THEN 'email'
+      when channel is null or channel = '' then (
+        case
+      when regexp_like(lower(referral_domain), 'sfmc|braze|klaviyo|mailchimp|sendgrid|constantcontact|hubspot|marketo|pardot|iterable|sailthru|customer\.io|activecampaign|campaignmonitor|getresponse|aweber')
+        or regexp_like(lower(source),          'sfmc|braze|klaviyo|mailchimp|sendgrid|constantcontact|hubspot|marketo|pardot|iterable|sailthru|customer\.io|activecampaign|campaignmonitor|getresponse|aweber')
+        then 'email'
 
       /* Video — checked before social so YouTube lands here */
-      WHEN REGEXP_LIKE(LOWER(referral_domain), 'youtube|vimeo|dailymotion|twitch|hulu|roku|pluto|peacock')
-        OR REGEXP_LIKE(LOWER(source),          'youtube|vimeo|dailymotion|twitch|hulu|roku|pluto|peacock|video')
-        THEN 'video'
+      when regexp_like(lower(referral_domain), 'youtube|vimeo|dailymotion|twitch|hulu|roku|pluto|peacock')
+        or regexp_like(lower(source),          'youtube|vimeo|dailymotion|twitch|hulu|roku|pluto|peacock|video')
+        then 'video'
 
       /* Social */
-      WHEN REGEXP_LIKE(LOWER(referral_domain), 'facebook|instagram|twitter|linkedin|snapchat|pinterest|tiktok|reddit|quora|threads|mastodon|bluesky|wechat|weibo|whatsapp|telegram')
-        OR REGEXP_LIKE(LOWER(source),          'facebook|instagram|twitter|linkedin|snapchat|pinterest|tiktok|reddit|quora|threads|mastodon|bluesky|wechat|weibo|whatsapp|telegram')
-        THEN 'social'
+      when regexp_like(lower(referral_domain), 'facebook|instagram|twitter|linkedin|snapchat|pinterest|tiktok|reddit|quora|threads|mastodon|bluesky|wechat|weibo|whatsapp|telegram')
+        or regexp_like(lower(source),          'facebook|instagram|twitter|linkedin|snapchat|pinterest|tiktok|reddit|quora|threads|mastodon|bluesky|wechat|weibo|whatsapp|telegram')
+        then 'social'
 
       /* Affiliate */
-      WHEN REGEXP_LIKE(LOWER(referral_domain), 'shareasale|cj\.com|rakuten|impact\.com|partnerize|awin|affiliate|refersion|pepperjam')
-        OR REGEXP_LIKE(LOWER(source),          'shareasale|cj\.com|rakuten|impact\.com|partnerize|awin|affiliate|refersion|pepperjam')
-        THEN 'affiliates'
+      when regexp_like(lower(referral_domain), 'shareasale|cj\.com|rakuten|impact\.com|partnerize|awin|affiliate|refersion|pepperjam')
+        or regexp_like(lower(source),          'shareasale|cj\.com|rakuten|impact\.com|partnerize|awin|affiliate|refersion|pepperjam')
+        then 'affiliates'
 
       /* Display / programmatic */
-      WHEN REGEXP_LIKE(LOWER(referral_domain), 'criteo|mediamath|thetradedesk|taboola|outbrain|stackadapt|adroll|appnexus|xandr|dv360|googlesyndication|rubiconproject|onetag')
-        OR REGEXP_LIKE(LOWER(source),          'criteo|mediamath|thetradedesk|taboola|outbrain|stackadapt|adroll|appnexus|xandr|dv360|googlesyndication|rubiconproject|onetag|display|banner')
-        OR REGEXP_LIKE(LOWER(campaign),        'display|discovery\s*ads|trueview|dv360|banner')
-        THEN 'display'
+      when regexp_like(lower(referral_domain), 'criteo|mediamath|thetradedesk|taboola|outbrain|stackadapt|adroll|appnexus|xandr|dv360|googlesyndication|rubiconproject|onetag')
+        or regexp_like(lower(source),          'criteo|mediamath|thetradedesk|taboola|outbrain|stackadapt|adroll|appnexus|xandr|dv360|googlesyndication|rubiconproject|onetag|display|banner')
+        or regexp_like(lower(campaign),        'display|discovery\s*ads|trueview|dv360|banner')
+        then 'display'
 
       /* Organic search — checked after social/video so shared domains (e.g. google) don't steal social/video hits */
-      WHEN REGEXP_LIKE(LOWER(referral_domain), 'google|bing|yahoo|baidu|duckduckgo|yandex|ecosia|naver|sogou|aol|perplexity|brave|ask\.com')
-        OR REGEXP_LIKE(LOWER(source),          'google|bing|yahoo|baidu|duckduckgo|yandex|ecosia|naver|sogou|aol|perplexity|brave|ask\.com|gpt')
-        THEN 'organic'
+      when regexp_like(lower(referral_domain), 'google|bing|yahoo|baidu|duckduckgo|yandex|ecosia|naver|sogou|aol|perplexity|brave|ask\.com')
+        or regexp_like(lower(source),          'google|bing|yahoo|baidu|duckduckgo|yandex|ecosia|naver|sogou|aol|perplexity|brave|ask\.com|gpt')
+        then 'organic'
 
 
           /* last resort when channel is blank: use source label */
-          ELSE source
-        END
+          else source
+        end
       )
 
       /* ===== 2) Channel is populated: apply mta_channel_mapping_final remaps ===== */
 
   /* cpc on social platforms -> social */
-    WHEN channel = 'cpc'
-      AND (
-        REGEXP_LIKE(LOWER(source), 'facebook|instagram|snapchat|tiktok|pinterest|linkedin|reddit|twitter')
-        OR REGEXP_LIKE(LOWER(campaign), 'fbig|fb_|ig_|snap_|tiktok_|pin_|li_|social|paid_social|meta_')
+    when channel = 'cpc'
+      and (
+        regexp_like(lower(source), 'facebook|instagram|snapchat|tiktok|pinterest|linkedin|reddit|twitter')
+        or regexp_like(lower(campaign), 'fbig|fb_|ig_|snap_|tiktok_|pin_|li_|social|paid_social|meta_')
       )
-      THEN 'social'
+      then 'social'
 
     /* cpc on search platforms -> paid_search */
-    WHEN channel = 'cpc'
-      AND (
-        REGEXP_LIKE(LOWER(source), 'google|bing|yahoo|search|microsoft|apple_search|amazon_search')
-        OR REGEXP_LIKE(LOWER(campaign), 'gmail\s*ads|paid\s*search|search\s*ads|ppc')
+    when channel = 'cpc'
+      and (
+        regexp_like(lower(source), 'google|bing|yahoo|search|microsoft|apple_search|amazon_search')
+        or regexp_like(lower(campaign), 'gmail\s*ads|paid\s*search|search\s*ads|ppc')
       )
-      THEN 'paid_search'
+      then 'paid_search'
 
     /* cpc on display/programmatic platforms -> display */
-    WHEN channel = 'cpc'
-      AND (
-        REGEXP_LIKE(LOWER(source), 'criteo|taboola|outbrain|dv360|thetradedesk|stackadapt|adroll|xandr')
-        OR REGEXP_LIKE(LOWER(campaign), 'display|discovery\s*ads|trueview|banner|programmatic')
+    when channel = 'cpc'
+      and (
+        regexp_like(lower(source), 'criteo|taboola|outbrain|dv360|thetradedesk|stackadapt|adroll|xandr')
+        or regexp_like(lower(campaign), 'display|discovery\s*ads|trueview|banner|programmatic')
       )
-      THEN 'display'
+      then 'display'
 
     /* cpc on video platforms -> video */
-    WHEN channel = 'cpc'
-      AND (
-        REGEXP_LIKE(LOWER(source), 'youtube|vimeo|twitch|hulu|roku')
-        OR REGEXP_LIKE(LOWER(campaign), 'video|pre.roll|bumper|instream')
+    when channel = 'cpc'
+      and (
+        regexp_like(lower(source), 'youtube|vimeo|twitch|hulu|roku')
+        or regexp_like(lower(campaign), 'video|pre.roll|bumper|instream')
       )
-      THEN 'video'
+      then 'video'
 
     /* cpc fallback — still cpc but didn't match above -> paid_search as safest default */
-    WHEN channel = 'cpc'
-      THEN 'paid_search'
+    when channel = 'cpc'
+      then 'paid_search'
 
     /* organic misclassified as referral */
-    WHEN channel = 'referral'
-      AND REGEXP_LIKE(LOWER(source), 'google|bing|yahoo|baidu|duckduckgo|yandex|ecosia|perplexity')
-      THEN 'organic'
+    when channel = 'referral'
+      and regexp_like(lower(source), 'google|bing|yahoo|baidu|duckduckgo|yandex|ecosia|perplexity')
+      then 'organic'
 
     /* social misclassified as referral */
-    WHEN channel = 'referral'
-      AND REGEXP_LIKE(LOWER(source), 'facebook|instagram|twitter|linkedin|snapchat|pinterest|tiktok|reddit|youtube|quora|threads')
-      THEN 'social'
+    when channel = 'referral'
+      and regexp_like(lower(source), 'facebook|instagram|twitter|linkedin|snapchat|pinterest|tiktok|reddit|youtube|quora|threads')
+      then 'social'
 
-      ELSE channel
-    END AS channel_new,
+      else channel
+    end as channel_new,
 
     /* source_new: best-effort normalized source for each touchpoint */
-    CASE
-      WHEN source IS NULL THEN
-        REGEXP_EXTRACT(
+    case
+      when source is null then
+        regexp_extract(
           referral_domain,
           'affiliat|sfmc|braze|klaviyo|mailchimp|sendgrid|constantcontact|getresponse|aweber|campaignmonitor|google|bing|yahoo|baidu|duckduckgo|yandex|ask.com|facebook|instagram|twitter|linkedin|snapchat|pinterest|tiktok|youtube|reddit|quora|youtube|vimeo|dailymotion|twitch|video|criteo|mediamath|thetradedesk|adobe|amazon|onetag|rubiconproject|xandr'
         )
-      ELSE source
-    END AS source_new
+      else source
+    end as source_new
 
-  FROM SESH
+  from sesh
 )
 
 /*
@@ -183,7 +183,7 @@ B) Global "carry-forward" backfill for channel/source:
 C) Output:
    - Keeps both originals (channel_orig/source_orig) and final normalized/backfilled values for attribution modeling.
 */
-SELECT
+select
   time,
   session_id,
   date_time,
@@ -196,10 +196,10 @@ SELECT
   referral_page,
   referral_domain,
 
-  channel AS channel_orig,
+  channel as channel_orig,
   channel_final,
 
-  source AS source_orig,
+  source as source_orig,
   source_final,
 
   campaign,
@@ -209,45 +209,45 @@ SELECT
   item_price,
   sess_rank_asc,
   sess_rank_desc
-FROM (
-  SELECT
-    STEP2.*,
+from (
+  select
+    step2.*,
 
     /* Within-session sequencing indices (useful for pathing and session-level attribution) */
-    RANK() OVER (
-      PARTITION BY STEP2.session_id
-      ORDER BY time ASC, campaign, context_col ASC
-    ) AS sess_rank_asc,
+    rank() over (
+      partition by step2.session_id
+      order by time asc, campaign, context_col asc
+    ) as sess_rank_asc,
 
-    RANK() OVER (
-      PARTITION BY STEP2.session_id
-      ORDER BY time DESC, campaign, context_col DESC
-    ) AS sess_rank_desc,
+    rank() over (
+      partition by step2.session_id
+      order by time desc, campaign, context_col desc
+    ) as sess_rank_desc,
 
     /* Attribution-ready channel: carry-forward last known channel, else 'direct' */
-    COALESCE(
-      LAST_VALUE(channel_new) IGNORE NULLS OVER (
-        PARTITION BY ${backfill_partition_col}
-        ORDER BY date_time
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    coalesce(
+      last_value(channel_new) ignore nulls over (
+        partition by ${backfill_partition_col}
+        order by date_time
+        rows between unbounded preceding and current row
       ),
       'direct'
-    ) AS channel_final,
+    ) as channel_final,
 
     /* Attribution-ready source: carry-forward last known source, else infer from domain */
-    COALESCE(
-      LAST_VALUE(source_new) IGNORE NULLS OVER (
-        PARTITION BY ${backfill_partition_col}
-        ORDER BY date_time
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    coalesce(
+      last_value(source_new) ignore nulls over (
+        partition by ${backfill_partition_col}
+        order by date_time
+        rows between unbounded preceding and current row
       ),
-      COALESCE(
-        REGEXP_EXTRACT(referral_domain, '(?<=\.)[^.]+(?=\.)'),
-        REGEXP_EXTRACT(url,            '(?<=\.)[^.]+(?=\.)')
+      coalesce(
+        regexp_extract(referral_domain, '(?<=\.)[^.]+(?=\.)'),
+        regexp_extract(url,            '(?<=\.)[^.]+(?=\.)')
       )
-    ) AS source_final
+    ) as source_final
 
-  FROM STEP2
+  from step2
 );
 
 

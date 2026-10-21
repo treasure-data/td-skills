@@ -1,6 +1,6 @@
-SELECT 
-  ARRAY_JOIN(ARRAY_SORT(ARRAY_AGG(DISTINCT column_name)), ', ') 
+select 
+  array_join(array_sort(array_agg(distinct column_name)), ', ') 
     as cols_to_select
-FROM information_schema.columns 
-WHERE table_schema = '${sink_database}' AND table_name = '${user_master_attr_table}' 
-AND REGEXP_LIKE(column_name, 'nbp_|nb_category') AND NOT REGEXP_LIKE(column_name, 'sku|ranks')
+from information_schema.columns 
+where table_schema = '${sink_database}' and table_name = '${user_master_attr_table}' 
+and regexp_like(column_name, 'nbp_|nb_category') and not regexp_like(column_name, 'sku|ranks')

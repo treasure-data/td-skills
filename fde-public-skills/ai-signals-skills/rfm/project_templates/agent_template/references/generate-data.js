@@ -201,6 +201,11 @@ function fmtPct(v) {
   return num(v).toFixed(1) + '%';
 }
 
+// JSON for inline <script>: escape "<" so data containing "</script>" cannot end the block
+function safeJson(value, ...args) {
+  return JSON.stringify(value, ...args).replace(/</g, "\\u003c");
+}
+
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)
@@ -714,27 +719,27 @@ async function main() {
     '{{exec_summary_html_li}}': execSummaryHtml,
     '{{exec_src_insights_html_li}}': sourceInsightsHtml,
 
-    '{{historic_run_labels_json}}': JSON.stringify(historicRunLabels),
-    '{{historic_segment_series_json}}': JSON.stringify(historicSegmentSeries),
-    '{{segment_bar_labels_json}}': JSON.stringify(segmentBarLabels),
-    '{{segment_bar_values_json}}': JSON.stringify(segmentBarValues),
-    '{{segment_bar_text_json}}': JSON.stringify(segmentBarText),
-    '{{segment_donut_labels_json}}': JSON.stringify(segmentDonutLabels),
-    '{{segment_donut_values_json}}': JSON.stringify(segmentDonutValues),
+    '{{historic_run_labels_json}}': safeJson(historicRunLabels),
+    '{{historic_segment_series_json}}': safeJson(historicSegmentSeries),
+    '{{segment_bar_labels_json}}': safeJson(segmentBarLabels),
+    '{{segment_bar_values_json}}': safeJson(segmentBarValues),
+    '{{segment_bar_text_json}}': safeJson(segmentBarText),
+    '{{segment_donut_labels_json}}': safeJson(segmentDonutLabels),
+    '{{segment_donut_values_json}}': safeJson(segmentDonutValues),
 
-    '{{recency_hist_x_json}}': JSON.stringify(recencyHist.x),
-    '{{recency_hist_y_json}}': JSON.stringify(recencyHist.y),
-    '{{frequency_hist_x_json}}': JSON.stringify(frequencyHist.x),
-    '{{frequency_hist_y_json}}': JSON.stringify(frequencyHist.y),
-    '{{monetary_hist_x_json}}': JSON.stringify(monetaryHist.x),
-    '{{monetary_hist_y_json}}': JSON.stringify(monetaryHist.y),
+    '{{recency_hist_x_json}}': safeJson(recencyHist.x),
+    '{{recency_hist_y_json}}': safeJson(recencyHist.y),
+    '{{frequency_hist_x_json}}': safeJson(frequencyHist.x),
+    '{{frequency_hist_y_json}}': safeJson(frequencyHist.y),
+    '{{monetary_hist_x_json}}': safeJson(monetaryHist.x),
+    '{{monetary_hist_y_json}}': safeJson(monetaryHist.y),
 
-    '{{src_contrib_labels_json}}': JSON.stringify(srcContribLabels),
-    '{{src_contrib_profiles_json}}': JSON.stringify(srcContribProfiles),
-    '{{src_contrib_text_json}}': JSON.stringify(srcContribText),
-    '{{src_touchpoints_labels_json}}': JSON.stringify(srcTouchpointsLabels),
-    '{{src_touchpoints_values_json}}': JSON.stringify(srcTouchpointsValues),
-    '{{src_touchpoints_text_json}}': JSON.stringify(srcTouchpointsText)
+    '{{src_contrib_labels_json}}': safeJson(srcContribLabels),
+    '{{src_contrib_profiles_json}}': safeJson(srcContribProfiles),
+    '{{src_contrib_text_json}}': safeJson(srcContribText),
+    '{{src_touchpoints_labels_json}}': safeJson(srcTouchpointsLabels),
+    '{{src_touchpoints_values_json}}': safeJson(srcTouchpointsValues),
+    '{{src_touchpoints_text_json}}': safeJson(srcTouchpointsText)
   };
 
   const templateContent = fs.readFileSync(templatePath, 'utf-8');
@@ -776,7 +781,7 @@ async function main() {
     }
   };
 
-  const rawInjection = `<script id="rfm-data-payload">\n  window.RAW = ${JSON.stringify(rawPayload, null, 2)};\n</script>\n`;
+  const rawInjection = `<script id="rfm-data-payload">\n  window.RAW = ${safeJson(rawPayload, null, 2)};\n</script>\n`;
   renderedHtml = renderedHtml.replace('</head>', `${rawInjection}</head>`);
 
   // Write output

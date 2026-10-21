@@ -1,12 +1,12 @@
-WITH T1 AS (
-  SELECT TD_TIME_STRING(tstamp, 's!') as event_tstamp,
+with t1 as (
+  select td_time_string(tstamp, 's!') as event_tstamp,
     itemid, item_name, item_category
-  FROM ${prefix}transaction
+  from ${prefix}transaction
   )
-SELECT itemid, 
+select itemid, 
   item_category, 
-  MAX_BY(item_name, event_tstamp) as item_name, 
-  MIN(event_tstamp) AS least_recent_event,
-  MAX(event_tstamp) AS most_recent_event
-FROM T1
-GROUP BY 1, 2
+  max_by(item_name, event_tstamp) as item_name, 
+  min(event_tstamp) as least_recent_event,
+  max(event_tstamp) as most_recent_event
+from t1
+group by 1, 2

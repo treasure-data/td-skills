@@ -8,37 +8,37 @@
 --   feature columns     computed only from data BEFORE cutoff_date (no leakage)
 -- Variables from data_prep.dig: ${mode}, ${cutoff_date}, ${feature_start_date}, ${label_end_date}
 
-WITH population AS (
+with population as (
   -- Entities to score: e.g. all profiles, open leads, active subscribers as of cutoff_date
-  SELECT <id_col> AS ${user_id_column}
-  FROM <source_database>.<profile_table>
-  WHERE <id_col> IS NOT NULL
+  select <id_col> as ${user_id_column}
+  from <source_database>.<profile_table>
+  where <id_col> is not null
 ),
 
-activity_features AS (
+activity_features as (
   -- Behavior in the feature window [feature_start_date, cutoff_date)
-  SELECT <id_col> AS ${user_id_column},
-         COUNT(*)                                                         AS events_cnt,
-         COUNT(DISTINCT TD_TIME_FORMAT(<event_time_col>, 'yyyy-MM-dd'))   AS active_days,
-         DATE_DIFF('day', FROM_UNIXTIME(MAX(<event_time_col>)), DATE '${cutoff_date}') AS days_since_last_event
-  FROM <source_database>.<activity_table>
-  WHERE TD_TIME_RANGE(<event_time_col>, '${feature_start_date}', '${cutoff_date}')
-  GROUP BY 1
+  select <id_col> as ${user_id_column},
+         count(*)                                                         as events_cnt,
+         count(distinct td_time_format(<event_time_col>, 'yyyy-MM-dd'))   as active_days,
+         date_diff('day', from_unixtime(max(<event_time_col>)), date '${cutoff_date}') as days_since_last_event
+  from <source_database>.<activity_table>
+  where td_time_range(<event_time_col>, '${feature_start_date}', '${cutoff_date}')
+  group by 1
 ),
 
-label AS (
+label as (
   -- Outcome in the label window [cutoff_date, label_end_date)
-  SELECT DISTINCT <id_col> AS ${user_id_column}, 1 AS ${target_column}
-  FROM <source_database>.<outcome_table>
-  WHERE TD_TIME_RANGE(<outcome_time_col>, '${cutoff_date}', '${label_end_date}')
+  select distinct <id_col> as ${user_id_column}, 1 as ${target_column}
+  from <source_database>.<outcome_table>
+  where td_time_range(<outcome_time_col>, '${cutoff_date}', '${label_end_date}')
 )
 
-SELECT '${session_id}'                                 AS session_id,
+select '${session_id}'                                 as session_id,
        p.${user_id_column},
-       COALESCE(a.events_cnt, 0)                        AS events_cnt,
-       COALESCE(a.active_days, 0)                       AS active_days,
+       coalesce(a.events_cnt, 0)                        as events_cnt,
+       coalesce(a.active_days, 0)                       as active_days,
        a.days_since_last_event,
-       CAST(COALESCE(l.${target_column}, 0) AS BIGINT)  AS ${target_column}
-FROM population p
-LEFT JOIN activity_features a ON a.${user_id_column} = p.${user_id_column}
-LEFT JOIN label l             ON l.${user_id_column} = p.${user_id_column}
+       cast(coalesce(l.${target_column}, 0) as bigint)  as ${target_column}
+from population p
+left join activity_features a on a.${user_id_column} = p.${user_id_column}
+left join label l             on l.${user_id_column} = p.${user_id_column}

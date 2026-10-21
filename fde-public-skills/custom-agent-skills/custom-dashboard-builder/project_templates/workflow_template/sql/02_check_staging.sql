@@ -1,7 +1,7 @@
 -- Guard read by +assert_staging: fails the run on an empty full load or rows without an event date.
-SELECT
-  COUNT(*)                      AS n_rows,
-  COUNT_IF(event_date IS NULL)  AS null_dates,
-  MIN(event_date)               AS first_day,
-  MAX(event_date)               AS last_day
-FROM ${project_prefix}_stg_events
+select
+  count(*)                      as n_rows,
+  count_if(event_date is null)  as null_dates,
+  min(event_date)               as first_day,
+  max(event_date)               as last_day
+from ${project_prefix}_stg_events

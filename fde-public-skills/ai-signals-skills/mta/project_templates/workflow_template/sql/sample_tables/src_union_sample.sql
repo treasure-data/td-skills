@@ -1,18 +1,18 @@
-WITH BASE AS (
-(SELECT ${unique_user_id}, APPROX_DISTINCT(src_table) as num_tables, SUM(conversion_flag) as num_conversions
-FROM ${src_union_table}_final
-GROUP BY 1
+with base as (
+(select ${unique_user_id}, approx_distinct(src_table) as num_tables, sum(conversion_flag) as num_conversions
+from ${src_union_table}_final
+group by 1
 ---- SELECT Users with minimum of 2 sessions, maximum of n-touchpoints and most source_tables/conversions activity
-HAVING MAX(conversion_flag) > 0 AND APPROX_DISTINCT(src_table) > 1 AND APPROX_DISTINCT(session_id) > 1 AND count(*) <= ${sample_tpoint_limit}
-ORDER BY 2 desc, 3 desc
-LIMIT 2)
-UNION ALL
-(SELECT ${unique_user_id}, APPROX_DISTINCT(src_table) as num_tables, SUM(conversion_flag) as num_conversions
-FROM ${src_union_table}_final
-GROUP BY 1
+having max(conversion_flag) > 0 and approx_distinct(src_table) > 1 and approx_distinct(session_id) > 1 and count(*) <= ${sample_tpoint_limit}
+order by 2 desc, 3 desc
+limit 2)
+union all
+(select ${unique_user_id}, approx_distinct(src_table) as num_tables, sum(conversion_flag) as num_conversions
+from ${src_union_table}_final
+group by 1
 ---- SELECT Users with minimum of 2 sessions, maximum of n-touchpoints and no conversion activity
-HAVING MAX(conversion_flag) < 1 AND APPROX_DISTINCT(src_table) > 1 AND APPROX_DISTINCT(session_id) > 1 AND count(*) <= ${sample_tpoint_limit}
-ORDER BY 2 desc
-LIMIT 2)
+having max(conversion_flag) < 1 and approx_distinct(src_table) > 1 and approx_distinct(session_id) > 1 and count(*) <= ${sample_tpoint_limit}
+order by 2 desc
+limit 2)
 )
-SELECT * FROM ${src_union_table}_final WHERE ${unique_user_id} IN (SELECT DISTINCT ${unique_user_id} FROM BASE)
+select * from ${src_union_table}_final where ${unique_user_id} in (select distinct ${unique_user_id} from base)

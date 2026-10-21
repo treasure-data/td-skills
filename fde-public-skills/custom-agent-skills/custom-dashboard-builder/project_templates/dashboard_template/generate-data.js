@@ -90,7 +90,8 @@ function runQuery(name, q) {
   if (!db) return Promise.reject(new Error(`${name}: unknown db '${q.db}'`));
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dash-'));
   const sqlFile = path.join(dir, 'q.sql'), outFile = path.join(dir, 'out.json');
-  const sql = /\blimit\s+\d+\s*$/i.test(q.sql.trim()) ? q.sql : `${q.sql.trim()}\nLIMIT ${q.limit}`;
+  const body = q.sql.trim().replace(/;+\s*$/, '');
+  const sql = /\blimit\s+\d+\s*$/i.test(body) ? body : `${body}\nLIMIT ${q.limit}`;
   fs.writeFileSync(sqlFile, sql);
   const started = Date.now();
   return new Promise((resolve, reject) => {

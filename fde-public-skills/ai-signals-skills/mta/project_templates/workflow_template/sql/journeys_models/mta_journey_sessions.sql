@@ -1,42 +1,42 @@
-WITH TOP_CHANNELS AS (
-SELECT channel_final,
-count(*)*1.0 / (SELECT COUNT(*) FROM mta_journeys_base) as perc_activity,
-SUM(total_conversions)*1.0 / (SELECT SUM(total_conversions) FROM mta_journeys_base) as perc_conv
-FROM mta_journeys_base 
-WHERE channel_final IS NOT NULL AND channel_final != ''
-GROUP BY 1
-HAVING (count(*)*1.0 / (SELECT COUNT(*) FROM mta_journeys_base)) > ${top_k_channel_perc} OR SUM(total_conversions)*1.0 / (SELECT SUM(total_conversions) FROM mta_journeys_base) > ${top_k_conv_perc}
+with top_channels as (
+select channel_final,
+count(*)*1.0 / (select count(*) from mta_journeys_base) as perc_activity,
+sum(total_conversions)*1.0 / (select sum(total_conversions) from mta_journeys_base) as perc_conv
+from mta_journeys_base 
+where channel_final is not null and channel_final != ''
+group by 1
+having (count(*)*1.0 / (select count(*) from mta_journeys_base)) > ${top_k_channel_perc} or sum(total_conversions)*1.0 / (select sum(total_conversions) from mta_journeys_base) > ${top_k_conv_perc}
 )
 ,
-BASE AS (
-SELECT 
+base as (
+select 
 J.*,
 -- session_id, date_time, conversion_flag, 
-${unique_user_id} || '@' || CAST(SUM(conversion_flag) OVER (PARTITION BY ${unique_user_id}  ORDER BY time DESC, context_col) AS VARCHAR) AS conversion_journey_id,
+${unique_user_id} || '@' || cast(sum(conversion_flag) over (partition by ${unique_user_id}  order by time desc, context_col) as varchar) as conversion_journey_id,
 -- total_conversions, converted_session_flag, channel_final, campaign, event_type, context_col, session_length, session_length_sec
 -- -- breaking into subsequences delimited by conversions. We do this b/c once a customer converts, attribution should be reset.
 -- -- At least this is the case for eCommerce where repeat purchases are expected. Probably applies less to SaaS for which the initial conversion matters most
-(SELECT ARRAY_AGG(channel_final) FROM TOP_CHANNELS) as top_channels
-FROM mta_journeys_base J
+(select array_agg(channel_final) from top_channels) as top_channels
+from mta_journeys_base J
 )
 ,
 -- Filter touchpoints to only those within max_journey_days before the conversion event.
 -- conversion_time = MAX(time) within the journey because journeys are ordered DESC
 -- and the conversion event is always the most recent touchpoint in each journey bucket.
-FILTERED AS (
-  SELECT
+filtered as (
+  select
     *,
-    MAX(time) OVER (PARTITION BY conversion_journey_id) AS conversion_time
-  FROM BASE
+    max(time) over (partition by conversion_journey_id) as conversion_time
+  from base
 )
 ,
-JOUR AS (
-SELECT
+jour as (
+select
 time,
 date_time,
 event_date,
-TD_TIME_STRING(MAX(time) OVER (PARTITION BY conversion_journey_id), 'M!') AS conversion_month,
-format_datetime(from_unixtime(time), 'EEEE') AS day_of_week,
+td_time_string(max(time) over (partition by conversion_journey_id), 'M!') as conversion_month,
+format_datetime(from_unixtime(time), 'EEEE') as day_of_week,
 ${unique_user_id},
 src_table,
 url,
@@ -47,21 +47,21 @@ events_num,
 context_col,
 event_type || ' | ' || context_col as event_context,
 -- channel_orig,
-IF(CONTAINS(top_channels, channel_final), channel_final, 'other') AS channel,
+if(contains(top_channels, channel_final), channel_final, 'other') as channel,
 -- source_orig,
 source_final as source,
 campaign,
 conversion_journey_id,
 conversion_flag,
 -- useful for calculating various attribution models
-COUNT(1) OVER (PARTITION BY conversion_journey_id) AS journey_length,
-ROW_NUMBER() OVER (PARTITION BY conversion_journey_id ORDER BY time) AS journey_index,
-APPROX_DISTINCT(session_id) OVER (PARTITION BY conversion_journey_id) AS total_sessions,
-SUM(session_length) OVER (PARTITION BY conversion_journey_id) as journey_touchpoints_total,
-SUM(session_length_sec) OVER (PARTITION BY conversion_journey_id) as journey_sessions_sec_total,
+count(1) over (partition by conversion_journey_id) as journey_length,
+row_number() over (partition by conversion_journey_id order by time) as journey_index,
+approx_distinct(session_id) over (partition by conversion_journey_id) as total_sessions,
+sum(session_length) over (partition by conversion_journey_id) as journey_touchpoints_total,
+sum(session_length_sec) over (partition by conversion_journey_id) as journey_sessions_sec_total,
 -- just "filling" in the conversion value for each session
-MAX(total_conversions) OVER (PARTITION BY conversion_journey_id ORDER BY time DESC) AS conversion_value,
-MAX(total_order_value) OVER (PARTITION BY conversion_journey_id ORDER BY time DESC) AS conversion_value_total_sales,
+max(total_conversions) over (partition by conversion_journey_id order by time desc) as conversion_value,
+max(total_order_value) over (partition by conversion_journey_id order by time desc) as conversion_value_total_sales,
 touchpoint_histogram,
 session_id,
 session_length_sec,
@@ -69,53 +69,53 @@ session_length,
 sess_rank_asc,
 sess_rank_desc,
 top_channels,
-ARRAY_DISTINCT(TRANSFORM(channel_list_distinct, x -> IF(CONTAINS(top_channels, x), x, 'other'))) as channel_list_temp
-FROM FILTERED
-WHERE time >= conversion_time - (${max_journey_days} * 86400)
-ORDER BY time
+array_distinct(transform(channel_list_distinct, x -> if(contains(top_channels, x), x, 'other'))) as channel_list_temp
+from filtered
+where time >= conversion_time - (${max_journey_days} * 86400)
+order by time
 )
 ,
 -- Aggregate session-level data to the conversion journey level:
 -- - Flatten all session channel arrays into a single distinct list per journey
 -- - Build the touchpoint history string for the journey
 -- - Capture journey start time for cumulative ordering in the next step
-HIST AS (
-  SELECT conversion_journey_id,
-  MIN(${unique_user_id}) as hist_user_id,
-  ARRAY_JOIN(ARRAY_AGG(REGEXP_REPLACE(touchpoint_histogram, '{|}|"', '') ORDER BY journey_index), ' -> ') as journey_history,
-  ARRAY_DISTINCT(FLATTEN(ARRAY_AGG(channel_list_temp))) as journey_channels,
-  MIN(time) as journey_start_time,
-  (MAX(time) - MIN(time)) / 60 as journey_duration_mins,
-  (MAX(time) - MIN(time)) / 86400 as journey_duration_days
-  FROM JOUR
-  GROUP BY 1
+hist as (
+  select conversion_journey_id,
+  min(${unique_user_id}) as hist_user_id,
+  array_join(array_agg(regexp_replace(touchpoint_histogram, '{|}|"', '') order by journey_index), ' -> ') as journey_history,
+  array_distinct(flatten(array_agg(channel_list_temp))) as journey_channels,
+  min(time) as journey_start_time,
+  (max(time) - min(time)) / 60 as journey_duration_mins,
+  (max(time) - min(time)) / 86400 as journey_duration_days
+  from jour
+  group by 1
 )
 ,
 -- Build a cumulative channel list that carries forward across conversion journeys:
 -- For each journey, collect distinct channels from ALL prior journeys (ordered by time)
 -- so that channels are never "lost" when a new conversion resets the journey boundary
-HIST_CUMULATIVE AS (
-  SELECT conversion_journey_id,
+hist_cumulative as (
+  select conversion_journey_id,
   journey_history,
-  ARRAY_JOIN(
-    ARRAY_DISTINCT(FLATTEN(
-      ARRAY_AGG(journey_channels) OVER (
-        PARTITION BY hist_user_id
-        ORDER BY journey_start_time
-        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+  array_join(
+    array_distinct(flatten(
+      array_agg(journey_channels) over (
+        partition by hist_user_id
+        order by journey_start_time
+        rows between unbounded preceding and current row
       )
     )), ' > '
   ) as channel_list_final,
   journey_duration_mins,
   journey_duration_days
-  FROM HIST
+  from hist
 )
-SELECT JOUR.*,
-IF(journey_index = 1, HIST_CUMULATIVE.channel_list_final, NULL) AS channel_list_final,
-HIST_CUMULATIVE.journey_history, HIST_CUMULATIVE.journey_duration_mins, HIST_CUMULATIVE.journey_duration_days
-FROM JOUR
-JOIN HIST_CUMULATIVE
-ON JOUR.conversion_journey_id = HIST_CUMULATIVE.conversion_journey_id
+select jour.*,
+if(journey_index = 1, hist_cumulative.channel_list_final, null) as channel_list_final,
+hist_cumulative.journey_history, hist_cumulative.journey_duration_mins, hist_cumulative.journey_duration_days
+from jour
+join hist_cumulative
+on jour.conversion_journey_id = hist_cumulative.conversion_journey_id
 
 
 

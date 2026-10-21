@@ -200,6 +200,13 @@ function fmtPct(v, decimals = 1) {
   return num(v).toFixed(decimals) + '%';
 }
 
+// JSON for inline <script>: escape "<" so data containing "</script>" cannot end the block
+function safeJson(value, ...args) {
+  return JSON.stringify(value, ...args).replace(/</g, "\\u003c");
+}
+
+// The template inserts values inside JS string and template literals, so also
+// escape backslash, backtick, "$" and newlines (rendered later via innerHTML)
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)
@@ -207,7 +214,11 @@ function escapeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/'/g, '&#39;')
+    .replace(/\\/g, '&#92;')
+    .replace(/`/g, '&#96;')
+    .replace(/\$/g, '&#36;')
+    .replace(/\r?\n/g, ' ');
 }
 
 function formatMonth(dateStr) {
@@ -920,11 +931,11 @@ async function main() {
     '{{avg_journey_steps}}': fmtFloat(avgJourneySteps, 1),
     '{{avg_journey_days}}': fmtFloat(avgJourneyDays, 1),
 
-    '{{std_channel_labels_json}}': JSON.stringify(stdChannelLabels),
-    '{{ft_values_json}}': JSON.stringify(ftValues),
-    '{{lt_values_json}}': JSON.stringify(ltValues),
-    '{{linear_values_json}}': JSON.stringify(linearValues),
-    '{{ushaped_values_json}}': JSON.stringify(ushapedValues),
+    '{{std_channel_labels_json}}': safeJson(stdChannelLabels),
+    '{{ft_values_json}}': safeJson(ftValues),
+    '{{lt_values_json}}': safeJson(ltValues),
+    '{{linear_values_json}}': safeJson(linearValues),
+    '{{ushaped_values_json}}': safeJson(ushapedValues),
     '{{model_comparison_rows}}': modelComparisonRows,
     '{{tab1_insights_html_li}}': tab1InsightsHtml,
 
@@ -936,9 +947,9 @@ async function main() {
     '{{shapley_channel_count}}': String(shapleyChannelCount),
     '{{negative_shapley_count}}': String(negativeShapleyCount),
     '{{negative_shapley_names}}': escapeHtml(negativeShapleyNames),
-    '{{markov_data_json}}': JSON.stringify(markovData),
-    '{{shapley_data_json}}': JSON.stringify(shapleyData),
-    '{{ml_compare_json}}': JSON.stringify({}),
+    '{{markov_data_json}}': safeJson(markovData),
+    '{{shapley_data_json}}': safeJson(shapleyData),
+    '{{ml_compare_json}}': safeJson({}),
     '{{ml_attribution_rows}}': mlAttributionRows,
     '{{tab2_insights_html_li}}': tab2InsightsHtml,
 
@@ -949,8 +960,8 @@ async function main() {
     '{{avg_churn_steps}}': fmtFloat(avgChurnSteps, 1),
     '{{avg_churn_days}}': fmtFloat(avgChurnDays, 1),
     '{{journey_table_rows}}': journeyTableRows,
-    '{{journey_compare_json}}': JSON.stringify(journeyCompareJson),
-    '{{pattern_donut_json}}': JSON.stringify(patternDonut),
+    '{{journey_compare_json}}': safeJson(journeyCompareJson),
+    '{{pattern_donut_json}}': safeJson(patternDonut),
     '{{tab3_insights_html_li}}': tab3InsightsHtml,
 
     '{{total_touchpoints}}': fmtInt(totalTouchpoints),
@@ -959,8 +970,8 @@ async function main() {
     '{{utm_coverage_pct}}': String(utmCoveragePct),
     '{{utm_coverage_label}}': utmCoverageLabel,
     '{{source_table_rows}}': sourceTableRows,
-    '{{source_vol_json}}': JSON.stringify(sourceVolJson),
-    '{{channel_donut_json}}': JSON.stringify(channelDonutJson),
+    '{{source_vol_json}}': safeJson(sourceVolJson),
+    '{{channel_donut_json}}': safeJson(channelDonutJson),
     '{{channel_table_rows}}': channelTableRows,
     '{{tab4_insights_html_li}}': tab4InsightsHtml,
 
@@ -972,7 +983,7 @@ async function main() {
     '{{sankey_second_flow_prob}}': sankeySecondFlowProb,
     '{{sankey_terminal_node}}': escapeHtml(sankeyTerminalNode),
     '{{sankey_terminal_desc}}': escapeHtml(sankeyTerminalDesc),
-    '{{sankey_flows_json}}': JSON.stringify(sankeyFlows),
+    '{{sankey_flows_json}}': safeJson(sankeyFlows),
     '{{tab5_insights_html_li}}': tab5InsightsHtml
   };
 
@@ -1028,7 +1039,7 @@ async function main() {
     sankey: sankeyFlows
   };
 
-  const rawInjection = `<script id="mta-data-payload">\n  window.RAW = ${JSON.stringify(rawPayload, null, 2)};\n</script>\n`;
+  const rawInjection = `<script id="mta-data-payload">\n  window.RAW = ${safeJson(rawPayload, null, 2)};\n</script>\n`;
   renderedHtml = renderedHtml.replace('</head>', `${rawInjection}</head>`);
 
   // Write output

@@ -197,6 +197,11 @@ function fmtCurrency(v) {
   return '$' + n.toLocaleString('en-US');
 }
 
+// JSON for inline <script>: escape "<" so data containing "</script>" cannot end the block
+function safeJson(value, ...args) {
+  return JSON.stringify(value, ...args).replace(/</g, "\\u003c");
+}
+
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)
@@ -345,7 +350,7 @@ async function main() {
   if (tfType === 'range') {
     const start = q1.time_range_start_date || 'earliest';
     let end = q1.time_range_end_date || 'latest';
-    if (end.startsWith('2222')) end = 'latest';
+    if (end.startsWith('2222') || end.startsWith('2099')) end = 'latest';
     timeFilterSummary = `range · ${start} → ${end}`;
   } else if (tfType === 'interval') {
     timeFilterSummary = `interval · ${q1.lookback_period || '-180d'}`;
@@ -695,12 +700,12 @@ async function main() {
     '{{date_range_days}}': String(dateRangeDays),
     '{{date_range_summary}}': escapeHtml(dateRangeSummary),
 
-    '{{source_events_labels_json}}': JSON.stringify(sourceEventsLabels),
-    '{{source_events_values_json}}': JSON.stringify(sourceEventsValues),
-    '{{source_events_text_json}}': JSON.stringify(sourceEventsText),
-    '{{source_profiles_labels_json}}': JSON.stringify(sourceProfilesLabels),
-    '{{source_profiles_values_json}}': JSON.stringify(sourceProfilesValues),
-    '{{source_profiles_text_json}}': JSON.stringify(sourceProfilesText),
+    '{{source_events_labels_json}}': safeJson(sourceEventsLabels),
+    '{{source_events_values_json}}': safeJson(sourceEventsValues),
+    '{{source_events_text_json}}': safeJson(sourceEventsText),
+    '{{source_profiles_labels_json}}': safeJson(sourceProfilesLabels),
+    '{{source_profiles_values_json}}': safeJson(sourceProfilesValues),
+    '{{source_profiles_text_json}}': safeJson(sourceProfilesText),
 
     '{{source_table_rows}}': sourceTableRows,
     '{{tab1_insights_html_li}}': tab1InsightsHtml,
@@ -714,28 +719,28 @@ async function main() {
     '{{no_ads_or_purchases_count}}': fmtInt(noAdsFlag.count),
     '{{no_ads_or_purchases_pct}}': noAdsFlag.pctStr,
 
-    '{{nbc_pick_labels_json}}': JSON.stringify(nbcPickLabels),
-    '{{nbc_pick_values_json}}': JSON.stringify(nbcPickValues),
-    '{{nbc_pick_text_json}}': JSON.stringify(nbcPickText),
-    '{{nbt_pick_labels_json}}': JSON.stringify(nbtPickLabels),
-    '{{nbt_pick_values_json}}': JSON.stringify(nbtPickValues),
-    '{{nbt_pick_text_json}}': JSON.stringify(nbtPickText),
-    '{{nbcamp_pick_labels_json}}': JSON.stringify(nbcampPickLabels),
-    '{{nbcamp_pick_values_json}}': JSON.stringify(nbcampPickValues),
+    '{{nbc_pick_labels_json}}': safeJson(nbcPickLabels),
+    '{{nbc_pick_values_json}}': safeJson(nbcPickValues),
+    '{{nbc_pick_text_json}}': safeJson(nbcPickText),
+    '{{nbt_pick_labels_json}}': safeJson(nbtPickLabels),
+    '{{nbt_pick_values_json}}': safeJson(nbtPickValues),
+    '{{nbt_pick_text_json}}': safeJson(nbtPickText),
+    '{{nbcamp_pick_labels_json}}': safeJson(nbcampPickLabels),
+    '{{nbcamp_pick_values_json}}': safeJson(nbcampPickValues),
 
-    '{{flags_flagged_json}}': JSON.stringify(flagsFlaggedJson),
-    '{{flags_flagged_pct_json}}': JSON.stringify(flagsFlaggedPctJson),
-    '{{flags_converters_json}}': JSON.stringify(flagsConvertersJson),
+    '{{flags_flagged_json}}': safeJson(flagsFlaggedJson),
+    '{{flags_flagged_pct_json}}': safeJson(flagsFlaggedPctJson),
+    '{{flags_converters_json}}': safeJson(flagsConvertersJson),
     '{{flags_table_rows}}': flagsTableRows,
     '{{tab2_insights_html_li}}': tab2InsightsHtml,
 
-    '{{historic_run_labels_json}}': JSON.stringify(historicRunLabels),
-    '{{historic_session_ids_json}}': JSON.stringify(historicSessionIds),
-    '{{historic_profiles_scored_json}}': JSON.stringify(historicProfilesScored),
-    '{{historic_nbc_series_json}}': JSON.stringify(historicNbcSeries),
-    '{{historic_nbt_series_json}}': JSON.stringify(historicNbtSeries),
-    '{{historic_nbcamp_series_json}}': JSON.stringify(historicNbcampSeries),
-    '{{historic_flags_rates_json}}': JSON.stringify(historicFlagsRates),
+    '{{historic_run_labels_json}}': safeJson(historicRunLabels),
+    '{{historic_session_ids_json}}': safeJson(historicSessionIds),
+    '{{historic_profiles_scored_json}}': safeJson(historicProfilesScored),
+    '{{historic_nbc_series_json}}': safeJson(historicNbcSeries),
+    '{{historic_nbt_series_json}}': safeJson(historicNbtSeries),
+    '{{historic_nbcamp_series_json}}': safeJson(historicNbcampSeries),
+    '{{historic_flags_rates_json}}': safeJson(historicFlagsRates),
     '{{historic_single_run_callout}}': historicSingleRunCallout,
     '{{tab3_insights_html_li}}': tab3InsightsHtml
   };
@@ -795,7 +800,7 @@ async function main() {
     }
   };
 
-  const rawInjection = `<script id="nba-data-payload">\n  window.RAW = ${JSON.stringify(rawPayload, null, 2)};\n</script>\n`;
+  const rawInjection = `<script id="nba-data-payload">\n  window.RAW = ${safeJson(rawPayload, null, 2)};\n</script>\n`;
   renderedHtml = renderedHtml.replace('</head>', `${rawInjection}</head>`);
 
   // Write output file

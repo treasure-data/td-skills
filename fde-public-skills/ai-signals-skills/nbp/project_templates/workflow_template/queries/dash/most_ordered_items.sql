@@ -1,15 +1,15 @@
-WITH T1 AS (
-  SELECT itemid, count(*) as times_ordered 
-  FROM ${prefix}transaction
-  GROUP BY 1
-  ORDER BY 2 desc
-  LIMIT 15
+with t1 as (
+  select itemid, count(*) as times_ordered 
+  from ${prefix}transaction
+  group by 1
+  order by 2 desc
+  limit 15
 )
 
-SELECT 
-CAST(CURRENT_DATE AS VARCHAR) as event_date, 
-T1.*,
-T2.item_name
-FROM T1
-LEFT JOIN ${prefix}itemid_name_product_mapping T2
-ON T1.itemid = T2.itemid
+select 
+cast(current_date as varchar) as event_date, 
+t1.*,
+t2.item_name
+from t1
+left join ${prefix}itemid_name_product_mapping t2
+on t1.itemid = t2.itemid

@@ -1,5 +1,5 @@
-SELECT SUBSTR(event_date, 1, 4) as journey_year, COUNT(*) as distinct_events, SUM(events_num) as touchpoints, APPROX_DISTINCT(conversion_journey_id) as distinct_journeys, ROUND(AVG(journey_length), 2) as avg_journey_touchpoints, APPROX_DISTINCT(channel) as distinct_channels,
-SUM(conversion_flag) as conversions 
-FROM mta_journeys
-GROUP BY 1
-ORDER BY 1 
+select substr(event_date, 1, 4) as journey_year, count(*) as distinct_events, sum(events_num) as touchpoints, approx_distinct(conversion_journey_id) as distinct_journeys, round(avg(journey_length), 2) as avg_journey_touchpoints, approx_distinct(channel) as distinct_channels,
+sum(conversion_flag) as conversions 
+from mta_journeys
+group by 1
+order by 1 

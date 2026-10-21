@@ -1,5 +1,5 @@
-INSERT INTO ${schema_tb}
-SELECT 
+insert into ${schema_tb}
+select 
 'WHEN ${time_logic.logic} THEN ''${time_logic.period}'' ' as case_logic,
 'COUNT_IF(${next_best_time.outputs.activity_period_column} = ''${time_logic.period}'') as ${time_logic.period}_events' as activity_logic,
 'SUM(IF(${next_best_time.outputs.activity_period_column} = ''${time_logic.period}'', 1, 0)) as ${time_logic.period}_events' as activity_logic_hive,

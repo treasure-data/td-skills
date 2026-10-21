@@ -1,73 +1,73 @@
-WITH SESH AS (
-SELECT
+with sesh as (
+select
 -- right now assuming that time between sessions = 60 min or 3600sec as the default 'session_length' param
-TD_SESSIONIZE_WINDOW(time, ${session_length}) OVER (PARTITION BY ${unique_user_id} ORDER BY time) || ${unique_user_id} AS session_id,
-BASE.*
-FROM ${src_union_table}_temp BASE
+td_sessionize_window(time, ${session_length}) over (partition by ${unique_user_id} order by time) || ${unique_user_id} as session_id,
+base.*
+from ${src_union_table}_temp base
 )
 ,
-STEP2 AS (
-SELECT SESH.*, 
-CASE 
-    WHEN REGEXP_LIKE(lower(channel), 'web') THEN 'web_ads'
-    WHEN REGEXP_LIKE(lower(channel), 'dsp|rtb|criteo|mediamath|thetradedesk|adobe|amazon|onetag|rubiconproject|xandr') THEN 'dsp_rtb'
-    WHEN REGEXP_LIKE(lower(channel), 'call|center') THEN 'call_center'
-    WHEN REGEXP_LIKE(lower(channel), 'mobile|device|push|app') THEN 'mobile'
-    WHEN REGEXP_LIKE(lower(channel), 'email|sfmc|braze|klaviyo|mailchimp|sendgrid|constantcontact|getresponse|aweber|campaignmonitor') THEN 'email'
-    WHEN REGEXP_LIKE(lower(channel), 'facebook|instagram|twitter|linkedin|snapchat|pinterest|tiktok|tik_tok|tik tok|youtube|reddit|quora|social|meta') THEN 'social'
-    WHEN REGEXP_LIKE(lower(channel), 'google ads|google_ads|search|yahoo|baidu|duckduckgo|yandex|ask.com') THEN 'paid search'
-    WHEN REGEXP_LIKE(lower(channel), 'display|digital|banner|creative') THEN 'display'
-    WHEN REGEXP_LIKE(lower(channel), 'maddict') THEN 'maddict'
-    ELSE 
+step2 as (
+select sesh.*, 
+case 
+    when regexp_like(lower(channel), 'web') then 'web_ads'
+    when regexp_like(lower(channel), 'dsp|rtb|criteo|mediamath|thetradedesk|adobe|amazon|onetag|rubiconproject|xandr') then 'dsp_rtb'
+    when regexp_like(lower(channel), 'call|center') then 'call_center'
+    when regexp_like(lower(channel), 'mobile|device|push|app') then 'mobile'
+    when regexp_like(lower(channel), 'email|sfmc|braze|klaviyo|mailchimp|sendgrid|constantcontact|getresponse|aweber|campaignmonitor') then 'email'
+    when regexp_like(lower(channel), 'facebook|instagram|twitter|linkedin|snapchat|pinterest|tiktok|tik_tok|tik tok|youtube|reddit|quora|social|meta') then 'social'
+    when regexp_like(lower(channel), 'google ads|google_ads|search|yahoo|baidu|duckduckgo|yandex|ask.com') then 'paid search'
+    when regexp_like(lower(channel), 'display|digital|banner|creative') then 'display'
+    when regexp_like(lower(channel), 'maddict') then 'maddict'
+    else 
         -- Step Below looks for information in source column to backfill NULL values for channel
-        CASE 
-            WHEN channel IS NULL OR channel IN ('', 'none') THEN 
-                CASE
-                    WHEN REGEXP_LIKE(lower(source), 'web') THEN 'web_ads'
-                    WHEN REGEXP_LIKE(lower(source), 'dsp|rtb|criteo|mediamath|thetradedesk|adobe|amazon|onetag|rubiconproject|xandr') THEN 'dsp_rtb'
-                    WHEN REGEXP_LIKE(lower(source), 'call|center') THEN 'call_center'
-                    WHEN REGEXP_LIKE(lower(source), 'mobile|device|push|app') THEN 'mobile'
-                    WHEN REGEXP_LIKE(lower(source), 'email|sfmc|braze|klaviyo|mailchimp|sendgrid|constantcontact|getresponse|aweber|campaignmonitor') THEN 'email'
-                    WHEN REGEXP_LIKE(lower(source), 'facebook|instagram|twitter|linkedin|snapchat|pinterest|tiktok|tik_tok|tik tok|youtube|reddit|quora|social|meta') THEN 'social'
-                    WHEN REGEXP_LIKE(lower(source), 'google ads|google_ads|search|yahoo|baidu|duckduckgo|yandex|ask.com') THEN 'paid search'
-                    WHEN REGEXP_LIKE(lower(source), 'display|digital|banner|creative') THEN 'display'
-                    WHEN REGEXP_LIKE(lower(source), 'maddict') THEN 'maddict'
-                    ELSE COALESCE(trim(lower(source)), 'organic')
-                END
-            ELSE trim(lower(channel))
-        END 
-END AS channel_new,
+        case 
+            when channel is null or channel in ('', 'none') then 
+                case
+                    when regexp_like(lower(source), 'web') then 'web_ads'
+                    when regexp_like(lower(source), 'dsp|rtb|criteo|mediamath|thetradedesk|adobe|amazon|onetag|rubiconproject|xandr') then 'dsp_rtb'
+                    when regexp_like(lower(source), 'call|center') then 'call_center'
+                    when regexp_like(lower(source), 'mobile|device|push|app') then 'mobile'
+                    when regexp_like(lower(source), 'email|sfmc|braze|klaviyo|mailchimp|sendgrid|constantcontact|getresponse|aweber|campaignmonitor') then 'email'
+                    when regexp_like(lower(source), 'facebook|instagram|twitter|linkedin|snapchat|pinterest|tiktok|tik_tok|tik tok|youtube|reddit|quora|social|meta') then 'social'
+                    when regexp_like(lower(source), 'google ads|google_ads|search|yahoo|baidu|duckduckgo|yandex|ask.com') then 'paid search'
+                    when regexp_like(lower(source), 'display|digital|banner|creative') then 'display'
+                    when regexp_like(lower(source), 'maddict') then 'maddict'
+                    else coalesce(trim(lower(source)), 'organic')
+                end
+            else trim(lower(channel))
+        end 
+end as channel_new,
 -- Step Below looks for information in channel or src_table columns to fill NULLs for source
-CASE WHEN COALESCE(source, channel) IS NULL THEN src_table
-ELSE trim(lower(source))
-END AS source_new
-FROM SESH
+case when coalesce(source, channel) is null then src_table
+else trim(lower(source))
+end as source_new
+from sesh
 )
 -- ,channel_final_cte as(
 -- --- Last step tries to backfill all remaining null values for channel and source with the previous non-null touchpoint in the journey, and if none are found flags as 'direct'
-SELECT 
+select 
 time, session_id, date_time, event_date, ${unique_user_id}, src_table, event_type, td_market, td_brand, url, path, referral_page, 
-channel AS channel_orig, TRIM(LOWER(channel_final)) AS channel_session,
-source AS source_orig, TRIM(LOWER(source_final)) AS source_session,
+channel as channel_orig, trim(lower(channel_final)) as channel_session,
+source as source_orig, trim(lower(source_final)) as source_session,
 campaign, context_col, conversion_flag, item_price, sess_rank_asc, sess_rank_desc
-FROM  (
-SELECT STEP2.*,
+from  (
+select step2.*,
         -- get index of the touchpoints in each session to 
-        RANK() OVER (PARTITION BY STEP2.session_id ORDER BY time ASC, context_col ASC) as sess_rank_asc,
-        RANK() OVER (PARTITION BY STEP2.session_id ORDER BY time DESC, context_col DESC) as sess_rank_desc,
+        rank() over (partition by step2.session_id order by time asc, context_col asc) as sess_rank_asc,
+        rank() over (partition by step2.session_id order by time desc, context_col desc) as sess_rank_desc,
         -- Use LAST_VALUE to get the latest non-null value in the window, ignoring nulls.
         -- The window is partitioned over each canonical_id, ordered by timestamp.
-        COALESCE(
+        coalesce(
           -- Below code backfills all NULL values with the first NON-NULL value it detects going in reverse time order 
-          LAST_VALUE(channel_new) IGNORE NULLS OVER (
-            PARTITION BY ${backfill_partition_col} ORDER BY date_time 
-            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ), 'organic') AS channel_final,
-      COALESCE(
-        LAST_VALUE(source_new) IGNORE NULLS OVER (
-            PARTITION BY ${backfill_partition_col} ORDER BY date_time 
-            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ), src_table) AS source_final
-    FROM
-        STEP2
+          last_value(channel_new) ignore nulls over (
+            partition by ${backfill_partition_col} order by date_time 
+            rows between unbounded preceding and current row
+        ), 'organic') as channel_final,
+      coalesce(
+        last_value(source_new) ignore nulls over (
+            partition by ${backfill_partition_col} order by date_time 
+            rows between unbounded preceding and current row
+        ), src_table) as source_final
+    from
+        step2
 )

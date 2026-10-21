@@ -8,7 +8,7 @@ _export:
   empty_tables: ["${output_table}"]
 
 +run_rfm:
-  http>: https://ml-batch-api.treasuredata.com/v1/runs
+  http>: ${ml_batch_api_endpoint}/v1/runs
   method: POST
   headers:
     - authorization: ${secret:td.apikey}
@@ -22,7 +22,7 @@ _export:
       
 +poll_status:
   # Server returns 408 for tasks in progress so this block will be retried until a 200 is returned
-  http>: https://ml-batch-api.treasuredata.com/v1/runs/${JSON.parse(http.last_content)['id']}/status
+  http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
   method: GET
   headers:
     - authorization: ${secret:td.apikey}
