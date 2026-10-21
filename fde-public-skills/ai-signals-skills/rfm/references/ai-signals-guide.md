@@ -39,7 +39,7 @@ Sent in the POST body. Top-level keys select the solution and tables; everything
 | `mv_threshold` | `solution_arguments` | optional | null (no threshold) | Absolute amount, in the unit of `monetary_value`. Profiles at or below it are left out of the M cut-off calculation and get `m_quartile` 1; they stay in the output. Leave it unset by default. Set it (e.g. `0.05`) when many profiles have no spend, so the M cut-offs are computed from buyers only |
 | `audience_name` | `solution_arguments` | optional | not set | Asks the API to create a Master Segment and a child Segment per RFM segment. It creates objects in the account — never set it in DEV (Phases 1–4); only in Phase 5, and only if the user wants the API to build the segments |
 
-Headers: `authorization: "TD1 ${secret:td.apikey}"` (required, exactly as in the template — the key is provided by the AI Signals architecture; no manual secret setup). Optional `X-TD-ML-SESSION-ID: ${session_id}` and `X-TD-ML-ATTEMPT-ID: ${attempt_id}` tag the API run with the workflow session and attempt for tracing.
+Headers: `authorization: ${secret:td.apikey}` (required, exactly as in the template — the key is provided by the AI Signals architecture; no manual secret setup). Optional `X-TD-ML-SESSION-ID: ${session_id}` and `X-TD-ML-ATTEMPT-ID: ${attempt_id}` tag the API run with the workflow session and attempt for tracing.
 
 ### Endpoint by region
 
@@ -60,7 +60,7 @@ Set `ml_batch_api_endpoint` in the config to the base URL of the account's regio
   http>: ${ml_batch_api_endpoint}/v1/runs
   method: POST
   headers:
-    - authorization: "TD1 ${secret:td.apikey}"
+    - authorization: ${secret:td.apikey}
     - X-TD-ML-SESSION-ID: ${session_id}       # optional
     - X-TD-ML-ATTEMPT-ID: ${attempt_id}       # optional
   store_content: true                         # needed: +poll_status reads the run id from the response
@@ -80,7 +80,7 @@ Set `ml_batch_api_endpoint` in the config to the base URL of the account's regio
   http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
   method: GET
   headers:
-    - authorization: "TD1 ${secret:td.apikey}"
+    - authorization: ${secret:td.apikey}
 ```
 
 Keep `+poll_status` directly after `+run_rfm` — it reads the run id from the previous task's response, and the next task (`rfm_agg_stats.dig`) needs the finished output table.

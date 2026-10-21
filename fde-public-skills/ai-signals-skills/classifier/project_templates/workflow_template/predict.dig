@@ -29,7 +29,7 @@ _export:
   http>: ${ml_batch_api_endpoint}/v1/runs
   method: POST
   headers:
-    - authorization: "TD1 ${secret:td.apikey}"
+    - authorization: ${secret:td.apikey}
   store_content: true
   content:
     input_table: ${sink_database}.${pred_input_table}
@@ -52,7 +52,7 @@ _export:
   http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
   method: GET
   headers:
-    - authorization: "TD1 ${secret:td.apikey}"
+    - authorization: ${secret:td.apikey}
   store_content: true
 
 +assert_prediction_succeeded:

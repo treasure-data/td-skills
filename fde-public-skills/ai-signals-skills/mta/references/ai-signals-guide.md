@@ -128,7 +128,7 @@ Set it from the `site` that `tdx status` reports for the customer's account. It 
       http>: ${ml_batch_api_endpoint}/v1/runs/
       method: POST
       headers:
-        - authorization: "TD1 ${secret:td.apikey}"
+        - authorization: ${secret:td.apikey}
         - X-TD-ML-SESSION-ID: ${session_id}
         - X-TD-ML-ATTEMPT-ID: ${attempt_id}
       content_format: json
@@ -149,7 +149,7 @@ Set it from the `site` that `tdx status` reports for the customer's account. It 
       http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
       method: GET
       headers:
-        - authorization: "TD1 ${secret:td.apikey}"
+        - authorization: ${secret:td.apikey}
     # … *_final reporting steps
   +execute_shapley_model:
     # same pattern: input SQL → POST solution_name: mta_shapley (user_id_col: ${user_id_col} = unique_user_id,
