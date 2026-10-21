@@ -61,7 +61,7 @@ tdx journey push --dry-run                # Preview changes before push
 
 | Constraint | Description |
 |-----------|-------------|
-| Branch must have action step | Every decision_point/ab_test/condition-wait branch should include an action step before merge (for example, activation). |
+| Branch must have a step | Every decision_point/ab_test/condition-wait branch should include a step before merge (for example, activation). |
 
 ### Schema Validation (Zod)
 
