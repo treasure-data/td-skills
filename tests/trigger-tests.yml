@@ -282,3 +282,47 @@ tests:
 
   - prompt: "Build an interactive dashboard component to visualize ingestion volume"
     expected: react-dashboard
+
+  # === FDE Public Skills ===
+
+  - prompt: "Set up RFM segmentation for our customers"
+    expected: fde-rfm
+
+  - prompt: "Help me find our best and at-risk customers with an RFM model"
+    expected: fde-rfm
+
+  - prompt: "Set up personalized product recommendations for each customer"
+    expected: fde-nbp
+
+  - prompt: "Start a Next Best Product project"
+    expected: fde-nbp
+
+  - prompt: "Set up multi-touch attribution to measure which channels drive conversions"
+    expected: fde-mta
+
+  - prompt: "Configure an MTA workflow with Markov and Shapley models"
+    expected: fde-mta
+
+  - prompt: "Set up next best action scores for the best time and channel to contact each customer"
+    expected: fde-nba-scores
+
+  - prompt: "Start an NBA engagement scores project"
+    expected: fde-nba-scores
+
+  - prompt: "Build a churn prediction model for our customers"
+    expected: fde-classifier
+
+  - prompt: "Set up a lead scoring propensity model"
+    expected: fde-classifier
+
+  - prompt: "Set up an audience agent for our parent segment"
+    expected: fde-custom-audience-agent
+
+  - prompt: "Build an AI analyst that helps our marketers analyze customers and build segments"
+    expected: fde-custom-audience-agent
+
+  - prompt: "Convert our Treasure Insights .dash export into an HTML dashboard"
+    expected: fde-custom-dashboard-builder
+
+  - prompt: "Turn this dashboard screenshot into a custom HTML dashboard on our TD data"
+    expected: fde-custom-dashboard-builder
