@@ -28,7 +28,7 @@ custom-agent-skills/<solution_folder>/
 ```
 
 - `<solution_slug>` (short, in the Quick Reference — e.g. `audience`) is the default `<project_slug>`; the agent is `<project_slug>-agent`.
-- Register the solution folder in `.claude-plugin/marketplace.json`. Never register `shared/` or anything under `project_templates/`; no file named `SKILL.md` or `CLAUDE.md` may exist under `project_templates/`.
+- Register the solution folder in `.claude-plugin/marketplace.json`. Never register anything under `project_templates/`; no file named `SKILL.md` or `CLAUDE.md` may exist there. Treasure AI Studio installs only registered skill folders, so `shared/` is registered with a stub `SKILL.md` (name `fde-custom-agent-shared`, a description that points to the setup skills, `disable-model-invocation: true` and `user-invocable: false`) — never add instructions to that stub.
 - Every file ≤ 1 MB (Treasure AI Studio drops larger files when skills are shared).
 
 ## 2. `SKILL.md` section order

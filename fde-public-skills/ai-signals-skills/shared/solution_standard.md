@@ -30,7 +30,7 @@ ai-signals-skills/<solution_slug>/
 ```
 
 - `<solution_slug>` = folder name = the default `<project_slug>` (`agent_outputs/<solution_slug>/`, agent `<solution_slug>-agent`) when the user adds no project prefix.
-- Register the solution in `.claude-plugin/marketplace.json`. Never register `shared/` (a plain reference folder with no `SKILL.md`) or anything under `project_templates/`, and no file named `SKILL.md` may exist in either.
+- Register the solution in `.claude-plugin/marketplace.json`. Never register anything under `project_templates/`, and no file named `SKILL.md` may exist there. Treasure AI Studio installs only registered skill folders, so `shared/` is registered with a stub `SKILL.md` (name `fde-ai-signals-shared`, a description that points to the setup skills, `disable-model-invocation: true` and `user-invocable: false`) — never add instructions to that stub.
 - Every file ≤ 1 MB (Treasure AI Studio drops larger files when skills are shared).
 
 ## 2. `SKILL.md` section order
