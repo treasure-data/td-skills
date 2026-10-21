@@ -1,0 +1,52 @@
+timezone: UTC
+schedule: 
+  monthly>: 3,06:15:00 
+
+####################### ERROR EMAIL NOTIFICATION #########################  
+_error:
+  mail>: body.txt
+  subject: NBA Eng Scores Workflow failed - Customer Name
+  to: ['your-team@example.com']
+
+####################### MAIN WORKFLOW #####################################
+_export:
+  !include : config/input_params.yml
+  td:
+    database: ${sink_database}
+
+############## CREATE SINK DATABASE IF NOT EXIST ###############################
++create_sink_database:
+  td_ddl>:
+  create_databases: ["${sink_database}"]
+
+############## UNION WEB ACTIVITY AND ALL ACTIVITY TABLES ######################################
++union_all_activity:
+  call>: nba_union_all_activity.dig
+
+############## CREATE TEMP TABLES FOR next-best-time, next-best-channel, and user-flag scores ####################################
++create_nba_metrics_temp_tables:
+  _parallel: true
+
+  +next_best_time:
+    call>: nba_next_best_time_metrics.dig
+
+  +next_best_channel:
+    call>: nba_next_best_channel_metrics.dig
+
+  +next_best_campaign:
+    call>: nba_next_best_campaign_metrics.dig
+
+############## COMBINE FINAL NBA SCORES IN ONE FINAL TABLE ######################################
++next_best_action_combined_metrics_table:
+  call>: nba_metrics_table.dig
+
+############## AGGREGATE MODEL OUTPUT STATS FOR DASHBOARD BUILD #################################
++create_model_stats_archive:
+  call>: nba_dash_stats.dig
+
+#################### CLEANUP TEMP TABLES ######################################
++cleanup_temp_tables:
+  if>: ${cleanup_temp_tables == 'yes'}
+  _do:
+    +run_cleanup_workflow:
+      call>: nba_cleanup_runner.dig

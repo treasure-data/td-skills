@@ -1,0 +1,24 @@
+timezone: UTC
+
+# ###################### SCHEDULE PARAMS ##################################
+# schedule:
+#   daily>: 06:00:00
+
+####################### ERROR EMAIL NOTIFICATION ##########################
+# _error:
+#  mail>: body.txt
+#  subject: Classifier Workflow failed - Project Name
+#  to: ['your-team@example.com']
+
+# Entry point: train, then score. Schedule train.dig and predict.dig
+# separately instead if retrain and scoring run on different cadences.
+_export:
+  !include : 'config.yml'
+  td:
+    database: ${sink_database}
+
++train:
+  call>: train.dig
+
++predict:
+  call>: predict.dig

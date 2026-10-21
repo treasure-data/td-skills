@@ -1,0 +1,66 @@
+#####################################################################
+########################## GLOBAL PARAMS ############################
+#####################################################################
+
+# ── Output ─────────────────────────────────────────────────────────
+sink_database: <sink_database>                # where output tables are written (created by the first run if missing)
+prefix: 'nbp_'                                # prefix for every table the workflow writes, and for the AI Signals model name
+user_master_attr_table: nbp_user_master       # final attribute table with per-rank recommendation columns
+cleanup_temp_tables: 'no'                     # 'yes' drops the temp tables at the end of the run
+
+# ── AI Signals model ───────────────────────────────────────────────
+automl_model_type: similar_to_latest          # algorithm: similar_to_latest, als or popular
+ml_batch_api_endpoint: 'https://ml-batch-api.treasuredata.com'   # US; use the account's regional endpoint
+als_sample_rate: 1.0                          # ALS only: share of users sampled for training (1.0 = no sampling)
+als_max_users: 100000                         # ALS only: maximum users after sampling
+filter_viewed: false                          # true leaves out items the user already purchased
+
+#####################################################################
+########################## INPUT PARAMS #############################
+#####################################################################
+
+# ── Source Tables ──────────────────────────────────────────────────
+in_db: <source_database>
+original_item_transactions_table: transactions_items
+original_item_info_table: transactions_items  # same table when item_name / item_category are on the transaction rows
+
+# ── Column Mappings ────────────────────────────────────────────────
+original_user_id_column_name: customer_id
+original_item_id_column_name: item_sku
+original_item_name_column_name: item_name
+original_item_category_column_name: item_category
+original_timestamp_name: time
+
+# ── Time Filter ────────────────────────────────────────────────────
+orders_lookback: ''                           # days of history to use; '' = all history
+
+#####################################################################
+######################## EXCLUSION FILTERS ##########################
+#####################################################################
+
+transaction_filter: ''                        # extra SQL appended to the transaction WHERE clause, e.g. "AND order_status = ''completed''"
+
+# ── Pre-model exclusion (removes items from training data) ─────────
+exclude_product_train: 'no'                   # 'yes' removes the matching items before training
+exclusion_column: item_name                   # itemid, item_name or item_category (ignored if exclusion_values is 'query')
+exclusion_values: query                       # regex string, or 'query' to use filter_products_training_query.sql
+
+# ── Post-model exclusion (removes items from recommendation output) ─
+exclude_product_recs: 'no'                    # 'yes' removes the matching items from the recommendations
+recs_exclusion_column: item_name              # itemid, item_name or item_category (ignored if recs_exclusion_values is 'query')
+recs_exclusion_values: ''                     # regex string, or 'query' to use filter_products_recs_query.sql
+
+#####################################################################
+################### RECOMMENDATION OUTPUT ###########################
+#####################################################################
+
+max_recommended_items: 5                      # recommendations per user (topk sent to the AI Signals model)
+min_cooccurence_filter: 1                     # dashboard user-item stats: keep pairs seen at least this often
+
+#####################################################################
+################### MODEL EVALUATION ################################
+#####################################################################
+
+run_model_test_set: 'yes'                     # 'yes' compares the recommendations with the last test_lookback of purchases
+test_params:
+  test_lookback: 30d

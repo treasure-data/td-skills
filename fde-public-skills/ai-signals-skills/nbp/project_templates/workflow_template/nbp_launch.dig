@@ -1,0 +1,39 @@
+# ###################### SCHEDULE PARAMS ################################## 
+# timezone: UTC #(default system timezone)
+# schedule: 
+#   weekly>: Sat, 03:00:00 #(this will run every Monay, at 4am UTC)
+
+####################### ERROR EMAIL NOTIFICATION ########################## 
+# _error:
+#  mail>: body.txt
+#  subject: NBP Model Workflow failed - Customer Name
+#  to: ['your-team@example.com']
+
+####################### MAIN WORKFLOW ######################################
+_export:
+  !include : config/input_params.yml
+  td:
+    database: ${sink_database}
+
+############## CREATE SINK DATABASE IF DOES NOT EXIST ############################
++create_sink_database:
+  td_ddl>:
+  create_databases: ["${sink_database}"]
+
++run_preprocessing:
+  call>: nbp_preprocessing.dig
+
+################ RUN RECOMMENDATIONS SCRIPT ###########################
++run_recommendation_engine:
+  call>: nbp_ai_signals.dig
+
+################ AGG MODEL PARAMS AND OUTPUTS #########################
++aggregate_model_params:
+  call>: nbp_agg_model_stats.dig
+
+############# CLEANUP TEMP TABLES ##################################
++cleanup_temp_tables:
+  if>: ${cleanup_temp_tables == 'yes'}
+  _do:
+    td_ddl>:
+    drop_tables: ["${prefix}user_item", "${prefix}schema", "${prefix}topk_recommended_items_temp", "${prefix}als_sampled_input"]

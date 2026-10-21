@@ -1,0 +1,46 @@
+_export:
+  !include : 'config/input_params.yml'
+  td:
+    database: ${globals.sink_database}
+
++create_params_table:
+  td>: queries/parse_table_params.sql
+  create_table: rfm_input_params
+
++create_empty_union_table:
+  td_ddl>:
+  empty_tables: ["${union_activity_table}"]
+
+####### Loop Through YAML Params for each SRC table and insert into the UNION table #####################  
++create_union_activity_table:
+  _parallel: true
+
+  td_for_each>: queries/parse_table_params.sql
+  _do:
+
+    +check_if_custom_query_process_required:
+      if>: ${td.each.query_type != 'custom'}
+      _do:
+
+        +insert_src_table:
+          td>: queries/union_src_tables/insert_src_table.sql
+          insert_into: ${union_activity_table}
+
+      _else_do:
+        ####if query_type = 'custom', the src_table will be created from the custom SQL files that you have added to the project manually
+
+        +insert_src_table_custom_query:
+          td>: sql/union_src_tables/${td.each.event_name}.sql
+          insert_into: ${union_activity_table}
+
++create_final_input_and_summary_tables:
+  _parallel: true
+
+  +create_src_table_summary:
+    td>: queries/create_src_table_summary.sql
+    create_table: rfm_src_table_summary
+
+  +create_final_agg_input_table:
+    td>: queries/create_agg_input_table.sql
+    create_table: ${input_table}
+

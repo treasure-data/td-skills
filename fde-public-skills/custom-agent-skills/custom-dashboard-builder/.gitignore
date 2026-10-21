@@ -1,0 +1,14 @@
+# .claude runtime and local settings
+.claude/.tdx-settings-backup.json
+.claude/settings.local.json
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+*.log
+
+# Temporary files
+*.tmp
+.temp/

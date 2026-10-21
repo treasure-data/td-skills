@@ -1,0 +1,38 @@
+_export:
+  !include : 'config/input_params.yml'
+  td:
+    database: ${sink_database}
+  schema_tb: ${prefix}_schema_time
+
+  queries:
+  # case
+  time_period_flag:
+    !include : sql/nb_time/time_period_flag.sql
+
+
++stage_data:
+  +stage_filter_schema_table:
+    td_ddl>:
+    empty_tables: ["${sink_database}.${schema_tb}"]
+      
+  +calculate_activity_percentile:
+    _parallel: true
+    for_each>:
+      time_logic: ${next_best_time.outputs.day_breakdown}
+    _do:
+      +write_schema:
+          engine: presto
+          td>: queries/next_best_time/data_write_schema.sql
+          
+  +generate_query:
+    td>: queries/next_best_time/data_generate_query.sql
+    store_last_results: true
+
+  +execute_scoring_logic_query:
+    td>: queries/next_best_time/create_activity_labels_${scoring_logic}.sql
+    create_table: ${temporary_tables.next_best_time}
+        
+  +clean_up:
+    database: ${sink_database}
+    td_ddl>: 
+    drop_tables: ["${schema_tb}"]

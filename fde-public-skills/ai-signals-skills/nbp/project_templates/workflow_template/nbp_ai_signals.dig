@@ -1,0 +1,138 @@
+_export:
+  !include : config/input_params.yml
+  td:
+    database: ${sink_database}
+
++initialize_automl_tables:
+  td_ddl>:
+  empty_tables: ["${sink_database}.${prefix}metrics_temp", "${sink_database}.${prefix}item_similarity", "${sink_database}.${prefix}topk_recommended_items"]
+
++check_als_sampling:
+  if>: ${automl_model_type == 'als' && als_sample_rate < 1.0}
+  _do:
+    +create_sampled_input:
+      td>: queries/create_als_sampled_input.sql
+      create_table: ${prefix}als_sampled_input
+      engine: presto
+
+    +train_with_sampling:
+      http>: ${ml_batch_api_endpoint}/v1/runs/
+      method: POST
+      headers:
+        - authorization: ${secret:td.apikey}
+      store_content: true
+      content:
+        input_table: ${sink_database}.${prefix}als_sampled_input
+        output_table: ${sink_database}.${prefix}topk_recommended_items
+        solution_name: nbp_train
+        solution_arguments:
+          model_name: ${prefix}${automl_model_type}
+          algorithm: ${automl_model_type}
+          metrics_table: ${sink_database}.${prefix}metrics_temp
+          user_column: userid
+          item_column: itemid
+          tstamp_column: tstamp
+          tunable: true
+          topk: ${max_recommended_items}
+          similar_items_table: ${sink_database}.${prefix}item_similarity
+    +train_poll_sampled:
+      http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
+      method: GET
+      headers:
+        - authorization: ${secret:td.apikey}
+
+  _else_do:
+    +train:
+      http>: ${ml_batch_api_endpoint}/v1/runs/
+      method: POST
+      headers:
+        - authorization: ${secret:td.apikey}
+      store_content: true
+      content:
+        input_table: ${sink_database}.${prefix}transaction
+        output_table: ${sink_database}.${prefix}topk_recommended_items
+        solution_name: nbp_train
+        solution_arguments:
+          model_name: ${prefix}${automl_model_type}
+          algorithm: ${automl_model_type}
+          metrics_table: ${sink_database}.${prefix}metrics_temp
+          user_column: userid
+          item_column: itemid
+          tstamp_column: tstamp
+          tunable: true
+          topk: ${max_recommended_items}
+          similar_items_table: ${sink_database}.${prefix}item_similarity
+    +train_poll:
+      http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
+      method: GET
+      headers:
+        - authorization: ${secret:td.apikey}
+
++pred:
+  http>: ${ml_batch_api_endpoint}/v1/runs/
+  method: POST
+  headers:
+    - authorization: ${secret:td.apikey}
+  store_content: true
+  content:
+    input_table: ${sink_database}.${prefix}transaction
+    output_table: ${sink_database}.${prefix}topk_recommended_items
+    solution_name: nbp_predict
+    solution_arguments:
+      model_name: ${prefix}${automl_model_type}
+      algorithm: ${automl_model_type}
+      user_column: userid
+      item_column: itemid
+      tstamp_column: tstamp
+      filter_viewed: ${filter_viewed}
++pred_poll_status:
+  http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
+  method: GET
+  headers:
+    - authorization: ${secret:td.apikey}
+
++check_exclusion:
+  if>: ${exclude_product_recs == 'yes'}
+  _do:
+    +rename_recs_to_temp:
+      td_ddl>:
+      rename_tables: [{from: "${prefix}topk_recommended_items", to: "${prefix}topk_recommended_items_temp"}]
+
+    +filter_products_from_recommendation_list:
+      if>: ${recs_exclusion_values !== 'query'}
+      _do:
+        td>: queries/filter_products_recs.sql
+        create_table: ${prefix}topk_recommended_items
+      _else_do:
+        td>: queries/filter_products_recs_query.sql
+        create_table: ${prefix}topk_recommended_items
+
++final_table:
+  +create_empty_schema:
+    td_ddl>:
+    empty_tables: ["${prefix}schema"]
+
+  +loop_through_index_of_max_recommended_items:
+    _parallel: true
+    loop>: ${max_recommended_items}
+    _do:
+      +generate_query_syntax_per_index:
+        +generate_list_index:
+          td>:
+          query: "SELECT ${i} + 1 AS idx"
+          store_last_results: true
+        +insert_syntax_into_schema:
+          td>: queries/nbp_parsing_syntax.sql
+          insert_into: ${prefix}schema
+          engine: presto
+
++generate_final_query_syntax:
+  td>:
+  query: "SELECT ARRAY_JOIN(array_sort(ARRAY_AGG(query_syntax)), CONCAT(', ',chr(10))) as query_syntax FROM ${prefix}schema"
+  engine: presto
+  store_last_results: true
+
++enrich_user_master_with_recommendations_attribute:
+  td>: queries/add_recs_to_user_master_attribute.sql
+  create_table: ${user_master_attr_table}
+  engine: presto

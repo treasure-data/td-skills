@@ -1,0 +1,14 @@
+_export:
+  !include : 'config/input_params.yml'
+  td:
+    database: ${sink_database}
+        
++clean_tables:
+  _parallel: true
+  for_each>:
+    temp_table: ${temporary_tables.table_list}
+  _do:
+    +clean_table:
+        database: ${sink_database}
+        td_ddl>: 
+        drop_tables: ["${temp_table}"]

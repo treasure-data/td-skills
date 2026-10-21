@@ -1,0 +1,69 @@
+#####################################################################
+########################## GLOBAL PARAMS ############################
+#####################################################################
+globals:
+#Define input/output database names in TD
+  canonical_id: canonical_id
+  sink_database: <sink_database>
+  built_union_activity: yes
+  api_endpoint: 'api.treasuredata.com'   #Reserved for future use - not read by the workflow yet
+  num_bins: 10                 #Number of buckets in the dashboard histograms (rfm_stats_histogram) - does not change scoring
+
+### Output Table Params 
+union_activity_table: rfm_combined_user_events
+input_table: rfm_input_table
+output_table: rfm_output_table
+stats_table: rfm_stats
+
+############## TIME FILTER PARAMS ##########################
+##The filter below is applied to a source ONLY when that source's own `apply_time_filter: 'yes'` (in aggregate_metrics_tables);
+##otherwise its entire history is included. This top-level flag only labels the run in the dashboard stats - keep it in line.
+apply_time_filter: 'no'
+time_filter_type: interval                #'range' = fixed start/end dates (TD_TIME_RANGE); 'interval' = look back from the run time (TD_INTERVAL)
+time_range_start_date: 2022-01-01         #Start date for 'range', format YYYY-MM-DD
+time_range_end_date: 2099-12-31           #End date for 'range', format YYYY-MM-DD (far-future date = up to the latest data)
+lookback_period: '-180d'                  #Look-back for 'interval': -30d = 30 days, -2w = 2 weeks, -1M = 1 month
+
+
+############## UNION BEHAVIOR TABLES PARAMS ##########################
+################ INPUT TABLE PARAMS ###################################
+aggregate_metrics_tables:
+  - src_table: <source_database>.enriched_pageviews
+    name: 'pageviews'
+    unixtime_col: time
+    join_key: canonical_id
+    order_amount: 0.0
+    context_col: td_title
+    custom_filter: 
+    apply_time_filter: 'no'
+    query_type:                  #Leave blank if you want to read from YML params, use 'custom' to write custom SQL for src_table creation using the 'sql/src_tables/name.sql' files
+
+  - src_table: <source_database>.enriched_orders
+    name: 'order_events'
+    unixtime_col: time
+    join_key: canonical_id
+    order_amount: unit_price
+    context_col: item_name
+    custom_filter: "NOT REGEXP_LIKE(lower(order_status), ''cancel|return'')"
+    apply_time_filter: 'no'
+    query_type:    
+
+  - src_table: <source_database>.enriched_email_events
+    name: 'email_activity'
+    unixtime_col: time
+    join_key: canonical_id
+    order_amount: 0.0
+    context_col: campaign_name
+    custom_filter: "event_type IN (''friendforward'', ''webform'', ''open'', ''click'', ''conversion'', ''unsubscribe'', ''reply'')"
+    apply_time_filter: 'no'
+    query_type: 
+
+  - src_table: <source_database>.sales_rep_interactions
+    name: 'sales_rep_interactions'
+    unixtime_col: time
+    join_key: canonical_id
+    order_amount: 0.0
+    context_col: topic
+    custom_filter: 
+    apply_time_filter: 'no'
+    query_type:   

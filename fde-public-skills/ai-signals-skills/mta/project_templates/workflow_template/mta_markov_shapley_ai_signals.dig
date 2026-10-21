@@ -1,0 +1,104 @@
+_export: 
+  !include : 'config/input_params.yml'
+  td:
+    database: ${sink_database}
+
+
+
++create_empty_tables_for_markov_and_shapley_models:
+  td_ddl>:
+  empty_tables: ["${markov_output_table}", "${transition_output_table}", "${shapley_output_table}"]
+
++run_markov_and_shapley_models_parallel:
+  _parallel: true
+
+  +execute_markov_model:
+
+    +agg_journey_for_markov_chains:
+      td>: sql/ml_models/mta_journey_agg.sql
+      create_table: ${markov_input_table}
+    
+    +markov_run:
+    
+      +markov:
+        http>: ${ml_batch_api_endpoint}/v1/runs/
+        method: POST
+        headers:
+          - authorization: "${secret:td.apikey}"
+          - X-TD-ML-SESSION-ID: ${session_id}
+          - X-TD-ML-ATTEMPT-ID: ${attempt_id}
+        content_format: json
+        content:
+          input_table: "${sink_database}.${markov_input_table}"
+          output_table: "${sink_database}.${markov_output_table}"
+          solution_name: "mta_markov"
+          version: ${ml_batch_api_version}
+          solution_arguments:
+            user_id_col: ${markov_user_id}
+            time_col: ${time_col}
+            channel_colname: ${markov_channel_colname}
+            conversion_col_name: ${markov_conversion_col_name}
+            max_load_rows: ${markov_max_load_rows}
+            transition_output_table: "${sink_database}.${transition_output_table}"
+            # output_mode omitted: MTA defaults to overwrite, so a re-run replaces both raw output tables
+        store_content: true
+
+      +markov_poll:
+        http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
+        method: GET
+        headers:
+          - authorization: "${secret:td.apikey}"
+        store_content: true
+
+      +create_transition_matrix_channels:
+        _parallel: true
+
+        td_for_each>: sql/ml_models/get_markov_channels_with_removal_effect.sql
+        _do:  
+          +create_markov_transition_final:
+            td>: sql/ml_models/markov_transition_matrix.sql
+            insert_into: ${transition_output_table}_final
+
+      +insert_into_markov_attribution_final:
+        td>: sql/ml_models/markov_insert_final.sql
+        insert_into: ${markov_output_table}_final
+
+  +execute_shapley_model:
+    +create_input_table_for_shapely:
+      td>: sql/ml_models/mta_shapely_input_table.sql
+      create_table: ${shapley_input_table}
+
+    +shapley_run:
+      +shapley:
+        http>: ${ml_batch_api_endpoint}/v1/runs/
+        method: POST
+        headers:
+          - authorization: "${secret:td.apikey}"
+          - X-TD-ML-SESSION-ID: ${session_id}
+          - X-TD-ML-ATTEMPT-ID: ${attempt_id}
+        content_format: json
+        content:
+          input_table: "${sink_database}.${shapley_input_table}"
+          output_table: "${sink_database}.${shapley_output_table}"
+          solution_name: "mta_shapley"
+          version: ${ml_batch_api_version}
+          solution_arguments:
+            user_id_col: ${user_id_col}
+            time_col: ${time_col}
+            channel_colname: ${channel_colname}
+            conversion_col_name: ${shapley_conversion_col_name}
+            shapley_lookback_window: ${shapley_lookback_window}
+            shapley_order: ${shapley_order}
+            max_load_rows: ${shapley_max_load_rows}
+        store_content: true
+
+      +shapley_poll:
+        http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
+        method: GET
+        headers:
+          - authorization: "${secret:td.apikey}"
+        store_content: true
+
+      +create_shapely_attribution_percentage:
+        td>: sql/ml_models/shapley_attr_percentage.sql
+        insert_into: ${shapley_output_table}_final

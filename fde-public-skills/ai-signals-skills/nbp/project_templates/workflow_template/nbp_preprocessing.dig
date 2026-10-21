@@ -1,0 +1,38 @@
+_export:
+  !include : config/input_params.yml
+  td:
+    database: ${sink_database}
+
+# priority: test set, then exclusion filter test, then supplement recs in a separate dig and yml
+
++transaction_table:
+  td>: queries/create_transaction_table.sql
+  create_table: ${prefix}transaction
+
++item_id_to_name_mapping:
+  td>: queries/distinct_item_id_name_table.sql
+  create_table: ${prefix}itemid_name_product_mapping
+
++check_if_train_exclusion_filters:
+  if>: ${exclude_product_train == 'yes'}
+  _do:
+    +rename_transaction_table:
+      td_ddl>:
+      rename_tables: [{from: "${prefix}transaction", to: "${prefix}transaction_unfiltered"}]
+
+    +filter_transaction_table:
+      if>: ${exclusion_values !== 'query'}
+      _do:
+        td>: queries/filter_products_training_column.sql
+        create_table: ${prefix}excluded
+      _else_do:
+        td>: queries/filter_products_training_query.sql
+        create_table: ${prefix}excluded
+
+    +transaction_table_filters:
+      td>: queries/create_transaction_table_filters.sql
+      create_table: ${prefix}transaction
+
++user_item_interaction:
+  td>: queries/user_item.sql
+  create_table: ${prefix}user_item

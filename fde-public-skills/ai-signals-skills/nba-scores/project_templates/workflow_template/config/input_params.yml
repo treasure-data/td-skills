@@ -1,0 +1,164 @@
+#####################################################################
+########################## GLOBAL PARAMS ############################
+#####################################################################
+sink_database: <sink_database>                        #database where all model output tables will be saved
+unique_user_id: canonical_id                   #the main join key that will be used to join behaviors tables to customers table, unless a foreign join key is required - this can be defined in next 
+cleanup_temp_tables: 'yes'                         #'yes' - will DELETE all temp_tables not used by final dashboard
+prefix: 'nba'
+
+#####################################################################
+######################## FILTER PARAMS ############################## <--- NOTE** It is VERY important to apply these correctly when running this for customers with lots of Parent Segments / Audiences
+#####################################################################
+time_filter_type: interval                  #Use 'range' to specify fixed start/end dates OR 'interval' to lookback days/weeks/months from time_range_end_date
+time_range_start_date: 2022-01-01           #Defines start date for`TD_TIME_RANGE` use format YYYY-MM-DD
+time_range_end_date: 2222-22-22             #To always end TIME_RANGE at the latest available date, leave default as '222-02-02'. To end on a custom date use format YYYY-MM-DD
+lookback_period: -365d                      #-1M looksback a month, -30d looks back 30 days, - 2w looksback 2 weeks etc. Used only with TD_INTERVAL
+session_length: 3600                        #in seconds (3600s = 60 mins) - how long a customer has to be inactive from previous touchpoint to count next touchpoint as a new session  
+backfill_partition_col: ${unique_user_id}   #use '${unique_user_id}' to backfill NULL touchpoints across entire customer journey, OR use 'session_id' if you only want to backfill within a session
+timeshift_change: '+'                 #use '-' to subtract time_interval below or '+' to add to original timestamp
+timeshift_hours: 4                    #shifts original timestamp timezone by n-hours
+scoring_logic: 'quartile'             #'minmax' - will use minmax scaling from Hivemall. Works well for data which is skewed left or right, 'quartile' - creates even distribution of buckets, 'percentile' - based on percentiles
+topk_values: 10
+
+################### OUTPUT TABLES ######################################
+src_union_table: nba_combined_user_events
+final_nba_metrics_table: nba_combined_metrics_final
+
+#####################################################################
+############# TABLE INPUT PARAMS FOR UNION TABLE #####################
+#####################################################################
+aggregate_metrics_tables:
+  - src_table: <source_database>.enriched_pageviews
+    name: 'pageviews'
+    unixtime_col: time
+    join_key: ${unique_user_id}
+    market_col: "''none''"
+    brand_col: "''none''"
+    url_col: td_url
+    referral_col: td_referrer
+    medium_col: "url_extract_parameter(LOWER(td_url),''utm_medium'')"
+    source_col: "url_extract_parameter(LOWER(td_url),''utm_source'')"
+    campaign_col: "url_extract_parameter(LOWER(td_url),''utm_campaign'')"
+    context_col: td_os
+    event_type: "''web_activity''"
+    custom_filter: "${unique_user_id} IS NOT NULL AND REGEXP_LIKE(lower(td_language), ''en'')"
+    conversion_flag: "IF(REGEXP_LIKE(lower(td_path), ''thank|download''), 1.0, 0.0)"
+    item_price: 0.0
+    apply_time_filter: false
+    query_type:                  #Leave blank if you want to read from YML params, use 'custom' to write custom SQL for src_table creation using the 'sql/src_tables/name.sql' files
+
+  - src_table: <source_database>.enriched_email_events
+    name: 'email_events'
+    unixtime_col: time
+    join_key: ${unique_user_id}
+    market_col: "''none''"
+    brand_col: "''none''"
+    url_col: CAST(NULL AS VARCHAR)
+    referral_col: "''email''"
+    medium_col: "''email''"
+    source_col: "''sfmc''"
+    campaign_col: "REGEXP_REPLACE(lower(campaign_name), ''[- ]'', ''_'')"
+    context_col: "REGEXP_REPLACE(lower(email_name), ''[- ]'', ''_'')"
+    event_type: "CONCAT(''email_'', event_type)"
+    custom_filter: "${unique_user_id} IS NOT NULL AND NOT REGEXP_LIKE(lower(event_type), ''send'')"
+    conversion_flag: 0.0
+    item_price: 0.0
+    apply_time_filter: false
+    query_type:  
+
+  - src_table: <source_database>.sales_rep_interactions
+    name: 'sales_rep_interactions'
+    unixtime_col: time
+    join_key: ${unique_user_id}
+    market_col: "''none''"
+    brand_col: "''none''"
+    url_col: CAST(NULL AS VARCHAR)
+    referral_col: CAST(NULL AS VARCHAR)
+    medium_col: "''sales_rep_interactions''"
+    source_col: source
+    campaign_col: topic
+    context_col: topic
+    event_type: "CONCAT(''sales_rep_interactions_'', source)"
+    custom_filter: ${unique_user_id} IS NOT NULL
+    conversion_flag: 0.0
+    item_price: 0.0
+    apply_time_filter: false
+    query_type: 
+
+###################### CUSTOM QUERY SOURCES - DO NOT UNCOMMENT, THEY ARE ALL SET ###############################
+  - src_table: <source_database>.enriched_orders
+    name: 'order_events'
+    unixtime_col: time
+    join_key: ${unique_user_id}
+    market_col: "''none''"
+    brand_col: "''none''"
+    url_col: CAST(NULL AS VARCHAR)
+    referral_col: CAST(NULL AS VARCHAR)
+    medium_col: CAST(NULL AS VARCHAR)
+    source_col: CAST(NULL AS VARCHAR)
+    campaign_col: CAST(NULL AS VARCHAR)
+    context_col: order_type
+    event_type: "CONCAT(lower(order_type), ''_order'')"
+    custom_filter: ${unique_user_id} IS NOT NULL AND order_status IN (''COMPLETE'', ''PROCESSING'')
+    conversion_flag: 1.0
+    item_price: unit_price
+    apply_time_filter: false
+    query_type:
+
+#################### NEXT BEST TIME PARAMS ########################################
+next_best_time:   
+  outputs:
+    database: ${sink_database}
+    union_table: nba_combined_user_events_final
+    activity_period_column: activity_period
+    day_breakdown:
+      - period: morning
+        logic: time_hour >= 6 AND time_hour <= 11
+      - period: afternoon
+        logic: time_hour >= 12 AND time_hour<= 17 
+      - period: evening
+        logic: time_hour >= 18 AND time_hour <= 23
+      - period: overnight
+        logic: time_hour >= 0 AND time_hour <= 5
+
+####################### NEXT BEST CHANNEL PARAMS ##################################
+utm_parcing:
+  date_field: time
+  channel_column: channel
+  source_column: source
+  exclude_channel_regexp: '%|!|@|#|\(|\)'
+  min_percent: 0.4
+
+  outputs:
+    union_table: nba_combined_user_events_final
+
+###################### NEXT BEST CAMPIAGN PARAMS ##################################
+next_best_campaign:
+  database: ${sink_database}
+  src_table: nba_combined_user_events_final
+  join_key: ${unique_user_id}
+  date_field: time
+  abandon_regexp: REGEXP_LIKE(lower(event_type), '(?=.*add)(?=.*cart)')
+  abandon_regexp_string: REGEXP_LIKE(lower(event_type), ''(?=.*add)(?=.*cart)'')
+  conversion_logic: conversion_flag > 0
+  ad_engagement_logic: channel IN ('paid search', 'tiktok', 'web ads', 'dsp_rtb', 'maddict', 'call center', 'others', 'display')
+  ad_engagement_logic_string: channel IN (''paid'', ''search'', ''tiktok'', ''web ads'', ''dsp_rtb'', ''maddict'', ''call center'', ''others'', ''display'')
+  event_lookback: 90
+  new_customers_days: 45
+  custom_flags_table: nba_custom_campaign_flags
+
+####################### TEMPORARY TABLES ################################## 
+temporary_tables:
+  next_best_channel: nba_next_best_channel
+  next_best_time: nba_next_best_time
+  next_best_campaign: nba_next_best_campaign
+  cart_abandon: nba_cart_abandon
+  new_visitors: nba_new_visitor_no_ads
+  
+  table_list:
+  - nba_next_best_time
+  - nba_next_best_channel
+  - nba_next_best_campaign
+  - nba_cart_abandon
+  - nba_new_visitor_no_ads
+  - schema

@@ -1,0 +1,19 @@
+# Dashboard workflow — parameters (every .dig file loads this with `_export: !include`).
+# All keys stay top-level: digdag does not resolve nested keys.
+
+project_prefix: dashboard              # prefix of every table this workflow writes: <prefix>_stg_events, <prefix>_sink_<group>
+sink_database: dashboard_db            # output database (never the source database)
+
+source_database: source_db
+source_table: events
+event_time_expr: time                  # SQL expression giving the business event time as unix seconds,
+                                       # e.g. time, or TD_TIME_PARSE(order_timestamp, 'UTC')
+table_filter: ""                       # confirmed exclusions as a WHERE fragment, e.g. "order_status <> 'cancelled'"
+
+history_start: '2024-01-01'            # first day loaded by a full refresh (data before it is ignored)
+
+refresh_mode: 'full'                   # 'full' = rebuild every SINK table from history_start (default, always the first run)
+                                       # 'incremental' = replace only the last incremental_look_back_days days
+incremental_look_back_days: 2          # days re-processed on incremental runs (late-arriving data)
+
+cleanup_staging: 'no'                  # 'yes' drops <prefix>_stg_events at the end of a run

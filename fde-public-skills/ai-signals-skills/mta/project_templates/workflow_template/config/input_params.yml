@@ -1,0 +1,148 @@
+#####################################################################
+########################## GLOBAL PARAMS ############################
+#####################################################################
+sink_database: <sink_database>                  #database where all model output tables will be saved
+unique_user_id: canonical_id                    #the customer ID column, present in every source table under this name
+include_non_converted_channels: 'yes'           #'yes' - standard models keep channels that never appear in a converted journey; 'no' - drops them
+
+######################## CUSTOMER ANALYSIS ENRICHMENT ################################################################
+add_customer_analysis: 'no'                                             #'yes' - will join customer table to journey table and add customer labels
+customers_table: <source_database>.rfm_output_table                     #full table name (database.table) for customer table to join to journey table
+attributes_list: 'recency, frequency, monetary_value, rfm_segment'      #column names from customer table to add to journey table
+
+#####################################################################
+############ AI SIGNALS MARKOV AND SHAPLEY MODELS ###################
+#####################################################################
+ml_batch_api_endpoint: https://ml-batch-api.treasuredata.com   #AI Signals ml-batch-api of the account's region: set from `tdx status` site (table in README / ai-signals-guide.md)
+ml_batch_api_version: stable                    #AI Signals model version
+markov_max_load_rows: 50000000                  #memory safety cap on rows the Markov model loads (0 = no cap)
+shapley_max_load_rows: 50000000                 #memory safety cap on journeys the Shapley model loads (0 = no cap); also LIMIT of the Shapley input query
+shapley_lookback_window: 4                      #Shapley: one model per size 0..N (0 = whole journey, N = last N unique channels); 1-10
+shapley_order: true                             #Shapley: true - channel order matters within a coalition; false - channel sets only
+removal_effect_limit: 0.005                     #Markov: channels with a removal effect at or below this are left out of the transition matrix output
+# Model input and output tables (raw outputs are replaced each run; every run is appended to <name>_final)
+markov_input_table: mta_markov_input_table
+markov_output_table: mta_markov_attribution
+transition_output_table: mta_markov_transition   #Markov transition matrix; omitting it would skip that write
+shapley_input_table: mta_shapely_input_table
+shapley_output_table: mta_shapley_attribution
+# Column names of the model input tables, passed explicitly to the API
+markov_user_id: conversion_journey_id           #Markov: one row per journey
+markov_channel_colname: journey                 #Markov: the ordered path joined by ' > '
+markov_conversion_col_name: conversion
+user_id_col: ${unique_user_id}                  #Shapley: one row per touch, grouped by customer
+time_col: date_time
+channel_colname: channel
+shapley_conversion_col_name: conversion_flag
+
+#####################################################################
+######################## FILTER PARAMS ############################## <--- NOTE** It is VERY important to apply these correctly when running this for customers with lots of Parent Segments / Audiences
+#####################################################################
+time_filter_type: range                       #Use 'range' to specify fixed start/end dates OR 'interval' to lookback days/weeks/months from now
+time_range_start_date: 2022-01-01             #Defines start date for `TD_TIME_RANGE`, use format YYYY-MM-DD
+time_range_end_date: 2099-12-31               #End date for `TD_TIME_RANGE`; keep 2099-12-31 to always include the latest data, or use YYYY-MM-DD
+lookback_period: -180d                        #-1M looks back a month, -30d looks back 30 days, -2w looks back 2 weeks etc. Used only with TD_INTERVAL
+session_length: 3600                          #in seconds (3600s = 60 mins) - how long a customer has to be inactive from previous touchpoint to count next touchpoint as a new session
+backfill_partition_col: ${unique_user_id}     #use '${unique_user_id}' to backfill NULL touchpoints across entire customer journey, OR use 'session_id' if you only want to backfill within a session
+top_k_channel_perc: 0.01                      #channels below this share of all touchpoints (and below top_k_conv_perc of conversions) are renamed 'other'
+top_k_conv_perc: 0.01                         #channels below this share of all conversions (and below top_k_channel_perc of touchpoints) are renamed 'other'
+sample_tpoint_limit: 25                       #controls journey length of the samples tables we're extracting from src_union and all the journey tables for easy review and analysis
+max_journey_days: 180                         #Lookback days since conversion event to include touchpoints from in the converted journey
+agg_analysis_cols: ["event_context", "channel"]
+summary_table_top_k: 20                       #top-k of distinct values to include in src_table_summary JSONs of stats
+
+#####################################################################
+# ############# TABLE INPUT PARAMS FOR UNION TABLE #############
+# #####################################################################
+
+aggregate_metrics_tables:
+  - src_table: <source_database>.enriched_pageviews
+    table_description: 'Web Activity data streamed from JS SDK on the website'
+    name: pageviews
+    unixtime_col: time
+    url_col: td_url
+    referral_col: td_referrer
+    medium_col: "COALESCE(url_extract_parameter(LOWER(td_url),''utm_medium''), url_extract_parameter(LOWER(td_url),''medium''))"
+    source_col: "COALESCE(url_extract_parameter(LOWER(td_url),''utm_source''), url_extract_parameter(LOWER(td_url),''source''))"
+    campaign_col: "COALESCE(url_extract_parameter(LOWER(td_url),''utm_campaign''), url_extract_parameter(LOWER(td_url),''campaign''))"
+    utm_mailing_col: "COALESCE(url_extract_parameter(LOWER(td_url),''utm_mailing''), url_extract_parameter(LOWER(td_url),''mailing''))"
+    context_col: td_title
+    event_type: "''web activity''"
+    custom_filter: "${unique_user_id} IS NOT NULL AND REGEXP_LIKE(lower(td_language), ''en'')"
+    # conversion_flag: 0.0
+    conversion_flag: "IF(REGEXP_LIKE(lower(td_path), ''thank_you''), 1.0, 0.0)"
+    item_price: 1.0
+    apply_time_filter: false
+    query_type:                  #Leave blank to build the source from these params, use 'custom' to read it from 'sql/union_src_tables/<name>.sql'
+
+  - src_table: <source_database>.enriched_email_events
+    table_description: 'Email activity data coming from SFMC tracking email sends, opens, clicks, unsubscribe events etc'
+    name: 'email_events'
+    unixtime_col: time
+    url_col: CAST(NULL AS VARCHAR)
+    referral_col: "''email''"
+    medium_col: "''email''"
+    source_col: "''sfmc''"
+    campaign_col: "REGEXP_REPLACE(lower(campaign_name), ''[- ]'', ''_'')"
+    utm_mailing_col: "REGEXP_REPLACE(lower(campaign_name), ''[- ]'', ''_'')"
+    context_col: "REGEXP_REPLACE(lower(email_name), ''[- ]'', ''_'')"
+    event_type: "CONCAT(''email_'', event_type)"
+    custom_filter: "${unique_user_id} IS NOT NULL AND NOT REGEXP_LIKE(lower(event_type), ''send'')"
+    conversion_flag: 0.0
+    item_price: 0.0
+    apply_time_filter: false
+    query_type:
+
+  - src_table: <source_database>.enriched_sales_rep_interactions
+    table_description: 'Sales rep notes coming from SFDC containing information on the context and sentiment of the interaction with the customer'
+    name: 'sales_rep_interactions'
+    unixtime_col: time
+    url_col: CAST(NULL AS VARCHAR)
+    referral_col: CAST(NULL AS VARCHAR)
+    medium_col: "''sales_rep_interactions''"
+    source_col: source
+    campaign_col: topic
+    utm_mailing_col: topic
+    context_col: topic
+    event_type: "CONCAT(''sales_rep_interactions_'', source)"
+    custom_filter: ${unique_user_id} IS NOT NULL
+    conversion_flag: 0.0
+    item_price: 0.0
+    apply_time_filter: false
+    query_type:
+
+###################### CUSTOM QUERY SOURCES - read from sql/union_src_tables/<name>.sql ###############################
+  - src_table: <source_database>.enriched_orders
+    table_description: 'Order history activity with information on items purchased, item price, order status, etc '
+    name: 'order_events'
+    unixtime_col: time
+    url_col: CAST(NULL AS VARCHAR)
+    referral_col: CAST(NULL AS VARCHAR)
+    medium_col: CAST(NULL AS VARCHAR)
+    source_col: CAST(NULL AS VARCHAR)
+    campaign_col: CAST(NULL AS VARCHAR)
+    utm_mailing_col: CAST(NULL AS VARCHAR)
+    context_col: order_type
+    event_type: "CONCAT(lower(order_type), ''_order'')"
+    custom_filter: "${unique_user_id} IS NOT NULL AND order_status IN (''COMPLETE'', ''PROCESSING'')"
+    conversion_flag: 1.0
+    item_price: unit_price
+    apply_time_filter: false
+    query_type: 'custom'
+
+
+####### OUTPUT PARAMS
+src_union_table: journey_src_union
+src_union_base_to_session_table: ${src_union_table}_temp_converted
+journeys_input_table: ${src_union_table}_final_converted
+
+####################### MTA STANDARD MODELS LOGIC ##################################
+u_shaped:
+  first_touch_att: 0.35
+  last_touch_att: 0.35
+
+####################### OUTPUT TABLES ####################################
+output_tables:
+  journeys_table: mta_journeys
+  models_table: mta_models_standard
+  agg_pageviews_table: mta_agg_pageview_stats

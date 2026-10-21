@@ -1,0 +1,41 @@
+_export:
+  !include : 'config/input_params.yml'
+  td:
+    database: ${sink_database}
+  schema_tb: schema_channel
+
++stage_data:
+  +stage_filter_schema_table:
+    td_ddl>:
+    empty_tables: ["${sink_database}.${schema_tb}"]   
+
+#calcualte utm_param_ad_response_percentile and add metrics to master_user_enriched
++calculate_ad_response_percentiles:
+  _parallel: true
+  td_for_each>: queries/next_best_channel/load_distinct_channels.sql
+  _do:
+    +write_schema:
+      engine: presto
+      td>: queries/next_best_channel/data_write_schema_distinct.sql
+
++generate_query:
+  td>: queries/next_best_channel/data_generate_query_distinct.sql
+  store_last_results: true
+  
++check_scoring_logic:
+  if>: ${scoring_logic == 'percentile'}
+  _do:
+    +run_percentile_query:
+      td>: queries/next_best_channel/create_activity_labels_percentile_distinct.sql
+      create_table: ${temporary_tables.next_best_channel}
+  _else_do:
+    +run_minmax_query:
+      td>: queries/next_best_channel/create_activity_labels_minmax_distinct.sql
+      create_table: ${temporary_tables.next_best_channel}
+
+
++clean_up:
+  database: ${sink_database}
+  td_ddl>: 
+  drop_tables: ["${schema_tb}"]
+

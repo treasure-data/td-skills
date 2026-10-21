@@ -1,0 +1,95 @@
+_export: 
+  !include : 'config/input_params.yml'
+  td:
+    database: ${sink_database}
+
++create_params_tables:
+
+  +create_params_table:
+    td>: sql/parse_table_params.sql
+    create_table: mta_table_params
+
++create_empty_table:
+  td_ddl>:
+  empty_tables: ["${src_union_table}_temp"]
+
+####### Loop Through YAML Params for each SRC table and insert into the UNION table #####################  
++create_temp_metrics_tables:
+  _parallel: true
+
+  td_for_each>: sql/parse_table_params.sql
+  _do:
+
+    +check_if_custom_query_process_required:
+      if>: ${td.each.query_type != 'custom'}
+      _do:
+
+        +insert_src_table:
+          td>: sql/union_src_tables/insert_src_table.sql
+          insert_into: ${src_union_table}_temp
+
+      _else_do:
+        ####if query_type = 'custom', the src_table will be created from the custom SQL files that you have added to the project manually
+
+        +insert_src_table_custom_query:
+          td>: sql/union_src_tables/${td.each.event_name}.sql
+          insert_into: ${src_union_table}_temp
+
++create_converted_users_split_base:
+  _parallel: true
+
+  +create_converted_users:
+    rule: HAVING MAX(conversion_flag) > 0.0
+    td>: sql/union_src_tables/union_src_temp.sql
+    create_table: ${src_union_table}_temp_converted
+
+  +create_non_converted_users:
+    rule: HAVING MAX(conversion_flag) < 1.0
+    td>: sql/union_src_tables/union_src_temp.sql
+    create_table: ${src_union_table}_temp_nonconv
+
++get_union_table_summary:
+  td>: sql/union_src_tables/summary_union_table.sql
+  create_table: ${src_union_table}_summary
+  
++create_sessionized_union_table:
+  td>: sql/union_src_tables/sessionize_temp_table.sql
+  create_table: ${src_union_table}_final
+
++create_sample_table:
+  td>: sql/sample_tables/src_union_sample.sql
+  create_table: ${src_union_table}_sample
+
++create_converted_users_split_tables:
+  _parallel: true
+
+  +create_converted_users:
+    rule: HAVING MAX(conversion_flag) > 0.0
+    td>: sql/union_src_tables/split_converted_journeys.sql
+    create_table: ${src_union_table}_final_converted
+
+  +create_non_converted_users:
+    rule: HAVING MAX(conversion_flag) < 1.0
+    td>: sql/union_src_tables/split_converted_journeys.sql
+    create_table: ${src_union_table}_final_nonconv
+
++check_if_add_customer_analysis:
+  if>: ${add_customer_analysis=='yes'}
+  _do:
+
+    +add_customer_attributes_to_journey_union:
+      input_table: ${src_union_table}_final
+      td>: sql/union_src_tables/add_customer_attributes_to_journey.sql
+      create_table: ${src_union_table}_attributes
+
+    +repalce_attributes_with_journey_union:
+      td_ddl>:
+      rename_tables: [{from: "${src_union_table}_attributes", to: "${src_union_table}_final"}]
+
+
+
+  
+
+
+
+

@@ -1,0 +1,54 @@
+
+_export:
+  !include : config/input_params.yml
+  td:
+    database: ${sink_database}
+
++create_params_table:
+  td>: sql/union/parse_table_params.sql
+  create_table: nba_table_params
+
++create_empty_table:
+  td_ddl>:
+  empty_tables: ["${src_union_table}_temp"]
+
+####### Loop Through YAML Params for each SRC table and insert into the UNION table #####################  
++create_temp_metrics_tables:
+  _parallel: true
+
+  td_for_each>: sql/union/parse_table_params.sql
+  _do:
+
+    +check_if_custom_query_process_required:
+      if>: ${td.each.query_type != 'custom'}
+      _do:
+
+        +insert_src_table:
+          td>: sql/union/insert_src_table.sql
+          insert_into: ${src_union_table}_temp
+
+      _else_do:
+        ####if query_type = 'custom', the src_table will be created from the custom SQL files that you have added to the project manually
+
+        +insert_src_table_custom_query:
+          td>: sql/union/${td.each.event_name}.sql
+          insert_into: ${src_union_table}_temp
+
++create_sessionized_union_table:
+  td>: sql/union/sessionize_temp_table.sql
+  create_table: ${src_union_table}_session
+
++create_topk_values_lookup_table:
+  td>: sql/union/create_topk_lookup_table.sql
+  create_table: nba_topk_values_lookup
+
++create_final_union_table:
+  td>: sql/union/create_final_union_table.sql
+  create_table: ${src_union_table}_final
+
++create_sample_table:
+  td>: sql/sample_tables/src_union_sample.sql
+  create_table: ${src_union_table}_sample
+
+
+

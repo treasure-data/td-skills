@@ -1,0 +1,34 @@
+_export:
+  !include : 'config/input_params.yml'
+  td:
+    database: ${globals.sink_database}
+
++create_daily_agg_table:
+  td_ddl>:
+  create_tables: ['${stats_table}_daily_agg']
+
++create_stats_tables:
+  _parallel: true
+
+  +rfm_stats_summary:
+    td>: queries/rfm_stats_summary.sql
+    create_table: ${stats_table}
+
+  +rfm_histogram:
+    td>: queries/rfm_stats_histogram.sql
+    create_table: ${stats_table}_histogram
+
+  +rfm_model_params:
+    td>: queries/stats_model_params.sql
+    insert_into: ${stats_table}_model_params
+
++get_global_filters:
+  _parallel: true 
+
+  +create_global_session_filter:
+    td>: queries/stats_global_session_filter.sql
+    create_table: ${stats_table}_global_session_filter
+
+  +archive_historic_scores:
+    td>: queries/stats_historic_agg.sql
+    insert_into: ${stats_table}_daily_agg

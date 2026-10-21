@@ -1,0 +1,23 @@
+_export:
+  !include : 'config/input_params.yml'
+  td:
+    database: ${sink_database}
+
+#Create base identities table with distinct user_ids to join all temp derived attribute tables to
++create_base_attributers_table:
+  td>: sql/final/base_table.sql
+  create_table: ${final_nba_metrics_table}
+
++loop_tables:
+  td_for_each>: sql/final/select_temp_tables.sql
+  _do:
+
+    +join_nba_metrics:
+      td>: sql/final/join_temp_tables.sql
+      create_table: ${final_nba_metrics_table}_temp
+      
+    +rename_temp_table:
+      td_ddl>:
+      rename_tables: [{from: "${final_nba_metrics_table}_temp", to: "${final_nba_metrics_table}"}]
+
+

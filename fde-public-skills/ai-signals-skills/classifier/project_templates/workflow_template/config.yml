@@ -1,0 +1,95 @@
+sink_database: classification_scoring
+description: 'binary classification - P(target = 1)'
+
+#####################################################################
+############################ ML BATCH API ###########################
+#####################################################################
+# Region endpoint for the ML batch API (set from the account's site, `tdx status`):
+#   US: https://ml-batch-api.treasuredata.com
+#   (use the matching endpoint for JP / EU / AP accounts — see README)
+ml_batch_api_endpoint: https://ml-batch-api.treasuredata.com
+ml_batch_api_version: stable
+
+#####################################################################
+############################ ML MODEL ###############################
+#####################################################################
+# model_name is unique per TD account: retraining under the same name replaces the model.
+model_name: classify_scorer_xgb
+model_type: xgboost
+
+# Input tables are built by data_prep.dig (sql/) in every run, with a session_id column.
+# Training uses the latest batch (MAX(session_id)) of train_input_table.
+#
+# Outputs (all in ${sink_database}, append-only):
+#   train   -> fixed-name artifact tables classifier_run_log, classifier_feature_importance,
+#              classifier_shap_directional, classifier_roc_curve, ... (train_output_table is
+#              required by the API but not written)
+#   predict -> pred_output_table (session_id, model_type, user_id, score, predicted_label,
+#              threshold_applied, score_bucket, prediction_timestamp)
+train_input_table: classify_final_features_train
+train_output_table: classifier_train_output
+
+pred_input_table: classify_final_features_pred
+pred_output_table: classifier_predictions
+
+target_column: target
+user_id_column: user_id
+columns_to_drop: time|session_id|snapshot_date   # pipe-separated non-feature columns
+
+#####################################################################
+########################## FEATURE WINDOWS ##########################
+#####################################################################
+# Read by the feature SQL in sql/ through data_prep.dig.
+# train: features up to cutoff_date = run date - label_window_days, label observed after it
+# pred:  features up to cutoff_date = run date
+reference_date: ''              # '' = the run date; 'YYYY-MM-DD' for data that ends in the past
+label_window_days: 90
+feature_lookback_days: 365
+
+#####################################################################
+######################### TRAINING PARAMS ###########################
+#####################################################################
+test_size: 0.2
+
+# ---tuning------
+n_trials: 30
+cv_folds: 5
+fbeta_beta: 1.0
+optuna_metric: auc_roc            # fbeta | auc_roc | auc_pr | precision | recall | log_loss
+early_stopping_rounds: 50
+class_balance_strategy: balanced  # balanced | none
+n_estimators_min: 100
+n_estimators_max: 1000
+max_depth_min: 3
+max_depth_max: 10
+learning_rate_min: 0.01
+learning_rate_max: 0.3
+
+# ---threshold------
+threshold_strategy: precision_optimal   # precision_optimal | f1_optimal | recall_optimal | youden_j | fixed
+min_metric_floor: 0.45
+fixed_threshold: 0.5               # used only when threshold_strategy = fixed
+
+# ---metric------
+eval_metric: aucpr
+corr_threshold: 0.85
+shap_max_samples: 2000
+
+# ---xgboost search ranges------
+subsample_min: 0.6
+subsample_max: 1.0
+colsample_bytree_min: 0.5
+colsample_bytree_max: 1.0
+min_child_weight_min: 1
+min_child_weight_max: 100
+reg_alpha_min: 0.001
+reg_alpha_max: 10.0
+reg_lambda_min: 0.001
+reg_lambda_max: 10.0
+gamma_min: 0.0
+gamma_max: 5.0
+
+#####################################################################
+######################## PREDICTION PARAMS ##########################
+#####################################################################
+pred_output_mode: append          # append = one batch per run
