@@ -1,2 +1,2 @@
-SELECT * FROM ${src_union_table}_final
-LIMIT 10000
+select * from ${src_union_table}_final
+limit 10000

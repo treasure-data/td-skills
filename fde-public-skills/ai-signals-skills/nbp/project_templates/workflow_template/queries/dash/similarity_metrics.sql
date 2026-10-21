@@ -1,18 +1,18 @@
-WITH BASE AS (
-  SELECT 
-  CAST(CURRENT_DATE AS VARCHAR) as event_date,
-  T1.target_item_id,
-  T2.item_name as item_name,
-  T1.item_id,
-  T3.item_name as other_item_name,
-  ARRAY_JOIN(ARRAY_SORT(ARRAY [T2.item_name, T3.item_name]), ' || ') as item_pair,
-  ROUND(T1.score, 4) as similarity
-  FROM ${prefix}item_similarity T1
-  LEFT JOIN ${prefix}itemid_name_product_mapping T2
-  ON T1.target_item_id = T2.itemid
-  LEFT JOIN ${prefix}itemid_name_product_mapping T3
-  ON T1.item_id = T3.itemid
+with base as (
+  select 
+  cast(current_date as varchar) as event_date,
+  t1.target_item_id,
+  t2.item_name as item_name,
+  t1.item_id,
+  t3.item_name as other_item_name,
+  array_join(array_sort(array [t2.item_name, t3.item_name]), ' || ') as item_pair,
+  round(t1.score, 4) as similarity
+  from ${prefix}item_similarity t1
+  left join ${prefix}itemid_name_product_mapping t2
+  on t1.target_item_id = t2.itemid
+  left join ${prefix}itemid_name_product_mapping t3
+  on t1.item_id = t3.itemid
 )
-SELECT event_date, item_pair, MIN(item_name) AS item_name, MAX(other_item_name) AS other_item_name, MAX(similarity) AS similarity 
-FROM BASE
-GROUP BY 1, 2
+select event_date, item_pair, min(item_name) as item_name, max(other_item_name) as other_item_name, max(similarity) as similarity 
+from base
+group by 1, 2

@@ -1,10 +1,10 @@
-SELECT 
+select 
   userid,
   itemid,
   max(tstamp) as tstamp,
   count(1) as count
-FROM
+from
   ${prefix}transaction
-GROUP BY
+group by
   userid, itemid
-HAVING count(userid) >= ${min_cooccurence_filter}
+having count(userid) >= ${min_cooccurence_filter}

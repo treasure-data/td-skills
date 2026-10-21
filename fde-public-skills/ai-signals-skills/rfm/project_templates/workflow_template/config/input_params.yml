@@ -6,7 +6,6 @@ globals:
   canonical_id: canonical_id
   sink_database: <sink_database>
   built_union_activity: yes
-  api_endpoint: 'api.treasuredata.com'   #Reserved for future use - not read by the workflow yet
   num_bins: 10                 #Number of buckets in the dashboard histograms (rfm_stats_histogram) - does not change scoring
 
 ### Output Table Params 
@@ -14,6 +13,9 @@ union_activity_table: rfm_combined_user_events
 input_table: rfm_input_table
 output_table: rfm_output_table
 stats_table: rfm_stats
+
+### AI Signals API
+ml_batch_api_endpoint: 'https://ml-batch-api.treasuredata.com'   # US; use the account's regional endpoint
 
 ############## TIME FILTER PARAMS ##########################
 ##The filter below is applied to a source ONLY when that source's own `apply_time_filter: 'yes'` (in aggregate_metrics_tables);

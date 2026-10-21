@@ -45,7 +45,7 @@ All keys are in `config/input_params.yml`. The template values are a working exa
 | **`globals.canonical_id`** | Name of the profile ID column in every table the workflow writes; each source's `join_key` is renamed to it | The ID the Parent Segment joins on (e.g. `canonical_id`, `td_customer_id`) |
 | **`globals.sink_database`** | Database for every table the workflow writes | The confirmed sink database (sink-database gate). Created by the first run if it does not exist (`+create_sink_database`); the project owner needs permission to create databases, otherwise create it in the TD Console first |
 | `globals.built_union_activity` | `yes` rebuilds the union and input tables before scoring; `no` re-scores the existing `input_table` | `yes`. `no` only to re-run scoring on unchanged inputs |
-| `globals.api_endpoint` | *Not read* — reserved for future use | Leave as is |
+| **`ml_batch_api_endpoint`** | AI Signals ml-batch-api base URL, used by `rfm_ai_signals.dig` | The account's region (`tdx status`); the values are in `references/ai-signals-guide.md` §3 |
 | `globals.num_bins` | Number of buckets in the dashboard histograms (`<stats_table>_histogram`). Does not change scoring — scores are always quartiles | Keep `10`; lower it for small populations |
 
 ### Output tables
@@ -103,7 +103,7 @@ All tables are written to `globals.sink_database`.
 ## Secrets & Requirements
 
 - **Secrets:** none to set. `rfm_ai_signals.dig` sends `${secret:td.apikey}` to the AI Signals batch API, which provides the key itself.
-- **API endpoint:** `rfm_ai_signals.dig` calls the US endpoint (`https://ml-batch-api.treasuredata.com/v1/runs`). For other regions, change the URL in `+run_rfm` and `+poll_status`: Japan `ml-batch-api.treasuredata.co.jp`, EU `ml-batch-api.eu01.treasuredata.com`, AP `ml-batch-api.ap02.treasuredata.com` / `ml-batch-api.ap03.treasuredata.com`.
+- **API endpoint:** `ml_batch_api_endpoint` in the config, US (`https://ml-batch-api.treasuredata.com`) by default. For other regions, set it to the regional base URL: Japan `ml-batch-api.treasuredata.co.jp`, EU `ml-batch-api.eu01.treasuredata.com`, AP `ml-batch-api.ap02.treasuredata.com` / `ml-batch-api.ap03.treasuredata.com`.
 - **Failure email:** the `_error` block in `rfm_launch.dig` is commented out. To enable it, uncomment it, replace `your-team@example.com` with the customer's address and put the customer name in `subject`.
 - **Schedule:** the `schedule:` block in `rfm_launch.dig` is commented out (example: monthly). Uncomment and set it if the customer wants scheduled runs.
 - **Requirements:** `globals.sink_database` exists or can be created; every source has a profile ID column and a usable event timestamp; Trino (`presto`) engine. Large accounts may need a shorter `lookback_period`.

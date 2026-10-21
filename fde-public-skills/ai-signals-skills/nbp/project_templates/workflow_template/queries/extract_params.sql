@@ -1,12 +1,12 @@
-WITH latest as (
-  SELECT * FROM ${prefix}metrics_temp
+with latest as (
+  select * from ${prefix}metrics_temp
 )
 
-SELECT 
-  'Algorithm: ' || algorithm || ', Params: ' || model_params AS model_params,
-  'Precision: ' || REGEXP_EXTRACT(FORMAT('%.20f', ROUND(precicion_${max_recommended_items},3)), '^(-?\d+\.\d+?)(0*)$', 1)|| 
-  ', Recall: ' || REGEXP_EXTRACT(FORMAT('%.20f', ROUND(recall_${max_recommended_items},3)), '^(-?\d+\.\d+?)(0*)$', 1)|| 
-  ', NDCG: ' || REGEXP_EXTRACT(FORMAT('%.20f', ROUND(ndcg_${max_recommended_items},3)), '^(-?\d+\.\d+?)(0*)$', 1)|| 
-  ', MRR: ' || REGEXP_EXTRACT(FORMAT('%.20f', ROUND(mrr_${max_recommended_items},3)), '^(-?\d+\.\d+?)(0*)$', 1)|| 
-  ' MAP: ' || REGEXP_EXTRACT(FORMAT('%.20f', ROUND(map_${max_recommended_items},3)), '^(-?\d+\.\d+?)(0*)$', 1) AS model_metrics
-FROM latest
+select 
+  'Algorithm: ' || algorithm || ', Params: ' || model_params as model_params,
+  'Precision: ' || regexp_extract(format('%.20f', round(precicion_${max_recommended_items},3)), '^(-?\d+\.\d+?)(0*)$', 1)|| 
+  ', Recall: ' || regexp_extract(format('%.20f', round(recall_${max_recommended_items},3)), '^(-?\d+\.\d+?)(0*)$', 1)|| 
+  ', NDCG: ' || regexp_extract(format('%.20f', round(ndcg_${max_recommended_items},3)), '^(-?\d+\.\d+?)(0*)$', 1)|| 
+  ', MRR: ' || regexp_extract(format('%.20f', round(mrr_${max_recommended_items},3)), '^(-?\d+\.\d+?)(0*)$', 1)|| 
+  ' MAP: ' || regexp_extract(format('%.20f', round(map_${max_recommended_items},3)), '^(-?\d+\.\d+?)(0*)$', 1) as model_metrics
+from latest

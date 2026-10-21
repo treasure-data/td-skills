@@ -1,9 +1,9 @@
-WITH exclude AS (
-  SELECT itemid 
-  FROM ${prefix}excluded
+with exclude as (
+  select itemid 
+  from ${prefix}excluded
 )
-SELECT *
-FROM ${prefix}transaction_unfiltered
-WHERE itemid NOT IN (
-  SELECT itemid FROM exclude
+select *
+from ${prefix}transaction_unfiltered
+where itemid not in (
+  select itemid from exclude
 )

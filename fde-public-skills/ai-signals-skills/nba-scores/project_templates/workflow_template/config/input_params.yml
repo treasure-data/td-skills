@@ -9,9 +9,9 @@ prefix: 'nba'
 #####################################################################
 ######################## FILTER PARAMS ############################## <--- NOTE** It is VERY important to apply these correctly when running this for customers with lots of Parent Segments / Audiences
 #####################################################################
-time_filter_type: interval                  #Use 'range' to specify fixed start/end dates OR 'interval' to lookback days/weeks/months from time_range_end_date
+time_filter_type: interval                  #Use 'range' to specify fixed start/end dates OR 'interval' to lookback days/weeks/months from today
 time_range_start_date: 2022-01-01           #Defines start date for`TD_TIME_RANGE` use format YYYY-MM-DD
-time_range_end_date: 2222-22-22             #To always end TIME_RANGE at the latest available date, leave default as '222-02-02'. To end on a custom date use format YYYY-MM-DD
+time_range_end_date: 2099-12-31             #End date for 'range', format YYYY-MM-DD (far-future date = up to the latest data)
 lookback_period: -365d                      #-1M looksback a month, -30d looks back 30 days, - 2w looksback 2 weeks etc. Used only with TD_INTERVAL
 session_length: 3600                        #in seconds (3600s = 60 mins) - how long a customer has to be inactive from previous touchpoint to count next touchpoint as a new session  
 backfill_partition_col: ${unique_user_id}   #use '${unique_user_id}' to backfill NULL touchpoints across entire customer journey, OR use 'session_id' if you only want to backfill within a session

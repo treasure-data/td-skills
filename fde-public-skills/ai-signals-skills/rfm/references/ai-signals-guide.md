@@ -39,28 +39,28 @@ Sent in the POST body. Top-level keys select the solution and tables; everything
 | `mv_threshold` | `solution_arguments` | optional | null (no threshold) | Absolute amount, in the unit of `monetary_value`. Profiles at or below it are left out of the M cut-off calculation and get `m_quartile` 1; they stay in the output. Leave it unset by default. Set it (e.g. `0.05`) when many profiles have no spend, so the M cut-offs are computed from buyers only |
 | `audience_name` | `solution_arguments` | optional | not set | Asks the API to create a Master Segment and a child Segment per RFM segment. It creates objects in the account — never set it in DEV (Phases 1–4); only in Phase 5, and only if the user wants the API to build the segments |
 
-Headers: `authorization: ${secret:td.apikey}` (required, exactly as in the template — the key is provided by the AI Signals architecture; no manual secret setup). Optional `X-TD-ML-SESSION-ID: ${session_id}` and `X-TD-ML-ATTEMPT-ID: ${attempt_id}` tag the API run with the workflow session and attempt for tracing.
+Headers: `authorization: "TD1 ${secret:td.apikey}"` (required, exactly as in the template — the key is provided by the AI Signals architecture; no manual secret setup). Optional `X-TD-ML-SESSION-ID: ${session_id}` and `X-TD-ML-ATTEMPT-ID: ${attempt_id}` tag the API run with the workflow session and attempt for tracing.
 
 ### Endpoint by region
 
-Use the endpoint of the account's region (`tdx status`) in both `+run_rfm` and `+poll_status`. The template uses the US endpoint.
+Set `ml_batch_api_endpoint` in the config to the base URL of the account's region (`tdx status`); `+run_rfm` and `+poll_status` both read it. The template default is the US endpoint.
 
 | Region | Endpoint |
 |---|---|
-| US (us01) | `https://ml-batch-api.treasuredata.com/v1/runs` |
-| Japan (Tokyo) | `https://ml-batch-api.treasuredata.co.jp/v1/runs` |
-| EU (eu01) | `https://ml-batch-api.eu01.treasuredata.com/v1/runs` |
-| AP (ap02) | `https://ml-batch-api.ap02.treasuredata.com/v1/runs` |
-| AP (ap03) | `https://ml-batch-api.ap03.treasuredata.com/v1/runs` |
+| US (us01) | `https://ml-batch-api.treasuredata.com` |
+| Japan (Tokyo) | `https://ml-batch-api.treasuredata.co.jp` |
+| EU (eu01) | `https://ml-batch-api.eu01.treasuredata.com` |
+| AP (ap02) | `https://ml-batch-api.ap02.treasuredata.com` |
+| AP (ap03) | `https://ml-batch-api.ap03.treasuredata.com` |
 
 ## 4. Workflow syntax
 
 ```yaml
 +run_rfm:
-  http>: https://ml-batch-api.treasuredata.com/v1/runs
+  http>: ${ml_batch_api_endpoint}/v1/runs
   method: POST
   headers:
-    - authorization: ${secret:td.apikey}
+    - authorization: "TD1 ${secret:td.apikey}"
     - X-TD-ML-SESSION-ID: ${session_id}       # optional
     - X-TD-ML-ATTEMPT-ID: ${attempt_id}       # optional
   store_content: true                         # needed: +poll_status reads the run id from the response
@@ -77,10 +77,10 @@ Use the endpoint of the account's region (`tdx status`) in both `+run_rfm` and `
 
 +poll_status:
   # Returns 408 while the run is in progress; http> retries until 200
-  http>: https://ml-batch-api.treasuredata.com/v1/runs/${JSON.parse(http.last_content)['id']}/status
+  http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
   method: GET
   headers:
-    - authorization: ${secret:td.apikey}
+    - authorization: "TD1 ${secret:td.apikey}"
 ```
 
 Keep `+poll_status` directly after `+run_rfm` — it reads the run id from the previous task's response, and the next task (`rfm_agg_stats.dig`) needs the finished output table.
@@ -160,7 +160,7 @@ Spot-check segments against the rule table: `SELECT rfm_segment, rfm_quartile, C
 |---|---|
 | Compare a setting without touching production | New `output_table` (e.g. `rfm_output_test`), run, compare segment mix with the production table, then switch back |
 | Non-buyers distort M quartiles | Add `mv_threshold` (e.g. `0.05`) — M cut-offs then come from buyers only |
-| Account outside the US | Regional endpoint (§3) in `+run_rfm` and `+poll_status` |
+| Account outside the US | Regional `ml_batch_api_endpoint` (§3) |
 | Slow run or out of memory | `use_sql: true`; if Trino then hits memory limits, add `use_hive: true` |
 | Different definition of R, F or M (e.g. frequency = orders only, recency = last purchase) | Change the input table — `create_agg_input_table.sql`, or `query_type: custom` per source — keeping the four column names and types |
 | Shorter or longer history | Time filter in `config/input_params.yml` (`references/workflow-setup.md` §2) |

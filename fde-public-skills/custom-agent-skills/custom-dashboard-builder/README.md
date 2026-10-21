@@ -4,7 +4,7 @@ Build a custom HTML dashboard on your Treasure Data data — new, or converted f
 
 ## Getting started
 
-1. Enable the `custom-agent-skills` plugin from the `fde-public-skills` marketplace in Treasure AI Studio.
+1. Install the `fde-public-skills` plugin from the `td-skills` marketplace (`/plugin install fde-public-skills@td-skills`) in Treasure AI Studio.
 2. Open (or create) a Work Folder for the project, e.g. *Sales Dashboard*.
 3. In a new chat: *"Build a custom sales dashboard"*, or *"Convert this dashboard into a TAIS HTML dashboard"* with the file attached.
 

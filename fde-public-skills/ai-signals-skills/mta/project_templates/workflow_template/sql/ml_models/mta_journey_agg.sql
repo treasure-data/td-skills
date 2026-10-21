@@ -22,7 +22,7 @@
 
 
 ---- OLD query
-  SELECT  td_time_string(max(time),'s!') as date_time,
+  select  td_time_string(max(time),'s!') as date_time,
 conversion_journey_id ,
 array_join(array_agg(channel order by time),' > ') as journey ,
  max(conversion_flag) as conversion

@@ -1,18 +1,18 @@
-SELECT
-TD_TIME_STRING(${session_unixtime}, 's!') AS run_time,
+select
+td_time_string(${session_unixtime}, 's!') as run_time,
 ${session_id} as session_id,
 'ai_signals' as model_type, 
 source as source_table,
 '${apply_time_filter}' as time_filter,
-CASE 
-WHEN '${apply_time_filter}'  = 'no' THEN '-' || TRY(CAST(MAX(recency_days) as VARCHAR)) || 'd'
-ELSE '${lookback_period}'
-END AS lookback_days,
-SUM(total_touchpoints) AS total_touchpoints,
-MAX(recency_days) AS oldest_touchpoint,
-MIN(recency_days) AS most_recent_touchpoint,
-ROUND(SUM(total_spend), 3) AS total_spend,
-TD_TIME_STRING(MIN(time), 's!') as min_date,
-TD_TIME_STRING(MAX(time), 's!') as max_date
-FROM ${union_activity_table}
-GROUP BY 1, 2, 3, 4
+case 
+when '${apply_time_filter}'  = 'no' then '-' || try(cast(max(recency_days) as varchar)) || 'd'
+else '${lookback_period}'
+end as lookback_days,
+sum(total_touchpoints) as total_touchpoints,
+max(recency_days) as oldest_touchpoint,
+min(recency_days) as most_recent_touchpoint,
+round(sum(total_spend), 3) as total_spend,
+td_time_string(min(time), 's!') as min_date,
+td_time_string(max(time), 's!') as max_date
+from ${union_activity_table}
+group by 1, 2, 3, 4

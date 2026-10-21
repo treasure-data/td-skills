@@ -19,7 +19,7 @@ _export:
       http>: ${ml_batch_api_endpoint}/v1/runs/
       method: POST
       headers:
-        - authorization: ${secret:td.apikey}
+        - authorization: "TD1 ${secret:td.apikey}"
       store_content: true
       content:
         input_table: ${sink_database}.${prefix}als_sampled_input
@@ -39,14 +39,14 @@ _export:
       http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
       method: GET
       headers:
-        - authorization: ${secret:td.apikey}
+        - authorization: "TD1 ${secret:td.apikey}"
 
   _else_do:
     +train:
       http>: ${ml_batch_api_endpoint}/v1/runs/
       method: POST
       headers:
-        - authorization: ${secret:td.apikey}
+        - authorization: "TD1 ${secret:td.apikey}"
       store_content: true
       content:
         input_table: ${sink_database}.${prefix}transaction
@@ -66,13 +66,13 @@ _export:
       http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
       method: GET
       headers:
-        - authorization: ${secret:td.apikey}
+        - authorization: "TD1 ${secret:td.apikey}"
 
 +pred:
   http>: ${ml_batch_api_endpoint}/v1/runs/
   method: POST
   headers:
-    - authorization: ${secret:td.apikey}
+    - authorization: "TD1 ${secret:td.apikey}"
   store_content: true
   content:
     input_table: ${sink_database}.${prefix}transaction
@@ -89,7 +89,7 @@ _export:
   http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
   method: GET
   headers:
-    - authorization: ${secret:td.apikey}
+    - authorization: "TD1 ${secret:td.apikey}"
 
 +check_exclusion:
   if>: ${exclude_product_recs == 'yes'}

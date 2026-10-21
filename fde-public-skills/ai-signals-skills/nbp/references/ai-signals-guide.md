@@ -70,7 +70,7 @@ Each algorithm ignores the others' parameters: `popular` uses none of `factors` 
 | `lastk` | optional | `1` | `similar_to_latest` only: how many latest interactions seed the recommendations (`lastk × topk` candidates are ranked). Higher can help basket-style purchasing but costs time and memory |
 | `filter_viewed` | optional | `false` | `true` leaves out items the user already interacted with — the template sends `filter_viewed` from the config |
 
-Headers: `authorization: ${secret:td.apikey}` (required, exactly as in the template — the key is provided by the AI Signals architecture; no manual secret setup). Optional `X-TD-ML-SESSION-ID: ${session_id}` and `X-TD-ML-ATTEMPT-ID: ${attempt_id}` tag the API run with the workflow session and attempt for tracing.
+Headers: `authorization: "TD1 ${secret:td.apikey}"` (required, exactly as in the template — the key is provided by the AI Signals architecture; no manual secret setup). Optional `X-TD-ML-SESSION-ID: ${session_id}` and `X-TD-ML-ATTEMPT-ID: ${attempt_id}` tag the API run with the workflow session and attempt for tracing.
 
 ### Endpoint by region
 
@@ -91,7 +91,7 @@ Headers: `authorization: ${secret:td.apikey}` (required, exactly as in the templ
   http>: ${ml_batch_api_endpoint}/v1/runs/
   method: POST
   headers:
-    - authorization: ${secret:td.apikey}
+    - authorization: "TD1 ${secret:td.apikey}"
     - X-TD-ML-SESSION-ID: ${session_id}       # optional
     - X-TD-ML-ATTEMPT-ID: ${attempt_id}       # optional
   store_content: true                         # needed: the poll step reads the run id from the response
@@ -116,13 +116,13 @@ Headers: `authorization: ${secret:td.apikey}` (required, exactly as in the templ
   http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
   method: GET
   headers:
-    - authorization: ${secret:td.apikey}
+    - authorization: "TD1 ${secret:td.apikey}"
 
 +pred:
   http>: ${ml_batch_api_endpoint}/v1/runs/
   method: POST
   headers:
-    - authorization: ${secret:td.apikey}
+    - authorization: "TD1 ${secret:td.apikey}"
   store_content: true
   content:
     input_table: ${sink_database}.${prefix}transaction
@@ -142,7 +142,7 @@ Headers: `authorization: ${secret:td.apikey}` (required, exactly as in the templ
   http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
   method: GET
   headers:
-    - authorization: ${secret:td.apikey}
+    - authorization: "TD1 ${secret:td.apikey}"
 ```
 
 Keep each poll step directly after its POST — it reads the run id from the previous task's response. With ALS sampling on (`als` and `als_sample_rate < 1.0`), the training input is `<prefix>als_sampled_input` instead of `<prefix>transaction`.

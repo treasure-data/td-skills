@@ -1,6 +1,6 @@
-SELECT 
+select 
   item_category, 
-  ARRAY_JOIN(ARRAY_SORT(ARRAY_DISTINCT(ARRAY_AGG(item_name))), ', ') as item_list, 
-  COUNT(*) as item_count
-FROM ${prefix}itemid_name_product_mapping
-GROUP BY 1
+  array_join(array_sort(array_distinct(array_agg(item_name))), ', ') as item_list, 
+  count(*) as item_count
+from ${prefix}itemid_name_product_mapping
+group by 1

@@ -1,18 +1,18 @@
-WITH T1 as
+with t1 as
 (
-SELECT ${unique_user_id},
+select ${unique_user_id},
 ${td.last_results.activity_logic}
-FROM ${utm_parcing.outputs.union_table}
-GROUP BY ${unique_user_id}
+from ${utm_parcing.outputs.union_table}
+group by ${unique_user_id}
 ),
-T4 AS (
-SELECT T1.*,
-CASE greatest(${td.last_results.channel_list})
+t4 as (
+select t1.*,
+case greatest(${td.last_results.channel_list})
 ${td.last_results.case_logic}
-      END AS next_best_channel,
+      end as next_best_channel,
 ${td.last_results.percentile_logic}
-FROM T1
+from t1
 )
-SELECT T4.*,
+select t4.*,
 ${td.last_results.avg_label}
-FROM T4
+from t4

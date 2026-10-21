@@ -133,4 +133,4 @@ Only after the user says the model is ready and confirms the move (playbook Phas
 - **Key outputs:** `rfm_output_table` (Parent Segment attributes); `rfm_stats`, `rfm_stats_histogram`, `rfm_stats_model_params`, `rfm_stats_daily_agg`
 - **Agent name:** `<project_slug>-agent` — `rfm-agent` by default
 - **Secrets:** none to set — `${secret:td.apikey}` in `rfm_ai_signals.dig` is provided by the AI Signals architecture
-- **API endpoint:** US by default; other regions in `references/ai-signals-guide.md` §3
+- **API endpoint:** `ml_batch_api_endpoint` in the config — US by default; other regions in `references/ai-signals-guide.md` §3

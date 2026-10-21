@@ -1,3 +1,3 @@
-SELECT T1.*, ${td.each.agg_columns}
-FROM ${final_nba_metrics_table} T1 LEFT JOIN ${td.each.table_name} AGG 
-ON T1.${unique_user_id} = AGG.${unique_user_id}
+select t1.*, ${td.each.agg_columns}
+from ${final_nba_metrics_table} t1 left join ${td.each.table_name} agg 
+on t1.${unique_user_id} = agg.${unique_user_id}

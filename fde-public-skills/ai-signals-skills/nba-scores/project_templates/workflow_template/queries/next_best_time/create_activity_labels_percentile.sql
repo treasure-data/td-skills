@@ -1,35 +1,35 @@
-WITH T1 AS (
-SELECT *
-FROM ${src_union_table}_final
-WHERE ${unique_user_id} IS NOT NULL
+with t1 as (
+select *
+from ${src_union_table}_final
+where ${unique_user_id} is not null
 ),
-T2 AS (
-SELECT T1.*,
-CASE
+t2 as (
+select t1.*,
+case
 ${td.last_results.case_logic}
-END as ${next_best_time.outputs.activity_period_column}
-FROM T1
+end as ${next_best_time.outputs.activity_period_column}
+from t1
 ), 
-T3 as (
-SELECT T2.${unique_user_id},
+t3 as (
+select t2.${unique_user_id},
 ${td.last_results.activity_logic}
-FROM T2
-GROUP BY ${unique_user_id}
+from t2
+group by ${unique_user_id}
 ),
-T4 AS (
-SELECT T3.*,
-CASE greatest(morning_events, afternoon_events, evening_events, overnight_events)
-          WHEN morning_events      THEN 'morning'
-          WHEN afternoon_events     THEN 'afternoon'
-          WHEN evening_events    THEN 'evening'
-          WHEN overnight_events      THEN 'overnight'
-      END AS next_best_time,
+t4 as (
+select t3.*,
+case greatest(morning_events, afternoon_events, evening_events, overnight_events)
+          when morning_events      then 'morning'
+          when afternoon_events     then 'afternoon'
+          when evening_events    then 'evening'
+          when overnight_events      then 'overnight'
+      end as next_best_time,
 ${td.last_results.percentile_logic}
-FROM T3
+from t3
 )
-SELECT T4.*,
-IF(morning_activity_perc >= (select avg(morning_activity_perc) from T4), 'Above AVG', 'Below AVG') AS morning_engagement_score,
-IF(afternoon_activity_perc >= (select avg(afternoon_activity_perc) from T4), 'Above AVG', 'Below AVG') AS afternoon_engagement_score,
-IF(evening_activity_perc >= (select avg(evening_activity_perc) from T4), 'Above AVG', 'Below AVG') AS evening_engagement_score,
-IF(overnight_activity_perc >= (select avg(overnight_activity_perc) from T4), 'Above AVG', 'Below AVG') AS overnight_engagement_score
-FROM T4
+select t4.*,
+if(morning_activity_perc >= (select avg(morning_activity_perc) from t4), 'Above AVG', 'Below AVG') as morning_engagement_score,
+if(afternoon_activity_perc >= (select avg(afternoon_activity_perc) from t4), 'Above AVG', 'Below AVG') as afternoon_engagement_score,
+if(evening_activity_perc >= (select avg(evening_activity_perc) from t4), 'Above AVG', 'Below AVG') as evening_engagement_score,
+if(overnight_activity_perc >= (select avg(overnight_activity_perc) from t4), 'Above AVG', 'Below AVG') as overnight_engagement_score
+from t4

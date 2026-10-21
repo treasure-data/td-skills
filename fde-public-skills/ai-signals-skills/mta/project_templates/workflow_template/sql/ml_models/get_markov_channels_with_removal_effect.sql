@@ -1,4 +1,4 @@
-SELECT column_name FROM INFORMATION_SCHEMA.columns 
-WHERE table_schema = '${sink_database}' AND table_name = '${transition_output_table}' 
-AND column_name IN (SELECT DISTINCT lower(REGEXP_REPLACE(channels, '-| ', '_')) FROM ${markov_output_table} WHERE removal_effect > ${removal_effect_limit})
+select column_name from information_schema.columns 
+where table_schema = '${sink_database}' and table_name = '${transition_output_table}' 
+and column_name in (select distinct lower(regexp_replace(channels, '-| ', '_')) from ${markov_output_table} where removal_effect > ${removal_effect_limit})
 

@@ -130,7 +130,7 @@ Prerequisite: the account's AI Signals solutions include `classifier_train` and 
   http>: ${ml_batch_api_endpoint}/v1/runs
   method: POST
   headers:
-    - authorization: ${secret:td.apikey}      # keep exactly as in the template
+    - authorization: "TD1 ${secret:td.apikey}"      # keep exactly as in the template
   store_content: true                         # the poll step reads the run id from the response
   content:
     input_table: ${sink_database}.${train_input_table}
@@ -152,7 +152,7 @@ Prerequisite: the account's AI Signals solutions include `classifier_train` and 
   http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
   method: GET
   headers:
-    - authorization: ${secret:td.apikey}
+    - authorization: "TD1 ${secret:td.apikey}"
   store_content: true
 ```
 

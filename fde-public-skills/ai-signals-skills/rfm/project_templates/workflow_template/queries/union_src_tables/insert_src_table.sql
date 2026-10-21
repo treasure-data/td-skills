@@ -1,46 +1,46 @@
-WITH BASE AS (
-  SELECT ${td.each.join_key} AS ${globals.canonical_id},
-MAX(${td.each.unixtime_col}) as time,
-TD_TIME_STRING(MAX(${td.each.unixtime_col}), 's!') as latest_tstamp,
-'${td.each.event_name}' AS source,
-COUNT(*) as total_touchpoints,
-SUM(TRY(CAST(${td.each.order_amount} AS DOUBLE))) as total_spend,
-(${session_unixtime} - MAX(${td.each.unixtime_col}))/86400 AS recency_days
-FROM ${td.each.src_table}
+with base as (
+  select ${td.each.join_key} as ${globals.canonical_id},
+max(${td.each.unixtime_col}) as time,
+td_time_string(max(${td.each.unixtime_col}), 's!') as latest_tstamp,
+'${td.each.event_name}' as source,
+count(*) as total_touchpoints,
+sum(try(cast(${td.each.order_amount} as double))) as total_spend,
+(${session_unixtime} - max(${td.each.unixtime_col}))/86400 as recency_days
+from ${td.each.src_table}
 ${td.each.final_where_clause}
-GROUP BY 1
+group by 1
 )
 ,
 -- Top 10 event_type per src_table
-event_hist AS (
-SELECT
+event_hist as (
+select
     ${globals.canonical_id},
     '{' || array_join(
         array_agg(
-            '"' || ${td.each.context_col} || '": ' || CAST(cnt AS VARCHAR)
-            ORDER BY cnt DESC
+            '"' || ${td.each.context_col} || '": ' || cast(cnt as varchar)
+            order by cnt desc
         ),
         ', '
-    ) || '}' AS events_list
-    FROM (
-        SELECT
+    ) || '}' as events_list
+    from (
+        select
             ${globals.canonical_id},
             ${td.each.context_col},
             cnt,
-            row_number() OVER (PARTITION BY ${globals.canonical_id} ORDER BY cnt DESC) AS rn
-        FROM (
-            SELECT
-                ${td.each.join_key} AS ${globals.canonical_id},
+            row_number() over (partition by ${globals.canonical_id} order by cnt desc) as rn
+        from (
+            select
+                ${td.each.join_key} as ${globals.canonical_id},
                 ${td.each.context_col},
-                COUNT(*) AS cnt
-            FROM ${td.each.src_table}
-            GROUP BY ${td.each.join_key}, ${td.each.context_col}
+                count(*) as cnt
+            from ${td.each.src_table}
+            group by ${td.each.join_key}, ${td.each.context_col}
         )
     )
-    WHERE rn <= 10
-    GROUP BY ${globals.canonical_id}
+    where rn <= 10
+    group by ${globals.canonical_id}
  
 )
-SELECT BASE.*, T2.events_list
-FROM BASE LEFT JOIN event_hist T2
-ON BASE.${globals.canonical_id} = T2.${globals.canonical_id}
+select base.*, t2.events_list
+from base left join event_hist t2
+on base.${globals.canonical_id} = t2.${globals.canonical_id}
