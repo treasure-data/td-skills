@@ -27,7 +27,7 @@
 #
 # - Every branch MUST perform a different action (otherwise don't branch)
 # - Multiple paths MUST converge through a Merge step (not directly to End)
-# - No Merge → Merge chains; wait required after activation (via merge is OK)
+# - No Merge → Merge chains; no mandatory wait requirement
 # - End step: no next, no with
 # - Condition wait: if both paths do the same thing, use duration wait instead
 #
@@ -57,7 +57,7 @@
 #     with:
 #       target: { journey: Nurture Journey, stage: Follow Up }
 #   Jump does NOT need a wait before it. If one branch jumps and another
-#   continues, the continuing branch still needs Merge → Wait → End.
+#   continues, the continuing branch should follow the intended business flow; wait is optional unless explicitly required.
 #
 # --- After designing each stage ---
 #   1. Show the stage design to the client and get confirmation
