@@ -191,13 +191,13 @@ journeys:
 
 Other wait options: `wait_until: "2025-04-01"` | `days_of_week: ["monday", "wednesday", "friday"]`
 
-**API constraint**: A wait step must follow every activation step (place after merge if activation → merge).
+**API constraint**: Activation steps do not require a following wait step. Add wait only when requested/needed by journey logic.
 
 **Limits**: Max 8 stages (local), 120 events/journey, 70 events/stage, 30 versions (API)
 
 ## Best Practices
 
-- **Frequency capping**: Use wait steps between activations to control message frequency. Avoid sending more than 1 message per day per channel.
+- **Frequency capping**: If the journey’s communication policy requires spacing, insert wait steps between relevant activations (for example, to avoid more than 1 message/day/channel).
 - **Consent management**: Include opt-in/subscription status in entry_criteria or exit_criteria segments (e.g., `email_opt_in = true`).
 - **Suppression**: Use exit_criteria to remove users who should stop receiving messages (e.g., recent purchasers, open support tickets).
 - **Reentry mode**: Use `no_reentry` for one-time campaigns, `reentry_unless_goal_achieved` for ongoing programs, `reentry_always` for recurring triggers.

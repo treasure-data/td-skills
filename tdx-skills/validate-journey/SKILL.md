@@ -61,8 +61,7 @@ tdx journey push --dry-run                # Preview changes before push
 
 | Constraint | Description |
 |-----------|-------------|
-| Branch must have activation | Every decision_point/ab_test/condition wait branch MUST have an activation step before merge |
-| Wait after activation | A wait step must follow every activation step. If activation → merge, place wait after merge |
+| Branch must have a step | Every decision_point/ab_test/condition-wait branch should include a step before merge (for example, activation). |
 
 ### Schema Validation (Zod)
 
@@ -133,14 +132,14 @@ journeys:
 - Condition wait paths MUST lead to **different actions** — if both paths do the same thing, use duration wait instead
 - Every branch (decision_point, ab_test, condition wait) should perform a **meaningful, distinct action**
 - Prefer flat branching over nested branching — inner branches must merge before joining outer branch
-- A wait step must follow every activation step (place after merge if activation → merge)
-- **Frequency capping**: wait between activations; avoid >1 message/day/channel
+- Use wait steps when delay/pacing is explicitly required by the journey design
+- **Frequency capping**: waits are recommended where needed (e.g., to avoid over-messaging that is >1 message/day/channel), but are not universally mandatory after every activation.
 - **Consent/Suppression**: use entry_criteria/exit_criteria segments for opt-in and removal
 
 ## Flow Control Rules
 
 ```yaml
-# Pattern: decision → actions → merge → wait → end
+# Common pattern (when pacing is needed): decision → actions → merge → wait → end
 - type: decision_point
   name: Check Status
   with:
