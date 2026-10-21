@@ -1,0 +1,33 @@
+_export:
+  !include : 'config/input_params.yml'
+  td:
+    database: ${sink_database}
+
++empty_stats_tables:
+  td_ddl>:
+  create_tables: ["nba_dash_stats_summary", "nba_dash_model_metrics", "nba_dash_source_tables"]
+
++next_best_action_create_stats:
+  _parallel: true
+  +create_metric_stats:
+    _parallel: true
+    +loop_metrics:
+      td_for_each>: queries/dash/get_distinct_col_names.sql
+      _do:
+        +insert_nba_aggregate_stats:
+          td>: queries/dash/agg_stats_calculate.sql
+          insert_into: nba_dash_stats_summary
+
+  +insert_model_params:
+    td>: queries/dash/insert_model_metrics.sql
+    insert_into: nba_dash_model_metrics
+
+  +insert_source_table_stats:
+    td>: queries/dash/source_table_stats.sql
+    insert_into: nba_dash_source_tables
+
++get_session_global_filter:
+  td>: queries/dash/global_session_filter.sql
+  create_table: nba_dash_session_filter
+
+

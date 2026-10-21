@@ -1,0 +1,79 @@
+timezone: UTC
+
+_export:
+  !include : 'config.yml'
+  td:
+    database: ${sink_database}
+  mode: 'pred'
+
+# 0. Build ${pred_input_table} (session_id, ${user_id_column} and the same
+#    feature columns as training) with the feature SQL in sql/
++data_prep:
+  call>: data_prep.dig
+
+# 1. Guard: non-empty scoring population
++check_prediction_dataset:
+  td>:
+  query: |
+    SELECT MAX(session_id) AS session_id, COUNT(*) AS n
+    FROM ${pred_input_table}
+  store_last_results: true
+
++assert_prediction_dataset:
+  if>: ${td.last_results.n == 0}
+  _do:
+    fail>: "Prediction dataset ${pred_input_table} is empty"
+
+# 2. Score with the latest trained model; session_id stamps the scored batch
++predict_classifier:
+  http>: ${ml_batch_api_endpoint}/v1/runs
+  method: POST
+  headers:
+    - authorization: ${secret:td.apikey}
+  store_content: true
+  content:
+    input_table: ${sink_database}.${pred_input_table}
+    output_table: ${sink_database}.${pred_output_table}
+    solution_name: classifier_predict
+    version: ${ml_batch_api_version}
+    solution_arguments:
+      session_id: ${td.last_results.session_id}
+      model_name: ${model_name}
+      user_id_column: ${user_id_column}
+      columns_to_drop: ${columns_to_drop}
+      output_mode: ${pred_output_mode}
+
+# 3. Wait for completion (408 while RUNNING, 200 when finished)
++wait_for_prediction:
+  _retry:
+    limit: 5
+    interval: 60
+    interval_type: constant
+  http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
+  method: GET
+  headers:
+    - authorization: ${secret:td.apikey}
+  store_content: true
+
++assert_prediction_succeeded:
+  if>: ${['FAILED','ERROR','CANCELLED','CANCELED'].indexOf(JSON.parse(http.last_content).status) >= 0 || JSON.parse(http.last_content).error_messages.length > 0}
+  _do:
+    fail>: "Prediction run failed: ${http.last_content}"
+
+# 4. Latest scores, one row per user (the predictions table is append-only) —
+#    the Parent Segment attribute table
++latest_scores:
+  td>:
+  query: |
+    SELECT user_id,
+           max_by(score, time)                AS score,
+           max_by(predicted_label, time)      AS predicted_label,
+           max_by(score_bucket, time)         AS score_bucket,
+           max_by(threshold_applied, time)    AS threshold_applied,
+           max_by(model_type, time)           AS model_type,
+           max_by(prediction_timestamp, time) AS prediction_timestamp,
+           session_id
+    FROM ${pred_output_table}
+    WHERE session_id = (SELECT max_by(session_id, time) FROM ${pred_output_table})
+    GROUP BY user_id, session_id
+  create_table: ${pred_output_table}_latest

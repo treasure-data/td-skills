@@ -1,0 +1,28 @@
+_export:
+  !include : 'config/input_params.yml'
+  td:
+    database: ${globals.sink_database}
+
++create_empty_output_table:
+  td_ddl>:
+  empty_tables: ["${output_table}"]
+
++run_rfm:
+  http>: https://ml-batch-api.treasuredata.com/v1/runs
+  method: POST
+  headers:
+    - authorization: ${secret:td.apikey}
+  store_content: true
+  content:
+    input_table: ${globals.sink_database}.${input_table}
+    output_table: ${globals.sink_database}.${output_table}
+    solution_name: rfm
+    solution_arguments:
+      user_column: ${globals.canonical_id}
+      
++poll_status:
+  # Server returns 408 for tasks in progress so this block will be retried until a 200 is returned
+  http>: https://ml-batch-api.treasuredata.com/v1/runs/${JSON.parse(http.last_content)['id']}/status
+  method: GET
+  headers:
+    - authorization: ${secret:td.apikey}

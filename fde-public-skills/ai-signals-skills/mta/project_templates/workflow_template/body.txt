@@ -1,0 +1,15 @@
+Failed to run Workflow. Please check the error details and handle it.
+
+https://console.treasuredata.com/app/workflows/sessions/${session_id}
+
+# session_local_time
+${session_local_time}
+
+# task_name
+${task_name}
+
+# error_message
+${error.message}
+
+# error_stacktrace
+${error.stacktrace}

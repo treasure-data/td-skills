@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  NBP Next Best Product — Dashboard Template (4-tab layout)
+================================================================================
+
+  RECOMMENDED EXECUTION (Fast build-time query & bake via generate-data.js):
+    node generate-data.js <sink_database> [project_slug] [project_name] [-p <table_prefix>]
+    # Or with environment variables:
+    SOURCE_DB=<sink_database> TABLE_PREFIX=nbp_ node generate-data.js retail-nbp "Retail NBP"
+
+  The generator:
+    1. Executes queries Q1–Q7 against the sink_database via tdx CLI in parallel
+    2. Shapes metrics, formats tables, and synthesizes executive insights
+    3. Substitutes all {{TOKEN}} placeholders
+    4. Inlines window.RAW data object for programmatic access
+    5. Writes the result to:
+         agent_outputs/<project_slug>/dashboards/nbp_summary_dashboard.html
+    6. Opens with mcp__work__open_file
+
+  All visual structure (TD palette, layout, tabs, chart shapes) is fixed.
+  Only the data behind the tokens changes per customer / per run.
+
+  DASHBOARD LAYOUT — 4 or 5 TABS
+  ────────────────────────────────
+    TAB 1: Run Overview
+      - KPI cards (coverage, users with recs, items recommended, training window)
+      - Coverage pie chart (with recs vs. without)
+      - Model config snapshot table
+      - Insights
+
+    TAB 2: Recommendations
+      - Top recommended items at rank 1 (horizontal bar)
+      - Top-3 recommendations summary table (top items at ranks 1, 2, 3 side-by-side)
+      - Category distribution at rank 1 (pie)
+      - Category spread across ranks 1–3 (stacked bar)
+      - Insights
+
+    TAB 3: Catalog & Popularity
+      - Category breakdown of product catalog (pie)
+      - Most ordered items from source data (horizontal bar)
+      - Most recommended vs. most ordered side-by-side comparison
+      - Insights
+
+    TAB 4: Historic Tracker
+      - Coverage rate over time (line)
+      - Items recommended over time (line)
+      - Graceful single-run callout when only 1 session exists
+
+    TAB 5: Test Set  ← CONDITIONAL: only rendered when testset_available = true
+      - 4 KPI cards (product match rate, category match rate, product lift, category lift)
+      - Model vs. random baseline grouped bar chart
+      - Precision histogram (bar)
+      - Recall histogram (bar)
+      - Insights
+      When testset_available = false: render a single callout explaining testset is disabled
+      and how to enable it (set run_model_test_set: 'yes' in config/input_params.yml).
+
+  ──────────────────────────────────────────────────────────────────────────
+  TOKEN REFERENCE
+  ──────────────────────────────────────────────────────────────────────────
+
+  ── Header / metadata tokens (strings) ─────────────────────────────────────
+  {{project_name}}               — e.g. "Retail NBP"
+  {{sink_database}}              — e.g. "ml_output"
+  {<prefix>}                     — e.g. "nbp_"
+  {{session_id}}                 — latest session_id (bigint)
+  {{run_time_utc}}               — e.g. "2026-05-18 06:00 UTC"
+  {{engine}}                     — "AI Signals"
+  {{algorithm}}                  — "als" | "similar_to_latest" | "popular"
+  {{run_count}}                  — int, total number of historical runs
+
+  ── TAB 1 (Run Overview) tokens ────────────────────────────────────────────
+  {{total_users}}                — int with thousands separators
+  {{users_with_recs}}            — int with thousands separators
+  {{coverage_pct}}               — e.g. "86.3%"
+  {{distinct_items_recommended}} — int with thousands separators
+  {{total_items_in_catalog}}     — int with thousands separators
+  {{time_range_days}}            — int
+  {{least_recent_event}}         — e.g. "2025-11-18"
+  {{most_recent_event}}          — e.g. "2026-05-17"
+  {{filtered_item_count}}        — int
+  {{exclusion_filters}}          — string description of applied exclusion filters
+  {{model_params}}               — JSON string of model configuration
+
+  {{coverage_with_recs}}         — int (same as users_with_recs, for pie chart)
+  {{coverage_without_recs}}      — int (total_users - users_with_recs)
+
+  {{tab1_insights_html_li}}      — pre-rendered <li>...</li> bullets focused on
+                                   coverage, training window, exclusion filter impact,
+                                   cold-start handling
+
+  ── TAB 2 (Recommendations) tokens ─────────────────────────────────────────
+  {{top_items_labels_json}}      — array<string>, top items at rank 1, ASC for hbar
+  {{top_items_values_json}}      — array<int>, user_count per item, parallel
+  {{top_items_text_json}}        — array<string>, formatted counts, parallel
+
+  Top-3 summary table — top 10 items at each of ranks 1, 2, 3:
+  {{top3_table_rows}}            — pre-rendered <tr>...</tr> rows, one per item.
+                                   Columns: Rank 1 Item | Users | Rank 2 Item | Users | Rank 3 Item | Users
+                                   Rows represent position 1–10 within each rank independently
+                                   (i.e. row 1 = top item at each rank, row 2 = 2nd item at each rank, etc.)
+                                   Leave cells empty ("—") if fewer than 10 items exist at a given rank.
+
+  {{cat_rank1_labels_json}}      — array<string>, categories at rank 1, DESC by count
+  {{cat_rank1_values_json}}      — array<int>, user_count per category, parallel
+
+  Stacked bar — ranks 1–3 by category (one bar per rank, one segment per category):
+  {{rank_categories_json}}       — array<string>, all distinct categories (legend)
+  {{rank1_values_json}}          — array<int>, user_count per category at rank 1
+  {{rank2_values_json}}          — array<int>, user_count per category at rank 2
+  {{rank3_values_json}}          — array<int>, user_count per category at rank 3
+
+  {{tab2_insights_html_li}}      — pre-rendered <li>...</li> bullets focused on
+                                   top recommended items, category concentration,
+                                   long-tail vs. popularity-driven recs,
+                                   rank-to-rank diversity observations
+
+  ── TAB 3 (Catalog & Popularity) tokens ─────────────────────────────────────
+  {{catalog_cat_labels_json}}    — array<string>, category names, DESC by item_count
+  {{catalog_cat_values_json}}    — array<int>, item_count per category, parallel
+
+  {{most_ordered_labels_json}}   — array<string>, item names ASC for hbar
+  {{most_ordered_values_json}}   — array<int>, times_ordered, parallel
+  {{most_ordered_text_json}}     — array<string>, formatted counts, parallel
+
+  {{most_rec_labels_json}}       — array<string>, top recommended item names ASC for hbar
+  {{most_rec_values_json}}       — array<int>, user_count per item, parallel
+  {{most_rec_text_json}}         — array<string>, formatted counts, parallel
+
+  {{tab3_insights_html_li}}      — pre-rendered <li>...</li> bullets focused on
+                                   catalog diversity, popularity vs. recs divergence,
+                                   category coverage gaps
+
+  ── TAB 4 (Historic Tracker) tokens ─────────────────────────────────────────
+  {{historic_run_labels_json}}   — array<string>, run dates ASC, e.g. ["2025-11-18","2026-05-18"]
+  {{historic_coverage_pct_json}} — array<number>, coverage % per run (1 decimal), parallel
+  {{historic_items_rec_json}}    — array<int>, distinct_items_recommended per run, parallel
+  {{historic_users_rec_json}}    — array<int>, users_with_recs per run, parallel
+
+  {{historic_single_run_callout}} — empty string when run_count >= 2; OR a full
+                                    <div class="callout">...</div> block when
+                                    run_count == 1
+
+  {{tab4_insights_html_li}}      — pre-rendered <li>...</li> bullets focused on
+                                   coverage trend, catalog breadth trend, config
+                                   changes that drove metric shifts
+
+  ── TAB 5 (Test Set) tokens — CONDITIONAL ──────────────────────────────────
+  {{testset_available}}          — boolean string: "true" or "false"
+                                   Set to "true" only when BOTH conditions hold:
+                                     1. run_model_test_set: 'yes' is set in config/input_params.yml
+                                     2. <prefix>dash_testset AND <prefix>dash_testset_numbers
+                                        tables exist and are non-empty for this session
+                                   Otherwise set to "false" — the tab renders a disabled callout.
+
+  When testset_available = "true":
+  {{testset_total_customers}}    — int with thousands separators
+  {{testset_total_items_bought}} — int with thousands separators
+  {{testset_product_match_rate}} — e.g. "30.9%"
+  {{testset_category_match_rate}} — e.g. "51.3%"
+  {{testset_random_item_pct}}    — e.g. "7.2%"  (random_item_rate * 100, 1 decimal)
+  {{testset_random_cat_pct}}     — e.g. "17.1%"
+  {{testset_product_lift}}       — e.g. "4.3×"  (product_match_rate / random_item_rate, 1 decimal)
+  {{testset_category_lift}}      — e.g. "3.0×"
+
+  Bar chart — model vs. random baseline:
+  {{testset_bar_model_json}}     — array<number>, [product_match_rate_float, category_match_rate_float]
+  {{testset_bar_random_json}}    — array<number>, [random_item_rate_float*100, random_cat_rate_float*100]
+
+  Precision histogram from <prefix>dash_testset WHERE type='precision':
+  {{testset_prec_labels_json}}   — array<string>, bin label values, ASC
+  {{testset_prec_values_json}}   — array<number>, bin_cnt per label, parallel
+
+  Recall histogram from <prefix>dash_testset WHERE type='recall':
+  {{testset_rec_labels_json}}    — array<string>, bin label values, ASC
+  {{testset_rec_values_json}}    — array<number>, bin_cnt per label, parallel
+
+  {{tab5_insights_html_li}}      — pre-rendered <li>...</li> bullets interpreting
+                                   product vs. category match lift, histogram shape,
+                                   what poor performance indicates and how to fix it
+
+  ──────────────────────────────────────────────────────────────────────────
+  SOURCE QUERIES (the skill MUST run these against the customer's sink_database)
+  ──────────────────────────────────────────────────────────────────────────
+
+  Q1 — Latest run config + coverage (drives header + Tab 1):
+      SELECT s.session_id, s.run_time,
+             m.users_with_recs, m.users_with_recs_after_filter,
+             m.distinct_users_transactions_table, m.distinct_items_recommended,
+             m.distinct_items_transactions_table, m.time_range_days,
+             m.least_recent_event, m.most_recent_event,
+             m.model_params, m.exclusion_filters, m.filtered_item_count
+      FROM <prefix>dash_model_param_stats_agg m
+      JOIN <prefix>global_session_filter s ON m.session_id = s.session_id
+      WHERE s.session_rnk = 1
+
+  Q2 — Top recommended items at ranks 1, 2, and 3 (Tab 2):
+      -- Rank 1
+      SELECT nbp_1 AS item, SUM(event_cnt) AS user_count
+      FROM <prefix>dash_final_recs_stats_daily
+      WHERE event_date = (SELECT MAX(event_date) FROM <prefix>dash_final_recs_stats_daily)
+      GROUP BY nbp_1 ORDER BY user_count DESC LIMIT 15
+      -- Rank 2
+      SELECT nbp_2 AS item, SUM(event_cnt) AS user_count
+      FROM <prefix>dash_final_recs_stats_daily
+      WHERE event_date = (SELECT MAX(event_date) FROM <prefix>dash_final_recs_stats_daily)
+      GROUP BY nbp_2 ORDER BY user_count DESC LIMIT 10
+      -- Rank 3
+      SELECT nbp_3 AS item, SUM(event_cnt) AS user_count
+      FROM <prefix>dash_final_recs_stats_daily
+      WHERE event_date = (SELECT MAX(event_date) FROM <prefix>dash_final_recs_stats_daily)
+      GROUP BY nbp_3 ORDER BY user_count DESC LIMIT 10
+
+  Q3 — Category distribution at ranks 1–3 (Tab 2):
+      SELECT 'rank_1' AS rank_label, nb_category_1 AS category, SUM(event_cnt) AS user_count
+      FROM <prefix>dash_final_recs_stats_daily
+      WHERE event_date = (SELECT MAX(event_date) FROM <prefix>dash_final_recs_stats_daily)
+      GROUP BY nb_category_1
+      UNION ALL
+      SELECT 'rank_2', nb_category_2, SUM(event_cnt)
+      FROM <prefix>dash_final_recs_stats_daily
+      WHERE event_date = (SELECT MAX(event_date) FROM <prefix>dash_final_recs_stats_daily)
+      GROUP BY nb_category_2
+      UNION ALL
+      SELECT 'rank_3', nb_category_3, SUM(event_cnt)
+      FROM <prefix>dash_final_recs_stats_daily
+      WHERE event_date = (SELECT MAX(event_date) FROM <prefix>dash_final_recs_stats_daily)
+      GROUP BY nb_category_3
+      ORDER BY rank_label, user_count DESC
+
+  Q4 — Catalog category breakdown + most ordered items (Tab 3):
+      SELECT item_category, item_count FROM <prefix>dash_item_category_mapping_agg ORDER BY item_count DESC
+      --
+      SELECT item_name, times_ordered FROM <prefix>dash_most_ordered_items ORDER BY times_ordered DESC LIMIT 10
+
+  Q5 — Historic run inventory (Tab 4):
+      SELECT s.session_id, s.run_time,
+             m.users_with_recs, m.distinct_users_transactions_table, m.distinct_items_recommended
+      FROM <prefix>dash_model_param_stats_agg m
+      JOIN <prefix>global_session_filter s ON m.session_id = s.session_id
+      ORDER BY s.session_rnk DESC
+
+  Q6 — Test set aggregate metrics (Tab 5 — only run if testset tables exist):
+      SELECT n.total_customers, n.total_items_bought,
+             n.total_product_matches, n.total_category_matches,
+             n.random_item_rate, n.random_category_rate
+      FROM <prefix>dash_testset_numbers n
+      JOIN <prefix>global_session_filter s ON n.session_id = s.session_id
+      WHERE s.session_rnk = 1
+
+  Q7 — Test set histograms (Tab 5 — only run if testset tables exist):
+      SELECT t.label, t.bin_cnt, t.type
+      FROM <prefix>dash_testset t
+      JOIN <prefix>global_session_filter s ON t.session_id = s.session_id
+      WHERE s.session_rnk = 1
+      ORDER BY t.type, t.label
+
+  NOTE: Before running Q6/Q7, verify the tables exist:
+      SHOW TABLES IN <sink_db> LIKE '<prefix>dash_testset%'
+  If they are absent or empty, set testset_available = "false" and skip Q6/Q7.
+
+  ──────────────────────────────────────────────────────────────────────────
+  SUBSTITUTION RULES
+  ──────────────────────────────────────────────────────────────────────────
+  - Strip THIS leading HTML comment before substitution
+  - Numeric tokens: thousands separators; percentages: 1 decimal place + "%"
+  - JSON tokens: valid JSON literals — no trailing commas, double-quoted strings
+  - Single-run mode: set {{historic_single_run_callout}} to a callout block AND
+    set every historic_*_json to a single-element array
+
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBP Next Best Product Summary — {{project_name}}</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<style>
+  :root {
+    --td-1: #B4E3E3; --td-2: #ABB3DB; --td-3: #D9BFDF; --td-4: #F8E1B0;
+    --td-5: #8FD6D4; --td-6: #828DCA; --td-7: #C69ED0; --td-8: #F5D389;
+    --td-9: #6AC8C6; --td-10: #5867B8; --td-11: #B37EC0; --td-12: #F1C461;
+    --td-13: #44BAB8; --td-14: #2E41A6; --td-15: #8CC97E; --td-16: #A05EB0;
+    --bg: #F7F8FB; --card: #FFFFFF; --ink: #1F2147; --muted: #6A6F8A; --line: #E6E8F2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+         background: var(--bg); color: var(--ink); line-height: 1.4; }
+  header { background: linear-gradient(135deg, var(--td-14) 0%, var(--td-10) 100%); color: white;
+           padding: 32px 48px 0; }
+  header h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; }
+  header p { margin: 0; opacity: 0.85; font-size: 14px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 16px; font-size: 13px; padding-bottom: 24px; }
+  .meta-row span strong { font-weight: 600; }
+  .tab-nav { background: linear-gradient(135deg, var(--td-14) 0%, var(--td-10) 100%); padding: 0 48px; }
+  .tab-nav-inner { display: flex; gap: 4px; max-width: 1400px; margin: 0 auto; }
+  .tab-button {
+    background: rgba(255,255,255,0.12); color: white; border: none; padding: 14px 24px;
+    cursor: pointer; font-size: 14px; font-weight: 500; border-radius: 8px 8px 0 0;
+    transition: background 0.15s ease; font-family: inherit;
+  }
+  .tab-button:hover { background: rgba(255,255,255,0.22); }
+  .tab-button.active { background: var(--bg); color: var(--td-14); font-weight: 600; }
+  main { padding: 32px 48px; max-width: 1400px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  section { margin-bottom: 40px; }
+  h2 { font-size: 20px; font-weight: 600; margin: 0 0 16px; padding-bottom: 8px;
+       border-bottom: 2px solid var(--td-1); color: var(--td-14); }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 20px;
+         box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .kpi .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi .value { font-size: 32px; font-weight: 700; margin-top: 6px; color: var(--td-14); }
+  .kpi .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .chart { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px 16px 8px;
+           box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .chart-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid var(--line); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); font-size: 13px; }
+  th { background: var(--td-1); color: var(--td-14); font-weight: 600; font-size: 12px;
+       text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;
+          background: var(--td-1); color: var(--td-14); }
+  .pill.warn { background: var(--td-4); color: #8a6d1c; }
+  .pill.ok { background: var(--td-15); color: #2c5e1f; }
+  .insights ul { margin: 0; padding-left: 20px; }
+  .insights li { margin-bottom: 8px; font-size: 14px; }
+  .insights li strong { color: var(--td-14); }
+  .callout { background: var(--td-4); border: 1px solid #e6c87e; color: #8a6d1c;
+             padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
+  .callout strong { color: #6a5316; }
+  footer { text-align: center; padding: 24px; color: var(--muted); font-size: 12px; }
+  @media (max-width: 900px) { .chart-row, .chart-row.three { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Next Best Product Model Summary</h1>
+  <p>{{project_name}} · {{sink_database}} · Prefix: {{prefix}} · Session {{session_id}}</p>
+  <div class="meta-row">
+    <span><strong>Run time:</strong> {{run_time_utc}}</span>
+    <span><strong>Model:</strong> {{engine}} / {{algorithm}}</span>
+    <span><strong>Users with recs:</strong> {{users_with_recs}}</span>
+    <span><strong>Coverage:</strong> {{coverage_pct}}</span>
+    <span><strong>Items excluded by filters:</strong> {{filtered_item_count}}</span>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <div class="tab-nav-inner">
+    <button class="tab-button active" data-tab="tab-overview">Run Overview</button>
+    <button class="tab-button" data-tab="tab-recommendations">Recommendations</button>
+    <button class="tab-button" data-tab="tab-catalog">Catalog &amp; Popularity</button>
+    <button class="tab-button" data-tab="tab-historic">Historic Tracker</button>
+    <button class="tab-button" data-tab="tab-testset">Test Set</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- TAB 1 — RUN OVERVIEW                                         -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <div id="tab-overview" class="tab-panel active">
+
+    <section>
+      <h2>Coverage KPIs</h2>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="label">Users with Recommendations</div><div class="value">{{users_with_recs}}</div><div class="sub">of {{total_users}} source users</div></div>
+        <div class="kpi"><div class="label">Coverage Rate</div><div class="value">{{coverage_pct}}</div><div class="sub">of source users received ≥1 rec</div></div>
+        <div class="kpi"><div class="label">Items Recommended</div><div class="value">{{distinct_items_recommended}}</div><div class="sub">of {{total_items_in_catalog}} items in catalog</div></div>
+        <div class="kpi"><div class="label">Training Window</div><div class="value">{{time_range_days}}d</div><div class="sub">{{least_recent_event}} → {{most_recent_event}}</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Recommendation Coverage</h2>
+      <div class="chart-row">
+        <div class="chart"><div id="chart-coverage-pie" style="height:360px"></div></div>
+        <div class="chart">
+          <table style="margin-top:8px">
+            <thead><tr><th>Configuration</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Session ID</strong></td><td>{{session_id}}</td></tr>
+              <tr><td><strong>Run time</strong></td><td>{{run_time_utc}}</td></tr>
+              <tr><td><strong>Model</strong></td><td>{{engine}}</td></tr>
+              <tr><td><strong>Algorithm</strong></td><td>{{algorithm}}</td></tr>
+              <tr><td><strong>Training window</strong></td><td>{{time_range_days}} days</td></tr>
+              <tr><td><strong>Items excluded by filters</strong></td><td>{{filtered_item_count}}</td></tr>
+              <tr><td><strong>Exclusion filters</strong></td><td>{{exclusion_filters}}</td></tr>
+              <tr><td><strong>Model params</strong></td><td><code style="font-size:11px">{{model_params}}</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Insights &amp; Recommendations</h2>
+      <div class="kpi insights"><ul>{{tab1_insights_html_li}}</ul></div>
+    </section>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- TAB 2 — RECOMMENDATIONS                                      -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <div id="tab-recommendations" class="tab-panel">
+
+    <section>
+      <h2>Top Recommended Items — Rank 1</h2>
+      <div class="chart"><div id="chart-top-items" style="height:420px"></div></div>
+    </section>
+
+    <section>
+      <h2>Top 3 Recommendations — Side by Side</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Rank 1 Item</th><th class="num">Users</th>
+            <th>Rank 2 Item</th><th class="num">Users</th>
+            <th>Rank 3 Item</th><th class="num">Users</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{top3_table_rows}}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Category Distribution &amp; Rank Spread</h2>
+      <div class="chart-row">
+        <div class="chart"><div id="chart-cat-rank1-pie" style="height:360px"></div></div>
+        <div class="chart"><div id="chart-cat-ranks-stacked" style="height:360px"></div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Insights &amp; Recommendations</h2>
+      <div class="kpi insights"><ul>{{tab2_insights_html_li}}</ul></div>
+    </section>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- TAB 3 — CATALOG & POPULARITY                                 -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <div id="tab-catalog" class="tab-panel">
+
+    <section>
+      <h2>Product Catalog — Category Breakdown</h2>
+      <div class="chart"><div id="chart-catalog-pie" style="height:360px"></div></div>
+    </section>
+
+    <section>
+      <h2>Most Ordered vs. Most Recommended</h2>
+      <div class="chart-row">
+        <div class="chart">
+          <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px">Most Ordered in Source Data</div>
+          <div id="chart-most-ordered" style="height:380px"></div>
+        </div>
+        <div class="chart">
+          <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px">Most Recommended (Rank 1)</div>
+          <div id="chart-most-recommended" style="height:380px"></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Insights &amp; Recommendations</h2>
+      <div class="kpi insights"><ul>{{tab3_insights_html_li}}</ul></div>
+    </section>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- TAB 4 — HISTORIC TRACKER                                     -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <div id="tab-historic" class="tab-panel">
+
+    {{historic_single_run_callout}}
+
+    <section>
+      <h2>Coverage Rate Over Time</h2>
+      <div class="chart"><div id="chart-historic-coverage" style="height:320px"></div></div>
+    </section>
+
+    <section>
+      <h2>Users with Recommendations Over Time</h2>
+      <div class="chart"><div id="chart-historic-users" style="height:300px"></div></div>
+    </section>
+
+    <section>
+      <h2>Catalog Breadth — Items Recommended Over Time</h2>
+      <div class="chart"><div id="chart-historic-items" style="height:300px"></div></div>
+    </section>
+
+    <section>
+      <h2>Insights &amp; Recommendations</h2>
+      <div class="kpi insights"><ul>{{tab4_insights_html_li}}</ul></div>
+    </section>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <!-- TAB 5 — TEST SET (conditional)                               -->
+  <!-- ════════════════════════════════════════════════════════════ -->
+  <div id="tab-testset" class="tab-panel">
+
+    {{testset_tab_content}}
+
+  </div>
+
+</main>
+
+<footer>
+  Generated from <code>{{prefix}}dash_*</code> tables · {{sink_database}} · session {{session_id}} · Next Best Product workflow
+</footer>
+
+<script>
+  // TD brand palette — DO NOT substitute.
+  const TD = ["#B4E3E3","#ABB3DB","#D9BFDF","#F8E1B0","#8FD6D4","#828DCA","#C69ED0","#F5D389","#6AC8C6","#5867B8","#B37EC0","#F1C461","#44BAB8","#2E41A6","#8CC97E","#A05EB0"];
+  const BASE = {
+    paper_bgcolor:'white', plot_bgcolor:'white',
+    font:{ family:'-apple-system, BlinkMacSystemFont, sans-serif', color:'#1F2147', size:12 },
+    margin:{ t:50, r:20, b:60, l:60 }
+  };
+  const CFG = { responsive:true, displayModeBar:false };
+
+  // ── Injected data ──────────────────────────────────────────────────────────
+
+  // Tab 1
+  const COVERAGE = { withRecs: {{coverage_with_recs}}, withoutRecs: {{coverage_without_recs}} };
+
+  // Tab 2
+  const TOP_ITEMS  = { labels:{{top_items_labels_json}}, values:{{top_items_values_json}}, text:{{top_items_text_json}} };
+  const CAT_RANK1  = { labels:{{cat_rank1_labels_json}}, values:{{cat_rank1_values_json}} };
+  const RANK_CATS  = {{rank_categories_json}};
+  const RANK1_V    = {{rank1_values_json}};
+  const RANK2_V    = {{rank2_values_json}};
+  const RANK3_V    = {{rank3_values_json}};
+
+  // Tab 3
+  const CAT_CATALOG  = { labels:{{catalog_cat_labels_json}}, values:{{catalog_cat_values_json}} };
+  const MOST_ORDERED = { labels:{{most_ordered_labels_json}}, values:{{most_ordered_values_json}}, text:{{most_ordered_text_json}} };
+  const MOST_REC     = { labels:{{most_rec_labels_json}}, values:{{most_rec_values_json}}, text:{{most_rec_text_json}} };
+
+  // Tab 4
+  const HIST = {
+    runs: {{historic_run_labels_json}},
+    coveragePct: {{historic_coverage_pct_json}},
+    itemsRec: {{historic_items_rec_json}},
+    usersRec: {{historic_users_rec_json}}
+  };
+
+  // Tab 5 — test set (only referenced when testset_available = "true")
+  const TESTSET_AVAILABLE = {{testset_available}};
+  const TESTSET = TESTSET_AVAILABLE ? {
+    barModel:  {{testset_bar_model_json}},
+    barRandom: {{testset_bar_random_json}},
+    precLabels: {{testset_prec_labels_json}},
+    precValues: {{testset_prec_values_json}},
+    recLabels:  {{testset_rec_labels_json}},
+    recValues:  {{testset_rec_values_json}}
+  } : null;
+
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      window.dispatchEvent(new Event('resize'));
+    });
+  });
+
+  // ── TAB 1 charts ──────────────────────────────────────────────────────────
+  Plotly.newPlot('chart-coverage-pie', [{
+    type:'pie',
+    labels:['With Recommendations','Without Recommendations'],
+    values:[COVERAGE.withRecs || 0, COVERAGE.withoutRecs || 0],
+    marker:{ colors:[TD[0], TD[7]] },
+    hole:0.45,
+    textinfo:'label+percent', textposition:'outside', sort:false
+  }], {
+    ...BASE, title:{ text:'Recommendation Coverage', font:{ size:14 } }, showlegend:true,
+    margin:{ t:50, r:20, b:60, l:20 }
+  }, CFG);
+
+  // ── TAB 2 charts ──────────────────────────────────────────────────────────
+
+  // Top items horizontal bar
+  Plotly.newPlot('chart-top-items', [{
+    type:'bar', orientation:'h',
+    x:TOP_ITEMS.values || [], y:TOP_ITEMS.labels || [],
+    marker:{ color: TD[0] },
+    text:TOP_ITEMS.text || [], textposition:'outside', cliponaxis:false
+  }], {
+    ...BASE,
+    title:{ text:'Users Receiving Each Item as Their Top-1 Recommendation', font:{ size:14 } },
+    xaxis:{ title:'Users' }, yaxis:{ automargin:true },
+    margin:{ t:50, r:80, b:60, l:220 }
+  }, CFG);
+
+  // Category rank 1 pie
+  Plotly.newPlot('chart-cat-rank1-pie', [{
+    type:'pie',
+    labels:CAT_RANK1.labels || [], values:CAT_RANK1.values || [],
+    marker:{ colors:TD.slice(0, (CAT_RANK1.labels || []).length) },
+    textinfo:'label+percent', textposition:'outside', sort:false
+  }], {
+    ...BASE, title:{ text:'Category Distribution — Rank 1', font:{ size:14 } }, showlegend:false,
+    margin:{ t:50, r:20, b:60, l:20 }
+  }, CFG);
+
+  // Category stacked bar across ranks
+  const rankTraces = (RANK_CATS || []).map((cat, i) => ({
+    name:cat, type:'bar',
+    x:['Rank 1','Rank 2','Rank 3'],
+    y:[(RANK1_V || [])[i] || 0, (RANK2_V || [])[i] || 0, (RANK3_V || [])[i] || 0],
+    marker:{ color:TD[i % TD.length] }
+  }));
+  Plotly.newPlot('chart-cat-ranks-stacked', rankTraces, {
+    ...BASE,
+    title:{ text:'Category Spread Across Ranks 1–3', font:{ size:14 } },
+    barmode:'stack',
+    xaxis:{ title:'Rank' }, yaxis:{ title:'Users' },
+    legend:{ orientation:'h', y:-0.25 },
+    margin:{ t:50, r:20, b:100, l:60 }
+  }, CFG);
+
+  // ── TAB 3 charts ──────────────────────────────────────────────────────────
+
+  // Catalog category pie
+  Plotly.newPlot('chart-catalog-pie', [{
+    type:'pie',
+    labels:CAT_CATALOG.labels || [], values:CAT_CATALOG.values || [],
+    marker:{ colors:TD.slice(0, (CAT_CATALOG.labels || []).length) },
+    textinfo:'label+value', textposition:'outside', sort:false
+  }], {
+    ...BASE, title:{ text:'Product Catalog — Items per Category', font:{ size:14 } }, showlegend:true,
+    margin:{ t:50, r:20, b:60, l:20 }
+  }, CFG);
+
+  // Most ordered (horizontal bar)
+  Plotly.newPlot('chart-most-ordered', [{
+    type:'bar', orientation:'h',
+    x:MOST_ORDERED.values || [], y:MOST_ORDERED.labels || [],
+    marker:{ color:TD[3] },
+    text:MOST_ORDERED.text || [], textposition:'outside', cliponaxis:false
+  }], {
+    ...BASE, title:{ text:'Most Ordered Items (Source Data)', font:{ size:14 } },
+    xaxis:{ title:'Times Ordered' }, yaxis:{ automargin:true },
+    margin:{ t:50, r:80, b:60, l:200 }
+  }, CFG);
+
+  // Most recommended (horizontal bar)
+  Plotly.newPlot('chart-most-recommended', [{
+    type:'bar', orientation:'h',
+    x:MOST_REC.values || [], y:MOST_REC.labels || [],
+    marker:{ color:TD[0] },
+    text:MOST_REC.text || [], textposition:'outside', cliponaxis:false
+  }], {
+    ...BASE, title:{ text:'Most Recommended Items (Rank 1)', font:{ size:14 } },
+    xaxis:{ title:'Users Receiving' }, yaxis:{ automargin:true },
+    margin:{ t:50, r:80, b:60, l:200 }
+  }, CFG);
+
+  // ── TAB 4 charts ──────────────────────────────────────────────────────────
+
+  // Coverage % trend
+  Plotly.newPlot('chart-historic-coverage', [{
+    type:'scatter', mode:'lines+markers',
+    x:HIST.runs || [], y:HIST.coveragePct || [],
+    line:{ color:TD[0], width:3 },
+    marker:{ size:10, color:TD[8] },
+    hovertemplate:'%{x}<br>Coverage: %{y:.1f}%<extra></extra>'
+  }], {
+    ...BASE, title:{ text:'Coverage Rate per Run (%)', font:{ size:14 } },
+    xaxis:{ title:'Run date', type:'category' },
+    yaxis:{ title:'Coverage (%)', rangemode:'tozero' }
+  }, CFG);
+
+  // Users with recs trend
+  Plotly.newPlot('chart-historic-users', [{
+    type:'scatter', mode:'lines+markers',
+    x:HIST.runs || [], y:HIST.usersRec || [],
+    line:{ color:TD[1], width:3 },
+    marker:{ size:10, color:TD[5] },
+    hovertemplate:'%{x}<br>Users: %{y:,}<extra></extra>'
+  }], {
+    ...BASE, title:{ text:'Users with Recommendations per Run', font:{ size:14 } },
+    xaxis:{ title:'Run date', type:'category' },
+    yaxis:{ title:'Users', rangemode:'tozero' }
+  }, CFG);
+
+  // Items recommended trend
+  Plotly.newPlot('chart-historic-items', [{
+    type:'scatter', mode:'lines+markers',
+    x:HIST.runs || [], y:HIST.itemsRec || [],
+    line:{ color:TD[2], width:3 },
+    marker:{ size:10, color:TD[6] },
+    hovertemplate:'%{x}<br>Items: %{y:,}<extra></extra>'
+  }], {
+    ...BASE, title:{ text:'Distinct Items Appearing in Recommendations per Run', font:{ size:14 } },
+    xaxis:{ title:'Run date', type:'category' },
+    yaxis:{ title:'Items', rangemode:'tozero' }
+  }, CFG);
+
+  // ── TAB 5 charts — only rendered when testset is available ────────────────
+  if (TESTSET_AVAILABLE && TESTSET && document.getElementById('chart-testset-baseline')) {
+    Plotly.newPlot('chart-testset-baseline', [
+      { name:'Model', type:'bar', x:['Product Match','Category Match'], y:TESTSET.barModel || [0,0],
+        marker:{ color:[TD[0], TD[1]] }, text:(TESTSET.barModel || [0,0]).map(v=>(v||0).toFixed(1)+'%'), textposition:'outside' },
+      { name:'Random Baseline', type:'bar', x:['Product Match','Category Match'], y:TESTSET.barRandom || [0,0],
+        marker:{ color:[TD[7], TD[7]] }, text:(TESTSET.barRandom || [0,0]).map(v=>(v||0).toFixed(1)+'%'), textposition:'outside' }
+    ], {
+      ...BASE, title:{ text:'Model vs. Random Baseline', font:{ size:14 } },
+      barmode:'group', yaxis:{ title:'Match Rate (%)', rangemode:'tozero' },
+      legend:{ orientation:'h', y:-0.2 }, margin:{ t:50, r:20, b:90, l:60 }
+    }, CFG);
+
+    if (document.getElementById('chart-testset-prec')) {
+      Plotly.newPlot('chart-testset-prec', [{
+        type:'bar', x:TESTSET.precLabels || [], y:TESTSET.precValues || [],
+        marker:{ color:TD[0] }, name:'Precision'
+      }], {
+        ...BASE, title:{ text:'Precision Distribution', font:{ size:14 } },
+        xaxis:{ title:'Precision Bin' }, yaxis:{ title:'User Count' }
+      }, CFG);
+    }
+
+    if (document.getElementById('chart-testset-rec')) {
+      Plotly.newPlot('chart-testset-rec', [{
+        type:'bar', x:TESTSET.recLabels || [], y:TESTSET.recValues || [],
+        marker:{ color:TD[1] }, name:'Recall'
+      }], {
+        ...BASE, title:{ text:'Recall Distribution', font:{ size:14 } },
+        xaxis:{ title:'Recall Bin' }, yaxis:{ title:'User Count' }
+      }, CFG);
+    }
+  }
+</script>
+
+</body>
+</html>

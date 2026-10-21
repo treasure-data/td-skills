@@ -1,0 +1,98 @@
+_export: 
+  !include : 'config/input_params.yml'
+  td:
+    database: ${sink_database}
+
++create_journeys_base_table:
+  td>: sql/journeys_models/journeys_base_table.sql
+  create_table: mta_journeys_base
+
++create_sample_base_table:
+  tbl: mta_journeys_base
+  td>: sql/sample_tables/journeys_sample.sql
+  create_table: ${tbl}_sample
+
+###Create Journey IDs and Journey Agg stats
++create_journey_and_pageviews_aggregate_tables:
+
+  +journey_tables:
+
+    +create_journey_sessions_conversions_table:
+      td>: sql/journeys_models/mta_journey_sessions.sql
+      create_table: ${output_tables.journeys_table}
+
+    +check_if_add_customer_analysis:
+      if>: ${add_customer_analysis=='yes'}
+      _do:
+
+        +add_customer_attributes_to_journey_union:
+          input_table: ${output_tables.journeys_table}
+          td>: sql/union_src_tables/add_customer_attributes_to_journey.sql
+          create_table: ${output_tables.journeys_table}_attributes
+
+        +repalce_attributes_with_journey_union:
+          td_ddl>:
+          rename_tables: [{from: "${output_tables.journeys_table}_attributes", to: "${output_tables.journeys_table}"}]
+
+    +create_sample_final_table:
+      tbl: ${output_tables.journeys_table}
+      td>: sql/sample_tables/journeys_sample.sql
+      create_table: ${tbl}_sample
+
+  +create_agg_journey_tables:
+
+    +create_empty_table:
+      td_ddl>:
+      empty_tables: ["${output_tables.journeys_table}_agg_stats", "${output_tables.agg_pageviews_table}"]
+
+    +loop_agg_dimentions_list:
+      _parallel: true
+
+      for_each>:
+        agg_col: ${agg_analysis_cols}
+
+      _do:
+        +insert_into_journey_agg:
+          td>: sql/journeys_models/mta_agg_journey_stats.sql
+          insert_into: ${output_tables.journeys_table}_agg_stats
+
+        +insert_into_daily_stats:
+          td>: sql/journeys_models/mta_agg_pageview_stats.sql
+          insert_into: ${output_tables.agg_pageviews_table}
+
+#Execute final MTA models logic 
++check_if_exclude_channels_with_no_conversions:
+  if>: ${include_non_converted_channels=='yes'}
+  _do:
+    +create_mta_models_table_with_all_channels:
+      td>: sql/journeys_models/mta_models_union.sql
+      create_table: ${output_tables.models_table}
+
+  _else_do:
+    +create_mta_models_table_with_only_converted_channels:    
+      td>: sql/journeys_models/mta_models_union_exclude_non_converted_channels.sql
+      create_table: ${output_tables.models_table}
+
++create_aggregate_validation_tables:
+  _parallel: true
+
+  +create_top_conversion_journeys_table:
+    td>: sql/journeys_models/mta_conversion_journey_stats.sql
+    create_table: mta_top_conversion_journeys
+
+  +create_channel_parsing_validation:
+    td>: sql/journeys_models/channel_parsing_validate.sql
+    create_table: mta_channel_parsing_validate
+
+  +create_mta_journeys_validation:
+    td>: sql/journeys_models/mta_journeys_validate.sql
+    create_table: mta_journeys_validate
+
+  +create_journey_yearly_summary:
+    td>: sql/journeys_models/journey_summary_table.sql
+    create_table: mta_journey_stats_yearly
+
+#### Create Sankey Table
++create_mta_journeys_table:
+  td>: sql/journeys_models/mta_sankey_journeys.sql
+  create_table: mta_sankey_journeys

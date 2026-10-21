@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  MTA Journey Analytics Model Summary — Dashboard Template (5-tab layout)
+================================================================================
+
+  HOW THIS TEMPLATE WORKS
+  -----------------------
+  Self-contained HTML dashboard with placeholder tokens that the mta-journey-analysis
+  skill substitutes with real data from the customer's MTA output tables.
+
+  The skill:
+    1. Reads this file
+    2. Runs the documented queries below against ${sink_database}
+    3. STRIPS this leading HTML comment (the one you're reading)
+    4. Replaces every {{TOKEN}}
+    5. Writes the result to:
+         agent_outputs/<customer_slug>/mta/dashboards/mta_summary_dashboard.html
+    6. Opens with mcp__work__open_file
+
+  Rendering: vanilla JS + Chart.js 4.4.1 + chartjs-chart-sankey 0.12.0 (2 CDN scripts).
+  Same pattern as idu-dashboard.html and overmerge-dashboard.html — zero compilation step,
+  always renders. Charts are interactive (hover tooltips, animated). Sankey on Tab 5.
+
+  DASHBOARD LAYOUT — 5 TABS
+  ─────────────────────────
+    TAB 1: Attribution Overview
+      - 4 headline KPIs
+      - First Touch vs Last Touch grouped bar (Chart.js)
+      - All-models side-by-side bar (Chart.js)
+      - Model comparison table
+      - Interpretation table + insights
+
+    TAB 2: ML Models (Markov & Shapley)
+      - 4 headline KPIs
+      - Markov Attr. % horizontal bar (Chart.js)
+      - Shapley % (whole journey) horizontal bar — negative values in red (Chart.js)
+      - Markov vs Shapley vs Linear comparison bar (Chart.js)
+      - Full ML attribution table + insights
+
+    TAB 3: Top Conversion Journeys
+      - 4 headline KPIs
+      - Top journey patterns table
+      - Converted vs Churn comparison bar (Chart.js)
+      - Top pattern donut (Chart.js)
+      - Insights
+
+    TAB 4: Source & Channel Health
+      - 4 headline KPIs + SVG UTM gauge
+      - Source table summary table
+      - Event volume by source horizontal bar (Chart.js)
+      - Channel share donut (Chart.js)
+      - Channel distribution table + insights
+
+    TAB 5: Journey Flow (Sankey)
+      - 4 headline KPIs
+      - Channel-to-channel Sankey (chartjs-chart-sankey, top 15 flows)
+      - Insights
+
+  ──────────────────────────────────────────────────────────────────────────
+  TOKEN REFERENCE
+  ──────────────────────────────────────────────────────────────────────────
+
+  ── Header / metadata tokens ────────────────────────────────────────────────
+  {{customer_name}}              — project display name, e.g. "Paid Media MTA"
+  {{sink_database}}              — e.g. "mta_output"
+  {{run_date}}                   — e.g. "2026-06-02"
+  {{lookback_period}}            — e.g. "365 days"
+  {{unique_user_id}}             — e.g. "customer_id"
+  {{conversion_source}}          — e.g. "orders (order_status IN COMPLETE/PROCESSING)"
+
+  ── TAB 1 — Attribution Overview ────────────────────────────────────────────
+  {{total_conversions}}          — int with thousands sep, e.g. "548"
+  {{unique_customers}}           — int with thousands sep, e.g. "372"
+  {{avg_journey_steps}}          — 1 decimal, e.g. "29.8"
+  {{avg_journey_days}}           — 1 decimal, e.g. "194.5"
+
+  Standard model charts — top 8 channels sorted DESC by linear conv:
+  {{std_channel_labels_json}}    — JS array<string>, e.g. ["email","paid_search",...]
+  {{ft_values_json}}             — JS array<number>, First Touch attributed conversions
+  {{lt_values_json}}             — JS array<number>, Last Touch attributed conversions
+  {{linear_values_json}}         — JS array<number>, Linear attributed conversions
+  {{ushaped_values_json}}        — JS array<number>, U-Shaped attributed conversions
+
+  {{model_comparison_rows}}      — pre-rendered <tr>...</tr> per channel
+                                   columns: Channel | First Touch | Linear | U-Shaped | Last Touch
+
+  {{tab1_insights_html_li}}      — pre-rendered <li>...</li> insight bullets
+
+  ── TAB 2 — ML Models ───────────────────────────────────────────────────────
+  {{top_markov_channel}}         — e.g. "paid_search"
+  {{top_markov_removal}}         — Markov attribution share of the top channel, e.g. "22.50%"
+  {{top_shapley_channel}}        — e.g. "paid_search"
+  {{top_shapley_pct}}            — e.g. "92.76%"
+  {{markov_channel_count}}       — int, e.g. "16"
+  {{shapley_channel_count}}      — int, e.g. "18"
+  {{negative_shapley_count}}     — int, e.g. "3"
+  {{negative_shapley_names}}     — comma-separated, e.g. "display, cpm, support"
+
+  {{markov_data_json}}           — JS array of {ch, v} objects sorted DESC by v
+                                   e.g. [{"ch":"paid_search","v":100},...]
+  {{shapley_data_json}}          — JS array of {ch, v} objects sorted DESC by v
+                                   e.g. [{"ch":"paid_search","v":92.76},...]
+  {{ml_compare_json}}            — JS object keyed by channel name with markov/shapley/linear values
+                                   used to build comparison bar — derive from Q2/Q3/Q4 results
+
+  {{ml_attribution_rows}}        — pre-rendered <tr>...</tr> per channel
+                                   columns: Channel | Markov Attr. % | Markov Removal % | Shapley % | Shapley Total | Linear Conv
+
+  {{tab2_insights_html_li}}      — pre-rendered <li>...</li> insight bullets
+
+  ── TAB 3 — Top Conversion Journeys ─────────────────────────────────────────
+  {{conversion_patterns}}        — int, e.g. "804"
+  {{churn_patterns}}             — int, e.g. "32"
+  {{avg_conv_steps}}             — 1 decimal, e.g. "16.6"
+  {{avg_conv_days}}              — 1 decimal, e.g. "138.8"
+  {{avg_churn_steps}}            — 1 decimal, e.g. "4.6"
+  {{avg_churn_days}}             — 1 decimal, e.g. "96.0"
+
+  {{journey_table_rows}}         — pre-rendered <tr>...</tr>, top 10 conversion patterns
+                                   columns: Journey Sequence | Conversions | Avg Steps | Avg Days
+
+  {{journey_compare_json}}       — JS array: [{"name":"Converted","steps":16.6,"days":138.8},{"name":"Churn","steps":4.6,"days":96.0}]
+  {{pattern_donut_json}}         — JS array of {n, v} objects (name + % share)
+                                   e.g. [{"n":"paid_search (google)","v":62.0},...]
+
+  {{tab3_insights_html_li}}      — pre-rendered <li>...</li> insight bullets
+
+  ── TAB 4 — Source & Channel Health ─────────────────────────────────────────
+  {{total_touchpoints}}          — int with thousands sep, e.g. "13,610"
+  {{data_window_days}}           — int, e.g. "365"
+  {{data_date_range}}            — e.g. "Apr 2025 → Apr 2026"
+  {{utm_coverage_pct}}           — number 0–100, e.g. 57.1 (used in JS for gauge calc)
+  {{utm_coverage_label}}         — e.g. "57.1%"
+
+  {{source_table_rows}}          — pre-rendered <tr>...</tr> per source table
+                                   columns: Source Table | Profiles | Events | Conversions | Date From | Date To
+  {{source_vol_json}}            — JS array of {src, v} objects sorted DESC by v
+                                   e.g. [{"src":"web_events","v":9720},...]
+  {{channel_donut_json}}         — JS array of {ch, v} objects (channel name + % share)
+                                   e.g. [{"ch":"email","v":30.4},...]
+  {{channel_table_rows}}         — pre-rendered <tr>...</tr> per channel
+                                   columns: Channel | Events | % of Events | Conversions | Role
+
+  {{tab4_insights_html_li}}      — pre-rendered <li>...</li> insight bullets
+
+  ── TAB 5 — Journey Flow (Sankey) ────────────────────────────────────────────
+  {{sankey_top_flow}}            — e.g. "1-mobile_ios → 2-conversion"
+  {{sankey_top_flow_prob}}       — e.g. "218,603 conversions"
+  {{sankey_top_feeder_email}}    — e.g. "1-non-brand sem → 2-organic → 3-conversion"
+  {{sankey_top_feeder_email_prob}} — e.g. "96,910 conversions"
+  {{sankey_second_flow}}         — e.g. "paid_search → email"
+  {{sankey_second_flow_prob}}    — e.g. "25%"
+  {{sankey_terminal_node}}       — e.g. "2-conversion / 3-conversion"
+  {{sankey_terminal_desc}}       — e.g. "All paths end at a confirmed conversion event"
+
+  {{sankey_flows_json}}          — JS array of {from, to, flow} objects for top 10 ranked paths.
+                                   IMPORTANT: Use from_step/to_step values AS-IS including the "N-" prefix
+                                   so node positions are preserved (e.g. "1-organic", "2-crm", "3-conversion").
+                                   Aggregate SUM(conversions) across conversion_month duplicates per edge.
+                                   flow = SUM(conversions) — raw integer count, NOT a percentage.
+                                   e.g. [{"from":"1-mobile_ios","to":"2-conversion","flow":218603},
+                                          {"from":"1-non-brand sem","to":"2-organic","flow":96910},
+                                          {"from":"2-organic","to":"3-conversion","flow":96910},...]
+
+  {{tab5_insights_html_li}}      — pre-rendered <li>...</li> insight bullets
+
+  ──────────────────────────────────────────────────────────────────────────
+  SOURCE QUERIES (run against ${sink_database})
+  ──────────────────────────────────────────────────────────────────────────
+
+  Q1 — Headline KPIs (Tab 1):
+      Resolve the configured customer identifier with DESCRIBE mta_journeys
+      (or use --customer-id-col / CUSTOMER_ID_COL), then run:
+      SELECT
+        COUNT(*) AS total_touchpoints,
+        COUNT(DISTINCT <customer_id_col>) AS unique_customers,
+        CAST(SUM(conversion_flag) AS BIGINT) AS total_conversions,
+        COUNT(DISTINCT conversion_journey_id) AS distinct_journeys,
+        ROUND(AVG(journey_length), 1) AS avg_journey_steps,
+        ROUND(AVG(journey_duration_days), 1) AS avg_journey_days
+      FROM mta_journeys
+
+  Q2 — Standard model attribution by channel (Tab 1):
+      SELECT attribution_type, channel,
+             ROUND(SUM(total_conversions), 1) AS total_conv
+      FROM mta_models_standard
+      GROUP BY 1, 2
+      ORDER BY 1, 3 DESC
+
+  Q3 — Markov attribution % (Tab 2):
+      SELECT channels AS ch,
+             ROUND(SUM(attribution_markov_algorithmic) * 100.0 / SUM(SUM(attribution_markov_algorithmic)) OVER (), 2) AS v,
+             ROUND(AVG(removal_effect) * 100, 1) AS re
+      FROM mta_markov_attribution_final
+      WHERE run_time = (SELECT MAX(run_time) FROM mta_markov_attribution_final)
+      GROUP BY channels
+      ORDER BY v DESC
+
+  Q4 — Shapley attribution (Tab 2):
+      SELECT channels AS ch,
+             ROUND(SUM(value), 1) AS total_attributed,
+             ROUND(SUM(percentage) * 100, 2) AS v
+      FROM mta_shapley_attribution_final
+      WHERE run_time = (SELECT MAX(run_time) FROM mta_shapley_attribution_final)
+        AND step = 0
+      GROUP BY channels
+      ORDER BY total_attributed DESC
+
+  Q5 — Top conversion journeys (Tab 3):
+      SELECT target, journey_steps, conversions,
+             ROUND(avg_journey_length, 1) AS avg_steps,
+             ROUND(avg_journey_duration_days, 1) AS avg_days
+      FROM mta_top_conversion_journeys
+      ORDER BY target, conversions DESC
+      LIMIT 20
+
+  Q6 — Source table summary (Tab 4):
+      SELECT src_table, total_profiles, total_events,
+             CAST(conversion_events AS BIGINT) AS conversion_events,
+             min_date, max_date
+      FROM journey_src_union_summary
+      ORDER BY total_events DESC
+
+  Q7 — Channel distribution (Tab 4):
+      SELECT channel AS ch, total_events,
+             ROUND(perc_of_total_events, 1) AS pct_events,
+             CAST(total_conversions AS BIGINT) AS conversions
+      FROM mta_journeys_validate
+      ORDER BY total_events DESC
+
+  Q8 — Sankey conversion paths (Tab 5) — top 10 ranked journey patterns:
+      SELECT from_step, to_step, SUM(conversions) AS flow
+      FROM mta_sankey_journeys
+      WHERE target = 'conversion'
+        AND rnk <= 10
+      GROUP BY from_step, to_step
+      ORDER BY SUM(conversions) DESC
+
+      IMPORTANT:
+      - Use from_step/to_step AS-IS including the "N-" prefix (e.g. "1-organic", "3-conversion")
+      - Do NOT strip numeric prefixes — they define node position in the Sankey
+      - Do NOT use mta_markov_transition_final for the Sankey — that table has no conversion endpoint
+      - flow = SUM(conversions) integer count, not a percentage
+
+  ──────────────────────────────────────────────────────────────────────────
+  SUBSTITUTION RULES
+  ──────────────────────────────────────────────────────────────────────────
+  - Strip THIS leading HTML comment before writing the output file
+  - Numeric tokens: thousands separators, percentages: 1 decimal place + "%"
+  - _json tokens: substitute directly into JS const declarations — must be valid
+    JS array/object literals (double-quoted strings, no trailing commas)
+  - Pre-rendered _rows tokens: plain <tr>...</tr> HTML, no wrapper needed
+  - utm_coverage_pct: raw number (e.g. 57.1) — the template JS computes the
+    SVG dashoffset inline as Math.round(157 - (UTM_PCT/100)*157)
+
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MTA Model Summary — {{customer_name}}</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.0/dist/chartjs-chart-sankey.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#F7F8FB;color:#1F2147;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:13px}
+#app{max-width:1320px;margin:0 auto;padding:0 0 40px}
+.mta-header{background:linear-gradient(135deg,#2E41A6 0%,#5867B8 100%);color:#fff;padding:28px 48px 0}
+.mta-header h1{font-size:24px;font-weight:700}
+.mta-header .sub{font-size:13px;opacity:.85;margin-top:5px}
+.meta-row{display:flex;flex-wrap:wrap;gap:24px;margin-top:14px;padding-bottom:20px;font-size:12px}
+.meta-row strong{font-weight:600}
+.tab-nav{background:linear-gradient(135deg,#2E41A6 0%,#5867B8 100%);padding:0 48px}
+.tab-nav-inner{display:flex;gap:4px;flex-wrap:wrap}
+.tab-btn{background:rgba(255,255,255,.12);color:#fff;border:none;padding:10px 20px;cursor:pointer;font-size:12px;font-weight:500;border-radius:6px 6px 0 0;font-family:inherit;transition:background .15s}
+.tab-btn:hover{background:rgba(255,255,255,.22)}
+.tab-btn.active{background:#F7F8FB;color:#2E41A6;font-weight:700}
+.tab-content{padding:28px 48px}
+.tab-pane{display:none;flex-direction:column;gap:20px}
+.tab-pane.active{display:flex}
+.section-title{font-size:15px;font-weight:700;color:#1F2147;border-bottom:2px solid #B4E3E3;padding-bottom:7px;margin-bottom:14px;margin-top:8px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{background:#fff;border:1px solid #E6E8F2;border-radius:8px;padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kpi-label{font-size:10px;color:#6A6F8A;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.kpi-val{font-size:26px;font-weight:700;color:#1F2147;margin-top:6px;line-height:1.2}
+.kpi-val.sm{font-size:17px}
+.kpi-sub{font-size:11px;color:#6A6F8A;margin-top:4px}
+.kpi-utm{background:#fff;border:1px solid #E6E8F2;border-radius:8px;padding:12px 18px;box-shadow:0 1px 3px rgba(0,0,0,.04);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.card{background:#fff;border:1px solid #E6E8F2;border-radius:8px;padding:18px 22px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.chart-wrap{position:relative;width:100%}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #E6E8F2;font-size:13px}
+th{background:#B4E3E3;color:#1F2147;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:9px 13px;text-align:left}
+td{padding:9px 13px;border-bottom:1px solid #E6E8F2}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:#F7F8FB}
+td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+td.conv{background:#dcfce7!important;color:#166534;font-weight:700;text-align:right}
+.pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:#E0E7FF;color:#2E41A6}
+.pill.ok{background:#DCFCE7;color:#166534}
+.pill.warn{background:#FEF3C7;color:#92400E}
+.pill.neutral{background:#F1F5F9;color:#475569}
+.insights-list{padding-left:20px}
+.insights-list li{margin-bottom:10px;font-size:13px;line-height:1.6;color:#1F2147}
+.insights-list li strong{color:#2E41A6}
+footer{text-align:center;padding:20px;color:#6A6F8A;font-size:11px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="mta-header">
+    <h1>MTA Journey Analytics — Model Summary</h1>
+    <div class="sub">{{customer_name}} &nbsp;·&nbsp; {{sink_database}} &nbsp;·&nbsp; {{run_date}}</div>
+    <div class="meta-row">
+      <span><strong>Lookback:</strong> {{lookback_period}}</span>
+      <span><strong>Unique user ID:</strong> {{unique_user_id}}</span>
+      <span><strong>Conversion:</strong> {{conversion_source}}</span>
+      <span><strong>Total conversions:</strong> {{total_conversions}}</span>
+      <span><strong>Unique customers:</strong> {{unique_customers}}</span>
+    </div>
+  </div>
+  <div class="tab-nav">
+    <div class="tab-nav-inner" id="tab-nav"></div>
+  </div>
+  <div class="tab-content">
+    <div id="tab-attribution" class="tab-pane active"></div>
+    <div id="tab-ml"          class="tab-pane"></div>
+    <div id="tab-journeys"    class="tab-pane"></div>
+    <div id="tab-health"      class="tab-pane"></div>
+    <div id="tab-flow"        class="tab-pane"></div>
+  </div>
+</div>
+<footer>Generated from MTA output tables &nbsp;·&nbsp; {{sink_database}} &nbsp;·&nbsp; {{run_date}} &nbsp;·&nbsp; MTA Journey Analytics workflow</footer>
+
+<script>
+/* ── Palette ─────────────────────────────────────────────────────── */
+const TD = ["#B4E3E3","#ABB3DB","#D9BFDF","#F8E1B0","#8FD6D4","#828DCA","#C69ED0","#F5D389",
+            "#6AC8C6","#5867B8","#B37EC0","#F1C461","#44BAB8","#2E41A6","#8CC97E","#A05EB0"];
+const NODE_COLOR = {
+  email:'#5867B8', crm:'#44BAB8', sms:'#ef4444',
+  social:'#B37EC0', organic:'#8FD6D4', paid_search:'#F5D389',
+  video:'#F8E1B0', cpm:'#94a3b8', display:'#94a3b8', retargeting:'#828DCA',
+  support:'#6AC8C6', native:'#8CC97E', referral:'#D9BFDF',
+  cpc:'#ABB3DB', other:'#64748b', sales_rep:'#B4E3E3', review:'#F1C461'
+};
+const ink='#1F2147', muted='#6A6F8A', gridCol='rgba(230,232,242,0.8)';
+const baseFont={family:"-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",size:11};
+Chart.defaults.font = baseFont;
+Chart.defaults.color = muted;
+
+/* ── Injected data ───────────────────────────────────────────────── */
+const STD_LABELS  = {{std_channel_labels_json}};
+const FT_VALUES   = {{ft_values_json}};
+const LT_VALUES   = {{lt_values_json}};
+const LIN_VALUES  = {{linear_values_json}};
+const USH_VALUES  = {{ushaped_values_json}};
+const MARKOV_DATA = {{markov_data_json}};
+const SHAPLEY_DATA= {{shapley_data_json}};
+const JOURNEY_COMPARE = {{journey_compare_json}};
+const PATTERN_DONUT   = {{pattern_donut_json}};
+const SOURCE_VOL      = {{source_vol_json}};
+const CHANNEL_DONUT   = {{channel_donut_json}};
+const SANKEY_FLOWS    = {{sankey_flows_json}};
+const UTM_PCT         = {{utm_coverage_pct}};
+
+/* ── Helpers ─────────────────────────────────────────────────────── */
+const fmt = n => n == null ? '—' : Number(n).toLocaleString();
+
+function kpi(label, value, sub, sm) {
+  return `<div class="kpi">
+    <div class="kpi-label">${label}</div>
+    <div class="kpi-val${sm?' sm':''}">${value}</div>
+    ${sub?`<div class="kpi-sub">${sub}</div>`:''}
+  </div>`;
+}
+function secTitle(t) { return `<div class="section-title">${t}</div>`; }
+function insightsHtml(li) {
+  return secTitle('Insights &amp; Recommendations')
+    + `<ul class="insights-list">${li}</ul>`;
+}
+function canvasCard(id, height) {
+  return `<div class="card"><div class="chart-wrap" style="height:${height}px"><canvas id="${id}"></canvas></div></div>`;
+}
+function tbl(headers, rows) {
+  const ths = headers.map(h=>`<th>${h}</th>`).join('');
+  const trs = rows.map(r=>`<tr>${r.map(cell=>{
+    if(typeof cell==='object') return `<td class="${cell.cls||''}" style="${cell.sty||''}">${cell.v}</td>`;
+    return `<td>${cell}</td>`;
+  }).join('')}</tr>`).join('');
+  return `<div class="tbl-wrap"><table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
+}
+const num  = v => ({v, cls:'num'});
+const conv = v => ({v, cls:'conv'});
+
+/* ── Chart.js helpers ────────────────────────────────────────────── */
+const baseScales = {
+  x:{ticks:{color:muted,font:baseFont,padding:4},grid:{color:gridCol}},
+  y:{ticks:{color:muted,font:baseFont,padding:6},grid:{color:gridCol},beginAtZero:true}
+};
+const baseLegend = {labels:{color:ink,font:baseFont,boxWidth:12,padding:14}};
+
+function vBar(id, labels, datasets) {
+  new Chart(document.getElementById(id), {
+    type:'bar',
+    data:{labels, datasets:datasets.map(d=>({...d,borderRadius:4,borderSkipped:false}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:baseLegend,tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}`}}},
+      scales:baseScales}
+  });
+}
+function hBar(id, labels, data, colors, pctMode) {
+  new Chart(document.getElementById(id), {
+    type:'bar',
+    data:{labels, datasets:[{data, borderRadius:4, borderSkipped:false,
+      backgroundColor:Array.isArray(colors)?colors:data.map(v=>v<0?'#f87171':colors)}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.x}${pctMode?'%':''}`}}},
+      scales:{
+        x:{ticks:{color:muted,font:baseFont,padding:4,callback:v=>pctMode?v+'%':v},grid:{color:gridCol},beginAtZero:true},
+        y:{ticks:{color:muted,font:baseFont,padding:6},grid:{display:false}}
+      }
+    }
+  });
+}
+function doughnut(id, labels, data, colors) {
+  new Chart(document.getElementById(id), {
+    type:'doughnut',
+    data:{labels, datasets:[{data, backgroundColor:colors, borderWidth:2, borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{position:'right',labels:{color:ink,font:baseFont,boxWidth:12,padding:10}},
+        tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed}%`}}}
+    }
+  });
+}
+
+/* ── Tab 1: Attribution Overview ─────────────────────────────────── */
+function buildAttribution() {
+  const modelRows = (STD_LABELS || []).map((ch,i)=>[ch,num((FT_VALUES||[])[i]),num((LIN_VALUES||[])[i]),num((USH_VALUES||[])[i]),num((LT_VALUES||[])[i])]);
+  const interpRows = [
+    ['First Touch','Awareness channel ROI','Which channels initiate conversion journeys'],
+    ['Last Touch','Closing channel credit','Which channel is present at conversion'],
+    ['Linear','Balanced budget allocation','Equal credit across all journey touchpoints'],
+    ['U-Shaped','First + last emphasis','35% first touch, 35% last touch, 30% middle'],
+    ['Markov','Structural channel importance','Removal effect — impact of dropping this channel'],
+    ['Shapley','Marginal contribution (game theory)','Fair credit based on incremental value'],
+  ].map(([m,b,k])=>[`<strong>${m}</strong>`,b,k]);
+
+  document.getElementById('tab-attribution').innerHTML =
+    `<div class="kpi-grid">
+      ${kpi('Total Conversions','{{total_conversions}}','{{conversion_source}}')}
+      ${kpi('Unique Customers','{{unique_customers}}','In {{lookback_period}} journey window')}
+      ${kpi('Avg Journey Length','{{avg_journey_steps}}','Touchpoints per journey')}
+      ${kpi('Avg Journey Duration','{{avg_journey_days}}d','First touch to conversion',true)}
+    </div>`
+    + secTitle('First Touch vs Last Touch')
+    + canvasCard('c-ft-lt', 300)
+    + secTitle('All Models Side by Side — Top Channels')
+    + canvasCard('c-allmodels', 320)
+    + secTitle('Model Comparison Table')
+    + tbl(['Channel','First Touch','Linear','U-Shaped','Last Touch'], modelRows)
+    + secTitle('Attribution Model Interpretation')
+    + tbl(['Model','Best Used For','Key Finding'], interpRows)
+    + insightsHtml(`{{tab1_insights_html_li}}`);
+
+  vBar('c-ft-lt', STD_LABELS || [], [
+    {label:'First Touch', data:FT_VALUES || [],  backgroundColor:TD[9]},
+    {label:'Last Touch',  data:LT_VALUES || [],  backgroundColor:TD[3]}
+  ]);
+  vBar('c-allmodels', STD_LABELS || [], [
+    {label:'First Touch', data:FT_VALUES || [],  backgroundColor:TD[9]},
+    {label:'Linear',      data:LIN_VALUES || [], backgroundColor:TD[12]},
+    {label:'U-Shaped',    data:USH_VALUES || [], backgroundColor:TD[10]},
+    {label:'Last Touch',  data:LT_VALUES || [],  backgroundColor:TD[3]}
+  ]);
+}
+
+/* ── Tab 2: ML Models ────────────────────────────────────────────── */
+function buildML() {
+  const markovMap  = Object.fromEntries((MARKOV_DATA || []).map(d=>[d.ch,d.v]));
+  const shapleyMap = Object.fromEntries((SHAPLEY_DATA || []).map(d=>[d.ch,d.v]));
+  const linTotal   = (LIN_VALUES || []).reduce((a,b)=>a+b,0) || 1;
+  const linShare   = (STD_LABELS || []).map((_,i)=>+(((LIN_VALUES||[])[i]||0)*100/linTotal).toFixed(1));
+
+  document.getElementById('tab-ml').innerHTML =
+    `<div class="kpi-grid">
+      ${kpi('Top Markov Channel','{{top_markov_channel}}','{{top_markov_removal}} attribution share',true)}
+      ${kpi('Top Shapley Channel','{{top_shapley_channel}}','{{top_shapley_pct}} share (whole journey)',true)}
+      ${kpi('Channels Analysed','{{markov_channel_count}}','Markov | {{shapley_channel_count}} Shapley')}
+      ${kpi('Negative Shapley','{{negative_shapley_count}}','{{negative_shapley_names}}')}
+    </div>`
+    + secTitle('Markov Attribution (%)')
+    + canvasCard('c-markov', 400)
+    + secTitle('Shapley Attribution (%, whole journey)')
+    + canvasCard('c-shapley', 440)
+    + secTitle('Markov vs Shapley vs Linear — Top Channels')
+    + canvasCard('c-ml-compare', 320)
+    + secTitle('Full ML Attribution Table')
+    + tbl(['Channel','Markov Attr. %','Markov Removal %','Shapley %','Shapley Total Attributed','Linear Conv (ref)'], [])
+    + insightsHtml(`{{tab2_insights_html_li}}`);
+
+  // Fix table — rows injected via innerHTML directly
+  const mlTbody = document.querySelector('#tab-ml .tbl-wrap tbody');
+  if (mlTbody) mlTbody.innerHTML = `{{ml_attribution_rows}}`;
+
+  hBar('c-markov',  (MARKOV_DATA || []).map(d=>d.ch),  (MARKOV_DATA || []).map(d=>d.v),  TD[9],  true);
+  hBar('c-shapley', (SHAPLEY_DATA || []).map(d=>d.ch), (SHAPLEY_DATA || []).map(d=>d.v), TD[12], true);
+  vBar('c-ml-compare', STD_LABELS || [], [
+    {label:'Markov Removal %',    data:(STD_LABELS || []).map(ch=>markovMap[ch]||0),              backgroundColor:TD[9]},
+    {label:'Shapley %', data:(STD_LABELS || []).map(ch=>Math.max(shapleyMap[ch]||0,0)), backgroundColor:TD[12]},
+    {label:'Linear Conv Share %', data:linShare,                                           backgroundColor:TD[3]}
+  ]);
+}
+
+/* ── Tab 3: Journeys ──────────────────────────────────────────────── */
+function buildJourneys() {
+  document.getElementById('tab-journeys').innerHTML =
+    `<div class="kpi-grid">
+      ${kpi('Conversion Patterns','{{conversion_patterns}}','Distinct journey sequences')}
+      ${kpi('Avg Steps to Convert','{{avg_conv_steps}}','Touchpoints per converted journey')}
+      ${kpi('Avg Days to Convert','{{avg_conv_days}}','First touch to conversion event')}
+      ${kpi('Churn Patterns','{{churn_patterns}}','Non-converting (avg {{avg_churn_steps}} steps, {{avg_churn_days}}d)')}
+    </div>`
+    + secTitle('Top Conversion Journey Patterns')
+    + tbl(['Journey Sequence','Conversions','Avg Steps','Avg Days'], [])
+    + secTitle('Converted vs Churn — Steps &amp; Days')
+    + `<div class="grid-2">${canvasCard('c-journey-compare',280)}${canvasCard('c-pattern-donut',280)}</div>`
+    + insightsHtml(`{{tab3_insights_html_li}}`);
+
+  const jTbody = document.querySelector('#tab-journeys .tbl-wrap tbody');
+  if (jTbody) jTbody.innerHTML = `{{journey_table_rows}}`;
+
+  vBar('c-journey-compare', (JOURNEY_COMPARE || []).map(d=>d.name), [
+    {label:'Avg Steps', data:(JOURNEY_COMPARE || []).map(d=>d.steps), backgroundColor:[TD[12],TD[5]]},
+    {label:'Avg Days',  data:(JOURNEY_COMPARE || []).map(d=>d.days),  backgroundColor:[TD[9],TD[3]]}
+  ]);
+  doughnut('c-pattern-donut',
+    (PATTERN_DONUT || []).map(d=>d.n),
+    (PATTERN_DONUT || []).map(d=>d.v),
+    [TD[9],TD[12],TD[3],'#CBD5E1']
+  );
+}
+
+/* ── Tab 4: Source & Channel Health ──────────────────────────────── */
+function buildHealth() {
+  const utmOffset = Math.round(157-((UTM_PCT||0)/100)*157);
+  document.getElementById('tab-health').innerHTML =
+    `<div class="kpi-grid">
+      ${kpi('Total Touchpoints','{{total_touchpoints}}','Across all source tables')}
+      ${kpi('Data Window','{{data_window_days}}d','{{data_date_range}}',true)}
+      <div class="kpi-utm">
+        <div class="kpi-label">UTM Coverage — Web</div>
+        <svg width="110" height="62" viewBox="0 0 120 66">
+          <path d="M10,60 A50,50 0 0,1 110,60" fill="none" stroke="#E6E8F2" stroke-width="12" stroke-linecap="round"/>
+          <path d="M10,60 A50,50 0 0,1 110,60" fill="none" stroke="#F1C461" stroke-width="12" stroke-linecap="round" stroke-dasharray="157" stroke-dashoffset="${utmOffset}"/>
+          <text x="60" y="54" text-anchor="middle" fill="#1F2147" font-size="15" font-weight="700" font-family="sans-serif">{{utm_coverage_label}}</text>
+        </svg>
+        <div class="kpi-sub">utm_source coverage</div>
+      </div>
+      ${kpi('Conversion Source','{{conversion_source}}','Only source with conversions > 0',true)}
+    </div>`
+    + secTitle('Source Table Summary')
+    + tbl(['Source Table','Profiles','Events','Conversions','Date From','Date To'], [])
+    + secTitle('Event Volume &amp; Channel Share')
+    + `<div class="grid-2">${canvasCard('c-source-vol',300)}${canvasCard('c-channel-donut',300)}</div>`
+    + secTitle('Channel Distribution in Journeys')
+    + tbl(['Channel','Events','% of Events','Conversions','Role'], [])
+    + insightsHtml(`{{tab4_insights_html_li}}`);
+
+  const healthTables = document.querySelectorAll('#tab-health .tbl-wrap tbody');
+  if (healthTables[0]) healthTables[0].innerHTML = `{{source_table_rows}}`;
+  if (healthTables[1]) healthTables[1].innerHTML = `{{channel_table_rows}}`;
+
+  hBar('c-source-vol',
+    (SOURCE_VOL || []).map(d=>d.src), (SOURCE_VOL || []).map(d=>d.v),
+    (SOURCE_VOL || []).map((_,i)=>TD[i%TD.length])
+  );
+  doughnut('c-channel-donut',
+    (CHANNEL_DONUT || []).map(d=>d.ch), (CHANNEL_DONUT || []).map(d=>d.v),
+    (CHANNEL_DONUT || []).map((_,i)=>TD[i%TD.length])
+  );
+}
+
+/* ── Tab 5: Journey Flow (Sankey) ────────────────────────────────── */
+function buildFlow() {
+  document.getElementById('tab-flow').innerHTML =
+    `<div class="kpi-grid">
+      ${kpi('Strongest Flow','{{sankey_top_flow}}','{{sankey_top_flow_prob}} transition probability',true)}
+      ${kpi('Top Feeder to email','{{sankey_top_feeder_email}}','{{sankey_top_feeder_email_prob}} transition probability',true)}
+      ${kpi('Second Strongest Flow','{{sankey_second_flow}}','{{sankey_second_flow_prob}} transition probability',true)}
+      ${kpi('Terminal Node','{{sankey_terminal_node}}','{{sankey_terminal_desc}}',true)}
+    </div>`
+    + secTitle('Channel-to-Channel Transition Flow (Sankey)')
+    + canvasCard('c-sankey', 480)
+    + insightsHtml(`{{tab5_insights_html_li}}`);
+
+  new Chart(document.getElementById('c-sankey'), {
+    type:'sankey',
+    data:{datasets:[{
+      label:'Channel Flow',
+      data:SANKEY_FLOWS || [],
+      colorFrom: c => {
+        const item = c.dataset.data[c.dataIndex];
+        return NODE_COLOR[item && item.from] || '#94a3b8';
+      },
+      colorTo: c => {
+        const item = c.dataset.data[c.dataIndex];
+        return NODE_COLOR[item && item.to] || '#94a3b8';
+      },
+      colorMode:'gradient',
+      borderWidth:0,
+      nodePadding:20,
+      nodeWidth:16,
+      color:ink,
+      font:baseFont
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>{
+          const d=c.dataset.data[c.dataIndex];
+          return d ? ` ${d.from} → ${d.to}: ${Number(d.flow).toLocaleString()} conversions` : '';
+        }}}
+      }
+    }
+  });
+}
+
+/* ── Init ────────────────────────────────────────────────────────── */
+const TABS = [
+  {id:'tab-attribution', label:'Attribution Overview',         build:buildAttribution},
+  {id:'tab-ml',          label:'ML Models (Markov & Shapley)', build:buildML},
+  {id:'tab-journeys',    label:'Top Conversion Journeys',      build:buildJourneys},
+  {id:'tab-health',      label:'Source & Channel Health',      build:buildHealth},
+  {id:'tab-flow',        label:'Journey Flow',                 build:buildFlow},
+];
+
+document.getElementById('tab-nav').innerHTML = TABS.map((t,i)=>
+  `<button class="tab-btn${i===0?' active':''}" onclick="switchTab(${i})">${t.label}</button>`
+).join('');
+
+TABS.forEach(t => t.build());
+TABS.forEach((t,i) => document.getElementById(t.id).classList.toggle('active', i===0));
+
+function switchTab(i) {
+  document.querySelectorAll('.tab-btn').forEach((b,j)=>b.classList.toggle('active',i===j));
+  TABS.forEach((t,j)=>document.getElementById(t.id).classList.toggle('active',i===j));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+_export:
+  !include : 'config.yml'
+  td:
+    database: ${sink_database}
+
+  # Feature windows (config.yml FEATURE WINDOWS), read by the SQL in sql/.
+  # train: features up to cutoff_date, label observed in the label_window_days after it
+  # pred:  features up to cutoff_date = run date (no label)
+  cutoff_date: ${mode == 'train' ? moment(reference_date == '' ? session_date : reference_date).subtract(label_window_days, 'days').format('YYYY-MM-DD') : moment(reference_date == '' ? session_date : reference_date).format('YYYY-MM-DD')}
+  feature_start_date: ${moment(reference_date == '' ? session_date : reference_date).subtract(mode == 'train' ? label_window_days : 0, 'days').subtract(feature_lookback_days, 'days').format('YYYY-MM-DD')}
+  label_end_date: ${moment(reference_date == '' ? session_date : reference_date).format('YYYY-MM-DD')}
+
+# ============================================================
+# DATA PREP: customer-specific feature SQL (sql/)
+# ============================================================
+# Called from train.dig (mode = 'train') and predict.dig (mode = 'pred').
+# Builds ${train_input_table} or ${pred_input_table}: one row per
+# ${user_id_column}, a session_id column, the features and (train)
+# the ${target_column}. sql/README.md describes the contract.
+#
+# Feature tables that the final query joins can be added in parallel:
+#   +create_features:
+#     _parallel: true
+#
+#     +create_feature_table_1:
+#       td>: sql/your_feature_query_1.sql
+#       create_table: classify_feat_1_${mode}
+
++create_sink_database:
+  td_ddl>:
+  create_databases: ["${sink_database}"]
+
++create_input_table:
+  td>: sql/input_features.sql
+  create_table: ${mode == 'train' ? train_input_table : pred_input_table}

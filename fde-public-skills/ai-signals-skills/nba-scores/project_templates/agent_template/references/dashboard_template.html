@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  NBA Engagement Scores Model Summary — Dashboard Template (3-tab layout)
+================================================================================
+
+  HOW THIS TEMPLATE WORKS
+  -----------------------
+  Self-contained HTML dashboard with placeholder tokens that the nba-insights
+  skill substitutes with real data from the customer's `nba_dash_*` tables.
+
+  The skill:
+    1. Reads this file
+    2. Runs the documented queries below
+    3. STRIPS this leading HTML comment (the one you're reading)
+    4. Replaces every {{TOKEN}}
+    5. Writes the result to:
+         agent_outputs/<project_slug>/dashboards/nba_summary_dashboard.html
+
+  All visual structure (TD palette, layout, tabs, chart shapes) is fixed.
+  Only the data behind the tokens changes per customer / per run.
+
+  DASHBOARD LAYOUT — 3 TABS
+  ─────────────────────────
+    TAB 1: Input Data
+      - Run-config snapshot (session_id, scoring_logic, lookbacks, time filter)
+      - Per-source volume bar chart + table
+      - Date range coverage
+      - Insights & recommendations
+
+    TAB 2: NBA Scores Summary
+      - 6 headline KPIs
+      - Top-pick NBA charts (Channel, Time, Campaign)
+      - All 7 engagement flags grouped bar + table
+      - Insights & recommendations
+
+    TAB 3: Historic Tracker
+      - Trend lines for next_best_channel / next_best_time / next_best_campaign
+        distributions over time (across session_ids)
+      - Profiles-scored trend
+      - Flag-rate trend across all 7 flags
+      - Insights & recommendations
+      - Graceful single-run mode: when only 1 session exists, render the snapshot
+        with a "Trend will appear after the next run" callout
+
+  ──────────────────────────────────────────────────────────────────────────
+  TOKEN REFERENCE
+  ──────────────────────────────────────────────────────────────────────────
+
+  ── Header / metadata tokens (strings) ─────────────────────────────────────
+  {{project_name}}            — e.g. "Loyalty NBA Scores"
+  {{sink_database}}            — e.g. "automotive_demo"
+  {{session_id}}               — latest session_id (bigint)
+  {{run_time_utc}}             — e.g. "2026-05-18 21:02 UTC"
+  {{time_filter_summary}}      — e.g. "range · 2025-04-01 → latest"
+  {{scoring_logic}}            — "percentile" | "quartile" | "minmax"
+  {{event_lookback_days}}      — int, e.g. 90
+  {{new_customers_days}}       — int, e.g. 180
+  {{new_customers_days_note}}  — empty string OR <span class="pill warn">override from default 45</span>
+  {{create_dashboard}}         — "yes" | "no"
+  {{run_count}}                — int, total number of historical runs (used to
+                                 toggle Historic Tracker single-run mode)
+
+  ── TAB 1 (Input Data) tokens ──────────────────────────────────────────────
+  {{total_source_events}}            — int with thousands separators
+  {{source_count}}                   — int (number of source tables in run)
+  {{date_range_days}}                — int (e.g. 364)
+  {{date_range_summary}}             — e.g. "2025-04-09 → 2026-04-09"
+
+  {{source_events_labels_json}}      — array<string>, ASC by num_events for hbar
+  {{source_events_values_json}}      — array<int>, parallel
+  {{source_events_text_json}}        — array<string>, formatted with thousands sep
+
+  {{source_profiles_labels_json}}    — array<string>, ASC by unique_profiles for hbar
+  {{source_profiles_values_json}}    — array<int>, parallel
+  {{source_profiles_text_json}}      — array<string>, formatted
+
+  {{source_table_rows}}              — pre-rendered <tr>...</tr> per source
+                                       (mark conversion source with .pill)
+
+  {{tab1_insights_html_li}}          — pre-rendered <li>...</li> bullets
+                                       focused on data quality / volume /
+                                       freshness / coverage observations
+
+  ── TAB 2 (NBA Scores Summary) tokens ──────────────────────────────────────
+  {{profiles_scored}}                — int (prefer SUM(profile_count) for any
+                                       single flag — see SKILL.md note)
+  {{converted_count}}                — int
+  {{converted_pct}}                  — e.g. "42.1%"
+  {{cart_abandon_count}}             — int
+  {{cart_abandon_pct}}               — e.g. "5.4%"
+  {{recent_ad_engagement_count}}     — int
+  {{recent_ad_engagement_pct}}       — e.g. "22.3%"
+  {{no_ads_or_purchases_count}}      — int
+  {{no_ads_or_purchases_pct}}        — e.g. "17.1%"
+
+  {{nbc_pick_labels_json}}           — array<string>, top N channels, ASC for hbar
+  {{nbc_pick_values_json}}           — array<int>, parallel
+  {{nbc_pick_text_json}}             — array<string>, "<count> (<pct>)" parallel
+  {{nbt_pick_labels_json}}           — fixed: ["morning","afternoon","evening","overnight"]
+  {{nbt_pick_values_json}}           — array<int>, parallel
+  {{nbt_pick_text_json}}             — array<string>, "<pct>" parallel
+  {{nbcamp_pick_labels_json}}        — array<string>, DESC by count
+  {{nbcamp_pick_values_json}}        — array<int>, parallel
+
+  Engagement flags — fixed order:
+    ['conversion_flag','ad_engagement_flag','recent_ad_engagement_flag',
+     'recent_purchase_flag','cart_abandon_flag','new_visitor_flag',
+     'no_ads_or_purchases_flag']
+  {{flags_flagged_json}}             — array<int>, profile_count where metric_value='1'
+  {{flags_flagged_pct_json}}         — array<string>, e.g. "42.1%"
+  {{flags_converters_json}}          — array<int>, converted_users where metric_value='1'
+  {{flags_table_rows}}               — pre-rendered <tr>...</tr> per flag
+
+  {{tab2_insights_html_li}}          — pre-rendered <li>...</li> bullets focused
+                                       on top channel/daypart/campaign picks,
+                                       segment sizing, conversion rates per segment
+
+  ── TAB 3 (Historic Tracker) tokens ────────────────────────────────────────
+  {{historic_run_labels_json}}       — array<string>, run timestamps formatted
+                                       e.g. ["2026-04-18", "2026-05-18"], ASC by session_id
+  {{historic_session_ids_json}}      — array<int>, parallel session_ids (for tooltips)
+
+  {{historic_profiles_scored_json}}  — array<int>, profiles_scored per run, parallel
+
+  Per-pick-field trend lines — values are profile_count for the TOP bucket
+  (or top 3 buckets stacked) for each metric across runs:
+  {{historic_nbc_series_json}}       — array<{name: string, values: array<int>}>
+                                       e.g. [{"name":"email","values":[340,360]},
+                                             {"name":"organic","values":[300,317]}, ...]
+                                       Top 5 channels by latest run profile_count.
+                                       Each value is profile_count in that run.
+  {{historic_nbt_series_json}}       — array<{name: string, values: array<int>}>
+                                       4 series (morning/afternoon/evening/overnight)
+  {{historic_nbcamp_series_json}}    — array<{name: string, values: array<int>}>
+                                       All distinct campaign labels.
+
+  Per-flag trend (rate %) — across runs:
+  {{historic_flags_rates_json}}      — array<{name: string, values: array<number>}>
+                                       7 series, one per flag.
+                                       Each value is flagged% (0–100), 1 decimal.
+
+  {{historic_single_run_callout}}    — empty string when run_count >= 2; OR a full
+                                       <div class="callout">...</div> block when
+                                       run_count == 1, explaining that trends
+                                       will appear after the next run.
+
+  {{tab3_insights_html_li}}          — pre-rendered <li>...</li> bullets focused
+                                       on shifts run-over-run, drift detection,
+                                       config-vs-audience-change attribution.
+                                       For single-run mode, frame as expectations
+                                       and what to watch for in the next run.
+
+  ──────────────────────────────────────────────────────────────────────────
+  SOURCE QUERIES (the skill MUST run these against the customer's sink_database)
+  ──────────────────────────────────────────────────────────────────────────
+
+  Q1 — Latest run config + metadata (drives header + Tab 1):
+      SELECT session_id, profiles_scored, event_lookback_days, new_customers_days,
+             time_filter_type, lookback_period, time_range_start_date,
+             time_range_end_date,
+             TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm', 'UTC') AS run_time
+      FROM nba_dash_model_metrics
+      WHERE session_id = (SELECT MAX(session_id) FROM nba_dash_model_metrics)
+      LIMIT 1
+
+  Q2 — Per-source volumes for latest run (Tab 1):
+      SELECT source_table, num_events, unique_profiles, total_conversions,
+             day_range, min_date, max_date
+      FROM nba_dash_source_tables
+      WHERE session_id = <latest_session_id>
+      ORDER BY num_events DESC
+
+  Q3 — All 7 engagement flags for latest run (Tab 2):
+      SELECT metric_name, metric_value, profile_count, converted_users
+      FROM nba_dash_stats_summary
+      WHERE session_id = <latest_session_id>
+        AND metric_name IN ('conversion_flag','ad_engagement_flag',
+            'recent_ad_engagement_flag','recent_purchase_flag','cart_abandon_flag',
+            'new_visitor_flag','no_ads_or_purchases_flag')
+      ORDER BY metric_name, metric_value
+
+  Q4 — NBA pick fields for latest run (Tab 2):
+      SELECT metric_name, metric_value, profile_count, converted_users
+      FROM nba_dash_stats_summary
+      WHERE session_id = <latest_session_id>
+        AND metric_name IN ('next_best_channel','next_best_time','next_best_campaign')
+      ORDER BY metric_name, profile_count DESC
+
+  Q5 — Run inventory for Historic Tracker (Tab 3):
+      SELECT session_id,
+             TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'UTC') AS run_date,
+             profiles_scored
+      FROM nba_dash_model_metrics
+      ORDER BY session_id ASC
+
+  Q6 — Pick-field distributions across all runs (Tab 3):
+      SELECT session_id, metric_name, metric_value, profile_count
+      FROM nba_dash_stats_summary
+      WHERE metric_name IN ('next_best_channel','next_best_time','next_best_campaign')
+      ORDER BY session_id ASC, metric_name, profile_count DESC
+
+  Q7 — Flag rates across all runs (Tab 3):
+      SELECT session_id, metric_name, profile_count, converted_users
+      FROM nba_dash_stats_summary
+      WHERE metric_value = '1'
+        AND metric_name IN ('conversion_flag','ad_engagement_flag',
+            'recent_ad_engagement_flag','recent_purchase_flag','cart_abandon_flag',
+            'new_visitor_flag','no_ads_or_purchases_flag')
+      ORDER BY session_id ASC, metric_name
+
+  ──────────────────────────────────────────────────────────────────────────
+  SUBSTITUTION RULES
+  ──────────────────────────────────────────────────────────────────────────
+  - Strip THIS leading HTML comment before substitution (otherwise the docs
+    inside leak into the rendered output)
+  - Numeric tokens: thousands separators, percentages: 1 decimal place + "%"
+  - JSON tokens: emit valid JSON literals — no trailing commas, double-quoted
+  - Single-run mode: set {{historic_single_run_callout}} to a callout block
+    AND set every historic_*_json to a single-element array. Charts will still
+    render with one data point — they just won't show trend.
+
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NBA Engagement Scores Model Summary — {{project_name}}</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<style>
+  :root {
+    --td-1: #B4E3E3; --td-2: #ABB3DB; --td-3: #D9BFDF; --td-4: #F8E1B0;
+    --td-5: #8FD6D4; --td-6: #828DCA; --td-7: #C69ED0; --td-8: #F5D389;
+    --td-9: #6AC8C6; --td-10: #5867B8; --td-11: #B37EC0; --td-12: #F1C461;
+    --td-13: #44BAB8; --td-14: #2E41A6; --td-15: #8CC97E; --td-16: #A05EB0;
+    --bg: #F7F8FB; --card: #FFFFFF; --ink: #1F2147; --muted: #6A6F8A; --line: #E6E8F2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+         background: var(--bg); color: var(--ink); line-height: 1.4; }
+  header { background: linear-gradient(135deg, var(--td-14) 0%, var(--td-10) 100%); color: white;
+           padding: 32px 48px 0; }
+  header h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; }
+  header p { margin: 0; opacity: 0.85; font-size: 14px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 16px; font-size: 13px; padding-bottom: 24px; }
+  .meta-row span strong { font-weight: 600; }
+
+  /* Tab navigation */
+  .tab-nav { background: linear-gradient(135deg, var(--td-14) 0%, var(--td-10) 100%); padding: 0 48px; }
+  .tab-nav-inner { display: flex; gap: 4px; max-width: 1400px; margin: 0 auto; }
+  .tab-button {
+    background: rgba(255,255,255,0.12); color: white; border: none; padding: 14px 24px;
+    cursor: pointer; font-size: 14px; font-weight: 500; border-radius: 8px 8px 0 0;
+    transition: background 0.15s ease; font-family: inherit;
+  }
+  .tab-button:hover { background: rgba(255,255,255,0.22); }
+  .tab-button.active { background: var(--bg); color: var(--td-14); font-weight: 600; }
+
+  main { padding: 32px 48px; max-width: 1400px; margin: 0 auto; }
+
+  /* Tab content panels */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  section { margin-bottom: 40px; }
+  h2 { font-size: 20px; font-weight: 600; margin: 0 0 16px; padding-bottom: 8px;
+       border-bottom: 2px solid var(--td-1); color: var(--td-14); }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 20px;
+         box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .kpi .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi .value { font-size: 32px; font-weight: 700; margin-top: 6px; color: var(--td-14); }
+  .kpi .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .chart { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px 16px 8px;
+           box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .chart-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid var(--line); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); font-size: 13px; }
+  th { background: var(--td-1); color: var(--td-14); font-weight: 600; font-size: 12px;
+       text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;
+          background: var(--td-1); color: var(--td-14); }
+  .pill.warn { background: var(--td-4); color: #8a6d1c; }
+  .pill.ok { background: var(--td-15); color: #2c5e1f; }
+  .insights ul { margin: 0; padding-left: 20px; }
+  .insights li { margin-bottom: 8px; font-size: 14px; }
+  .insights li strong { color: var(--td-14); }
+
+  .callout { background: var(--td-4); border: 1px solid #e6c87e; color: #8a6d1c;
+             padding: 14px 18px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
+  .callout strong { color: #6a5316; }
+
+  footer { text-align: center; padding: 24px; color: var(--muted); font-size: 12px; }
+  @media (max-width: 900px) { .chart-row, .chart-row.three { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>NBA Engagement Scores Model Summary</h1>
+  <p>{{project_name}} · {{sink_database}} · Session {{session_id}}</p>
+  <div class="meta-row">
+    <span><strong>Run time:</strong> {{run_time_utc}}</span>
+    <span><strong>Profiles scored:</strong> {{profiles_scored}}</span>
+    <span><strong>Time window:</strong> {{time_filter_summary}}</span>
+    <span><strong>Scoring:</strong> {{scoring_logic}}</span>
+    <span><strong>Cart-abandon lookback:</strong> {{event_lookback_days}} days</span>
+    <span><strong>New-visitor window:</strong> {{new_customers_days}} days</span>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <div class="tab-nav-inner">
+    <button class="tab-button active" data-tab="tab-input-data">Input Data</button>
+    <button class="tab-button" data-tab="tab-scores-summary">NBA Scores Summary</button>
+    <button class="tab-button" data-tab="tab-historic">Historic Tracker</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 1 — INPUT DATA                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-input-data" class="tab-panel active">
+
+    <section>
+      <h2>Run Configuration & Source Coverage</h2>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="label">Source Tables</div><div class="value">{{source_count}}</div><div class="sub">Distinct sources unioned</div></div>
+        <div class="kpi"><div class="label">Total Events Ingested</div><div class="value">{{total_source_events}}</div><div class="sub">After all filters applied</div></div>
+        <div class="kpi"><div class="label">Profiles Scored</div><div class="value">{{profiles_scored}}</div><div class="sub">Unique customers reached</div></div>
+        <div class="kpi"><div class="label">Date Coverage</div><div class="value">{{date_range_days}}d</div><div class="sub">{{date_range_summary}}</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Source Data Contribution</h2>
+      <div class="chart-row">
+        <div class="chart"><div id="chart-source-events" style="height:380px"></div></div>
+        <div class="chart"><div id="chart-source-profiles" style="height:380px"></div></div>
+      </div>
+      <table style="margin-top: 16px;">
+        <thead>
+          <tr><th>Source Table</th><th class="num">Events</th><th class="num">Unique Profiles</th><th class="num">Conversions</th><th>Date Range</th></tr>
+        </thead>
+        <tbody>
+          {{source_table_rows}}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Run Configuration Snapshot</h2>
+      <table>
+        <tbody>
+          <tr><td><strong>Session ID</strong></td><td>{{session_id}}</td><td><strong>Profiles scored</strong></td><td>{{profiles_scored}}</td></tr>
+          <tr><td><strong>Time filter</strong></td><td>{{time_filter_summary}}</td><td><strong>Run time</strong></td><td>{{run_time_utc}}</td></tr>
+          <tr><td><strong>Scoring logic</strong></td><td>{{scoring_logic}}</td><td><strong>Cart-abandon lookback</strong></td><td>{{event_lookback_days}} days</td></tr>
+          <tr><td><strong>New-customers window</strong></td><td>{{new_customers_days}} days {{new_customers_days_note}}</td><td><strong>Dashboard build</strong></td><td>{{create_dashboard}}</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Insights & Recommendations</h2>
+      <div class="kpi insights">
+        <ul>
+          {{tab1_insights_html_li}}
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 2 — NBA SCORES SUMMARY                                          -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-scores-summary" class="tab-panel">
+
+    <section>
+      <h2>Headline KPIs</h2>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="label">Profiles Scored</div><div class="value">{{profiles_scored}}</div><div class="sub">Unique customers in the run</div></div>
+        <div class="kpi"><div class="label">Converted</div><div class="value">{{converted_count}}</div><div class="sub">{{converted_pct}} lifetime conversion rate</div></div>
+        <div class="kpi"><div class="label">Cart-Abandon Audience</div><div class="value">{{cart_abandon_count}}</div><div class="sub">{{cart_abandon_pct}} — recovery campaign target</div></div>
+        <div class="kpi"><div class="label">Recent Ad Engagement</div><div class="value">{{recent_ad_engagement_count}}</div><div class="sub">{{recent_ad_engagement_pct}} — actionable retargeting</div></div>
+        <div class="kpi"><div class="label">Cold / Dormant</div><div class="value">{{no_ads_or_purchases_count}}</div><div class="sub">{{no_ads_or_purchases_pct}} — re-activation pool</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Top-Pick NBA Recommendations</h2>
+      <div class="chart-row three">
+        <div class="chart"><div id="chart-nbc-pick" style="height:340px"></div></div>
+        <div class="chart"><div id="chart-nbt-pick" style="height:340px"></div></div>
+        <div class="chart"><div id="chart-nbcamp-pick" style="height:340px"></div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Profile-Level Engagement Flags (all 7)</h2>
+      <div class="chart" style="margin-bottom: 16px;">
+        <div id="chart-flags" style="height:420px"></div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Flag</th><th>Meaning</th><th class="num">Flagged</th><th class="num">% of Audience</th><th class="num">Converters</th><th class="num">Conv. Rate</th></tr>
+        </thead>
+        <tbody>
+          {{flags_table_rows}}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Insights & Recommendations</h2>
+      <div class="kpi insights">
+        <ul>
+          {{tab2_insights_html_li}}
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 3 — HISTORIC TRACKER                                            -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-historic" class="tab-panel">
+
+    {{historic_single_run_callout}}
+
+    <section>
+      <h2>Profiles Scored Over Time</h2>
+      <div class="chart"><div id="chart-historic-profiles" style="height:320px"></div></div>
+    </section>
+
+    <section>
+      <h2>Next Best Channel — Distribution Over Time</h2>
+      <div class="chart"><div id="chart-historic-nbc" style="height:380px"></div></div>
+    </section>
+
+    <section>
+      <h2>Next Best Time — Daypart Distribution Over Time</h2>
+      <div class="chart"><div id="chart-historic-nbt" style="height:380px"></div></div>
+    </section>
+
+    <section>
+      <h2>Next Best Campaign — Recommendation Mix Over Time</h2>
+      <div class="chart"><div id="chart-historic-nbcamp" style="height:380px"></div></div>
+    </section>
+
+    <section>
+      <h2>Engagement Flag Rates Over Time</h2>
+      <div class="chart"><div id="chart-historic-flags" style="height:420px"></div></div>
+    </section>
+
+    <section>
+      <h2>Insights & Recommendations</h2>
+      <div class="kpi insights">
+        <ul>
+          {{tab3_insights_html_li}}
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+</main>
+
+<footer>
+  Generated from <code>nba_dash_*</code> tables · {{sink_database}} · session {{session_id}} · NBA Engagement Scores workflow
+</footer>
+
+<script>
+  // TD brand palette — DO NOT substitute. Fixed across all customers/runs.
+  const TD_PALETTE = ["#B4E3E3","#ABB3DB","#D9BFDF","#F8E1B0","#8FD6D4","#828DCA","#C69ED0","#F5D389","#6AC8C6","#5867B8","#B37EC0","#F1C461","#44BAB8","#2E41A6","#8CC97E","#A05EB0"];
+  const baseLayout = {
+    paper_bgcolor: 'white', plot_bgcolor: 'white',
+    font: { family: '-apple-system, BlinkMacSystemFont, sans-serif', color: '#1F2147', size: 12 },
+    margin: { t: 50, r: 20, b: 60, l: 60 }
+  };
+  const cfg = { responsive: true, displayModeBar: false };
+
+  // ── Data injected by the skill ────────────────────────────────────────────
+
+  // Tab 1 / Tab 2 — latest-run data
+  const SRC_EVENTS = { labels: {{source_events_labels_json}}, values: {{source_events_values_json}}, text: {{source_events_text_json}} };
+  const SRC_PROFILES = { labels: {{source_profiles_labels_json}}, values: {{source_profiles_values_json}}, text: {{source_profiles_text_json}} };
+  const NBC = { labels: {{nbc_pick_labels_json}}, values: {{nbc_pick_values_json}}, text: {{nbc_pick_text_json}} };
+  const NBT = { labels: {{nbt_pick_labels_json}}, values: {{nbt_pick_values_json}}, text: {{nbt_pick_text_json}} };
+  const NBCAMP = { labels: {{nbcamp_pick_labels_json}}, values: {{nbcamp_pick_values_json}} };
+  const FLAGS_NAMES = ['conversion_flag','ad_engagement_flag','recent_ad_engagement_flag','recent_purchase_flag','cart_abandon_flag','new_visitor_flag','no_ads_or_purchases_flag'];
+  const FLAGS = {
+    flagged: {{flags_flagged_json}},
+    flagged_pct: {{flags_flagged_pct_json}},
+    converters: {{flags_converters_json}}
+  };
+
+  // Tab 3 — historic data
+  const HISTORIC = {
+    runs: {{historic_run_labels_json}},
+    sessions: {{historic_session_ids_json}},
+    profiles_scored: {{historic_profiles_scored_json}},
+    nbc_series: {{historic_nbc_series_json}},
+    nbt_series: {{historic_nbt_series_json}},
+    nbcamp_series: {{historic_nbcamp_series_json}},
+    flags_rates: {{historic_flags_rates_json}}
+  };
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.dataset.tab;
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(targetId).classList.add('active');
+      // Plotly charts inside hidden panels need a resize when revealed
+      window.dispatchEvent(new Event('resize'));
+    });
+  });
+
+  // ── TAB 1 charts ──────────────────────────────────────────────────────────
+
+  // Source events horizontal bar
+  Plotly.newPlot('chart-source-events', [{
+    type: 'bar', orientation: 'h',
+    x: SRC_EVENTS.values, y: SRC_EVENTS.labels,
+    marker: { color: TD_PALETTE.slice(0, (SRC_EVENTS.labels || []).length) },
+    text: SRC_EVENTS.text, textposition: 'outside', cliponaxis: false
+  }], {
+    ...baseLayout, title: { text: 'Events Ingested per Source', font: { size: 14 } },
+    xaxis: { title: 'Events' }, yaxis: { automargin: true }
+  }, cfg);
+
+  // Unique profiles per source
+  Plotly.newPlot('chart-source-profiles', [{
+    type: 'bar', orientation: 'h',
+    x: SRC_PROFILES.values, y: SRC_PROFILES.labels,
+    marker: { color: TD_PALETTE.slice(0, (SRC_PROFILES.labels || []).length) },
+    text: SRC_PROFILES.text, textposition: 'outside', cliponaxis: false
+  }], {
+    ...baseLayout, title: { text: 'Unique Profiles Reached per Source', font: { size: 14 } },
+    xaxis: { title: 'Unique Profiles' }, yaxis: { automargin: true }
+  }, cfg);
+
+  // ── TAB 2 charts ──────────────────────────────────────────────────────────
+
+  // Next Best Channel pick (top N, hbar ASC)
+  Plotly.newPlot('chart-nbc-pick', [{
+    type: 'bar', orientation: 'h',
+    x: NBC.values, y: NBC.labels,
+    marker: { color: TD_PALETTE.slice(0, (NBC.labels || []).length).reverse() },
+    text: NBC.text, textposition: 'outside', cliponaxis: false
+  }], {
+    ...baseLayout, title: { text: 'Next Best Channel (top picks)', font: { size: 14 } },
+    xaxis: { title: 'Profiles' }, yaxis: { automargin: true }
+  }, cfg);
+
+  // Next Best Time pick (4 dayparts)
+  Plotly.newPlot('chart-nbt-pick', [{
+    type: 'bar',
+    x: NBT.labels, y: NBT.values,
+    marker: { color: TD_PALETTE.slice(0, 4) },
+    text: NBT.text, textposition: 'outside', cliponaxis: false
+  }], {
+    ...baseLayout, title: { text: 'Next Best Time (daypart pick)', font: { size: 14 } },
+    xaxis: { title: 'Daypart' }, yaxis: { title: 'Profiles' }
+  }, cfg);
+
+  // Next Best Campaign pick (donut)
+  Plotly.newPlot('chart-nbcamp-pick', [{
+    type: 'pie',
+    labels: NBCAMP.labels, values: NBCAMP.values,
+    marker: { colors: [TD_PALETTE[1], TD_PALETTE[5], TD_PALETTE[12], TD_PALETTE[3], TD_PALETTE[7], TD_PALETTE[14]] },
+    hole: 0.45, textinfo: 'label+percent', textposition: 'outside', sort: false
+  }], {
+    ...baseLayout, title: { text: 'Next Best Campaign (recommendation)', font: { size: 14 } }, showlegend: false
+  }, cfg);
+
+  // Engagement flags grouped bar
+  Plotly.newPlot('chart-flags', [
+    { name: 'Flagged (=1)', type: 'bar', x: FLAGS_NAMES, y: FLAGS.flagged,
+      marker: { color: TD_PALETTE[9] }, text: FLAGS.flagged_pct, textposition: 'outside' },
+    { name: 'Converters in flagged group', type: 'bar', x: FLAGS_NAMES, y: FLAGS.converters,
+      marker: { color: TD_PALETTE[13] } }
+  ], {
+    ...baseLayout, title: { text: 'Profile-Level Engagement Flags — flagged audience size + converters', font: { size: 14 } },
+    xaxis: { tickangle: -25 }, yaxis: { title: 'Profiles' },
+    barmode: 'group', legend: { orientation: 'h', y: -0.35 },
+    margin: { t: 50, r: 20, b: 130, l: 60 }
+  }, cfg);
+
+  // ── TAB 3 charts ──────────────────────────────────────────────────────────
+
+  // Profiles scored trend
+  Plotly.newPlot('chart-historic-profiles', [{
+    type: 'scatter', mode: 'lines+markers',
+    x: HISTORIC.runs, y: HISTORIC.profiles_scored,
+    line: { color: TD_PALETTE[9], width: 3 },
+    marker: { size: 10, color: TD_PALETTE[13] },
+    text: (HISTORIC.profiles_scored || []).map(v => (v != null ? Number(v).toLocaleString() : '0')),
+    hovertemplate: '%{x}<br>%{y:,} profiles<extra></extra>'
+  }], {
+    ...baseLayout, title: { text: 'Profiles Scored per Run', font: { size: 14 } },
+    xaxis: { title: 'Run date', type: 'category' }, yaxis: { title: 'Profiles', rangemode: 'tozero' }
+  }, cfg);
+
+  // Next Best Channel trend (one line per top channel)
+  const nbcTraces = (HISTORIC.nbc_series || []).map((s, i) => ({
+    type: 'scatter', mode: 'lines+markers', name: s.name,
+    x: HISTORIC.runs, y: s.values,
+    line: { color: TD_PALETTE[i % TD_PALETTE.length], width: 2 },
+    marker: { size: 8 }
+  }));
+  Plotly.newPlot('chart-historic-nbc', nbcTraces, {
+    ...baseLayout, title: { text: 'Profiles per Top Channel — Run-over-Run', font: { size: 14 } },
+    xaxis: { title: 'Run date', type: 'category' }, yaxis: { title: 'Profiles', rangemode: 'tozero' },
+    legend: { orientation: 'h', y: -0.2 },
+    margin: { t: 50, r: 20, b: 100, l: 60 }
+  }, cfg);
+
+  // Next Best Time trend
+  const nbtTraces = (HISTORIC.nbt_series || []).map((s, i) => ({
+    type: 'scatter', mode: 'lines+markers', name: s.name,
+    x: HISTORIC.runs, y: s.values,
+    line: { color: TD_PALETTE[i % TD_PALETTE.length], width: 2 },
+    marker: { size: 8 }
+  }));
+  Plotly.newPlot('chart-historic-nbt', nbtTraces, {
+    ...baseLayout, title: { text: 'Profiles per Daypart — Run-over-Run', font: { size: 14 } },
+    xaxis: { title: 'Run date', type: 'category' }, yaxis: { title: 'Profiles', rangemode: 'tozero' },
+    legend: { orientation: 'h', y: -0.2 },
+    margin: { t: 50, r: 20, b: 100, l: 60 }
+  }, cfg);
+
+  // Next Best Campaign trend (stacked area to show mix over time)
+  const nbcampTraces = (HISTORIC.nbcamp_series || []).map((s, i) => ({
+    type: 'scatter', mode: 'lines', name: s.name,
+    x: HISTORIC.runs, y: s.values,
+    stackgroup: 'one',
+    line: { color: TD_PALETTE[i % TD_PALETTE.length], width: 0 },
+    fillcolor: TD_PALETTE[i % TD_PALETTE.length]
+  }));
+  Plotly.newPlot('chart-historic-nbcamp', nbcampTraces, {
+    ...baseLayout, title: { text: 'Campaign Recommendation Mix — Run-over-Run', font: { size: 14 } },
+    xaxis: { title: 'Run date', type: 'category' }, yaxis: { title: 'Profiles', rangemode: 'tozero' },
+    legend: { orientation: 'h', y: -0.2 },
+    margin: { t: 50, r: 20, b: 100, l: 60 }
+  }, cfg);
+
+  // Engagement flag rates trend (one line per flag, %)
+  const flagsTraces = (HISTORIC.flags_rates || []).map((s, i) => ({
+    type: 'scatter', mode: 'lines+markers', name: s.name,
+    x: HISTORIC.runs, y: s.values,
+    line: { color: TD_PALETTE[i % TD_PALETTE.length], width: 2 },
+    marker: { size: 7 },
+    hovertemplate: '%{x}<br>%{fullData.name}: %{y:.1f}%<extra></extra>'
+  }));
+  Plotly.newPlot('chart-historic-flags', flagsTraces, {
+    ...baseLayout, title: { text: 'Engagement Flag Rates — Run-over-Run (% of audience flagged)', font: { size: 14 } },
+    xaxis: { title: 'Run date', type: 'category' }, yaxis: { title: 'Flagged (%)', rangemode: 'tozero' },
+    legend: { orientation: 'h', y: -0.25 },
+    margin: { t: 50, r: 20, b: 130, l: 60 }
+  }, cfg);
+</script>
+
+</body>
+</html>

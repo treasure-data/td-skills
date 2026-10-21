@@ -1,0 +1,23 @@
+timezone: UTC
+
+# Schedule — enabled only after the first validated run and the user's approval:
+# schedule:
+#   daily>: "02:00:00"
+
+_export:
+  !include : 'input_params.yaml'
+  td:
+    database: ${sink_database}
+
++create_sink_database:
+  td_ddl>:
+  create_databases: ["${sink_database}"]
+
++data_prep_and_sink:
+  call>: SLUG_data_prep.dig
+
++cleanup:
+  if>: ${cleanup_staging == 'yes'}
+  _do:
+    td_ddl>:
+    drop_tables: ["${project_prefix}_stg_events"]

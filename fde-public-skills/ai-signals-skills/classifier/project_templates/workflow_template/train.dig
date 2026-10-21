@@ -1,0 +1,100 @@
+timezone: UTC
+
+_export:
+  !include : 'config.yml'
+  td:
+    database: ${sink_database}
+  mode: 'train'
+
+# 0. Build ${train_input_table} (session_id, ${user_id_column}, ${target_column}
+#    and feature columns) with the feature SQL in sql/
++data_prep:
+  call>: data_prep.dig
+
+# 1. Guard: latest batch is non-empty with both classes present
++check_training_dataset:
+  td>:
+  query: |
+    SELECT session_id, COUNT(*) AS n, COALESCE(AVG(${target_column}), 0) AS pos_rate
+    FROM ${train_input_table}
+    WHERE session_id = (SELECT MAX(session_id) FROM ${train_input_table})
+    GROUP BY session_id
+  store_last_results: true
+
++assert_training_dataset:
+  if>: ${td.last_results.n == null || td.last_results.n == 0 || td.last_results.pos_rate == 0 || td.last_results.pos_rate == 1}
+  _do:
+    fail>: "Training dataset invalid in ${train_input_table}: n=${td.last_results.n}, pos_rate=${td.last_results.pos_rate}"
+
+# 2. Train on the latest batch
++train_classifier:
+  http>: ${ml_batch_api_endpoint}/v1/runs
+  method: POST
+  headers:
+    - authorization: ${secret:td.apikey}
+  store_content: true
+  content:
+    input_table: ${sink_database}.${train_input_table}
+    output_table: ${sink_database}.${train_output_table}
+    solution_name: classifier_train
+    version: ${ml_batch_api_version}
+    solution_arguments:
+      session_id: ${td.last_results.session_id}
+      model_name: ${model_name}
+      model_type: ${model_type}
+      target_column: ${target_column}
+      user_id_column: ${user_id_column}
+      columns_to_drop: ${columns_to_drop}
+      test_size: ${test_size}
+      tuning:
+        n_trials: ${n_trials}
+        cv_folds: ${cv_folds}
+        fbeta_beta: ${fbeta_beta}
+        optuna_metric: ${optuna_metric}
+        early_stopping_rounds: ${early_stopping_rounds}
+        class_balance_strategy: ${class_balance_strategy}
+        n_estimators_min: ${n_estimators_min}
+        n_estimators_max: ${n_estimators_max}
+        max_depth_min: ${max_depth_min}
+        max_depth_max: ${max_depth_max}
+        learning_rate_min: ${learning_rate_min}
+        learning_rate_max: ${learning_rate_max}
+      threshold:
+        strategy: ${threshold_strategy}
+        min_metric_floor: ${min_metric_floor}
+        fixed_threshold: ${fixed_threshold}
+      metric:
+        eval_metric: ${eval_metric}
+        corr_threshold: ${corr_threshold}
+        shap_max_samples: ${shap_max_samples}
+      xgboost:
+        subsample_min: ${subsample_min}
+        subsample_max: ${subsample_max}
+        colsample_bytree_min: ${colsample_bytree_min}
+        colsample_bytree_max: ${colsample_bytree_max}
+        min_child_weight_min: ${min_child_weight_min}
+        min_child_weight_max: ${min_child_weight_max}
+        reg_alpha_min: ${reg_alpha_min}
+        reg_alpha_max: ${reg_alpha_max}
+        reg_lambda_min: ${reg_lambda_min}
+        reg_lambda_max: ${reg_lambda_max}
+        gamma_min: ${gamma_min}
+        gamma_max: ${gamma_max}
+
+# 3. Wait for completion. The status endpoint answers 408 while RUNNING (http>
+#    keeps retrying) and 200 when finished; _retry extends the wait for long runs.
++wait_for_training:
+  _retry:
+    limit: 5
+    interval: 60
+    interval_type: constant
+  http>: ${ml_batch_api_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
+  method: GET
+  headers:
+    - authorization: ${secret:td.apikey}
+  store_content: true
+
++assert_training_succeeded:
+  if>: ${['FAILED','ERROR','CANCELLED','CANCELED'].indexOf(JSON.parse(http.last_content).status) >= 0 || JSON.parse(http.last_content).error_messages.length > 0}
+  _do:
+    fail>: "Training run failed: ${http.last_content}"

@@ -1,0 +1,58 @@
+_export:
+  !include : 'input_params.yaml'
+  td:
+    database: ${sink_database}
+  # First day re-processed by an incremental run, as 'YYYY-MM-DD' — the staging window (01) and the
+  # DELETE below use this same day-truncated bound, so a rerun never leaves a partial day behind.
+  incr_start_day: ${moment(session_time).utc().startOf('day').subtract(incremental_look_back_days, 'days').format('YYYY-MM-DD')}
+
+# 1. Staging: this run's window of cleaned source rows (always fully replaced)
++stage_events:
+  td>: sql/01_stage_events.sql
+  engine: presto
+  create_table: ${project_prefix}_stg_events
+
+# 2. Guard: stop before writing SINK tables if staging is empty (full runs) or has rows without a date
++check_staging:
+  td>: sql/02_check_staging.sql
+  engine: presto
+  store_last_results: true
+
++assert_staging:
+  if>: ${(refresh_mode == 'full' && td.last_results.n_rows == 0) || td.last_results.null_dates > 0}
+  _do:
+    fail>: "Staging check failed: n_rows=${td.last_results.n_rows}, null_dates=${td.last_results.null_dates} — check source_table, history_start, table_filter and event_time_expr"
+
+# 3. SINK tables — one task per table: full = replace the table; incremental = delete the window, then append it.
+#    Never use create_table: in the incremental branch (it would delete all older history).
++sink_daily_metrics:
+  if>: ${refresh_mode == 'full'}
+  _do:
+    td>: sql/10_sink_daily_metrics.sql
+    engine: presto
+    create_table: ${project_prefix}_sink_daily_metrics
+  _else_do:
+    +delete_window:
+      td>:
+        data: "DELETE FROM ${project_prefix}_sink_daily_metrics WHERE event_date >= '${incr_start_day}'"
+      engine: presto
+    +append_window:
+      td>: sql/10_sink_daily_metrics.sql
+      engine: presto
+      insert_into: ${project_prefix}_sink_daily_metrics
+
++sink_daily_users:
+  if>: ${refresh_mode == 'full'}
+  _do:
+    td>: sql/11_sink_daily_users.sql
+    engine: presto
+    create_table: ${project_prefix}_sink_daily_users
+  _else_do:
+    +delete_window:
+      td>:
+        data: "DELETE FROM ${project_prefix}_sink_daily_users WHERE event_date >= '${incr_start_day}'"
+      engine: presto
+    +append_window:
+      td>: sql/11_sink_daily_users.sql
+      engine: presto
+      insert_into: ${project_prefix}_sink_daily_users

@@ -1,0 +1,44 @@
+###################### SCHEDULE PARAMS ################################## 
+# timezone: UTC #(default system timezone)
+ 
+# schedule: 
+#   monthly>: 3,06:00:00 
+
+####################### ERROR EMAIL NOTIFICATION ########################## 
+# _error:
+#  mail>: body.txt
+#  subject: RFM Model Workflow failed - Client Name
+#  to: ['your-team@example.com']
+
+####################### MAIN WORKFLOW ######################################
+_export:
+  !include : 'config/input_params.yml'
+  database: ${globals.sink_database}
+  td:
+    database: ${globals.sink_database}
+
+############## CREATE SINK DATABASE IF NOT EXIST ############################
++create_sink_database:
+  td_ddl>:
+  create_databases: ["${globals.sink_database}"]
+
+################ UNION ALL CUSTOMER BEHAVIOR TABLES #########################
++check_if_union_activity_must_be_built:
+  if>: ${globals.built_union_activity == "yes"}
+  _do:
+    +run_data_prep_queries:
+      call>: rfm_union_all_activity.dig
+
+############## RUN RFM ALGORITHM ############################################
+# Scores the input table with the AI Signals RFM model (ml-batch-api)
++train_rfm_model:
+  call>: rfm_ai_signals.dig
+
+############## AGG STATS FOR DASHBOARD ############################################
++agg_model_stats:
+  call>: rfm_agg_stats.dig
+
+
+
+
+

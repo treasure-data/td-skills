@@ -213,6 +213,21 @@
         "./treasure-work-skills/graflow",
         "./treasure-work-skills/portal-guide"
       ]
+    },
+    {
+      "name": "fde-public-skills",
+      "description": "Treasure AI FDE setup skills. AI Signals models on your Treasure Data account, each with a project agent and dashboard: RFM customer segmentation, Next Best Product recommendations, Multi-Touch Attribution, Next Best Action engagement scores, and propensity scoring (binary classification for churn, lead scoring, conversion or response). Custom AI agents: an audience and segment-analysis agent for any CDP parent segment, and a custom HTML dashboard (new, or converted from a .dash export, HTML file or screenshot) with its own dashboard agent.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./fde-public-skills/ai-signals-skills/rfm",
+        "./fde-public-skills/ai-signals-skills/nbp",
+        "./fde-public-skills/ai-signals-skills/mta",
+        "./fde-public-skills/ai-signals-skills/nba-scores",
+        "./fde-public-skills/ai-signals-skills/classifier",
+        "./fde-public-skills/custom-agent-skills/custom-audience-agent",
+        "./fde-public-skills/custom-agent-skills/custom-dashboard-builder"
+      ]
     }
   ]
 }

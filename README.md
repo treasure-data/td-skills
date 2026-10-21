@@ -113,6 +113,18 @@ Mirror of `studio-skills` updated for the renamed `mcp__work__*` MCP namespace (
 - **[treasure-work-skills/agent-review](./treasure-work-skills/agent-review)** - Review and validate agents before activating, with structural (AGENTS.md schema) and quality checks via parallel sub-agents
 - **[treasure-work-skills/web-search](./treasure-work-skills/web-search)** - Web search and URL content extraction using `web_search` with query optimization, search operators, and structured research patterns
 
+### FDE Public Skills
+
+Setup skills for Treasure AI Studio, maintained by the Treasure AI FDE Team. Each one walks through a setup in a Work Folder and installs the project's own agent. See [fde-public-skills](./fde-public-skills).
+
+- **[fde-public-skills/ai-signals-skills/rfm](./fde-public-skills/ai-signals-skills/rfm)** (`fde-rfm`) - RFM customer segmentation with the AI Signals RFM model: workflow, Parent Segment attributes, project agent and dashboard
+- **[fde-public-skills/ai-signals-skills/nbp](./fde-public-skills/ai-signals-skills/nbp)** (`fde-nbp`) - Next Best Product recommendations per customer with the AI Signals NBP model
+- **[fde-public-skills/ai-signals-skills/mta](./fde-public-skills/ai-signals-skills/mta)** (`fde-mta`) - Multi-Touch Attribution with standard, Markov and Shapley models
+- **[fde-public-skills/ai-signals-skills/nba-scores](./fde-public-skills/ai-signals-skills/nba-scores)** (`fde-nba-scores`) - Next Best Action engagement scores: best time, channel and campaign per customer, engagement flags
+- **[fde-public-skills/ai-signals-skills/classifier](./fde-public-skills/ai-signals-skills/classifier)** (`fde-classifier`) - Propensity scoring for any yes/no outcome (churn, lead scoring, conversion, response) with the AI Signals classifier
+- **[fde-public-skills/custom-agent-skills/custom-audience-agent](./fde-public-skills/custom-agent-skills/custom-audience-agent)** (`fde-custom-audience-agent`) - A customer-specific audience and segment-analysis agent on any parent segment, evaluated with ten test prompts
+- **[fde-public-skills/custom-agent-skills/custom-dashboard-builder](./fde-public-skills/custom-agent-skills/custom-dashboard-builder)** (`fde-custom-dashboard-builder`) - A custom HTML dashboard on TD data (new, or from a `.dash` export, HTML file or screenshot) with its own dashboard agent
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
@@ -138,6 +150,7 @@ Mirror of `studio-skills` updated for the renamed `mcp__work__*` MCP namespace (
    - `studio-skills` - Treasure Studio skills: workspace management, skill creation, React dashboards, scheduled tasks, and web search
    - `treasure-work-skills` - Treasure Work skills (same set as `studio-skills`, but updated for the renamed `mcp__work__*` MCP namespace)
    - `creative-skills` - Multi-channel ad ideation, brand compliance, and brand onboarding
+   - `fde-public-skills` - AI Signals setups (RFM, NBP, MTA, NBA engagement scores, Classifier) and custom agents (audience agent, dashboard builder)
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -151,6 +164,7 @@ Mirror of `studio-skills` updated for the renamed `mcp__work__*` MCP namespace (
    /plugin install studio-skills@td-skills
    /plugin install treasure-work-skills@td-skills
    /plugin install creative-skills@td-skills
+   /plugin install fde-public-skills@td-skills
    ```
 
 ### Invoking Skills

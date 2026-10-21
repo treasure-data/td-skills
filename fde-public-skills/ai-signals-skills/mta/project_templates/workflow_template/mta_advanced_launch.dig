@@ -1,0 +1,35 @@
+# ##################### SCHEDULE PARAMS ##################################
+# timezone: UTC
+
+# schedule:
+#   weekly>: Sun, 07:00:00
+
+###################### ERROR EMAIL NOTIFICATION ##########################
+# _error:
+#   mail>: body.txt
+#   subject: MTA Workflow Failed - Project Name
+#   to: ['your-team@example.com']
+
+####################### MAIN WORKFLOW ##################################################
+_export:
+  !include : 'config/input_params.yml'
+  td:
+    database: ${sink_database}
+
+############ CREATE REPORTING DATABASE IF NOT EXIST ###############################
++create_sink_database:
+  td_ddl>:
+  create_databases: ["${sink_database}"]
+
+
+####### PREPROCESS SOURCE TABLES AND UNION ################################################
++create_union_src_tables:
+  call>: mta_union_src_tables.dig
+
+############# PARSE CONVERSION JOURNEYS AND MTA MODELS ##############################
++create_journeys_and_mta_models:
+  call>: mta_journeys_and_models.dig
+
+#################### RUN AI SIGNALS MARKOV AND SHAPLEY MODELS ###########
++execute_markov_shapley_models:
+  call>: mta_markov_shapley_ai_signals.dig

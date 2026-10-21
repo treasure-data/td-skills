@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<!--
+  Dashboard template (HTML Client). Do not edit data here: generate-data.js replaces the
+  CHARTJS_PLACEHOLDER marker (in <head>) with the vendored Chart.js and the DATA_PLACEHOLDER marker
+  (end of <body>) with the RAW data script, then writes dashboard.html. Keep both markers exactly once.
+  Layout, KPIs, charts, tables and filters all come from RAW.layout (defined in generate-data.js).
+
+  RAW = {
+    meta:     { title, subtitle, source, data_start, data_end, generated_at, timezone, currency },
+    datasets: { <name>: [ {field: value, ...}, ... ] },          // aggregated rows only
+    layout: {
+      date_field: "date" | null,                                 // ISO strings: YYYY-MM-DD / YYYY-MM / YYYY
+      filters:  [ { key, label, field, scope: "global" | "<tab id>" } ],
+      tabs: [ { id, label,
+        kpis:   [ { label, dataset, agg, field, num, den, format, info, note } ],
+        charts: [ { type: "line"|"bar"|"hbar"|"doughnut", title, dataset, x, series: [ {label, agg, field, num, den} ],
+                    top, info, note } ],
+        tables: [ { title, dataset, columns: [ {label, field, agg, num, den, format} ], group_by, sort, top, note } ] } ]
+    }
+  }
+  agg: sum | count | min | max | ratio (sum(num) / sum(den)) | distinct (only on row-level datasets) | fixed (first row, not filtered)
+  format: number | currency | percent | decimal
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard</title>
+<!-- CHARTJS_PLACEHOLDER -->
+<style>
+  :root {
+    --primary: #2D40AA; --accent-1: #847BF2; --accent-2: #C466D4; --accent-3: #8BBCFD;
+    --bg: #F7F5F9; --card: #FFFFFF; --line: #E8E9ED; --ink: #000000; --muted: #666666;
+    --success: #8CC97E; --warning: #EEB53A; --error: #E4002B;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: Manrope, Arial, sans-serif; font-size: 14px; }
+  header { background: var(--card); border-bottom: 1px solid var(--line); padding: 16px 24px; }
+  h1 { font-family: Poppins, Arial, sans-serif; font-weight: 600; color: var(--primary); font-size: 22px; margin: 0; }
+  h2 { font-family: Poppins, Arial, sans-serif; font-weight: 600; color: var(--primary); font-size: 15px; margin: 0 0 10px; }
+  .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; padding: 12px 24px; background: var(--card); border-bottom: 1px solid var(--line); }
+  .bar label { display: flex; flex-direction: column; font-size: 11px; color: var(--muted); gap: 4px; }
+  .bar select, .bar input { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; min-width: 140px; }
+  .bar button { font: inherit; padding: 7px 12px; border: 1px solid var(--accent-1); color: var(--accent-1); background: none; border-radius: 6px; cursor: pointer; }
+  nav { display: flex; gap: 4px; padding: 0 24px; background: var(--card); border-bottom: 1px solid var(--line); }
+  nav button { font: inherit; border: none; background: none; padding: 12px 14px; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; }
+  nav button.active { color: var(--primary); border-bottom-color: var(--accent-1); font-weight: 600; }
+  main { padding: 20px 24px; }
+  .tab { display: none; } .tab.active { display: block; }
+  .tabfilters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .kpi .label { color: var(--muted); font-size: 12px; } .kpi .value { font-family: Poppins, Arial, sans-serif; font-size: 24px; font-weight: 600; color: var(--primary); margin-top: 6px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .chartbox { position: relative; height: 300px; }
+  .info { cursor: help; color: var(--accent-1); margin-left: 4px; }
+  .note { color: var(--muted); font-size: 11px; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; } td.num, th.num { text-align: right; }
+  th { color: var(--muted); font-weight: 600; }
+  .empty { color: var(--muted); padding: 20px; text-align: center; }
+  .error { color: var(--error); padding: 24px; }
+</style>
+</head>
+<body>
+<header><h1 id="title"></h1><div class="meta" id="meta"></div></header>
+<div class="bar" id="globalFilters"></div>
+<nav id="tabs"></nav>
+<main id="panels"></main>
+<!-- DATA_PLACEHOLDER -->
+<script>
+(function () {
+  'use strict';
+  var SERIES = ['#847BF2', '#8BBCFD', '#FDB893', '#C466D4', '#FEAFD9', '#FFE2BD', '#44BAB8', '#8CC97E', '#EEB53A', '#5FCFD8'];
+  if (typeof RAW === 'undefined' || typeof Chart === 'undefined') {
+    document.getElementById('panels').innerHTML = '<div class="error">No data: build this file with generate-data.js.</div>';
+    return;
+  }
+  var L = RAW.layout, M = RAW.meta || {}, charts = {}, state = {}, activeTab = null, colorMap = {};
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function fmt(v, f) {
+    if (v == null || !isFinite(v)) return '—';
+    if (f === 'percent') return (v * 100).toFixed(1) + '%';
+    if (f === 'decimal') return v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    if (f === 'currency') return (M.currency || '$') + v.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    return v.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  }
+  function colorFor(key, i) { if (!(key in colorMap)) colorMap[key] = SERIES[Object.keys(colorMap).length % SERIES.length]; return colorMap[key]; }
+
+  // A filter applies to a widget if it is global or belongs to the widget's tab and the dataset has its field.
+  function filtersFor(tabId) { return L.filters.filter(function (f) { return f.scope === 'global' || f.scope === tabId; }); }
+  function pass(row, tabId, skipField) {
+    var df = L.date_field;
+    if (df && row[df] != null && (state.from || state.to)) {
+      var d = String(row[df]), n = d.length;
+      if (state.from && d < state.from.slice(0, n)) return false;
+      if (state.to && d > state.to.slice(0, n)) return false;
+    }
+    return filtersFor(tabId).every(function (f) {
+      var v = state[f.key];
+      return !v || v === '__all' || f.field === skipField || !(f.field in row) || String(row[f.field]) === v;
+    });
+  }
+  function rowsOf(ds, tabId, skipField) { return (RAW.datasets[ds] || []).filter(function (r) { return pass(r, tabId, skipField); }); }
+  function agg(rows, spec) {
+    var a = spec.agg || 'sum';
+    if (a === 'fixed') { var all = RAW.datasets[spec.dataset] || []; return all.length ? Number(all[0][spec.field]) : null; }
+    if (a === 'count') return rows.length;
+    if (a === 'distinct') { var s = {}; rows.forEach(function (r) { s[r[spec.field]] = 1; }); return Object.keys(s).length; }
+    if (a === 'ratio') { var nu = 0, de = 0; rows.forEach(function (r) { nu += Number(r[spec.num]) || 0; de += Number(r[spec.den]) || 0; }); return de ? nu / de : null; }
+    var vals = rows.map(function (r) { return Number(r[spec.field]); }).filter(function (x) { return isFinite(x); });
+    if (!vals.length) return null;
+    if (a === 'min') return Math.min.apply(null, vals);
+    if (a === 'max') return Math.max.apply(null, vals);
+    return vals.reduce(function (s, x) { return s + x; }, 0);
+  }
+  function groupBy(rows, field) { var g = {}; rows.forEach(function (r) { var k = r[field] == null ? 'Unknown' : String(r[field]); (g[k] = g[k] || []).push(r); }); return g; }
+  function titled(parent, text, info) { var h = el('h2', null, text); if (info) { var i = el('span', 'info', 'ⓘ'); i.title = info; h.appendChild(i); } parent.appendChild(h); }
+
+  function filterControl(f) {
+    var lab = el('label', null, f.label), sel = el('select');
+    var values = {};
+    Object.keys(RAW.datasets).forEach(function (ds) { (RAW.datasets[ds] || []).forEach(function (r) { if (f.field in r && r[f.field] != null) values[String(r[f.field])] = 1; }); });
+    var o = el('option', null, 'All'); o.value = '__all'; sel.appendChild(o);
+    Object.keys(values).sort().forEach(function (v) { var op = el('option', null, v); op.value = v; sel.appendChild(op); });
+    sel.addEventListener('change', function () { state[f.key] = sel.value; renderTab(activeTab); });
+    lab.appendChild(sel); return lab;
+  }
+  function dateControls(bar) {
+    if (!L.date_field) return;
+    ['from', 'to'].forEach(function (k) {
+      var lab = el('label', null, k === 'from' ? 'From' : 'To'), inp = el('input'); inp.type = 'date';
+      inp.value = (k === 'from' ? M.data_start : M.data_end) || '';
+      inp.addEventListener('change', function () { state[k] = inp.value; if (state.from && state.to && state.from > state.to) { var t = state.from; state.from = state.to; state.to = t; } renderTab(activeTab); });
+      lab.appendChild(inp); bar.appendChild(lab);
+    });
+  }
+
+  function renderKpis(tab, box) {
+    (tab.kpis || []).forEach(function (k) {
+      var c = el('div', 'card kpi'), lab = el('div', 'label', k.label);
+      if (k.info) { var i = el('span', 'info', 'ⓘ'); i.title = k.info; lab.appendChild(i); }
+      c.appendChild(lab); c.appendChild(el('div', 'value', fmt(agg(rowsOf(k.dataset, tab.id), k), k.format)));
+      if (k.note) c.appendChild(el('div', 'note', k.note));
+      box.appendChild(c);
+    });
+  }
+  function renderChart(tab, spec, idx, box) {
+    var card = el('div', 'card'); titled(card, spec.title, spec.info);
+    var holder = el('div', 'chartbox'), canvas = el('canvas'); holder.appendChild(canvas); card.appendChild(holder);
+    if (spec.note) card.appendChild(el('div', 'note', spec.note));
+    box.appendChild(card);
+    // Breakdowns apply every active filter except one on their own dimension.
+    var rows = rowsOf(spec.dataset, tab.id, spec.type === 'line' ? null : spec.x), groups = groupBy(rows, spec.x);
+    var keys = Object.keys(groups);
+    if (spec.type === 'line') keys.sort();
+    else keys.sort(function (a, b) { return (agg(groups[b], spec.series[0]) || 0) - (agg(groups[a], spec.series[0]) || 0); });
+    if (spec.top) keys = keys.slice(0, spec.top);
+    var id = tab.id + ':' + idx;
+    if (charts[id]) charts[id].destroy();
+    if (!keys.length) { holder.textContent = ''; holder.appendChild(el('div', 'empty', 'No data for the selected filters')); return; }
+    var type = spec.type === 'hbar' ? 'bar' : spec.type;
+    var datasets = spec.series.map(function (s, i) {
+      var data = keys.map(function (k) { return agg(groups[k], s); });
+      var color = spec.type === 'doughnut' ? keys.map(colorFor) : colorFor(s.label, i);
+      return { label: s.label, data: data, backgroundColor: color, borderColor: spec.type === 'line' ? color : undefined, fill: false, tension: 0.2 };
+    });
+    charts[id] = new Chart(canvas, { type: type, data: { labels: keys, datasets: datasets },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: spec.type === 'hbar' ? 'y' : 'x',
+        plugins: { legend: { display: spec.series.length > 1 || spec.type === 'doughnut' } } } });
+  }
+  function renderTable(tab, spec, box) {
+    var card = el('div', 'card'); titled(card, spec.title, spec.info);
+    var rows = rowsOf(spec.dataset, tab.id), out;
+    if (spec.group_by) {
+      var g = groupBy(rows, spec.group_by);
+      out = Object.keys(g).map(function (k) { var r = {}; spec.columns.forEach(function (c) { r[c.field || c.label] = c.agg ? agg(g[k], c) : (c.field === spec.group_by ? k : g[k][0][c.field]); }); return r; });
+    } else out = rows.slice();
+    if (spec.sort) out.sort(function (a, b) { return (Number(b[spec.sort]) || 0) - (Number(a[spec.sort]) || 0); });
+    var total = out.length, top = spec.top || 50; out = out.slice(0, top);
+    var t = el('table'), hr = el('tr');
+    spec.columns.forEach(function (c) { hr.appendChild(el('th', c.format ? 'num' : null, c.label)); }); t.appendChild(hr);
+    out.forEach(function (r) { var tr = el('tr'); spec.columns.forEach(function (c) { var v = r[c.field || c.label]; tr.appendChild(el('td', c.format ? 'num' : null, c.format ? fmt(Number(v), c.format) : (v == null ? '—' : String(v)))); }); t.appendChild(tr); });
+    card.appendChild(total ? t : el('div', 'empty', 'No data for the selected filters'));
+    card.appendChild(el('div', 'note', 'Showing top ' + Math.min(top, total) + ' of ' + total + (spec.note ? ' · ' + spec.note : '')));
+    box.appendChild(card);
+  }
+  function renderTab(tab) {
+    var panel = document.getElementById('panel-' + tab.id); panel.textContent = '';
+    try {
+      var tf = el('div', 'tabfilters'); L.filters.filter(function (f) { return f.scope === tab.id; }).forEach(function (f) { tf.appendChild(filterControl(f)); });
+      if (tf.childNodes.length) panel.appendChild(tf);
+      var k = el('div', 'kpis'); renderKpis(tab, k); panel.appendChild(k);
+      var g = el('div', 'grid'); (tab.charts || []).forEach(function (c, i) { renderChart(tab, c, i, g); }); panel.appendChild(g);
+      (tab.tables || []).forEach(function (t) { renderTable(tab, t, panel); });
+    } catch (e) { panel.appendChild(el('div', 'error', 'This tab failed to render: ' + e.message)); }
+  }
+
+  document.title = M.title || 'Dashboard';
+  document.getElementById('title').textContent = M.title || 'Dashboard';
+  document.getElementById('meta').textContent = [M.subtitle, M.data_start && ('Data ' + M.data_start + ' – ' + M.data_end), M.timezone, M.generated_at && ('as of ' + M.generated_at)].filter(Boolean).join(' · ');
+  var bar = document.getElementById('globalFilters');
+  dateControls(bar); state.from = M.data_start || ''; state.to = M.data_end || '';
+  L.filters.filter(function (f) { return f.scope === 'global'; }).forEach(function (f) { bar.appendChild(filterControl(f)); });
+  var reset = el('button', null, 'Reset filters'); reset.addEventListener('click', function () { location.reload(); }); bar.appendChild(reset);
+  var nav = document.getElementById('tabs'), panels = document.getElementById('panels');
+  L.tabs.forEach(function (tab, i) {
+    var b = el('button', null, tab.label), p = el('section', 'tab'); p.id = 'panel-' + tab.id;
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(nav.children, function (x) { x.classList.remove('active'); });
+      Array.prototype.forEach.call(panels.children, function (x) { x.classList.remove('active'); });
+      b.classList.add('active'); p.classList.add('active'); activeTab = tab; renderTab(tab);
+    });
+    nav.appendChild(b); panels.appendChild(p);
+    if (i === 0) { b.classList.add('active'); p.classList.add('active'); activeTab = tab; }
+  });
+  if (L.tabs.length < 2) nav.style.display = 'none';
+  renderTab(activeTab);
+})();
+</script>
+</body>
+</html>

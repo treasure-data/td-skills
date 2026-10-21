@@ -1,0 +1,65 @@
+_export:
+  !include : config/input_params.yml
+  td:
+    engine: presto
+    database: ${sink_database}
+
++extract_model_params:
+  +extract_automl:
+    td>: queries/extract_params.sql
+    store_last_results: true
+
++create_model_summary_tables:
+  _parallel: true
+
+  +model_params:
+    +agg:
+      td>: queries/dash/model_params_agg.sql
+      insert_into: ${prefix}dash_model_param_stats_agg
+    +testset:
+      if>: ${run_model_test_set == 'yes'}
+      _do:
+        +select_median:
+          td>:
+          query: "SELECT MAX_BY(median_sim, unixtime_tstamp) as med FROM ${prefix}dash_model_param_stats_agg"
+          store_last_results: true
+        +create_summary:
+          td>: queries/dash/test_comparison.sql
+          create_table: ${prefix}testset
+        +stats:
+          td>: queries/dash/test_comparison_dash.sql
+          insert_into: ${prefix}dash_testset
+        +number_summary:
+          td>: queries/dash/test_comparison_numbers.sql
+          insert_into: ${prefix}dash_testset_numbers
+    
+  +item_category_mapping_stats:
+    td>: queries/dash/item_category_mapping_agg.sql
+    create_table: ${prefix}dash_item_category_mapping_agg
+
+  +similarity_metrics:
+    td>: queries/dash/similarity_metrics.sql
+    create_table: ${prefix}dash_similarity_stats_agg
+
+  +most_ordered_items:
+    td>: queries/dash/most_ordered_items.sql
+    create_table: ${prefix}dash_most_ordered_items
+
+  # Get Final Table Stats
+  +get_final_table_stats:
+    +select_distinct_recommended:
+      td>: queries/dash/get_distinct_items_final_rec_table.sql
+      store_last_results: true
+
+    +get_final_table_stats:
+      +tracking:
+        td>: queries/dash/get_final_rec_table_stats.sql
+        insert_into: ${prefix}dash_final_recs_stats_agg
+      +dash:
+        td>:
+        query: "SELECT * FROM ${prefix}dash_final_recs_stats_agg WHERE event_date=(SELECT max(event_date) FROM ${prefix}dash_final_recs_stats_agg)"
+        create_table: ${prefix}dash_final_recs_stats_daily
+
++create_global_session_filter:
+  td>: queries/dash/global_session_filter.sql
+  create_table: ${prefix}global_session_filter

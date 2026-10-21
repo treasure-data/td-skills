@@ -1,0 +1,15 @@
+_export:
+  !include : 'config/input_params.yml'
+  td:
+    database: ${sink_database}
+  
++create_temp_tables:
+  _parallel: true
+  
+  +create_custom_flags_table:
+    td>: queries/next_best_campaign/custom_engagement_flags.sql
+    create_table: ${next_best_campaign.custom_flags_table}
+
++create_final_next_best_campaign_table:
+  td>: queries/next_best_campaign/final_table_custom.sql
+  create_table: ${temporary_tables.next_best_campaign}

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+  RFM Customer Segmentation Model Summary — Dashboard Template (3-tab layout)
+================================================================================
+
+  HOW THIS TEMPLATE WORKS
+  -----------------------
+  Self-contained HTML dashboard with placeholder tokens that generate-data.js (run by the
+  customer RFM agent) substitutes with real data from the customer's RFM output tables.
+
+  RECOMMENDED EXECUTION (Fast build-time query & bake via generate-data.js):
+    node generate-data.js [sink_database] [project_slug] [project_name]
+    # Or with environment variable:
+    SOURCE_DB=my_sink_db node generate-data.js loyalty-rfm "Loyalty RFM"
+    # Or offline mock test:
+    node generate-data.js --mock rfm "RFM"
+
+  The generator:
+    1. Executes queries Q1–Q8 against customer's sink_database via tdx CLI
+    2. Shapes metrics, formats tables, and derives executive insights
+    3. Substitutes all {{TOKEN}} placeholders
+    4. Inlines window.RAW data object for programmatic access
+    5. Writes the result to:
+         agent_outputs/<project_slug>/dashboards/rfm_summary_dashboard.html
+    6. Opens with mcp__work__open_file
+
+  All visual structure (TD palette, layout, tabs, chart shapes) is fixed.
+  Only the data behind the tokens changes per customer / per run.
+
+  DASHBOARD LAYOUT — 3 TABS
+  ─────────────────────────
+    TAB 1: Model Overview
+      - 5 KPI cards: Total Profiles Scored (with % change vs prev run),
+        Avg RFM Score, Avg Recency, Avg Frequency, Avg Monetary Value
+      - Historic segment trend line chart (from rfm_stats_daily_agg)
+      - Run configuration snapshot
+      - Executive summary: insights & recommendations
+
+    TAB 2: Segment Analysis
+      - Customer count by segment (horizontal bar) + donut chart
+      - Segment metrics table with definition and quartile_list columns
+      - Score distributions: Recency, Frequency, Monetary histograms
+
+    TAB 3: Source Contribution
+      - Data Sources Used table (from rfm_src_table_summary)
+      - Profiles per source (horizontal bar)
+      - Avg touchpoints per source (bar)
+      - Avg spend per source (bar)
+
+  ──────────────────────────────────────────────────────────────────────────
+  TOKEN REFERENCE
+  ──────────────────────────────────────────────────────────────────────────
+
+  ── Header / metadata tokens ────────────────────────────────────────────────
+  {{project_name}}          — e.g. "Loyalty RFM"
+  {{sink_database}}          — e.g. "my_sink_db"
+  {{customer_id_col}}        — customer identifier detected from rfm_combined_user_events schema
+  {{session_id}}             — latest session_id (bigint)
+  {{run_time_utc}}           — e.g. "2026-06-11 15:03 UTC"
+  {{model_type}}             — "ai_signals"
+  {{time_filter_summary}}    — e.g. "interval · -180d" or "no filter — all history"
+
+  ── TAB 1 (Model Overview) tokens ───────────────────────────────────────────
+  {{total_profiles_scored}}       — int with thousands separators
+  {{profiles_change_pct}}         — e.g. "+5.2%" or "-3.1%" or "N/A (first run)"
+  {{profiles_change_class}}       — "change-up" | "change-down" | "change-na"
+  {{avg_rfm_score}}               — float, 2 decimal places, e.g. "2.45"
+  {{avg_recency_days}}            — int, e.g. "75"
+  {{avg_frequency}}               — float, 1 decimal place, e.g. "20.8"
+  {{avg_monetary_value}}          — currency formatted, e.g. "$6,915"
+
+  Historic segment trend (one JS series object per segment):
+  {{historic_run_labels_json}}    — array<string> run dates ASC, e.g. ["2026-01-26","2026-06-11"]
+  {{historic_segment_series_json}} — array<{name: string, values: array<int>}>
+                                     one entry per segment, values parallel to run labels
+                                     e.g. [{"name":"Champions","values":[4020,170]}, ...]
+
+  {{exec_summary_html_li}}        — pre-rendered <li>...</li> bullets — 5-7 key insights
+                                    and recommended actions based on latest model outputs.
+                                    Focus on: top revenue segments, at-risk audiences,
+                                    growth opportunities, churn signals, monetary leaders.
+
+  ── TAB 1 config snapshot ───────────────────────────────────────────────────
+  {{source_count}}                — int (number of source tables)
+
+  ── TAB 2 (Segment Analysis) tokens ─────────────────────────────────────────
+  {{segment_bar_labels_json}}     — array<string> segment names ASC by segment_size for hbar
+  {{segment_bar_values_json}}     — array<int>, parallel
+  {{segment_bar_text_json}}       — array<string>, e.g. ["71 (3.6%)", ...]
+
+  {{segment_donut_labels_json}}   — array<string> DESC by segment_size
+  {{segment_donut_values_json}}   — array<float> population_percent, parallel
+
+  {{segment_table_rows}}          — pre-rendered <tr>...</tr> per segment (excl. ALL)
+                                    Columns: segment, definition, quartile_list,
+                                    size, % of base, avg recency, avg frequency,
+                                    avg monetary, avg RFM score.
+                                    definition from rfm_stats_daily_agg (latest session).
+                                    quartile_list from rfm_stats (latest session).
+
+  {{recency_hist_x_json}}         — array<int> bin_value (upper boundary), e.g. [41,50,61,...]
+  {{recency_hist_y_json}}         — array<int> profile_cnt per bin
+  {{frequency_hist_x_json}}       — array<int> bin_value
+  {{frequency_hist_y_json}}       — array<int>
+  {{monetary_hist_x_json}}        — array<int> bin_value ($ amounts), e.g. [521,3469,...]
+  {{monetary_hist_y_json}}        — array<int>
+
+  ── TAB 3 (Source Contribution) tokens ──────────────────────────────────────
+  {{source_table_rows}}           — pre-rendered <tr>...</tr> from rfm_src_table_summary
+                                    Columns: source name, profiles, total events,
+                                    avg events/profile, total spend, avg spend/profile,
+                                    date range, months, filters applied.
+                                    Use "—" for total_spend and avg_spend_per_person when = 0.
+
+  {{src_contrib_labels_json}}     — array<string> source names ASC by profile_count for hbar
+  {{src_contrib_profiles_json}}   — array<int>
+  {{src_contrib_text_json}}       — array<string> with thousands sep
+
+  {{src_touchpoints_labels_json}} — array<string> source names DESC by avg_events_per_person
+  {{src_touchpoints_values_json}} — array<float> avg_events_per_person (from rfm_src_table_summary)
+  {{src_touchpoints_text_json}}   — array<string> e.g. "10.84 avg"
+
+  {{exec_src_insights_html_li}}   — pre-rendered <li>...</li> bullets based on source data stats:
+                                    data coverage, spend gaps, touchpoint imbalances,
+                                    sources present only in email/web vs purchases,
+                                    date range consistency observations.
+
+  ──────────────────────────────────────────────────────────────────────────
+  SOURCE QUERIES (run against the customer's sink_database)
+  ──────────────────────────────────────────────────────────────────────────
+
+  Q1 — Latest session KPIs (drives header + Tab 1 KPI cards):
+      SELECT session_id, segment_size AS total_profiles, avg_rfm, avg_recency,
+             avg_monetary, TD_TIME_FORMAT(time, 'yyyy-MM-dd HH:mm', 'UTC') AS run_time
+      FROM <sink_database>.rfm_stats
+      WHERE session_id = (SELECT MAX(session_id) FROM <sink_database>.rfm_stats)
+        AND rfm_segment = 'ALL'
+      LIMIT 1
+
+  Q2 — Previous run profile count for % change:
+      SELECT segment_size AS prev_total_profiles
+      FROM <sink_database>.rfm_stats_daily_agg
+      WHERE rfm_segment = 'ALL'
+        AND session_id = (
+          SELECT MAX(session_id) FROM <sink_database>.rfm_stats_daily_agg
+          WHERE session_id < (SELECT MAX(session_id) FROM <sink_database>.rfm_stats_daily_agg)
+        )
+      LIMIT 1
+      -- If no row: profiles_change_pct = "N/A (first run)", profiles_change_class = "change-na"
+      -- % change = ROUND(((current - prev) / prev) * 100, 1), prefix "+" if positive
+
+  Q3 — Historic segment sizes for trend chart (Tab 1):
+      SELECT session_id, rfm_segment, segment_size,
+             TD_TIME_FORMAT(time, 'yyyy-MM-dd', 'UTC') AS run_date
+      FROM <sink_database>.rfm_stats_daily_agg
+      WHERE rfm_segment != 'ALL'
+      ORDER BY session_id ASC
+      -- Build one series per segment. X-axis = distinct run_dates ASC.
+      -- Fill missing segment/run combinations with 0.
+
+  Q4 — Data sources summary (Tab 3 table + touchpoints chart):
+      SELECT event_name AS source_name, total_profiles, total_events,
+             avg_events_per_person, total_spend, avg_spend_per_person,
+             min_date, max_date, months_range, table_filters
+      FROM <sink_database>.rfm_src_table_summary
+      ORDER BY total_profiles DESC
+
+  Q5 — Segment distribution for latest run (Tab 2 charts + table):
+      SELECT s.rfm_segment, s.segment_size, s.population_percent,
+             s.avg_recency, s.avg_frequency, s.avg_monetary, s.avg_rfm,
+             s.quartile_list,
+             d.segment_definition
+      FROM <sink_database>.rfm_stats s
+      LEFT JOIN (
+        SELECT rfm_segment, segment_definition
+        FROM <sink_database>.rfm_stats_daily_agg
+        WHERE session_id = (SELECT MAX(session_id) FROM <sink_database>.rfm_stats_daily_agg)
+      ) d ON s.rfm_segment = d.rfm_segment
+      WHERE s.session_id = (SELECT MAX(session_id) FROM <sink_database>.rfm_stats)
+        AND s.rfm_segment != 'ALL'
+      ORDER BY s.segment_size DESC
+
+  Q6 — Score histograms for ALL profiles (Tab 2):
+      SELECT metric_name, bin_order, bin_label, profile_cnt
+      FROM <sink_database>.rfm_stats_histogram
+      WHERE session_id = (SELECT MAX(session_id) FROM <sink_database>.rfm_stats_histogram)
+        AND rfm_segment = 'ALL'
+      ORDER BY metric_name, bin_order ASC
+
+  Q7 — Source contribution from union activity table (Tab 3 charts):
+      SELECT source,
+             COUNT(DISTINCT <customer_id_col>) AS profile_count,
+             ROUND(AVG(total_touchpoints), 2) AS avg_touchpoints
+      FROM <sink_database>.rfm_combined_user_events
+      GROUP BY source
+      ORDER BY profile_count DESC
+
+  ──────────────────────────────────────────────────────────────────────────
+  SUBSTITUTION RULES
+  ──────────────────────────────────────────────────────────────────────────
+  - Strip THIS leading HTML comment before writing the output file
+  - Numeric tokens: thousands separators; percentages: 1 decimal + "%"
+  - Currency tokens: prefix "$", thousands separators, no decimals
+  - JSON tokens: valid JSON — no trailing commas, double-quoted strings
+  - profiles_change_pct: "+" prefix when positive; "N/A (first run)" when Q2 empty
+  - profiles_change_class: "change-up" | "change-down" | "change-na"
+  - src_spend: exclude sources where avg_spend_per_person = 0 (non-monetary sources)
+  - historic_segment_series_json: fill missing segment/run combos with 0
+
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RFM Customer Segmentation — {{project_name}}</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<style>
+  :root {
+    --td-1: #B4E3E3; --td-2: #ABB3DB; --td-3: #D9BFDF; --td-4: #F8E1B0;
+    --td-5: #8FD6D4; --td-6: #828DCA; --td-7: #C69ED0; --td-8: #F5D389;
+    --td-9: #6AC8C6; --td-10: #5867B8; --td-11: #B37EC0; --td-12: #F1C461;
+    --td-13: #44BAB8; --td-14: #2E41A6; --td-15: #8CC97E; --td-16: #A05EB0;
+    --bg: #F7F8FB; --card: #FFFFFF; --ink: #1F2147; --muted: #6A6F8A; --line: #E6E8F2;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+         background: var(--bg); color: var(--ink); line-height: 1.4; }
+  header { background: linear-gradient(135deg, var(--td-14) 0%, var(--td-10) 100%); color: white; padding: 32px 48px 0; }
+  header h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; }
+  header p  { margin: 0; opacity: 0.85; font-size: 14px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 24px; margin-top: 16px; font-size: 13px; padding-bottom: 24px; }
+  .meta-row span strong { font-weight: 600; }
+  .tab-nav { background: linear-gradient(135deg, var(--td-14) 0%, var(--td-10) 100%); padding: 0 48px; }
+  .tab-nav-inner { display: flex; gap: 4px; max-width: 1400px; margin: 0 auto; }
+  .tab-button { background: rgba(255,255,255,0.12); color: white; border: none; padding: 14px 24px;
+    cursor: pointer; font-size: 14px; font-weight: 500; border-radius: 8px 8px 0 0;
+    transition: background 0.15s ease; font-family: inherit; }
+  .tab-button:hover  { background: rgba(255,255,255,0.22); }
+  .tab-button.active { background: var(--bg); color: var(--td-14); font-weight: 600; }
+  main { padding: 32px 48px; max-width: 1400px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  section { margin-bottom: 40px; }
+  h2 { font-size: 20px; font-weight: 600; margin: 0 0 16px; padding-bottom: 8px;
+       border-bottom: 2px solid var(--td-1); color: var(--td-14); }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 20px;
+         box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .kpi .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi .value { font-size: 32px; font-weight: 700; margin-top: 6px; color: var(--td-14); }
+  .kpi .sub   { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .change-up   { color: #2c7a2c; font-weight: 600; }
+  .change-down { color: #b0291f; font-weight: 600; }
+  .change-na   { color: var(--muted); font-style: italic; }
+  .chart { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px 16px 8px;
+           box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .chart-row       { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .chart-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04); border: 1px solid var(--line); }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); font-size: 13px; }
+  th { background: var(--td-1); color: var(--td-14); font-weight: 600; font-size: 12px;
+       text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  td.num  { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+  td.def  { font-size: 12px; color: var(--muted); max-width: 220px; }
+  td.qtl  { font-size: 11px; color: var(--muted); max-width: 200px; word-break: break-word; }
+  .pill      { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;
+               background: var(--td-1); color: var(--td-14); }
+  .pill.warn { background: var(--td-4); color: #8a6d1c; }
+  .pill.ok   { background: var(--td-15); color: #2c5e1f; }
+  .insights ul { margin: 0; padding-left: 20px; }
+  .insights li { margin-bottom: 10px; font-size: 14px; line-height: 1.5; }
+  .insights li strong { color: var(--td-14); }
+  footer { text-align: center; padding: 24px; color: var(--muted); font-size: 12px; }
+  @media (max-width: 900px) { .chart-row, .chart-row.three { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>RFM Customer Segmentation — Model Summary</h1>
+  <p>{{project_name}} · {{sink_database}} · Session {{session_id}}</p>
+  <div class="meta-row">
+    <span><strong>Run time:</strong> {{run_time_utc}}</span>
+    <span><strong>Customer ID:</strong> {{customer_id_col}}</span>
+    <span><strong>Profiles scored:</strong> {{total_profiles_scored}}</span>
+    <span><strong>Scoring model:</strong> {{model_type}}</span>
+    <span><strong>Time filter:</strong> {{time_filter_summary}}</span>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <div class="tab-nav-inner">
+    <button class="tab-button active" data-tab="tab-overview">Model Overview</button>
+    <button class="tab-button" data-tab="tab-segments">Segment Analysis</button>
+    <button class="tab-button" data-tab="tab-sources">Source Contribution</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 1 — MODEL OVERVIEW                                              -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-overview" class="tab-panel active">
+
+    <section>
+      <h2>Run KPIs</h2>
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="label">Total Profiles Scored</div>
+          <div class="value">{{total_profiles_scored}}</div>
+          <div class="sub">vs previous run: <span class="{{profiles_change_class}}">{{profiles_change_pct}}</span></div>
+        </div>
+        <div class="kpi">
+          <div class="label">Average RFM Score</div>
+          <div class="value">{{avg_rfm_score}}</div>
+          <div class="sub">Scale 1–4 (quartile-based)</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Average Recency</div>
+          <div class="value">{{avg_recency_days}}d</div>
+          <div class="sub">Days since last activity</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Average Frequency</div>
+          <div class="value">{{avg_frequency}}</div>
+          <div class="sub">Touchpoints per profile</div>
+        </div>
+        <div class="kpi">
+          <div class="label">Average Monetary Value</div>
+          <div class="value">{{avg_monetary_value}}</div>
+          <div class="sub">Total spend per profile</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Segment Size — Historic Trend</h2>
+      <div class="chart"><div id="chart-historic-segments" style="height:440px"></div></div>
+    </section>
+
+    <section>
+      <h2>Run Configuration</h2>
+      <table>
+        <tbody>
+          <tr><td><strong>Session ID</strong></td><td>{{session_id}}</td><td><strong>Profiles scored</strong></td><td>{{total_profiles_scored}}</td></tr>
+          <tr><td><strong>Scoring model</strong></td><td>{{model_type}}</td><td><strong>Run time</strong></td><td>{{run_time_utc}}</td></tr>
+          <tr><td><strong>Time filter</strong></td><td colspan="3">{{time_filter_summary}}</td></tr>
+          <tr><td><strong>Source tables</strong></td><td>{{source_count}}</td><td><strong>Sink database</strong></td><td>{{sink_database}}</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Executive Summary — Insights &amp; Recommendations</h2>
+      <div class="kpi insights">
+        <ul>
+          {{exec_summary_html_li}}
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 2 — SEGMENT ANALYSIS                                            -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-segments" class="tab-panel">
+
+    <section>
+      <h2>Customer Distribution by Segment</h2>
+      <div class="chart-row">
+        <div class="chart"><div id="chart-segment-bar" style="height:420px"></div></div>
+        <div class="chart"><div id="chart-segment-donut" style="height:420px"></div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Segment Metrics</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Segment</th>
+            <th>Definition</th>
+            <th>Quartile Combinations</th>
+            <th class="num">Customers</th>
+            <th class="num">% of Base</th>
+            <th class="num">Avg Recency (d)</th>
+            <th class="num">Avg Frequency</th>
+            <th class="num">Avg Monetary</th>
+            <th class="num">Avg RFM Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{segment_table_rows}}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Score Distributions (All Profiles)</h2>
+      <div class="chart-row three">
+        <div class="chart"><div id="chart-hist-recency"   style="height:320px"></div></div>
+        <div class="chart"><div id="chart-hist-frequency" style="height:320px"></div></div>
+        <div class="chart"><div id="chart-hist-monetary"  style="height:320px"></div></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- TAB 3 — SOURCE CONTRIBUTION                                         -->
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <div id="tab-sources" class="tab-panel">
+
+    <section>
+      <h2>Data Sources Used for Scoring</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th class="num">Profiles</th>
+            <th class="num">Total Events</th>
+            <th class="num">Avg Events / Profile</th>
+            <th class="num">Total Spend</th>
+            <th class="num">Avg Spend / Profile</th>
+            <th>Date Range</th>
+            <th class="num">Months</th>
+            <th>Filters Applied</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{source_table_rows}}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Profiles &amp; Engagement per Source</h2>
+      <div class="chart-row">
+        <div class="chart"><div id="chart-src-profiles"    style="height:360px"></div></div>
+        <div class="chart"><div id="chart-src-touchpoints" style="height:360px"></div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Insights &amp; Observations — Source Data</h2>
+      <div class="kpi insights">
+        <ul>
+          {{exec_src_insights_html_li}}
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+</main>
+
+<footer>
+  Generated from <code>rfm_stats</code>, <code>rfm_stats_histogram</code>, <code>rfm_stats_daily_agg</code>, <code>rfm_src_table_summary</code>, <code>rfm_combined_user_events</code> · {{sink_database}} · session {{session_id}} · RFM Customer Segmentation workflow
+</footer>
+
+<script>
+  const TD_PALETTE = ["#B4E3E3","#ABB3DB","#D9BFDF","#F8E1B0","#8FD6D4","#828DCA","#C69ED0","#F5D389","#6AC8C6","#5867B8","#B37EC0","#F1C461","#44BAB8","#2E41A6","#8CC97E","#A05EB0"];
+  const baseLayout = {
+    paper_bgcolor: 'white', plot_bgcolor: 'white',
+    font: { family: '-apple-system, BlinkMacSystemFont, sans-serif', color: '#1F2147', size: 12 },
+    margin: { t: 50, r: 20, b: 60, l: 60 }
+  };
+  const cfg = { responsive: true, displayModeBar: false };
+
+  // ── Data injected by the skill ────────────────────────────────────────────
+
+  // Tab 1 — Historic segment trend
+  const HISTORIC_RUNS    = {{historic_run_labels_json}};
+  const HISTORIC_SEGS    = {{historic_segment_series_json}};
+
+  // Tab 2 — Segment distribution
+  const SEG_BAR   = { labels: {{segment_bar_labels_json}}, values: {{segment_bar_values_json}}, text: {{segment_bar_text_json}} };
+  const SEG_DONUT = { labels: {{segment_donut_labels_json}}, values: {{segment_donut_values_json}} };
+
+  // Tab 2 — Histograms (bin_value on X axis)
+  const HIST_RECENCY    = { x: {{recency_hist_x_json}},   y: {{recency_hist_y_json}} };
+  const HIST_FREQUENCY  = { x: {{frequency_hist_x_json}}, y: {{frequency_hist_y_json}} };
+  const HIST_MONETARY   = { x: {{monetary_hist_x_json}},  y: {{monetary_hist_y_json}} };
+
+  // Tab 3 — Source contribution
+  const SRC_PROFILES    = { labels: {{src_contrib_labels_json}},    values: {{src_contrib_profiles_json}}, text: {{src_contrib_text_json}} };
+  const SRC_TOUCHPOINTS = { labels: {{src_touchpoints_labels_json}},values: {{src_touchpoints_values_json}}, text: {{src_touchpoints_text_json}} };
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.tab-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.dataset.tab;
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(targetId).classList.add('active');
+      window.dispatchEvent(new Event('resize'));
+    });
+  });
+
+  // ── TAB 1 charts ──────────────────────────────────────────────────────────
+
+  // Historic segment size trend (one line per segment)
+  const histSegTraces = HISTORIC_SEGS.map((s, i) => ({
+    type: 'scatter', mode: 'lines+markers', name: s.name,
+    x: HISTORIC_RUNS, y: s.values,
+    line: { color: TD_PALETTE[i % TD_PALETTE.length], width: 2 },
+    marker: { size: 7 },
+    hovertemplate: '%{x}<br>' + s.name + ': %{y:,}<extra></extra>'
+  }));
+  Plotly.newPlot('chart-historic-segments', histSegTraces, {
+    ...baseLayout,
+    title: { text: 'Segment Size per Run — Historic Trend', font: { size: 14 } },
+    xaxis: { title: 'Run Date', type: 'category' },
+    yaxis: { title: 'Customers', rangemode: 'tozero' },
+    legend: { orientation: 'h', y: -0.25 },
+    margin: { t: 50, r: 20, b: 120, l: 70 }
+  }, cfg);
+
+  // ── TAB 2 charts ──────────────────────────────────────────────────────────
+
+  // Segment horizontal bar (ASC, largest at top)
+  Plotly.newPlot('chart-segment-bar', [{
+    type: 'bar', orientation: 'h',
+    x: SEG_BAR.values, y: SEG_BAR.labels,
+    marker: { color: TD_PALETTE.slice(0, SEG_BAR.labels.length) },
+    text: SEG_BAR.text, textposition: 'outside', cliponaxis: false
+  }], {
+    ...baseLayout,
+    title: { text: 'Customer Count by Segment', font: { size: 14 } },
+    xaxis: { title: 'Customers' }, yaxis: { automargin: true },
+    margin: { t: 50, r: 120, b: 60, l: 160 }
+  }, cfg);
+
+  // Segment donut
+  Plotly.newPlot('chart-segment-donut', [{
+    type: 'pie',
+    labels: SEG_DONUT.labels, values: SEG_DONUT.values,
+    marker: { colors: TD_PALETTE.slice(0, SEG_DONUT.labels.length) },
+    hole: 0.45, textinfo: 'label+percent', textposition: 'outside', sort: false
+  }], {
+    ...baseLayout,
+    title: { text: 'Segment Share of Customer Base (%)', font: { size: 14 } },
+    showlegend: false, margin: { t: 50, r: 20, b: 20, l: 20 }
+  }, cfg);
+
+  Plotly.newPlot('chart-hist-recency', [{
+    type: 'bar', x: (HIST_RECENCY.x || []).map(String), y: HIST_RECENCY.y || [], marker: { color: TD_PALETTE[0] }
+  }], { ...baseLayout, title: { text: 'Recency Distribution (days since last activity)', font: { size: 13 } },
+    xaxis: { title: 'Days (upper bin boundary)', type: 'category' }, yaxis: { title: 'Profiles' } }, cfg);
+
+  Plotly.newPlot('chart-hist-frequency', [{
+    type: 'bar', x: (HIST_FREQUENCY.x || []).map(String), y: HIST_FREQUENCY.y || [], marker: { color: TD_PALETTE[1] }
+  }], { ...baseLayout, title: { text: 'Frequency Distribution (total touchpoints)', font: { size: 13 } },
+    xaxis: { title: 'Touchpoints (upper bin boundary)', type: 'category' }, yaxis: { title: 'Profiles' } }, cfg);
+
+  Plotly.newPlot('chart-hist-monetary', [{
+    type: 'bar', x: (HIST_MONETARY.x || []).map(v => typeof v === 'number' ? '$' + v.toLocaleString() : '$' + v), y: HIST_MONETARY.y || [], marker: { color: TD_PALETTE[2] }
+  }], { ...baseLayout, title: { text: 'Monetary Distribution (total spend)', font: { size: 13 } },
+    xaxis: { title: 'Spend $ (upper bin boundary)', type: 'category', tickangle: -35 },
+    yaxis: { title: 'Profiles' }, margin: { t: 50, r: 20, b: 90, l: 60 } }, cfg);
+
+  // Source profiles hbar
+  Plotly.newPlot('chart-src-profiles', [{
+    type: 'bar', orientation: 'h',
+    x: SRC_PROFILES.values, y: SRC_PROFILES.labels,
+    marker: { color: TD_PALETTE.slice(0, SRC_PROFILES.labels.length) },
+    text: SRC_PROFILES.text, textposition: 'outside', cliponaxis: false
+  }], { ...baseLayout,
+    title: { text: 'Distinct Profiles Reached per Source', font: { size: 14 } },
+    xaxis: { title: 'Profiles' }, yaxis: { automargin: true },
+    margin: { t: 50, r: 100, b: 60, l: 160 } }, cfg);
+
+  // Avg events per source bar
+  Plotly.newPlot('chart-src-touchpoints', [{
+    type: 'bar', x: SRC_TOUCHPOINTS.labels, y: SRC_TOUCHPOINTS.values,
+    marker: { color: TD_PALETTE.slice(0, SRC_TOUCHPOINTS.labels.length) },
+    text: SRC_TOUCHPOINTS.text, textposition: 'outside', cliponaxis: false
+  }], { ...baseLayout,
+    title: { text: 'Average Events per Profile by Source', font: { size: 14 } },
+    xaxis: { title: 'Source' }, yaxis: { title: 'Avg Events', rangemode: 'tozero' } }, cfg);
+</script>
+
+</body>
+</html>
