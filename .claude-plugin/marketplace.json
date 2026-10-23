@@ -6,7 +6,7 @@
   },
   "metadata": {
     "version": "1.0.0",
-    "description": "Internal Treasure Data skills for Claude Code to enhance productivity with TD-specific tools and workflows"
+    "description": "Treasure Data skills for Claude Code to enhance productivity with TD-specific tools and workflows"
   },
   "plugins": [
     {
