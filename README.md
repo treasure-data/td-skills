@@ -322,6 +322,10 @@ For questions or issues:
 - Open an issue in this repository
 - Contact the Data Engineering team
 
----
+## License
 
-**Note:** These skills are for internal TD use only.
+Except where [separately licensed](./LICENSING.md#existing-license-exceptions), original content in this repository—including skill instructions, documentation, examples, and scripts—is licensed under the [Apache License 2.0](./LICENSE).
+
+Apache-2.0 permits commercial use, modification, and redistribution subject to its terms. It does not grant access to Treasure Data services or customer data, or general rights to use Treasure Data trademarks.
+
+The Apache-licensed content is provided **as is**, without warranties or conditions, subject to applicable law and written agreements. See sections 7–9 of [LICENSE](./LICENSE) for warranty, liability, and additional-obligation terms, and [LICENSING.md](./LICENSING.md) for redistribution guidance.
