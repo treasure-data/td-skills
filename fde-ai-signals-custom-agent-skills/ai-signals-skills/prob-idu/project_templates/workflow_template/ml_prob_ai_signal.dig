@@ -1,0 +1,45 @@
+_export:
+  !include : 'config/global.yml'
+  td:
+    database: ${sink_database}
+
+# The solution always appends, so drop the output table before submitting --
+# otherwise a re-run lands a second copy of every row on top of the last one.
++drop_output:
+  td_ddl>:
+  drop_tables: ["${output_table}"]
+
+# Calls the AI Signals ml-batch-api "pidu" solution directly with the http>
+# operator (no Python step). The solution reads blocking_table and writes
+# output_table; every argument comes from config/global.yml.
++cluster:
+  http>: ${ml_batch_endpoint}/v1/runs/
+  method: POST
+  headers:
+    - authorization: "TD1 ${secret:td.apikey}"
+    - X-TD-ML-SESSION-ID: ${session_id}
+    - X-TD-ML-ATTEMPT-ID: ${attempt_id}
+  content_format: json
+  content:
+    input_table: "${sink_database}.${blocking_table}"
+    output_table: "${sink_database}.${output_table}"
+    solution_name: "pidu"
+    version: ${ml_batch_version}
+    solution_arguments:
+      block_key_col: ${block_key_col}
+      id_col: ${id_col}
+      cluster_col_name: ${cluster_col_name}
+      dedupe_columns: ${dedupe_columns}
+      string_type: ${string_type}
+      cluster_threshold: ${cluster_threshold}
+      fill_missing: ${fill_missing}
+      max_block_rows: ${max_block_rows}
+  store_content: true
+
++cluster_poll:
+  # ml-batch-api returns 408 while the run is in progress; http> retries 408/429
+  # until 200 is returned (up to the 24h task limit).
+  http>: ${ml_batch_endpoint}/v1/runs/${JSON.parse(http.last_content)['id']}/status
+  method: GET
+  headers:
+    - authorization: "TD1 ${secret:td.apikey}"

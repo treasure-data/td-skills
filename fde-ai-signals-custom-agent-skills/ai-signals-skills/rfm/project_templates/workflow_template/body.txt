@@ -1,0 +1,15 @@
+Workflow encoutered an ERROR at Task: ${task_name}. Please go to Workflow-->Run Tab and explore the ERROR Messages in the Output Logs for more details.
+
+https://console.treasuredata.com/app/workflows/sessions/${session_id}
+
+# session_local_time
+${session_local_time}
+
+# task_name
+${task_name}
+
+# error_message
+${error.message}
+
+# error_stacktrace
+${error.stacktrace}

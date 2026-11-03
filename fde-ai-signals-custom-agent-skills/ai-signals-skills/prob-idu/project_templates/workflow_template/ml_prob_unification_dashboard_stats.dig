@@ -1,0 +1,24 @@
+_export:
+  !include : 'config/global.yml'
+  td:
+    database: ${sink_database}
+
+# Queries below extract useful stats from final tables and global params
++get_final_process_stats:
+  _parallel: true
+
+  +get_model_and_table_params:
+    td>: sql/save_model_stats.sql
+    insert_into: prob_model_table_params
+
+  +get_final_dedupe_stats:
+    td>: sql/get_cluster_histogram.sql
+    insert_into: prob_final_cluster_histogram
+
+  +get_stats:
+    td>: sql/get_final_table_stats_comparision.sql
+    insert_into: prob_uni_config_stats_table
+
++get_session_global_filter:
+  td>: sql/global_session_filter.sql
+  create_table: prob_session_global_filter

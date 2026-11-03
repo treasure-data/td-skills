@@ -1,0 +1,68 @@
+timezone: UTC
+
+# ###################### SCHEDULE PARAMS ##################################
+# schedule:
+#   daily>: 06:00:00
+
+####################### ERROR EMAIL NOTIFICATION ##########################
+# _error:
+#  mail>: body.txt
+#  subject: Probabilistic ID Unification Workflow failed - Project Name
+#  to: ['your-team@example.com']
+
+# Entry point: input table -> MinHash blocking -> AI Signals clustering -> final dedup / merge -> stats.
+_export:
+  !include : 'config/global.yml'
+  td:
+    database: ${sink_database}
+
+# The blocking threshold must not exceed the clustering threshold
++check_thresholds:
+  if>: ${jaccard_similarity_threshold > cluster_threshold}
+  _do:
+    fail>: jaccard_similarity_threshold must be <= cluster_threshold
+
++create_input_table:
+  td>: sql/input_table.sql
+  create_table: ${input_table}
+
+# MinHash LSH on the dedupe columns; builds blocking_table
++run_blocking_workflow_presto_parallel:
+  call>: ml_prob_unification_presto_parallel.dig
+
+# Clustering with the AI Signals "pidu" solution; builds output_table
++run_ai_signal:
+  call>: ml_prob_ai_signal.dig
+
+# Final deduplication: an ID that landed in several clusters is collapsed to one
++dedup_check:
+  td>:
+    data: "SELECT ${id_col}, COUNT(*) as num_ids FROM ${output_table} GROUP BY 1 ORDER BY 2 DESC LIMIT 1"
+  store_last_results: true
+
++if_dedup_needed:
+  if>: ${td.last_results.num_ids>1}
+  _do:
+    +select_dedup_columns:
+      td>: sql/final_dedup_select.sql
+      store_last_results: true
+
+    +dedup_prob_ids:
+      td>: sql/final_dedup.sql
+      create_table: ${output_table}_temp
+
+    +update_final_table:
+      td_ddl>:
+      rename_tables: [{from: "${output_table}_temp", to: "${output_table}"}]
+
+# Merge clusters that share a base ID into dedupe_<output_table>
++get_merge_columns:
+  td>: sql/prob_final_merge_select.sql
+  store_last_results: true
+
++merge_prob_ids:
+  td>: sql/prob_final_merge.sql
+  create_table: dedupe_${output_table}
+
++calculate_dash_stats:
+  call>: ml_prob_unification_dashboard_stats.dig

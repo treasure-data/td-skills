@@ -1,0 +1,40 @@
+_export:
+  !include : 'config.yml'
+  td:
+    database: ${sink_database}
+
+  # Snapshot variables (config.yml DATA PREP), read by the SQL in sql/.
+  # Cutoff k = run_date - spacing_days * k, for k in [snapshot_k_min, snapshot_k_max].
+  # train: k starts at ceil(label_window_days / spacing_days), so cutoff + label_window_days <= run_date
+  # pred:  k = 0 only, the cutoff is the run date
+  run_date: ${moment(reference_date == '' ? session_date : reference_date).format('YYYY-MM-DD')}
+  snapshot_k_min: ${mode == 'train' ? Math.ceil(Number(label_window_days) / Number(spacing_days)) : 0}
+  snapshot_k_max: ${mode == 'train' ? Math.ceil(Number(label_window_days) / Number(spacing_days)) + Number(n_train_snapshots) - 1 : 0}
+  # Partition-pruning bounds for every source scan: earliest feature start to the run date
+  scan_start: ${moment(reference_date == '' ? session_date : reference_date).subtract((mode == 'train' ? Number(spacing_days) * (Math.ceil(Number(label_window_days) / Number(spacing_days)) + Number(n_train_snapshots) - 1) : 0) + Number(feature_lookback_days), 'days').format('YYYY-MM-DD')}
+  scan_end: ${moment(reference_date == '' ? session_date : reference_date).add(1, 'days').format('YYYY-MM-DD')}
+
+# ============================================================
+# DATA PREP: customer-specific feature SQL (sql/)
+# ============================================================
+# Called from train.dig (mode = 'train') and predict.dig (mode = 'pred').
+# Builds ${train_input_table} or ${pred_input_table}: one row per
+# ${user_id_column} and cutoff_date, a session_id column, the features and
+# the ${target_column}. sql/README.md describes the contract.
+#
+# Heavy sources can be pre-aggregated into feature tables in parallel and
+# joined in input_features.sql on (${user_id_column}, cutoff_date):
+#   +create_features:
+#     _parallel: true
+#
+#     +create_feature_table_1:
+#       td>: sql/your_feature_query_1.sql
+#       create_table: classify_feat_1_${mode}
+
++create_sink_database:
+  td_ddl>:
+  create_databases: ["${sink_database}"]
+
++create_input_table:
+  td>: sql/input_features.sql
+  create_table: ${mode == 'train' ? train_input_table : pred_input_table}

@@ -1,0 +1,56 @@
+sink_database: prob_idu_sink
+
+######## INPUT / OUTPUT ################
+# input_table is built by sql/input_table.sql (ml_prob_unification_launch.dig) in ${sink_database}:
+# one row per id_col plus one column per dedupe column.
+source_database: <source_database>               # database read by sql/input_table.sql
+source_table: <source_table>                     # e.g. the deterministic-IDU customer / identity table
+input_table: prob_idu_input
+id_col: persistent_id                            # canonical ID column created by deterministic unification
+output_table: prob_idu_clusters                  # clusters from the AI Signals run; read by final dedup and stats
+exclude_overmerging: 'no'                        # only recorded in prob_model_table_params
+
+#--- columns used for unification; weights sum to 1.0
+dedupe_columns:
+
+  - name: phone_key      # column name in input_table
+    type: phone          # string | email | phone -- selects the cleaning / blocking logic
+    weight: 0.35         # share of the final match score contributed by this column
+
+  - name: email_key
+    type: email
+    weight: 0.35
+
+  - name: address_key
+    type: string
+    weight: 0.30
+
+
+######## BLOCKING (MinHash LSH, SQL) ################
+blocking_table: prob_idu_blocking
+max_ids_per_cluster: 3000             # MinHash buckets with more IDs are dropped
+max_ids_per_block: 3000               # blocks larger than this are split into sub-blocks of this size
+
+# Raising hashes, keygroups or jaccard_similarity_threshold changes recall / precision -- see README.
+hashes: 16                            # number of hash functions
+keygroups: 8                          # hash values per signature; a divisor of hashes
+jaccard_similarity_threshold: 0.90    # must be <= cluster_threshold
+ngram_len: 2                          # character n-gram size
+
+######## AI SIGNALS (ml-batch-api "pidu" solution) ################
+# Region endpoint (set from the account's site, `tdx status`):
+#   US: https://ml-batch-api.treasuredata.com
+#   (use the matching endpoint for JP / EU / AP accounts -- see README)
+ml_batch_endpoint: https://ml-batch-api.treasuredata.com
+ml_batch_version: experimental
+
+block_key_col: block_key                         # blocking-key column of blocking_table
+cluster_col_name: prob_id                        # cluster ID column written to output_table
+cluster_threshold: 0.90                          # 0-1; higher = stricter clusters
+string_type: fuzzy                               # fuzzy | jarowinkler
+fill_missing: True                               # soft-impute NULLs; False = NULL gives 0 similarity
+max_block_rows: 0                                # 0 disables the per-block row cap
+
+######## DASHBOARD STATS ################
+convergence_threshold: 0.01                      # only recorded in prob_model_table_params
+avg_spend_per_user: 100                          # annual marketing spend per user, for the estimated savings

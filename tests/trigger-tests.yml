@@ -283,7 +283,7 @@ tests:
   - prompt: "Build an interactive dashboard component to visualize ingestion volume"
     expected: react-dashboard
 
-  # === FDE Public Skills ===
+  # === FDE AI Signals & Custom Agent Skills ===
 
   - prompt: "Set up RFM segmentation for our customers"
     expected: fde-rfm
@@ -314,6 +314,12 @@ tests:
 
   - prompt: "Set up a lead scoring propensity model"
     expected: fde-classifier
+
+  - prompt: "Find duplicate customers that deterministic IDU missed because of typos or changed email addresses"
+    expected: fde-prob-idu
+
+  - prompt: "Set up probabilistic identity matching across our customer records"
+    expected: fde-prob-idu
 
   - prompt: "Set up an audience agent for our parent segment"
     expected: fde-custom-audience-agent

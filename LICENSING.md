@@ -11,8 +11,8 @@ Apache-2.0 allows commercial use, modification, redistribution, and proprietary 
 | Material | License and notices |
 | --- | --- |
 | [`semantic-layer/data-dictionary-helper/`](./semantic-layer/data-dictionary-helper/) | Retains its existing **ISC** declaration in [package.json](./semantic-layer/data-dictionary-helper/package.json) and [README](./semantic-layer/data-dictionary-helper/README.md#license); it is not relicensed by the repository default. |
-| [`chart.umd.min.js`](./fde-public-skills/custom-agent-skills/custom-dashboard-builder/project_templates/dashboard_template/chart.umd.min.js), Chart.js 4.4.0 | **MIT**. Preserve its embedded copyright notice and the accompanying [Chart.js license](./fde-public-skills/custom-agent-skills/custom-dashboard-builder/project_templates/dashboard_template/LICENSE.chartjs). |
-| @kurkle/color 0.3.2, embedded in the same Chart.js bundle | **MIT**. Preserve its embedded copyright notice and the accompanying [@kurkle/color license](./fde-public-skills/custom-agent-skills/custom-dashboard-builder/project_templates/dashboard_template/LICENSE.kurkle-color). |
+| [`chart.umd.min.js`](./fde-ai-signals-custom-agent-skills/custom-agent-skills/custom-dashboard-builder/project_templates/dashboard_template/chart.umd.min.js), Chart.js 4.4.0 | **MIT**. Preserve its embedded copyright notice and the accompanying [Chart.js license](./fde-ai-signals-custom-agent-skills/custom-agent-skills/custom-dashboard-builder/project_templates/dashboard_template/LICENSE.chartjs). |
+| @kurkle/color 0.3.2, embedded in the same Chart.js bundle | **MIT**. Preserve its embedded copyright notice and the accompanying [@kurkle/color license](./fde-ai-signals-custom-agent-skills/custom-agent-skills/custom-dashboard-builder/project_templates/dashboard_template/LICENSE.kurkle-color). |
 
 Dependencies and externally downloaded resources retain their own licenses. The repository license does not override third-party notices or grant rights the contributors do not hold.
 
