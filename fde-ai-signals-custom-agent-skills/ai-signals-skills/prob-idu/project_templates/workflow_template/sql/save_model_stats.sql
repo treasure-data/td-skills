@@ -1,0 +1,26 @@
+select
+${session_id} as session_id,
+
+(select array_join(array_agg(concat(column_name, ': ', col_weight)), ', ') from prob_dedupe_blocking_schema) as dedupe_col_params,
+${hashes} as hashes,
+${keygroups} as keygroups,
+${jaccard_similarity_threshold} as jaccard_sim_threshold,
+${convergence_threshold} as convergence_threshold,
+${cluster_threshold} as cluster_threshold,
+${avg_spend_per_user} as annual_marketing_spend_per_user,
+round((${avg_spend_per_user}/365.1), 2) as daily_marketing_spend_per_user,
+round((${avg_spend_per_user}/52.1), 2) as  weely_marketing_spend_per_user,
+'${string_type}' as string_similarity_algo,
+'${fill_missing}' as fill_missing,
+count(time) as raw_record_cnt,
+(select count(time) from ${blocking_table}) as blocking_table_cnt,
+(select approx_distinct(${id_col}) from ${blocking_table}) as num_profiles_block_table,
+(select approx_distinct(${block_key_col}) from ${blocking_table}) as num_blocks,
+(select count(time) from ${output_table}) as final_cluster_table_cnt,
+(select count(distinct ${cluster_col_name}) from ${output_table}) as num_final_clusters,
+(select count(time) - count(distinct ${cluster_col_name}) from ${output_table}) as deduped_ids,
+(select count(time) - count(distinct ${cluster_col_name})from ${output_table})*${avg_spend_per_user} as estimated_savings,
+substr(cast(current_timestamp as varchar), 1, 19) as run_date,
+date_diff('minute', from_unixtime(${session_unixtime}),  current_timestamp) as run_duration_mins,
+'${exclude_overmerging}' as exclude_overmerging
+from ${sink_database}.${input_table}

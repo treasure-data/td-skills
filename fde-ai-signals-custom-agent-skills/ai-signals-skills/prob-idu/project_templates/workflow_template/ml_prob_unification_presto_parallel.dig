@@ -1,0 +1,75 @@
+_export:
+  !include : 'config/global.yml'
+  td:
+    database: ${sink_database}
+
++create_hash_predicate_tables:
+  td_ddl>:
+  empty_tables: ["prob_hash_table","prob_dedupe_blocking_schema"]
+
++generate_blocking_keys:
+  _parallel: true
+  for_each>:
+    column_name: ${dedupe_columns}
+  _do:
+    +check_for_email:
+      if>: ${column_name.type == 'email'}
+      _do:
+        +extract_blocking_key:
+          td>: sql/email_predicates.sql
+
+    +check_for_phone:
+      if>: ${column_name.type == 'phone'}
+      _do:
+        +extract_blocking_key:
+          td>: sql/phone_predicates.sql
+
+    +check_for_string:
+      if>: ${column_name.type == 'string'}
+      _do:
+        +extract_blocking_key:
+          td>: sql/string_predicates.sql
+
+
++aggregate_queries:
+  td>: sql/blocking_query_agg.sql
+  store_last_results: true
+
++create_table_with_blocking_predicate:
+  td>: sql/create_blocking_table.sql
+  create_table: prob_hash_table
+
++create_blocking_tables:
+  td_ddl>:
+  empty_tables: ["${blocking_table}", "${blocking_table}_temp"]
+
++create_features:
+  td>: sql/create_features.sql
+  store_last_results: true
+
++create_blocking_temp:
+  td>: sql/create_blocking_temp.sql
+  engine: hive
+  engine_version: stable
+  create_table: ${blocking_table}_temp
+
+
++optimised_block_table:
+  td>: sql/optimised_final_block_table.sql
+  engine: hive
+  create_table: ${blocking_table}
+
+
+
++get_column_names:
+  td>:
+    data: "SELECT array_join(array_agg(column_name), ', ') as column_list FROM prob_dedupe_blocking_schema  WHERE column_name IS NOT NULL"
+  store_last_results: true
+
++merge_blocks:
+  td>: sql/merge_blocks.sql
+  create_table: ${blocking_table}_temp_filter
+
++replace_merged_blocks:
+  td_ddl>:
+  rename_tables: [{from: "${blocking_table}_temp_filter", to: "${blocking_table}"}]
