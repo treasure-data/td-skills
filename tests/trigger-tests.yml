@@ -332,3 +332,17 @@ tests:
 
   - prompt: "Turn this dashboard screenshot into a custom HTML dashboard on our TD data"
     expected: fde-custom-dashboard-builder
+
+  # === Monitoring Skills ===
+
+  - prompt: "Set up monitoring workflows for this account"
+    expected: setup-monitoring-workflows
+
+  - prompt: "Deploy basic_monitoring and workflow_monitoring"
+    expected: setup-monitoring-workflows
+
+  - prompt: "Show me failed jobs in basic_monitoring_talha as a dashboard"
+    expected: analyze-monitoring-data
+
+  - prompt: "Build a CDP monitoring dashboard for the last 30 days"
+    expected: analyze-monitoring-data
