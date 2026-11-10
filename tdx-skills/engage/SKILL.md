@@ -11,6 +11,7 @@ description: Manage Treasure Engage email templates, campaigns, workspaces, and 
 |---|---|---|
 | "create an email template", "build an email" | `type: template` YAML + HTML | `references/template-yaml.md` |
 | "create a campaign", "set up an email send" | `type: campaign` YAML + HTML | `references/campaign-yaml.md` |
+| "copy", "duplicate", or "clone" an existing template or campaign | Nothing new. Read **Copying Existing Content** first | — |
 
 Always produce **YAML + HTML together**. The YAML is what `tdx engage template push` or `tdx engage campaign push` consumes — HTML alone can't be pushed. This is the most common mistake: generating beautiful HTML, then realizing there's no YAML to push it with.
 
@@ -105,7 +106,7 @@ my-template.yaml    # type: template
 my-template.html    # HTML content
 ```
 
-Always set `editor_type: grapesjs`. The `beefree` editor uses a proprietary JSON format that can't be generated from HTML — `grapesjs` works directly with the HTML you write.
+For new HTML you write, always set `editor_type: grapesjs`. The `beefree` editor uses a proprietary JSON format that can't be generated from HTML — `grapesjs` works directly with the HTML you write. Copies keep their source editor type; see **Copying Existing Content**.
 
 **Variables:** every `{{profile.<name>}}` in HTML or subject needs a `variables` entry.
 
@@ -175,6 +176,23 @@ Use `preview_engage_campaign` for visual preview. Then push:
 tdx engage campaign push path/to/campaign.yaml --yes
 ```
 
+## Copying Existing Content
+
+Use this when the user wants a copy of an existing template or campaign, not new HTML.
+
+A pull followed by a push copies the HTML and metadata, but not the Beefree visual design. A copied `beefree` template opens with an empty content editor even though its preview renders. Don't report a YAML copy as a faithful copy.
+
+| Goal | Path |
+|---|---|
+| Duplicate a campaign in the same workspace | `tdx engage campaign duplicate "Name" --workspace "Workspace"` |
+| Duplicate a template in the same workspace | The Duplicate action in the Engage UI (there is no `tdx` command) |
+| Copy a template or campaign to another workspace | YAML pull → push only. Tell the user the Beefree design isn't carried over, and ask before pushing |
+
+Rules for YAML copies:
+- Keep the source `editor_type`. Switching a copy to `grapesjs` changes how the design is edited, so offer it as an option and get approval first.
+- `email_sender_id` is workspace-specific, so a copy may not point at a valid sender in the destination. Check `connector.email_sender_id` for the destination workspace (`tdx delivery senders --workspace "Name"`) before launch.
+- Check the copy in the content editor, not only the preview.
+
 ## Personalization
 
 Liquid merge tags reference parent segment output columns:
@@ -202,6 +220,7 @@ Check available attributes: `tdx ps desc <parent_segment> -o`
 | `ref:` template not found | Template must exist on server first. `tdx engage templates` to check |
 | Segment not found | Try full path: `ref:[1] Segments/Behavioral/Name` |
 | `ref:` prefix missing | `template`, `audience`, `segment` fields require `ref:Name` format |
+| Copied template's content editor is empty | YAML copies drop the Beefree design. See **Copying Existing Content** |
 
 ## Related Skills
 
