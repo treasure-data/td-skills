@@ -35,7 +35,7 @@ variables:
 | `subject` | No | Supports `{{profile.<name>}}` Liquid tags |
 | `preheader` | No | Inbox preview text; supports Liquid; API limit 220 characters; use `null` to clear an existing value |
 | `workspace` | No | Can use `--workspace` flag or `tdx.json` instead |
-| `editor_type` | Yes | Always `grapesjs` — `beefree` uses proprietary JSON, not compatible with raw HTML |
+| `editor_type` | Yes | `grapesjs` for new HTML. A `beefree` template pushed from YAML opens with an empty editor, because the Beefree design isn't in the YAML. See SKILL.md **Copying Existing Content** |
 | `html_file` | No | Relative path to companion HTML |
 | `plaintext_file` | No | Relative path to companion plaintext |
 | `variables` | No | Defaults to `[]` |
