@@ -231,6 +231,16 @@
         "./fde-ai-signals-custom-agent-skills/ai-signals-skills/shared",
         "./fde-ai-signals-custom-agent-skills/custom-agent-skills/shared"
       ]
+    },
+    {
+      "name": "monitoring-skills",
+      "description": "Deploy TD's basic_monitoring, cdp_monitoring, insights_monitoring, and workflow_monitoring workflow projects inside Treasure AI Studio, then query the ingested data and build self-contained HTML dashboards from natural-language requests",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./monitoring-skills/setup-monitoring-workflows",
+        "./monitoring-skills/analyze-monitoring-data"
+      ]
     }
   ]
 }

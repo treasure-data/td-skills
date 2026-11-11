@@ -126,6 +126,13 @@ Setup skills for Treasure AI Studio, maintained by the Treasure AI FDE Team. Eac
 - **[fde-ai-signals-custom-agent-skills/custom-agent-skills/custom-audience-agent](./fde-ai-signals-custom-agent-skills/custom-agent-skills/custom-audience-agent)** (`fde-custom-audience-agent`) - A customer-specific audience and segment-analysis agent on any parent segment, evaluated with ten test prompts
 - **[fde-ai-signals-custom-agent-skills/custom-agent-skills/custom-dashboard-builder](./fde-ai-signals-custom-agent-skills/custom-agent-skills/custom-dashboard-builder)** (`fde-custom-dashboard-builder`) - A custom HTML dashboard on TD data (new, or from a `.dash` export, HTML file or screenshot) with its own dashboard agent
 
+### Monitoring Skills
+
+Monitor your Treasure AI account's operational health — job health, CDP activity, workflow health, Insights usage — by deploying and querying pre-built monitoring workflow projects. See [monitoring-skills](./monitoring-skills).
+
+- **[monitoring-skills/setup-monitoring-workflows](./monitoring-skills/setup-monitoring-workflows)** - Deploys any combination of the four monitoring workflow projects (`basic_monitoring`, `cdp_monitoring`, `workflow_monitoring`, `insights_monitoring`) via `tdx`
+- **[monitoring-skills/analyze-monitoring-data](./monitoring-skills/analyze-monitoring-data)** - Queries a deployed project's data and answers in a dashboard or a quick reply, from natural language
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills
@@ -152,6 +159,7 @@ Setup skills for Treasure AI Studio, maintained by the Treasure AI FDE Team. Eac
    - `treasure-work-skills` - Treasure Work skills (same set as `studio-skills`, but updated for the renamed `mcp__work__*` MCP namespace)
    - `creative-skills` - Multi-channel ad ideation, brand compliance, and brand onboarding
    - `fde-ai-signals-custom-agent-skills` - AI Signals setups (RFM, NBP, MTA, NBA engagement scores, Classifier, probabilistic IDU) and custom agents (audience agent, dashboard builder)
+   - `monitoring-skills` - Deploy monitoring workflow projects and build dashboards from the ingested data
    - `template-skill` - Template for creating new skills
 
 3. **Or install directly:**
@@ -166,6 +174,7 @@ Setup skills for Treasure AI Studio, maintained by the Treasure AI FDE Team. Eac
    /plugin install treasure-work-skills@td-skills
    /plugin install creative-skills@td-skills
    /plugin install fde-ai-signals-custom-agent-skills@td-skills
+   /plugin install monitoring-skills@td-skills
    ```
 
 ### Invoking Skills
