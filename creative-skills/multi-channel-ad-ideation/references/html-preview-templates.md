@@ -576,6 +576,213 @@ subtext: "Ends Tonight"
 
 ---
 
+### Instagram Post Mockup (Portrait 4:5)
+
+**Best for**: Feed Image, Explore Home — more vertical screen real estate
+
+```html
+<div style="max-width:375px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#fafafa;padding:20px;">
+  <div style="background:#ffffff;border:1px solid #dbdbdb;border-radius:3px;">
+
+    <!-- Post header (profile info) -->
+    <div style="padding:14px 16px;display:flex;align-items:center;border-bottom:1px solid #efefef;">
+      <div style="width:32px;height:32px;border-radius:50%;background:{{profile_color}};margin-right:12px;"></div>
+      <strong style="font-size:14px;color:#262626;">{{brand_username}}</strong>
+    </div>
+
+    <!-- Image (4:5 ratio) -->
+    <div style="position:relative;width:100%;padding-bottom:125%;background:{{image_bg_color}};overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;bottom:0;
+                  display:flex;align-items:center;justify-content:center;
+                  padding:40px;text-align:center;">
+        <div>
+          {{image_content}}
+        </div>
+      </div>
+    </div>
+
+    <!-- Engagement buttons -->
+    <div style="padding:12px 16px;border-bottom:1px solid #efefef;">
+      <div style="display:flex;gap:16px;">
+        <span style="font-size:24px;">🤍</span>
+        <span style="font-size:24px;">💬</span>
+        <span style="font-size:24px;">📤</span>
+      </div>
+    </div>
+
+    <!-- Caption -->
+    <div style="padding:8px 16px;">
+      <p style="font-size:14px;line-height:18px;color:#262626;margin:0;">
+        <strong>{{brand_username}}</strong> {{primary_text}}
+      </p>
+    </div>
+
+    <!-- CTA button -->
+    <div style="padding:0 16px 16px 16px;">
+      <button style="width:100%;background:#0095f6;color:#ffffff;
+                     border:none;border-radius:8px;padding:9px;
+                     font-size:14px;font-weight:600;cursor:pointer;">
+        {{cta_button}}
+      </button>
+    </div>
+
+  </div>
+</div>
+```
+
+---
+
+### Instagram Stories/Reels Mockup (9:16)
+
+**Best for**: Stories, Reels, Explore Image — full-screen vertical format
+
+Includes semi-transparent safe zone overlays to visualize restricted areas.
+
+```html
+<div style="max-width:375px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#000;padding:20px;">
+  <div style="background:#000;border-radius:12px;overflow:hidden;position:relative;">
+
+    <!-- Full-screen image (9:16 ratio) -->
+    <div style="position:relative;width:100%;padding-bottom:177.78%;background:{{image_bg_color}};overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;bottom:0;
+                  display:flex;align-items:center;justify-content:center;
+                  padding:40px;text-align:center;">
+        <div>
+          {{image_content}}
+        </div>
+      </div>
+
+      <!-- Safe zone overlay: top 14% -->
+      <div style="position:absolute;top:0;left:0;right:0;height:14%;
+                  background:rgba(255,0,0,0.08);border-bottom:1px dashed rgba(255,0,0,0.3);">
+        <span style="font-size:10px;color:rgba(255,0,0,0.5);padding:4px;">⚠ Safe zone — top 14%</span>
+      </div>
+
+      <!-- Safe zone overlay: bottom (20% for Stories, 35% for Reels) -->
+      <div style="position:absolute;bottom:0;left:0;right:0;height:{{bottom_safe_zone_percent}};
+                  background:rgba(255,0,0,0.08);border-top:1px dashed rgba(255,0,0,0.3);">
+        <span style="font-size:10px;color:rgba(255,0,0,0.5);padding:4px;">⚠ Safe zone — bottom {{bottom_safe_zone_percent}}</span>
+      </div>
+    </div>
+
+    <!-- Caption overlay (Stories style) -->
+    <div style="position:absolute;bottom:60px;left:16px;right:16px;">
+      <p style="font-size:14px;line-height:18px;color:#ffffff;margin:0;text-shadow:0 1px 3px rgba(0,0,0,0.5);">
+        <strong>{{brand_username}}</strong> {{primary_text}}
+      </p>
+    </div>
+
+    <!-- Swipe-up / CTA indicator -->
+    <div style="position:absolute;bottom:20px;left:0;right:0;text-align:center;">
+      <span style="font-size:12px;color:#ffffff;opacity:0.8;">▲ {{cta_button}}</span>
+    </div>
+
+  </div>
+</div>
+```
+
+**Variable placeholders**:
+- `{{bottom_safe_zone_percent}}`: `20%` for Stories, `35%` for Reels
+- Other placeholders same as square template
+
+---
+
+### Instagram Carousel Mockup
+
+**Best for**: Multi-card carousel ads across any placement
+
+Shows first 2-3 cards with navigation dots and swipe indicator. Adjust `padding-bottom` per placement ratio.
+
+```html
+<div style="max-width:375px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#fafafa;padding:20px;">
+  <div style="background:#ffffff;border:1px solid #dbdbdb;border-radius:3px;">
+
+    <!-- Post header -->
+    <div style="padding:14px 16px;display:flex;align-items:center;border-bottom:1px solid #efefef;">
+      <div style="width:32px;height:32px;border-radius:50%;background:{{profile_color}};margin-right:12px;"></div>
+      <strong style="font-size:14px;color:#262626;">{{brand_username}}</strong>
+    </div>
+
+    <!-- Carousel cards container -->
+    <div style="position:relative;overflow:hidden;">
+      <div style="display:flex;width:300%;">
+
+        <!-- Card 1 (visible) -->
+        <div style="width:33.33%;position:relative;">
+          <div style="position:relative;width:100%;padding-bottom:{{ratio_percent}};background:{{card_1_bg}};overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;right:0;bottom:0;
+                        display:flex;align-items:center;justify-content:center;
+                        padding:30px;text-align:center;">
+              <div>{{card_1_content}}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 (peek) -->
+        <div style="width:33.33%;position:relative;">
+          <div style="position:relative;width:100%;padding-bottom:{{ratio_percent}};background:{{card_2_bg}};overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;right:0;bottom:0;
+                        display:flex;align-items:center;justify-content:center;
+                        padding:30px;text-align:center;">
+              <div>{{card_2_content}}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div style="width:33.33%;position:relative;">
+          <div style="position:relative;width:100%;padding-bottom:{{ratio_percent}};background:{{card_3_bg}};overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;right:0;bottom:0;
+                        display:flex;align-items:center;justify-content:center;
+                        padding:30px;text-align:center;">
+              <div>{{card_3_content}}</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Swipe indicator -->
+      <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);
+                  background:rgba(0,0,0,0.3);color:#fff;border-radius:50%;
+                  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+                  font-size:14px;">›</div>
+    </div>
+
+    <!-- Carousel dots -->
+    <div style="text-align:center;padding:8px;">
+      <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#0095f6;margin:0 3px;"></span>
+      <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#dbdbdb;margin:0 3px;"></span>
+      <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#dbdbdb;margin:0 3px;"></span>
+    </div>
+
+    <!-- Caption (shared across cards) -->
+    <div style="padding:8px 16px;">
+      <p style="font-size:14px;line-height:18px;color:#262626;margin:0;">
+        <strong>{{brand_username}}</strong> {{primary_text}}
+      </p>
+    </div>
+
+    <!-- CTA button -->
+    <div style="padding:0 16px 16px 16px;">
+      <button style="width:100%;background:#0095f6;color:#ffffff;
+                     border:none;border-radius:8px;padding:9px;
+                     font-size:14px;font-weight:600;cursor:pointer;">
+        {{cta_button}}
+      </button>
+    </div>
+
+  </div>
+</div>
+```
+
+**Variable placeholders**:
+- `{{ratio_percent}}`: `100%` (1:1), `125%` (4:5), or `177.78%` (9:16) per placement
+- `{{card_N_bg}}`, `{{card_N_content}}`: Per-card background and content
+- Other placeholders same as square template
+
+---
+
 ## SMS Plain Text Frame
 
 **For SMS previews** (plain text, no HTML):
@@ -667,10 +874,11 @@ subtext: "Ends Tonight"
 ✅ **Include alt text** for images (if using real images)
 
 ### Instagram Mockups
-✅ **1:1 ratio** - Use `padding-bottom:100%` trick for square
+✅ **Aspect ratios** - `padding-bottom:100%` (1:1), `125%` (4:5), `177.78%` (9:16)
 ✅ **Mobile frame** - Max width 375px (iPhone size)
 ✅ **System fonts** - Use `-apple-system` font stack
 ✅ **Instagram blue** - #0095F6 for CTAs
+✅ **Safe zones** - Stories: top 14% + bottom 20%. Reels: top 14% + bottom 35% + sides 6%
 
 ### General
 ✅ **Hex colors** - Use 6-digit hex codes

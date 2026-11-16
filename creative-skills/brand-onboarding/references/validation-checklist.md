@@ -10,7 +10,7 @@ Comprehensive validation criteria for brand guidelines completeness and quality.
 
 **When to use**: User chose "Start using now" after Phase 1 questions
 
-**Expected outcome**: Functional guidelines with score ~25-30/40
+**Expected outcome**: Functional guidelines (~70% complete)
 
 ### Required Elements (Phase 1)
 
@@ -84,7 +84,7 @@ Run through this checklist immediately after generating brand-guidelines.md:
 
 **Phase 1 Validation Result**:
 - All checkboxes above must be checked ✅
-- Expected score: 25-30/40 (Functional)
+- Expected score: ~70% (Functional)
 - Sections 1-4 complete, Sections 5-7 marked as "Optional - not configured"
 - Guidelines are functional but NOT production-ready (missing Messaging, Legal, Accessibility)
 
@@ -99,7 +99,7 @@ Run through this checklist immediately after generating brand-guidelines.md:
 
 **When to use**: User completed both Phase 1 and Phase 2 questions
 
-**Expected outcome**: Production-ready guidelines with score 35-40/40
+**Expected outcome**: Production-ready guidelines (~100% complete)
 
 ### Required Elements (Phase 1 + Phase 2)
 
@@ -130,7 +130,7 @@ All Phase 1 elements PLUS:
 
 **Phase 2 Validation Result**:
 - All Phase 1 + Phase 2 checkboxes must be checked ✅
-- Expected score: 35-40/40 (Mostly/Fully Compliant)
+- Expected score: ~100% (Mostly/Fully Compliant)
 - All 8 sections complete
 - Production-ready with full compliance
 
@@ -152,20 +152,6 @@ After completeness check, assess quality:
 - Generic attributes ("Good", "Nice", "Helpful")
 - Vague definitions without examples
 - Too many attributes (>4) dilutes identity
-
-**Example Good**:
-```
-Knowledgeable:
-- What it means: Experts in gear, technique, and environment
-- Example: "Engineered with bluesign® certified nylon and 100% recycled polyester fill"
-```
-
-**Example Poor**:
-```
-Professional:
-- What it means: We are professional
-- Example: "We do good work"
-```
 
 #### Color Quality
 **Good**:
@@ -249,20 +235,20 @@ Review this sample email for Phase 1 brand compliance:
 
 #### Step 3: Phase 1 Score Interpretation
 
-**Expected Score**: 25-30/40 (Functional)
+**Expected Score**: ~70% (Functional)
 
 **Score Ranges**:
-- **28-30**: Good Phase 1 ✅
+- **~70-75%**: Good Phase 1 ✅
   - Core branding elements work well
   - Ready for immediate use
   - Can enhance with Phase 2 later
 
-- **25-27**: Acceptable Phase 1 ⚠️
+- **~60-69%**: Acceptable Phase 1 ⚠️
   - Some minor gaps in Phase 1 elements
   - Still usable
   - Consider quick fixes or proceed
 
-- **< 25**: Phase 1 Issues ❌
+- **< ~60%**: Phase 1 Issues ❌
   - Missing critical Phase 1 elements
   - Re-check voice, colors, fonts
   - Ask follow-up questions
@@ -304,34 +290,34 @@ Review this sample email for brand compliance using the brand guidelines at ./br
 
 #### Step 3: Phase 2 Score Interpretation
 
-**Target Score**: 35+/40 (Mostly/Fully Compliant)
+**Target Score**: ~100% (Mostly/Fully Compliant)
 
 **Score Ranges**:
-- **38-40**: Fully Compliant ✅
+- **~95-100%**: Fully Compliant ✅
   - Guidelines are comprehensive and usable
   - Ready for production use
   - Proceed to completion
 
-- **35-37**: Mostly Compliant ⚠️
+- **~87-94%**: Mostly Compliant ⚠️
   - Minor gaps in guidelines
   - Identify specific missing elements
   - Offer quick fixes
   - Example: "CTA button color not specified - let's add that"
 
-- **28-34**: Partially Compliant ⚠️
+- **~70-86%**: Partially Compliant ⚠️
   - Significant gaps in Phase 2 elements
   - Multiple sections need enhancement
   - Enter refinement loop
   - Example: "Missing prohibited terms list or legal footer"
 
-- **< 28**: Issues ❌
+- **< ~70%**: Issues ❌
   - Major problems with guidelines
   - Check both Phase 1 and Phase 2 elements
   - Recommend refinement or starting over
 
 #### Step 4: Gap Analysis
 
-For scores < 35, identify which dimensions scored low:
+For scores < ~87%, identify which dimensions scored low:
 
 **Low Visual Compliance** (0-2/5):
 - Missing: CTA color, font specifications, logo rules
@@ -359,11 +345,11 @@ For scores < 35, identify which dimensions scored low:
 
 ### Refinement Loop
 
-If initial test score < 35/40:
+If initial test score < ~100%:
 
 #### Step 1: Identify Gaps
 ```
-Sample email scored 28/40. Here's what's missing:
+Sample email scored ~70%. Here's what's missing:
 
 ❌ Visual Compliance: 2/5
    - CTA color not defined
@@ -381,7 +367,7 @@ Sample email scored 28/40. Here's what's missing:
 **For each gap, ask specific questions**:
 
 ```
-Let's improve your guidelines to reach 35+/40:
+Let's improve your guidelines to reach ~100%:
 
 CTA Color:
 "What's your call-to-action button color? (hex code)"
@@ -411,13 +397,13 @@ Generate new sample email and re-score:
 ```
 Updated guidelines. Let me test again...
 
-Sample email scored: 38/40 (Fully Compliant) ✅
+Sample email scored: ~95% (Fully Compliant) ✅
 ```
 
 #### Step 5: Iterate or Complete
 
-- If score >= 35: Proceed to completion
-- If score < 35: Repeat refinement loop (max 2-3 iterations)
+- If score >= ~87%: Proceed to completion
+- If score < ~87%: Repeat refinement loop (max 2-3 iterations)
 
 ---
 
@@ -428,7 +414,7 @@ Sample email scored: 38/40 (Fully Compliant) ✅
 Before completing, verify file integrity:
 
 #### File Location
-- [ ] File created at correct path: `{project-root}/brand-guidelines.md`
+- [ ] File created at correct path: `~/Documents/Brand Guidelines/{Company Name}/brand-guidelines.md`
 - [ ] File is readable (not corrupted)
 - [ ] File size reasonable (typically 10-50KB for markdown)
 
@@ -489,7 +475,7 @@ After all validation phases complete, generate this report:
 
 ## Sample Email Test ✅
 
-**Test Result**: 38/40 (Fully Compliant)
+**Test Result**: ~95% (Fully Compliant)
 
 Dimension Scores:
 - Visual Compliance: 5/5
@@ -506,7 +492,7 @@ Dimension Scores:
 ## Recommendations
 
 ✅ Guidelines complete and validated
-✅ Sample content scored highly (38/40)
+✅ Sample content scored highly (~95%)
 ✅ All required sections present
 
 Optional enhancements:
@@ -526,74 +512,6 @@ Guidelines location: {full-path}/brand-guidelines.md
 
 ---
 
-## Common Validation Issues and Fixes
-
-### Issue: Low Sample Test Score (< 28/40)
-
-**Symptoms**:
-- Sample email doesn't use brand colors
-- Voice doesn't match guidelines
-- Missing legal footer
-
-**Diagnosis**:
-- Guidelines too vague or incomplete
-- Missing critical sections (colors, fonts, legal)
-
-**Fix**:
-- Review completeness checklist
-- Ask targeted follow-up questions for missing sections
-- Ensure specific hex codes, font names, and legal templates provided
-
-### Issue: Accessibility Warnings
-
-**Symptoms**:
-- CTA color contrast < 4.5:1 against background
-- Font sizes < 16px
-- No alt text requirements
-
-**Diagnosis**:
-- Colors chosen don't meet WCAG standards
-- Accessibility section skipped or incomplete
-
-**Fix**:
-- Calculate contrast ratios and suggest darker/lighter alternatives
-- Recommend minimum 16px font size
-- Add accessibility standards to guidelines
-
-### Issue: Generic/Vague Guidelines
-
-**Symptoms**:
-- Sample scores well but content could be for any brand
-- Voice attributes like "Professional, Good, Nice"
-- No specific power words
-
-**Diagnosis**:
-- User provided generic answers during wizard
-- Didn't give specific brand-unique information
-
-**Fix**:
-- Ask more specific follow-up questions
-- Request industry-specific terminology
-- Encourage unique voice attribute examples
-
-### Issue: Inconsistent Formatting
-
-**Symptoms**:
-- Sections out of order
-- Missing markdown formatting
-- Broken code blocks
-
-**Diagnosis**:
-- Template generation error
-- Manual editing broke formatting
-
-**Fix**:
-- Regenerate from template
-- Validate markdown syntax
-- Ensure code blocks use triple backticks
-
----
-
 ## Automated Validation Checks
 
 ### Checks Claude Should Perform Automatically
@@ -609,7 +527,7 @@ Guidelines location: {full-path}/brand-guidelines.md
 1. **File write success**: Confirm file created at correct path
 2. **Markdown validity**: No syntax errors
 3. **Placeholder removal**: No {template} text remaining
-4. **Sample test**: Generate and score >= 35/40
+4. **Sample test**: Generate and score >= ~100%
 
 #### Red Flags to Catch:
 - ❌ Same hex code for primary and CTA colors
@@ -617,78 +535,5 @@ Guidelines location: {full-path}/brand-guidelines.md
 - ❌ Empty sections or placeholder text
 - ❌ Font size < 14px (too small)
 - ❌ No legal requirements (if sending emails/SMS)
-- ❌ Sample test scores < 28/40 (major issues)
+- ❌ Sample test scores < ~70% (major issues)
 
----
-
-## Validation Success Criteria
-
-### Minimum Standards (Must Pass)
-
-To complete onboarding successfully:
-
-✅ **Completeness**: All required elements present (Phase 1 checklist)
-
-✅ **Accessibility**: Colors meet 4.5:1 contrast, fonts >= 16px
-
-✅ **Sample Test**: Score >= 35/40 on brand-compliance check
-
-✅ **File Integrity**: Valid markdown, proper structure, no errors
-
-### Recommended Standards (Should Pass)
-
-For high-quality guidelines:
-
-✅ **Quality**: Specific, brand-unique voice and terminology
-
-✅ **Coverage**: Multiple contextual tones (2-4 contexts)
-
-✅ **Legal**: Comprehensive channel coverage (email + SMS + Instagram)
-
-✅ **Sample Test**: Score >= 38/40 (Fully Compliant)
-
-### Exceptional Standards (Ideal)
-
-For exceptional guidelines:
-
-✅ **Comprehensive**: All optional sections filled
-
-✅ **Specificity**: Detailed usage rules and restrictions for every element
-
-✅ **Examples**: Multiple examples per voice attribute and tone
-
-✅ **Sample Test**: Score 40/40 (Perfect)
-
----
-
-## Validation Workflow Summary
-
-```
-1. Generate brand-guidelines.md
-   ↓
-2. Run Completeness Check (Phase 1)
-   ├─ Pass → Continue
-   └─ Fail → Identify missing sections, ask follow-up questions
-   ↓
-3. Run Quality Check (Phase 2)
-   ├─ Good quality → Continue
-   └─ Poor quality → Suggest improvements, refine answers
-   ↓
-4. Generate Sample Email
-   ↓
-5. Run Brand Compliance Test (Phase 3)
-   ├─ Score >= 35 → Continue
-   └─ Score < 35 → Enter Refinement Loop (Phase 4)
-   ↓
-6. Run File Integrity Check (Phase 5)
-   ├─ Pass → Complete
-   └─ Fail → Fix issues, regenerate
-   ↓
-7. Generate Validation Report
-   ↓
-8. SUCCESS: Guidelines ready for production use!
-```
-
----
-
-This validation checklist ensures every generated brand-guidelines.md file is complete, high-quality, accessible, and functional before the user starts creating branded content.
