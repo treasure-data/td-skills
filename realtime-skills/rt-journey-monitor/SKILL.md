@@ -428,6 +428,6 @@ After monitoring setup:
 
 ## Resources
 
-- [Activation Logs Documentation](https://docs.treasuredata.com/display/public/PD/Activation+Logs)
-- [Monitoring Best Practices](https://docs.treasuredata.com/display/public/PD/Monitoring+Guide)
-- [Troubleshooting Guide](https://docs.treasuredata.com/display/public/PD/RT+Troubleshooting)
+- [Activation Logs Documentation](https://docs.treasuredata.com/products/customer-data-platform/real-time/reviewing-real-time-triggered-activation-logs)
+- [Monitoring Best Practices](https://docs.treasuredata.com/products/customer-data-platform/real-time/reviewing-real-time-triggered-activation-logs)
+- [Troubleshooting Guide](https://docs.treasuredata.com/products/customer-data-platform/real-time/real-time)
