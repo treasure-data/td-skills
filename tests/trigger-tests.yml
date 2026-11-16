@@ -168,6 +168,9 @@ tests:
   - prompt: "Find recent hero images in Engage DAM before building my email campaign"
     expected: engage
 
+  - prompt: "Copy the Engage email template from the Marketing Team workspace to the EMEA workspace"
+    expected: engage
+
   # === Document Skills ===
 
   - prompt: "Create a PowerPoint presentation about our Q4 results"
