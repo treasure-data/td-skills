@@ -1,0 +1,20 @@
+{
+  "skill_name": "demo-environment",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have a demo coming up with Starbucks, they're CPG. Main goal is improving loyalty and reducing coupon waste.",
+      "expected_output": "Database glawrence_demo_starbucks, Parent Segment Demo - Starbucks, CPG blueprint with all tables, correct YAML schema"
+    },
+    {
+      "id": 2,
+      "prompt": "Set up a demo for Kaiser Permanente -- they're interested in patient engagement and reducing no-shows",
+      "expected_output": "Database glawrence_demo_kaiser_permanente, Parent Segment Demo - Kaiser Permanente, Healthcare blueprint"
+    },
+    {
+      "id": 3,
+      "prompt": "prep demo for T-Mobile, they want to reduce churn and upsell 5G plans",
+      "expected_output": "Database glawrence_demo_tmobile (hyphen stripped), Parent Segment Demo - T-Mobile, Telecom blueprint"
+    }
+  ]
+}
