@@ -99,7 +99,7 @@ Generate **3-5 Instagram image ad concepts** using **table format** for easy sid
 **HTML Generation and Preview Workflow** (complete all steps):
 1. Read `../references/html-preview-templates.md`
 2. **Check for generated image** (auto-background enhancement):
-   - Use Glob to find `instagram-ad-*.png` files in working directory
+   - Use Glob to find `instagram-*-ad-*.png` files in working directory
    - Sort by modification time (most recent first)
    - If found: Read PNG as binary and convert to base64 string
    - If not found: Use placeholder/emoji approach (current behavior)
@@ -112,7 +112,7 @@ Generate **3-5 Instagram image ad concepts** using **table format** for easy sid
 
 **Important workflow requirement**: After generating HTML for Instagram, always complete steps 4 and 5 automatically. Write the HTML to a file and immediately open it with `mcp__tdx-studio__open_file`. This ensures the user sees the preview without needing to ask for it.
 
-**Image Integration Note**: If you previously generated an image using the image-gen skill, this workflow will automatically detect the most recent `instagram-ad-*.png` file and use it as the background image in the HTML preview. This creates a more realistic preview with actual AI-generated visuals instead of placeholders.
+**Image Integration Note**: If you previously generated an image using the image-gen skill, this workflow will automatically detect the most recent `instagram-*-ad-*.png` file and use it as the background image in the HTML preview. This creates a more realistic preview with actual AI-generated visuals instead of placeholders.
 
 Example:
 ```markdown
@@ -143,7 +143,7 @@ This skill automatically integrates with the `image-gen` skill to create more re
 **How it works**:
 1. If you generate an actual Instagram ad image using the `image-gen` skill first
 2. When you then generate HTML mockups with this skill, it will:
-   - Auto-detect the most recent `instagram-ad-*.png` file in the working directory
+   - Auto-detect the most recent `instagram-*-ad-*.png` file in the working directory
    - Convert the PNG to base64 format
    - Embed it as the background image in the HTML preview
    - Result: HTML mockup shows the actual AI-generated image instead of placeholder
@@ -151,14 +151,14 @@ This skill automatically integrates with the `image-gen` skill to create more re
 **Example workflow**:
 ```
 User: "Generate an Instagram ad image for hiking boots"
-[image-gen skill creates instagram-ad-20250316-143022.png]
+[image-gen skill creates instagram-feed-ad-hiking-boots-20260708-143022.png]
 
 User: "Now show me the HTML mockup"
 [This skill detects the PNG, converts to base64, embeds in HTML]
 Result: HTML preview displays with the actual generated hiking boots image as background
 ```
 
-**Fallback**: If no `instagram-ad-*.png` file is found, the HTML mockup uses the standard placeholder/emoji approach.
+**Fallback**: If no `instagram-*-ad-*.png` file is found, the HTML mockup uses the standard placeholder/emoji approach.
 
 ## Copy Constraints
 

@@ -1,6 +1,6 @@
 ---
 name: image-gen
-description: Generate real Instagram image ads with AI-generated visuals and text overlays. Combines TD Creative Studio image generation with headline compositing via Pillow. Use when user wants to create Instagram ad images, generate ad visuals with text, or produce shareable ad PNGs. Trigger keywords: instagram ad image, generate ad image, image ad with text, ad visual, create instagram ad.
+description: Generate real Instagram image ads with AI-generated visuals and text overlays. Combines tas-imggen AI image generation (TD Creative Studio as backup) with headline compositing via Pillow. Use when user wants to create Instagram ad images, generate ad visuals with text, or produce shareable ad PNGs. Trigger keywords: instagram ad image, generate ad image, image ad with text, ad visual, create instagram ad.
 ---
 
 # Instagram Image Ad Generation
@@ -14,7 +14,7 @@ This skill chains three systems together:
 ```
 Creative Ideation (concept + copy)
     ↓
-TD Creative Studio Agent (AI image generation from concept description)
+tas-imggen CLI (AI image generation — TD Creative Studio agent as backup)
     ↓
 Pillow Text Compositor (headline overlay on generated image)
     ↓
@@ -45,10 +45,10 @@ Generate **3-5 Instagram image ad concepts** in this text-only format:
 [Combine the visual concept description with the primary text theme into a rich,
 detailed prompt for AI image generation. **If Description text is provided, incorporate
 it into the prompt context.** Include composition, lighting, color palette, mood, style,
-and any specific visual elements. This is what gets sent to the TD Creative Studio
-Image Generation Agent.]
+and any specific visual elements. This is what gets sent to the image generator
+(`tas-imggen`, or the TD Creative Studio agent as backup).]
 
-- **Dimensions**: 1024x1024 (will be generated at this size)
+- **Dimensions**: 1080x1080 (Instagram feed; generated at this size — use 1080x1920 for stories/reels)
 - **Style**: [Photorealistic, illustration, flat design, etc.]
 - **Mood/Tone**: [Energetic, calm, luxurious, urgent, etc.]
 - **Key Visual Elements**: [Specific objects, scenes, or compositions to include]
@@ -87,17 +87,24 @@ When triggered, execute the full pipeline for each confirmed concept.
 
 ## Execution Pipeline
 
-### Step 1: Set Project Context
+**Output filename contract:** Save the **final** composited image as `<placement>-ad-<concept-slug>-<timestamp>.png` — e.g. `instagram-feed-ad-summer-sale-20260708-143022.png`. `<placement>` is derived from the target size (`instagram-feed` for 1080×1080, `instagram-story` for 1080×1920 stories/reels), `<concept-slug>` is the kebab-cased concept name, and `<timestamp>` is `YYYYMMDD-HHMMSS`. Downstream skills auto-detect this output by globbing `instagram-*-ad-*.png` and picking the most recent by modification time — the placement prefix keeps Instagram assets distinct from other channels' images. Intermediate working files (`_base.png`, `_with_logo.png`) are transient and keep the concept slug.
+
+### Step 1: Generate the Base Image (Primary — `tas-imggen` CLI)
+
+Send the **Image Generation Prompt** from the confirmed concept to the `tas-imggen` tool, which writes the PNG directly to the output path — no project context, chat session, or extraction step required:
+
+```bash
+tas-imggen generate --prompt "<Image Generation Prompt from confirmed concept>" --size 1080x1080 --quality high -o <concept_name>_base.png
+```
+
+Set `--size` to the exact target Instagram placement — `1080x1080` for feed (default here), `1080x1920` for stories/reels. Generate multiple confirmed concepts in parallel (background tasks), each with its own `-o <concept_name>_base.png`. Once the base image exists, skip Steps 2–3 and proceed to Step 3.5.
+
+### Step 2: Generate the Base Image (Backup — TD Creative Studio Agent)
+
+**Only if `tas-imggen` is unavailable or errors.** Set the project context, then send the prompt to the TD agent:
 
 ```bash
 tdx use llm_project "TD-Managed: Creative Studio"
-```
-
-### Step 2: Generate the Base Image
-
-Send the **Image Generation Prompt** from the confirmed concept to the TD agent:
-
-```bash
 tdx chat --stream \
   --new \
   --agent "TD-Managed: Creative Studio/TD-Managed: Image Generation Agent" \
@@ -111,7 +118,7 @@ Parse the `chatId` from the metadata event in the stream output:
 {"type":"metadata","data":{"chatId":"<CHAT_ID>"}}
 ```
 
-### Step 3: Extract Image from Chat History
+### Step 3: Extract Image from Chat History (Backup only)
 
 ```bash
 tdx llm history "<CHAT_ID>"
@@ -273,14 +280,37 @@ if SUBTITLE_TEXT:
         draw.text((sx+ox, sy+oy), SUBTITLE_TEXT, fill=(0,0,0,180), font=subtitle_font)
     draw.text((sx, sy), SUBTITLE_TEXT, fill=SUBTITLE_COLOR, font=subtitle_font)
 
-img.convert("RGB").save("<concept_name>_final.png", "PNG", quality=95)
+img.convert("RGB").save("<placement>-ad-<concept-slug>-<timestamp>.png", "PNG", quality=95)  # e.g. instagram-feed-ad-summer-sale-20260708-143022.png
 ```
 
 ### Step 5: Display the Final Image
 
 ```
-open_file(path: "<concept_name>_final.png")
+open_file(path: "<placement>-ad-<concept-slug>-<timestamp>.png")
 ```
+
+### Step 5b: HTML Ad — Embed Image as Base64 (Required)
+
+When generating an HTML ad mockup, **never reference the PNG via a relative file path**. The HTML must be fully self-contained so it renders correctly regardless of where it is opened.
+
+Always embed the final PNG as a base64 data URI:
+
+```python
+import base64
+
+with open("<placement>-ad-<concept-slug>-<timestamp>.png", "rb") as f:
+    b64 = base64.b64encode(f.read()).decode()
+
+data_uri = f"data:image/png;base64,{b64}"
+```
+
+Then write the HTML with the data URI inline:
+
+```html
+<img src="data:image/png;base64,{{ b64 }}" alt="..." />
+```
+
+**Why**: A relative `src="image.png"` breaks whenever the HTML file is opened from a different directory, sent via email, or viewed in an artifact panel. A self-contained data URI works everywhere, first time, every time.
 
 ### Step 6: Iteration Support
 
@@ -370,7 +400,7 @@ Optional additional context, often hidden in feed.
 
 ## Image Generation Prompt Tips
 
-The TD Creative Studio Image Generation Agent uses Amazon Bedrock Nova Canvas (default 1024x1024).
+The primary generator is the `tas-imggen` CLI; set `--size` to the exact target placement (1080x1080 for Instagram feed, 1080x1920 for stories/reels). The TD Creative Studio backup uses Amazon Bedrock Nova Canvas (fixed 1024x1024).
 
 - **Do**: Be descriptive (composition, lighting, colors, mood, textures), specify style explicitly ("photorealistic", "digital illustration"), include negative prompts, leave visual breathing room where headline will go
 - **Don't**: Request copyrighted characters/brand logos, use vague descriptions, forget to leave clean space in the text position area
@@ -384,7 +414,7 @@ The TD Creative Studio Image Generation Agent uses Amazon Bedrock Nova Canvas (d
 | Primary Text | Instagram caption + informs image generation theme |
 | Headline | Text composited onto the generated image |
 | Description | Instagram ad description field + enriches image generation prompt when available |
-| Image Generation Prompt | Sent to TD Creative Studio Image Gen Agent |
+| Image Generation Prompt | Sent to the image generator (`tas-imggen`, Creative Studio backup) |
 | Headline Overlay Style | Controls Pillow text compositing parameters |
 
 ---
