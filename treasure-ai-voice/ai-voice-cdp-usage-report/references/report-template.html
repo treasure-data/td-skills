@@ -3,10 +3,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{レポートのタイトル}}</title>
 <!--
-  AI Voice 利用状況レポートのテンプレート。このファイルをコピーし、すべての {{プレースホルダー}} を置き換え、不要な部品を削除する。
-  CSSはそのまま使う。CSSはインラインのみ。JavaScript、外部フォント、外部画像は使わない。
-  ラベルは日本語が既定。英語で頼まれたら、固定のラベルも英訳し、html の lang を en にする。
-  棒:幅を % で指定する(値 / 最大値 * 100)。柱:高さを px で指定する(値 / 最大値 * 130、最小2)。
+  Template for the AI Voice usage report. Copy this file, replace every {{placeholder}}, and delete the parts you do not need.
+  Keep the CSS as it is. The CSS is inline only. Do not use JavaScript, external fonts, or external images.
+  Labels default to Japanese. If English is requested, translate the fixed labels too and set the html lang to en.
+  Bars: set the width in % (value / max * 100). Columns: set the height in px (value / max * 130, minimum 2).
 -->
 <style>
 :root{--ink:#140F24;--sub:#5A5570;--line:#E2DDEE;--brand:#7B32DC;--brand-d:#5A21A8;--soft:#EFE9FC;--bg:#F7F5F9;--grey:#C9C6D6;--alert:#C0392B}
@@ -65,16 +65,16 @@ footer p{margin:3px 0}
 @media print{body{background:#fff}.wrap{padding:0}section.panel,.rec,.kpi{break-inside:avoid}}
 </style></head><body><div class="wrap">
 
-<!-- ヘッダー:タイトル、対象を一言で、期間のバッジ1つ。データベース名やテーブル名は、レポートのどこにも書かない。 -->
+<!-- Header: title, one line about the scope, and one period badge. Never write database or table names anywhere in the report. -->
 <div class="top">
   <div><h1>{{レポートのタイトル}}</h1><div class="meta">{{対象を一言で。例:営業部の AI Voice 端末と録音}} / 生成 {{日付}}</div></div>
   <div class="badges"><span class="badge key">{{期間}}</span></div>
 </div>
 
-<!-- リード:結論と主要な数字を1文で。数字はクエリ結果から取る -->
+<!-- Lead: the conclusion and the key numbers in one sentence. Take the numbers from the query results. -->
 <p class="lead">{{結論を1文で}}</p>
 
-<!-- KPIカード:ちょうど4枚。数字はクエリ結果からそのまま写す -->
+<!-- KPI cards: exactly 4. Copy the numbers from the query results as they are. -->
 <div class="kpis">
   <div class="kpi"><div class="k">{{ラベル}}</div><div class="v">{{n}}<span class="u">{{単位}}</span></div><span class="sub">{{補足}}</span></div>
   <div class="kpi"><div class="k">{{ラベル}}</div><div class="v">{{n}}<span class="u">{{単位}}</span></div><span class="sub">{{補足}}</span></div>
@@ -82,8 +82,8 @@ footer p{margin:3px 0}
   <div class="kpi"><div class="k">{{ラベル}}</div><div class="v">{{n}}<span class="u">{{単位}}</span></div><span class="sub">{{補足}}</span></div>
 </div>
 
-<!-- 左に表、右に所見と次の一手を置くパネル。
-     表が5列以上なら class="grid2" を class="grid1" に変える:表は全幅になり、補足は表の下に置かれる。 -->
+<!-- Panels: the table on the left, and the findings and next steps on the right.
+     If the table has 5 or more columns, change class="grid2" to class="grid1": the table takes the full width, and the notes go under the table. -->
 <section class="panel"><h2>{{パネルのタイトル}}</h2><p class="cap">{{表が何を示すかを1行で}}</p>
 <div class="grid2">
   <div>
@@ -98,7 +98,7 @@ footer p{margin:3px 0}
   <div class="note"><b>所見</b>{{結果から言える事実だけ}}<b>次の一手</b>{{提案を1つ。提案の言い方で}}</div>
 </div></section>
 
-<!-- 横棒のパネル(人ごと・端末ごとの数に使う) -->
+<!-- Horizontal bar panel (for counts per person and per device) -->
 <section class="panel"><h2>{{パネルのタイトル}}</h2><p class="cap">{{説明}}</p>
 <div class="grid2">
   <div class="bars">
@@ -108,7 +108,7 @@ footer p{margin:3px 0}
   <div class="note"><b>所見</b>{{事実}}<b>次の一手</b>{{提案}}</div>
 </div></section>
 
-<!-- 柱のパネル(週ごとの推移に使う) -->
+<!-- Column panel (for the weekly trend) -->
 <section class="panel"><h2>{{パネルのタイトル}}</h2><p class="cap">{{説明}}</p>
 <div class="grid2">
   <div class="cols">
@@ -118,14 +118,14 @@ footer p{margin:3px 0}
   <div class="note"><b>所見</b>{{事実}}<b>次の一手</b>{{提案}}</div>
 </div></section>
 
-<!-- 次の一手の提案:最大3枚。優先度は HIGH / MID。結果から導かれる行動だけ -->
+<!-- Next steps: at most 3 cards. Priority is HIGH / MID. Only actions that follow from the results. -->
 <h2 class="sec">次の一手の提案</h2>
 <div class="recs">
   <div class="rec"><div class="p">HIGH</div><h3>{{短い見出し}}</h3>{{やること、誰に聞くか}}</div>
   <div class="rec"><div class="p">MID</div><h3>{{短い見出し}}</h3>{{やること}}</div>
 </div>
 
-<!-- フッター:1行だけ。数字の読み方が変わることだけ(期間、除外したもの)。注意書きやツールについての注記は書かない。 -->
+<!-- Footer: one line only, about what changes how the numbers are read (period, what was excluded). Do not add warnings or notes about tools. -->
 <footer>
   <p>{{期間とタイムゾーン / 除外したもの。例:対象期間 2026-10-01〜2026-11-09(Asia/Tokyo) / 3時間を超える長時間録音 1件は含まれていません}}</p>
 </footer>

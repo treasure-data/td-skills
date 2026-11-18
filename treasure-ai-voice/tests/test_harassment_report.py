@@ -1,7 +1,7 @@
-"""ai-voice-cdp-harassment-dashboard/scripts/harassment_report.py の単体テスト。
+"""Unit tests for ai-voice-cdp-harassment-dashboard/scripts/harassment_report.py.
 
-架空の検知結果を入力にし、件数と入力チェックを確かめる。
-実行: treasure-ai-voice フォルダで `python3 -m unittest discover -s tests -v`
+The input is made-up detection results. The tests check the counts and the input validation.
+Run from the treasure-ai-voice folder: python3 -m unittest discover -s tests -v
 """
 import importlib.util
 import json
@@ -17,8 +17,9 @@ SCRIPT = (
     / "ai-voice-cdp-harassment-dashboard" / "scripts" / "harassment_report.py"
 )
 
-# 架空の結果。候補5件のうち4件を判定、3件を「疑い」とした。
-# 判定しなかった候補は 5 - 4 = 1件(未判定)。失敗・処理中は 1 + 2 = 3件(除外)。
+# Made-up results: 4 of 5 candidates were judged, and 3 of them were marked suspected.
+# The 1 candidate not judged is 5 - 4 = 1. 1 failed + 2 in progress = 3 excluded.
+# The type values and the "客" (customer) / "店" (staff) values are fixed Japanese values that the script requires.
 BASE = {
     "lang": "ja",
     "period_start": "2026-11-01",
@@ -27,32 +28,32 @@ BASE = {
     "findings": [
         {
             "recording_id": "r1", "date": "2026-11-02", "time": "18:03",
-            "recorder": "山口 美咲", "title": "夕方の対応", "minutes": 4.4,
+            "recorder": "Recorder A", "title": "Evening service", "minutes": 4.4,
             "type": "暴言・侮辱", "severity": 3,
-            "quote": "ふざけるな", "reason": "強い侮辱語を繰り返している",
+            "quote": "Are you serious?", "reason": "Repeated insults toward the staff member",
             "context": [
-                {"t": "03:12", "who": "客", "text": "ふざけるなよ"},
-                {"t": "03:14", "who": "店", "text": "申し訳ございません"},
+                {"t": "03:12", "who": "客", "text": "Are you serious? Get me the manager."},
+                {"t": "03:14", "who": "店", "text": "I am sorry for the trouble."},
             ],
         },
         {
             "recording_id": "r2", "date": "2026-11-02", "time": "10:00",
-            "recorder": "佐藤", "title": "", "minutes": 10,
+            "recorder": "Recorder B", "title": "", "minutes": 10,
             "type": "長時間の拘束・繰り返し", "severity": 1,
-            "quote": "もう一回説明して", "reason": "同じ質問を繰り返している",
+            "quote": "Explain it to me one more time", "reason": "Asking the same question again and again",
         },
         {
             "recording_id": "r3", "date": "2026-11-05", "time": "12:00",
-            "recorder": "鈴木", "title": "レジ前", "minutes": 2,
+            "recorder": "Recorder C", "title": "Register area", "minutes": 2,
             "type": "暴言・侮辱", "severity": 2,
-            "quote": "バカにしてるのか", "reason": "侮辱的な言い方を繰り返している",
+            "quote": "Are you making fun of me?", "reason": "Repeated mocking remarks",
         },
     ],
 }
 
 
 def load_module():
-    """スクリプトを新しいモジュールとして読む。LANG などの状態をテストどうしで持ち越さないため。"""
+    """Load the script as a fresh module, so that LANG and other state are not carried between tests."""
     spec = importlib.util.spec_from_file_location("harassment_report", SCRIPT)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -138,10 +139,11 @@ class MainTest(HarassmentTestCase):
         proc, out = self.run_script(data)
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertEqual(json.loads(proc.stdout)["suspected"], 0)
+        # Japanese output text for "no findings" (the default label language is ja)
         self.assertIn("疑いのある録音はありませんでした。", out.read_text(encoding="utf-8"))
 
     def test_bad_input_exits_with_an_error_message(self):
-        proc, _ = self.run_script(self.finding(0, type="不明"))
+        proc, _ = self.run_script(self.finding(0, type="unknown"))
         self.assertNotEqual(proc.returncode, 0)
         self.assertIn("ERROR:", proc.stderr)
 
@@ -158,6 +160,7 @@ class RenderTest(HarassmentTestCase):
 
     def test_untitled_recording_is_labelled(self):
         html = self.render(BASE)
+        # Japanese output label for an untitled recording (the default label language is ja)
         self.assertIn("(無題)", html)
 
     def test_english_labels_when_lang_is_en(self):
@@ -185,7 +188,7 @@ class InputErrorTest(HarassmentTestCase):
         self.assert_rejected(self.data(lang="fr"), "lang must be ja or en")
 
     def test_type_must_be_one_of_the_fixed_types(self):
-        self.assert_rejected(self.finding(0, type="不明"), "type must be one of")
+        self.assert_rejected(self.finding(0, type="unknown"), "type must be one of")
 
     def test_severity_must_be_1_2_or_3(self):
         self.assert_rejected(self.finding(0, severity=4), "severity")
@@ -212,7 +215,7 @@ class InputErrorTest(HarassmentTestCase):
         self.assert_rejected(data, "larger than judged")
 
     def test_context_speaker_must_be_customer_or_staff(self):
-        data = self.finding(0, context=[{"t": "00:01", "who": "お客様", "text": "..."}])
+        data = self.finding(0, context=[{"t": "00:01", "who": "customer", "text": "..."}])
         self.assert_rejected(data, "who must be 客 or 店")
 
     def test_context_is_at_most_12_lines(self):

@@ -3,10 +3,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{会議のタイトル}} 議事録</title>
 <!--
-  議事録のテンプレート。このファイルをコピーし、すべての {{プレースホルダー}} を置き換え、不要な部分を削除する。
-  CSSはそのまま使う。CSSはインラインのみ。JavaScript、外部フォント、外部画像は使わない。
-  ラベルは出力する言語に合わせる(ひな形のラベルは日本語)。
-  文字起こしの本文中の < > & はエスケープする。曜日を記憶で書かない。
+  Template for the meeting minutes. Copy this file, replace every {{placeholder}}, and delete the parts you do not need.
+  Keep the CSS as it is. The CSS is inline only. Do not use JavaScript, external fonts, or external images.
+  Match the labels to the output language (the template labels are in Japanese).
+  Escape < > & in the transcript text. Do not write weekdays from memory.
 -->
 <style>
 :root{--ink:#140F24;--sub:#5A5570;--line:#E2DDEE;--brand:#7B32DC;--brand-d:#5A21A8;--soft:#EFE9FC;--bg:#F7F5F9}
@@ -37,13 +37,13 @@ footer p{margin:3px 0}
 @media print{body{background:#fff}.wrap{padding:0}section.panel{break-inside:avoid}}
 </style></head><body><div class="wrap">
 
-<!-- ヘッダー:タイトル、日時の行、バッジ(日時、要確認の件数) -->
+<!-- Header: title, a line for the date and time, and badges (date and time, number of items to confirm) -->
 <div class="top">
   <div><h1>{{会議のタイトル}}</h1><div class="meta">議事録 / 記録者 {{記録者}}</div></div>
   <div class="badges"><span class="badge key">{{日付、開始〜終了時刻}}</span><span class="badge">要確認 {{n}}件</span></div>
 </div>
 
-<!-- リード:その会議で何が決まったかを1文で -->
+<!-- Lead: what was decided in the meeting, in one sentence -->
 <p class="lead">{{結論を1文で}}</p>
 
 <div class="info">
@@ -75,7 +75,7 @@ footer p{margin:3px 0}
   <ul><li>{{要点、誰が提起したか、どう決着したか}}</li></ul>
 </section>
 
-<!-- 必ず残す:録音からは判断できないこと -->
+<!-- Always keep: what cannot be decided from the recording -->
 <section class="panel tbc"><h2>要確認</h2>
   <ul><li>{{担当や期限の言及なし / 文字起こしの誤りと思われる箇所 / 文脈から推定した話者}}</li></ul>
 </section>

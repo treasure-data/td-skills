@@ -80,12 +80,12 @@ from (
   select *, row_number() over (partition by unique_id order by updated_at desc) as rn
   from {database}.transcript_segments
   where td_interval(time, '-30d/now', '{tz}')
-    and recording_id = '<録音ID>'
+    and recording_id = '<recording_id>'
 ) where rn = 1
 order by segment_index
 ```
 
-(`<録音ID>` is a placeholder for the recording ID. Replace it with the actual ID.)
+(`<recording_id>` is a placeholder for the recording ID. Replace it with the actual ID.)
 
 The `time` of `transcript_segments` is "recording datetime + start position of the utterance", so if you know the recording date, narrowing around it is faster.
 
@@ -100,7 +100,7 @@ from (
   select *, row_number() over (partition by unique_id order by updated_at desc) as rn
   from {database}.transcript_segments
   where td_interval(time, '-30d/now', '{tz}')
-    and recording_id = '<録音ID>'
+    and recording_id = '<recording_id>'
 ) where rn = 1
 group by 1
 order by talk_seconds desc
@@ -132,13 +132,13 @@ select
   seg.text
 from seg
 left join r on r.id = seg.recording_id
-where seg.text like '%価格改定%'
+where seg.text like '%price%'
   and r.user_email = '<user email>'  -- default scope: the user's own recordings (see "Whose recordings to read" in SKILL.md)
 order by seg.time
 limit 50
 ```
 
-(`価格改定` in the `like` condition is an example keyword, meaning "price revision". Replace it with the user's keyword.)
+(`price` in the `like` condition is an example keyword. Replace it with the user's keyword.)
 
 Remove the `user_email` line only after the user has confirmed that they want to include recordings made by other people. Without it, the query also returns very long recordings that have no row in `recordings` (`title` is then empty); with it, those recordings are left out.
 

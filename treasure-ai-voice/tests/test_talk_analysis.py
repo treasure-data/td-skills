@@ -1,7 +1,7 @@
-"""ai-voice-talk-analysis/scripts/talk_analysis.py の単体テスト。
+"""Unit tests for ai-voice-talk-analysis/scripts/talk_analysis.py.
 
-架空の短い会話を入力にし、期待値は手で計算した数字と比べる。
-実行: treasure-ai-voice フォルダで `python3 -m unittest discover -s tests -v`
+The input is a short made-up conversation. The expected values are worked out by hand.
+Run from the treasure-ai-voice folder: python3 -m unittest discover -s tests -v
 """
 import importlib.util
 import json
@@ -13,15 +13,15 @@ from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent.parent / "ai-voice-talk-analysis" / "scripts" / "talk_analysis.py"
 
-# 秒単位の架空の会話。期待値は下のテストの説明どおり手で計算している。
-#   S1(自社) 0.0-10.0 / C1(顧客) 10.5-20.0 / S1 23.5-30.0 / C1 29.0-35.0 / O1(other) 35.5-38.0 / S1 38.5-40.0
+# A made-up conversation in seconds. The expected values are worked out by hand in SampleMetricsTest.
+#   S1 (self) 0.0-10.0 / C1 (customer) 10.5-20.0 / S1 23.5-30.0 / C1 29.0-35.0 / O1 (other) 35.5-38.0 / S1 38.5-40.0
 SAMPLE = {
-    "title": "A社 初回ヒアリング",
+    "title": "Customer A: first hearing",
     "unit": "s",
     "speakers": [
-        {"id": "S1", "name": "佐藤", "side": "self"},
-        {"id": "C1", "name": "田中", "side": "customer"},
-        {"id": "O1", "name": "X氏", "side": "other"},
+        {"id": "S1", "name": "Alice", "side": "self"},
+        {"id": "C1", "name": "Bob", "side": "customer"},
+        {"id": "O1", "name": "Carol", "side": "other"},
     ],
     "segments": [
         {"speaker": "S1", "start": 0.0, "end": 10.0},
@@ -35,7 +35,7 @@ SAMPLE = {
 
 
 def load_module():
-    """スクリプトを新しいモジュールとして読む(テストどうしで状態を持ち越さないため)。"""
+    """Load the script as a fresh module, so that state is not carried between tests."""
     spec = importlib.util.spec_from_file_location("talk_analysis", SCRIPT)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -60,14 +60,14 @@ class TalkTestCase(unittest.TestCase):
 
 
 class SampleMetricsTest(TalkTestCase):
-    """SAMPLE の期待値(手計算)。
+    """Expected values for SAMPLE, worked out by hand.
 
-    - 発話量: S1 = 10 + 6.5 + 1.5 = 18.0 秒、C1 = 9.5 + 6 = 15.5 秒、O1 = 2.5 秒
-    - 自社側と顧客側だけで100%にする: 18 / 33.5 = 53.7% → 54、15.5 / 33.5 = 46.3% → 46
-    - 沈黙: 20.0 から 23.5 まで 3.5 秒(3秒以上) → 1回
-    - 被り: 29.0 に始まった C1 が、前の S1(〜30.0)より前に始まる → 1回
-    - ラリー: other を飛ばして並べると S1,C1,S1,C1,S1 → 切り替わり 4回
-    - 発話の回数: S1 は3回(10, 6.5, 1.5 秒)、C1 は2回(9.5, 6 秒)
+    - Talk time: S1 = 10 + 6.5 + 1.5 = 18.0 s, C1 = 9.5 + 6 = 15.5 s, O1 = 2.5 s
+    - Our side and the customer side are 100%: 18 / 33.5 = 53.7% -> 54, 15.5 / 33.5 = 46.3% -> 46
+    - Silence: 20.0 to 23.5 is 3.5 s (3 s or more) -> 1
+    - Overlap: C1 starts at 29.0, before the previous S1 segment ends (30.0) -> 1
+    - Rally: skipping other, the sequence is S1, C1, S1, C1, S1 -> 4 switches
+    - Turns: S1 has 3 (10, 6.5, 1.5 s), C1 has 2 (9.5, 6 s)
     """
 
     def setUp(self):
@@ -109,7 +109,7 @@ class TurnTest(TalkTestCase):
             "speakers": [{"id": "S1", "side": "self"}, {"id": "C1", "side": "customer"}],
             "segments": [
                 {"speaker": "S1", "start": 0, "end": 5},
-                {"speaker": "S1", "start": 6.5, "end": 9},  # 1.5 秒の間は同じ発話
+                {"speaker": "S1", "start": 6.5, "end": 9},  # 1.5 s pause: same turn
             ],
             "unit": "s",
         }
@@ -122,7 +122,7 @@ class TurnTest(TalkTestCase):
             "speakers": [{"id": "S1", "side": "self"}],
             "segments": [
                 {"speaker": "S1", "start": 0, "end": 5},
-                {"speaker": "S1", "start": 9, "end": 12},  # 4 秒の間は別の発話
+                {"speaker": "S1", "start": 9, "end": 12},  # 4 s pause: new turn
             ],
             "unit": "s",
         }
@@ -136,13 +136,13 @@ class MergeTest(TalkTestCase):
             "unit": "s",
             "speakers": [
                 {"id": "S1", "side": "self"},
-                {"id": "C1", "name": "田中", "side": "customer"},
-                {"id": "S2", "merge_into": "C1"},  # 同じ人が別の端末で録音した
+                {"id": "C1", "name": "Bob", "side": "customer"},
+                {"id": "S2", "merge_into": "C1"},  # the same person, recorded on a second device
             ],
             "segments": [
                 {"speaker": "S1", "start": 0, "end": 10},
                 {"speaker": "C1", "start": 10.5, "end": 20},
-                {"speaker": "S2", "start": 21, "end": 25},  # 1 秒の間で C1 の発話に続く
+                {"speaker": "S2", "start": 21, "end": 25},  # starts 1 s after C1's turn
             ],
         }
         _, cfg, order, m, summary = self.analyze(data)
@@ -150,7 +150,7 @@ class MergeTest(TalkTestCase):
         self.assertEqual(m["talk"]["C1"], 9500 + 4000)
         c1 = next(s for s in summary["speakers"] if s["id"] == "C1")
         self.assertEqual((c1["turns"], c1["longest_turn_ms"]), (1, 14500))
-        self.assertEqual(m["rally"], 1)  # S1 → C1 の1回だけ。S2 は C1 と同じ側
+        self.assertEqual(m["rally"], 1)  # S1 -> C1 is the only switch; S2 is on the same side as C1
 
 
 class UnitTest(TalkTestCase):
@@ -183,7 +183,7 @@ class InputErrorTest(TalkTestCase):
     def test_speaker_id_must_be_unique(self):
         data = self.base()
         data["speakers"].append({"id": "S1", "side": "self"})
-        self.assert_rejected(data, "2回")
+        self.assert_rejected(data, "appears more than once")
 
     def test_speaker_needs_a_side_unless_merged(self):
         data = self.base()
@@ -198,17 +198,17 @@ class InputErrorTest(TalkTestCase):
     def test_every_segment_speaker_must_be_listed(self):
         data = self.base()
         data["segments"].append({"speaker": "S9", "start": 41, "end": 42})
-        self.assert_rejected(data, "speakers にありません")
+        self.assert_rejected(data, "is not in speakers")
 
     def test_end_before_start_is_rejected(self):
         data = self.base()
         data["segments"][0] = {"speaker": "S1", "start": 10, "end": 5}
-        self.assert_rejected(data, "end が start より前")
+        self.assert_rejected(data, "end is before start")
 
     def test_non_numeric_time_is_rejected(self):
         data = self.base()
         data["segments"][0]["start"] = "0:10"
-        self.assert_rejected(data, "数値ではありません")
+        self.assert_rejected(data, "is not a number")
 
     def test_merge_cycle_is_rejected(self):
         data = self.base()
@@ -216,7 +216,7 @@ class InputErrorTest(TalkTestCase):
             {"id": "S1", "merge_into": "C1"},
             {"id": "C1", "merge_into": "S1"},
         ]
-        self.assert_rejected(data, "循環")
+        self.assert_rejected(data, "cycle")
 
     def test_merge_target_must_be_listed(self):
         data = self.base()
@@ -224,12 +224,13 @@ class InputErrorTest(TalkTestCase):
         self.assert_rejected(data, "merge_into")
 
     def test_empty_segments_are_rejected(self):
-        self.assert_rejected(self.base(segments=[]), "segments が空です")
+        self.assert_rejected(self.base(segments=[]), "segments is empty")
 
 
 class RenderTest(TalkTestCase):
     def test_speaker_names_are_html_escaped(self):
-        data = self.base_with_name("<img src=x onerror=alert(1)>")
+        data = json.loads(json.dumps(SAMPLE))
+        data["speakers"][1]["name"] = "<img src=x onerror=alert(1)>"
         d, cfg, order, m, _ = self.analyze(data)
         html = self.mod.render(d, cfg, order, m)
         self.assertIn("&lt;img", html)
@@ -239,14 +240,6 @@ class RenderTest(TalkTestCase):
         d, cfg, order, m, _ = self.analyze(SAMPLE)
         html = self.mod.render(d, cfg, order, m)
         self.assertTrue(html.lstrip().lower().startswith("<!doctype html>"))
-
-    def base_with_name(self, name):
-        data = json.loads(json.dumps(SAMPLE))
-        data["speakers"][1]["name"] = name
-        return data
-
-    def base(self):
-        return json.loads(json.dumps(SAMPLE))
 
 
 class CommandLineTest(TalkTestCase):

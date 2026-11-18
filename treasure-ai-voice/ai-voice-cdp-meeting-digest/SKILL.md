@@ -84,7 +84,7 @@ from s
 left join r on r.id = s.recording_id
 -- Default scope: the user's own recordings. Remove or widen this only after the user confirms (see "Whose recordings").
 where r.user_email = '<user email>'
--- Narrow further here. Example: and s.inferred_name like '%定例%'  /  and contains(r.tags, '定例')
+-- Narrow further here. Example: and s.inferred_name like '%weekly%'  /  and contains(r.tags, 'weekly')
 order by s.time
 ```
 

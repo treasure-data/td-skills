@@ -1,16 +1,16 @@
--- Harassment lexicon (162 patterns), organised by the types of the MHLW manual
--- 「カスタマーハラスメント対策企業マニュアル」(厚生労働省)。
---   Base: the 2022 edition (令和4年2月) p.8-9, 15 groups, 154 patterns.
---   Added (8 patterns) from the revised edition (令和8年度改訂版, 令和8年9月) p.23: spitting, threats to break
+-- Harassment lexicon (162 patterns), organized by the categories of the MHLW manual
+-- 「カスタマーハラスメント対策企業マニュアル」 (Ministry of Health, Labour and Welfare, MHLW).
+--   Base: the 2022 edition (February 2022), pp. 8-9, 15 groups, 154 patterns.
+--   Added (8 patterns) from the revised edition (September 2026, Reiwa 8), p. 23: spitting, threats to break
 --   things, and photographing without permission (つばを吐く / 物を壊すとほのめかす / 盗撮・無断での撮影).
 -- Match by substring: strpos(text, pattern) > 0. Japanese verbs change their endings,
 -- so patterns are stems (e.g. 訴え matches 訴える / 訴えるぞ / 訴えてやる).
 -- Paste this as a CTE named `lexicon` in front of the query.
---   physical=身体的な攻撃 / verbal_abuse=精神的な攻撃(脅迫・中傷・侮辱・暴言) / intimidation=威圧
---   dogeza=土下座の要求 / persistent=継続的・執拗 / confinement=拘束(居座り) / discrimination=差別
---   sexual=性的な言動(盗撮・無断撮影を含む) / personal_attack=従業員個人への攻撃 / compensation=金銭・謝罪の要求
---   nitpicking=揚げ足取り / authority=権威型 / sns=SNS・暴露 / excessive=過度な要求
---   harassment_word=ハラスメントという語そのもの(無害な会話にも当たる。AI の判定で外す)
+--   physical=physical attack / verbal_abuse=verbal abuse (threats, slander, insults, abuse) / intimidation=intimidation
+--   dogeza=demand for a kneeling apology / persistent=persistent or repeated demands / confinement=holding the staff member (staying on the premises) / discrimination=discrimination
+--   sexual=sexual remarks (including photographing without permission) / personal_attack=personal attacks on the staff member / compensation=demands for money or apologies
+--   nitpicking=nitpicking / authority=authority-based demands / sns=SNS and exposure / excessive=excessive demands
+--   harassment_word=the word "harassment" itself (it also appears in harmless conversation; the AI judgment removes these)
 lexicon as (
   select category, pattern from (values
     ('physical', '殴る'),

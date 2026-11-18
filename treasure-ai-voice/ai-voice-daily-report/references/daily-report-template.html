@@ -3,10 +3,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{日報 2026年11月9日（月）}}</title>
 <!--
-  日報・週報のテンプレート。このファイルをコピーし、すべての {{プレースホルダー}} を置き換え、不要な部分を削除する。
-  CSSはそのまま使う。CSSはインラインのみ。JavaScript、外部フォント、外部画像は使わない。A4で印刷できる。
-  週報のときは「本日の活動」を日ごとの節に置き換え、「今週の成果」「来週への持ち越し」「課題」を足す。
-  文字起こしの本文中の < > & はエスケープする。曜日を記憶で書かない。
+  Template for the daily and weekly report. Copy this file, replace every {{placeholder}}, and delete the parts you do not need.
+  Keep the CSS as it is. The CSS is inline only. Do not use JavaScript, external fonts, or external images. It prints on A4.
+  For a weekly report, replace the 「本日の活動」 (today's activities) section with one section per day, and add 「今週の成果」 (this week's results), 「来週への持ち越し」 (carried over to next week), and 「課題」 (issues).
+  Escape < > & in the transcript text. Do not write weekdays from memory.
 -->
 <style>
 :root{--ink:#140F24;--sub:#5A5570;--line:#E2DDEE;--brand:#7B32DC;--brand-d:#5A21A8;--soft:#EFE9FC;--bg:#F7F5F9}
@@ -39,13 +39,13 @@ footer p{margin:3px 0}
 @media print{body{background:#fff}.wrap{padding:0}section.panel{break-inside:avoid}}
 </style></head><body><div class="wrap">
 
-<!-- ヘッダー:タイトルと日付、作成者、バッジ(活動の件数、含まれない録音の件数) -->
+<!-- Header: title and date, author, and badges (number of activities, number of recordings not included) -->
 <div class="top">
   <div><h1>{{日報 2026年11月9日（月）}}</h1><div class="meta">{{作成者の名前}}</div></div>
   <div class="badges"><span class="badge key">活動 {{n}}件</span><span class="badge">次のアクション {{n}}件</span></div>
 </div>
 
-<!-- リード:その日の結論を1文で(最も大きな成果と、いちばん急ぐこと) -->
+<!-- Lead: the conclusion of the day in one sentence (the biggest result, and what is most urgent) -->
 <p class="lead">{{その日の結論を1文で}}</p>
 
 <section class="panel"><h2>本日の活動</h2>
@@ -67,7 +67,7 @@ footer p{margin:3px 0}
   <ul class="todo"><li><span class="box"></span><span>{{やること}}<span class="due">{{期限(話されたまま)}}</span></span></li></ul>
 </section>
 
-<!-- 申し送りがないときは、この節ごと削除する -->
+<!-- Delete this whole section when there are no notes for the manager -->
 <section class="panel note"><h2>上長への申し送り</h2>
   <ul><li>{{判断や支援がほしいこと}}</li></ul>
 </section>

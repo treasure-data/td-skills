@@ -1,38 +1,38 @@
 #!/usr/bin/env python3
-"""1つの AI Voice 録音の会話を数える:発話量、沈黙、被り、自社側と顧客側のやりとり。
+"""Count the conversation in one AI Voice recording: talk share, silences, overlaps, and back-and-forth turns between our side and the customer side.
 
-話者と開始・終了時刻だけの小さなJSONを読み、1つで完結したHTMLを書き出す。
-Python 3.8 以上の標準ライブラリだけで動く(macOS 標準の python3 でも動く)。
+Reads a small JSON with only speakers and start/end times, and writes one self-contained HTML page.
+Uses only the Python 3.8+ standard library (it runs with the python3 that ships with macOS).
 
-使い方:
+Usage:
     python3 talk_analysis.py input.json output.html
 
-入力JSON:
+Input JSON:
 {
-  "title": "A社 初回ヒアリング",             # ページの見出し(録音のタイトル)
-  "recorded_at": "2026-10-28 15:51",       # 任意。ヘッダーに表示する
-  "lang": "ja",                            # "ja" か "en"(ラベルの言語)
-  "note": "...",                           # 任意。数字が変わる場合だけ書く1行の脚注
-  "unit": "s",                             # start/end の単位:"s"(秒)か "ms"
+  "title": "Customer A: first hearing",     # page heading (recording title)
+  "recorded_at": "2026-10-28 15:51",       # optional. Shown in the header
+  "lang": "ja",                            # "ja" or "en" (label language)
+  "note": "...",                           # optional. One-line footnote, only when the numbers cover part of the call
+  "unit": "s",                             # unit of start/end: "s" (seconds) or "ms"
   "speakers": [
-    {"id": "Speaker 1", "name": "佐藤", "side": "self"},        # 自社側
-    {"id": "Speaker 2", "name": "田中", "side": "customer"},    # 顧客側
-    {"id": "Speaker 3", "name": "X氏", "side": "other"},        # どちらにも数えない
-    {"id": "Speaker 4", "merge_into": "Speaker 2"}              # Speaker 2 と同じ人
+    {"id": "Speaker 1", "name": "Alice", "side": "self"},        # our side
+    {"id": "Speaker 2", "name": "Bob", "side": "customer"},      # customer side
+    {"id": "Speaker 3", "name": "Carol", "side": "other"},       # not counted on either side
+    {"id": "Speaker 4", "merge_into": "Speaker 2"}              # same person as Speaker 2
   ],
   "segments": [{"speaker": "Speaker 1", "start": 2.24, "end": 34.88}, ...]
 }
 
-定義:
-  沈黙   = 誰も話していない状態が3秒以上続いたこと(それまでの最大の終了時刻と比べる)
-  被り   = 自社側と顧客側で話者が切り替わるとき、次の区間が前の区間の終了前に始まったこと
-  ラリー = 連続する区間の間で、話す側(自社/顧客)が切り替わった回数(side が other は飛ばす)
-話者の「発話の回数」は、同じ話者の連続する区間(その話者自身の前の発話の終了から3秒未満)を1回として数える。
-発話量は区間の長さの合計。数字のJSONサマリーを標準出力に出す。
+Definitions:
+  silence  = nobody is speaking for 3 seconds or more (measured from the latest end time so far)
+  overlap  = the speaker switches between our side and the customer side, and the next segment starts before the previous one ends
+  rally    = the number of switches between our side and the customer side between consecutive segments (segments of "other" speakers are skipped)
+A "turn" is a run of consecutive segments by the same speaker, with less than 3 seconds since that speaker's previous end.
+Talk share is the total length of the segments. The JSON summary is printed to standard output.
 """
 
 # ruff: noqa: E501, PLR0915
-# (単一ファイルのスクリプトのため、長いHTML・ラベルの文字列と長い描画関数は意図したもの)
+# (Single-file script: the long HTML, the label strings, and the long drawing functions are intentional)
 import html
 import json
 import sys
@@ -177,11 +177,11 @@ def fail(msg):
 
 
 def resolve_merge(spk, remap):
-    """merge_into を最後まで辿った話者IDを返す。循環していればエラーにする。"""
+    """Return the speaker ID that the merge_into chain ends at. Fail on a cycle."""
     path = []
     while spk in remap:
         if spk in path:
-            fail("merge_into が循環しています: " + " → ".join([*path, spk]))
+            fail("merge_into has a cycle: " + " → ".join([*path, spk]))
         path.append(spk)
         spk = remap[spk]
     return spk
@@ -189,39 +189,39 @@ def resolve_merge(spk, remap):
 
 # ---------- input ----------
 def num(x, where):
-    """数値に直す。数値でなければ、どの区間かを示してエラーにする。"""
+    """Convert to a number. If it is not a number, fail and name the segment."""
     if isinstance(x, bool):
-        fail(f"{where} が数値ではありません: {x!r}")
+        fail(f"{where} is not a number: {x!r}")
     try:
         return float(x)
     except (TypeError, ValueError):
-        fail(f"{where} が数値ではありません: {x!r}")
+        fail(f"{where} is not a number: {x!r}")
 
 
 def load(path):
-    """入力を読む。黙って誤った数字を出さないよう、書き間違いはエラーで止める。"""
+    """Read the input. Stop on typos, so that wrong numbers are never printed silently."""
     d = json.loads(Path(path).read_text(encoding="utf-8"))
     unit = d.get("unit", "s")
     if unit not in ("s", "ms"):
-        fail(f'unit は "s"(秒)か "ms"(ミリ秒)にしてください: {unit!r}')
+        fail(f'unit must be "s" (seconds) or "ms" (milliseconds): {unit!r}')
     k = 1000 if unit == "s" else 1
     speakers = d.get("speakers") or []
     if not speakers:
-        fail("speakers が空です")
+        fail("speakers is empty")
     ids = []
     for i, sp in enumerate(speakers):
         if not sp.get("id"):
-            fail(f"speakers[{i}] に id がありません")
+            fail(f"speakers[{i}] has no id")
         if sp["id"] in ids:
-            fail(f"話者ID {sp['id']} が speakers に2回あります。1人1行にしてください")
+            fail(f"speaker ID {sp['id']} appears more than once in speakers. Use one line per person")
         ids.append(sp["id"])
     remap, cfg, order = {}, {}, []
     for sp in speakers:
         if sp.get("merge_into"):
             if sp["merge_into"] not in ids or sp["merge_into"] == sp["id"]:
-                fail(f"{sp['id']} の merge_into は、一覧にある別の話者IDにしてください")
+                fail(f"{sp['id']}: merge_into must name another speaker ID in the list")
             remap[sp["id"]] = sp["merge_into"]
-    for sp_id in remap:  # 循環は、区間に出てこない話者も含めて先に弾く
+    for sp_id in remap:  # check for cycles first, including speakers that appear in no segment
         resolve_merge(sp_id, remap)
     for sp in speakers:
         if sp["id"] in remap:
@@ -229,7 +229,7 @@ def load(path):
         side = sp.get("side")
         if side not in ("self", "customer", "other"):
             fail(
-                f"{sp['id']} の side を self / customer / other のどれかで指定してください: {side!r}"
+                f"{sp['id']}: side must be one of self / customer / other: {side!r}"
             )
         cfg[sp["id"]] = {"name": sp.get("name") or sp["id"], "side": side}
         order.append(sp["id"])
@@ -237,18 +237,18 @@ def load(path):
     for i, s in enumerate(d.get("segments") or []):
         if s.get("speaker") not in ids:
             fail(
-                f"segments[{i}] の話者 {s.get('speaker')!r} が speakers にありません。全員を speakers に入れてください"
+                f"segments[{i}]: speaker {s.get('speaker')!r} is not in speakers. Put every speaker in speakers"
             )
         spk = resolve_merge(s["speaker"], remap)
         a = round(num(s.get("start"), f"segments[{i}].start") * k)
         b = round(num(s.get("end"), f"segments[{i}].end") * k)
         if b < a:
             fail(
-                f"segments[{i}] の end が start より前です(start={s.get('start')}, end={s.get('end')})。単位や列の取り違えがないか確認してください"
+                f"segments[{i}]: end is before start (start={s.get('start')}, end={s.get('end')}). Check for a unit or column mix-up"
             )
         segs.append({"idx": i, "spk": spk, "start": a, "end": b})
     if not segs:
-        fail("segments が空です")
+        fail("segments is empty")
     return d, cfg, order, segs
 
 
@@ -262,7 +262,7 @@ def metrics(segs, side_of):
         gap = None if run_max is None else s["start"] - run_max
         if gap is not None and gap >= SIL_MS:
             sil_list.append((run_max, s["start"]))
-        own_gap = None if cur is None else s["start"] - cur["end"]  # 同じ話者の直前の終了からの間隔
+        own_gap = None if cur is None else s["start"] - cur["end"]  # gap since the same speaker's previous end
         new_turn = cur is None or s["spk"] != prev_spk or own_gap >= SIL_MS
         if new_turn:
             cur = {"spk": s["spk"], "start": s["start"], "end": s["end"]}
@@ -273,7 +273,7 @@ def metrics(segs, side_of):
         prev_spk = s["spk"]
     mapped = [s for s in segs if side_of[s["spk"]] != "other"]
     rally, ov_list = 0, []
-    # 隣り合う区間のペア。itertools.pairwise と zip(strict=) は Python 3.10 以上なので使わない
+    # consecutive pairs. itertools.pairwise and zip(strict=) need Python 3.10+, so they are not used
     for i in range(1, len(mapped)):
         p, s = mapped[i - 1], mapped[i]
         if side_of[s["spk"]] != side_of[p["spk"]]:
@@ -445,7 +445,7 @@ def render(d, cfg, order, m):
     def pct(ms):
         return round(ms / tot * 100)
 
-    def pair_pct(ms):  # 自社側と顧客側の合計を100%とする(KPI・サマリーと同じ。other は含めない)
+    def pair_pct(ms):  # our side plus the customer side is 100% (same as the KPI and summary; other is excluded)
         return round(ms / tl * 100) if tl else 0
 
     facts = [
@@ -551,7 +551,7 @@ def summary(d, cfg, order, m):
     both = side_ms["self"] + side_ms["customer"]
     return {
         "title": d.get("title"),
-        # ページの Talk : Listen と同じ。自社側と顧客側の合計を100%とする(other は含めない)
+        # same as the Talk : Listen on the page; our side plus the customer side is 100% (other is excluded)
         "side_share_pct": {k: round(v / both * 100) for k, v in side_ms.items()} if both else None,
         "total_ms": m["total"],
         "silences": len(m["sil_list"]),

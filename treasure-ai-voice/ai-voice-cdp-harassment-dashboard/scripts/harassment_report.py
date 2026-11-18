@@ -17,7 +17,7 @@ Input (JSON):
              "failed": 1, "in_progress": 1},   # recordings left out (failed, still processing)
   "findings": [                          # only the recordings judged "suspected"
     {"recording_id": "p1", "date": "2026-11-09", "time": "18:03",
-     "recorder": "山口 美咲", "title": "...", "minutes": 4,
+     "recorder": "Recorder A", "title": "...", "minutes": 4,
      "type": "暴言・侮辱", "severity": 3,
      "quote": "short excerpt of the customer's words (1-2 sentences)", "reason": "why it is suspected (1 sentence)",
      "context": [{"t": "03:12", "who": "客", "text": "one line of the conversation around it"}]}   # context is optional, up to 12 lines
