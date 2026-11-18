@@ -86,6 +86,7 @@ LABELS = {
         "min": "{m}分{s:02d}秒",
         "sec": "{s}秒",
         "nobody": "-",
+        "names": "・",
     },
     "en": {
         "meta": "Conversation analysis / recorded {rec} / generated {today}",
@@ -127,6 +128,7 @@ LABELS = {
         "min": "{m}m {s:02d}s",
         "sec": "{s}s",
         "nobody": "-",
+        "names": ", ",
     },
 }
 
@@ -493,11 +495,11 @@ def render(d, cfg, order, m):
             )
     cap = lab["cap"].format(
         dur=dur(m["total"], lab),
-        s="・".join(cfg[s]["name"] for s in selfs) or lab["nobody"],
-        c="・".join(cfg[s]["name"] for s in custs) or lab["nobody"],
+        s=lab["names"].join(cfg[s]["name"] for s in selfs) or lab["nobody"],
+        c=lab["names"].join(cfg[s]["name"] for s in custs) or lab["nobody"],
     )
     if others:
-        cap += lab["cap_other"].format(o="・".join(cfg[s]["name"] for s in others))
+        cap += lab["cap_other"].format(o=lab["names"].join(cfg[s]["name"] for s in others))
     dl = "".join(
         f'<div><i style="background:{col[s]}"></i>{esc(cfg[s]["name"])} {dur(talk[s], lab)}</div>'
         for s in ordered
