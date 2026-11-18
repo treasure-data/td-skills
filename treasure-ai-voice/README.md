@@ -81,11 +81,12 @@ The `description` fields are in English and list Japanese example requests, so t
 
 ## Testing
 
-Run all three checks before a pull request that changes a skill, and write the results in the pull request. Use only made-up recordings and data. Do not commit real recordings, customer names, or generated outputs, because this repository is public.
+Run the checks below before a pull request that changes a skill, and write the results in the pull request. Use only made-up recordings and data. Do not commit real recordings, customer names, or generated outputs, because this repository is public.
 
 1. **Trigger tests** check which skill a request selects. The AI Voice cases are in `tests/trigger-tests.yml` at the repository root, with Japanese and English requests for every skill and pairs of skills that are easy to confuse. Run `CLAUDE_CONFIG_DIR=$(mktemp -d) ./tests/run-tests.sh --verbose`; it needs the `claude` CLI and `yq`. The fresh `CLAUDE_CONFIG_DIR` matters: the runner calls Claude Code, which loads the skills installed for the user, so without it an installed AI Voice skill (for example `ai-voice-customer-history-summary`) can be chosen instead of the expected one. An isolated run on 2026-11-18 passed 34 of 34. The runner always picks one skill, so a passing test does not prove that a short request selects the skill in Studio (see Known limitations).
-2. **Unit tests** check the numbers and the input checks of `talk_analysis.py` and `harassment_report.py`. They are in `tests/`, outside the skill folders, so they are not installed with the skills. Run `python3 -m unittest discover -s tests -v` from the `treasure-ai-voice` folder. They use only the standard library and made-up data, and the expected values are worked out by hand in the test files.
+2. **Unit tests** check the numbers and the input checks of `talk_analysis.py` and `harassment_report.py`. They are in `tests/`, outside the skill folders, so they are not installed with the skills. Run `python3 -m unittest discover -s tests -v` from the `treasure-ai-voice` folder. They use only the standard library and made-up data, and the expected values are worked out by hand in the test files. The output-language tests in the same folder check that a Japanese request gives a Japanese page, and an English request gives an English page.
 3. **Manual check in Treasure AI Studio** checks reading through the connector or CDP and the output. Run one request per skill and record the date, the Studio version, and the result.
+4. **Japanese-output check (manual; calls the model).** `evals/japanese_output/run_eval.py` runs each skill on a Japanese request with made-up connector data, then lists the English words in the output. It makes about 12 model calls, so run it when a skill's output instructions change. Choose the model with `EVAL_MODEL` (default `opus`). Outputs go to `evals/japanese_output/out/`, which is git-ignored.
 
 | Skill | Request to try | Check |
 |---|---|---|
