@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{会議のタイトル}} 議事録</title>
+<!--
+  議事録のテンプレート。このファイルをコピーし、すべての {{プレースホルダー}} を置き換え、不要な部分を削除する。
+  CSSはそのまま使う。CSSはインラインのみ。JavaScript、外部フォント、外部画像は使わない。
+  ラベルは出力する言語に合わせる(ひな形のラベルは日本語)。
+  文字起こしの本文中の < > & はエスケープする。曜日を記憶で書かない。
+-->
+<style>
+:root{--ink:#140F24;--sub:#5A5570;--line:#E2DDEE;--brand:#7B32DC;--brand-d:#5A21A8;--soft:#EFE9FC;--bg:#F7F5F9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 "Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:24px 20px 56px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:2px solid var(--brand);padding-bottom:12px}
+.top h1{font-size:24px;margin:0;line-height:1.3;color:var(--brand-d)}
+.top .meta{color:var(--sub);font-size:13px;margin-top:2px}
+.badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.badge{display:inline-block;border:1px solid var(--line);background:#fff;border-radius:4px;padding:2px 10px;font-size:12px;color:var(--sub);white-space:nowrap}
+.badge.key{border-color:var(--brand);color:var(--brand-d);font-weight:700}
+.lead{margin:22px 0 6px;font-size:20px;font-weight:700;line-height:1.5}
+.info{display:grid;grid-template-columns:7em 1fr;gap:4px 12px;font-size:14px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 16px;margin:14px 0 18px}
+.info span:nth-child(odd){color:var(--sub)}
+section.panel{background:#fff;border:1px solid var(--line);border-radius:6px;padding:16px 20px;margin-bottom:14px}
+section.panel h2{font-size:16px;margin:0 0 8px;color:var(--brand-d)}
+section.panel ul,section.panel ol{margin:0;padding-left:1.4em}
+section.panel li{margin-bottom:2px}
+section.panel h3{font-size:14px;margin:14px 0 4px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{background:var(--soft);color:var(--brand-d);text-align:left;padding:7px 10px;border:1px solid var(--line);font-weight:700}
+td{padding:7px 10px;border:1px solid var(--line);vertical-align:top}
+.tbc{border-left:4px solid var(--brand);background:var(--soft)}
+.tbc h2{color:var(--brand-d)}
+footer{margin-top:22px;font-size:12px;color:var(--sub)}
+footer p{margin:3px 0}
+@media print{body{background:#fff}.wrap{padding:0}section.panel{break-inside:avoid}}
+</style></head><body><div class="wrap">
+
+<!-- ヘッダー:タイトル、日時の行、バッジ(日時、要確認の件数) -->
+<div class="top">
+  <div><h1>{{会議のタイトル}}</h1><div class="meta">議事録 / 記録者 {{記録者}}</div></div>
+  <div class="badges"><span class="badge key">{{日付、開始〜終了時刻}}</span><span class="badge">要確認 {{n}}件</span></div>
+</div>
+
+<!-- リード:その会議で何が決まったかを1文で -->
+<p class="lead">{{結論を1文で}}</p>
+
+<div class="info">
+  <span>日時</span><span>{{日付、開始〜終了時刻}}</span>
+  <span>出席者</span><span>{{名前。不明なら「録音からは特定できず」}}</span>
+</div>
+
+<section class="panel"><h2>要旨</h2>
+  <ul><li>{{目的と結果を3〜5項目}}</li></ul>
+</section>
+
+<section class="panel"><h2>決定事項</h2>
+  <ol><li>{{決定したこと}}</li></ol>
+</section>
+
+<section class="panel"><h2>宿題</h2>
+  <table>
+    <thead><tr><th>内容</th><th>担当</th><th>期限</th></tr></thead>
+    <tbody><tr><td>{{やること}}</td><td>{{名前、または「未記載」}}</td><td>{{話されたまま、または「未記載」}}</td></tr></tbody>
+  </table>
+</section>
+
+<section class="panel"><h2>未決事項</h2>
+  <ul><li>{{結論が出なかった論点}}</li></ul>
+</section>
+
+<section class="panel"><h2>議論の内容</h2>
+  <h3>{{トピック}}</h3>
+  <ul><li>{{要点、誰が提起したか、どう決着したか}}</li></ul>
+</section>
+
+<!-- 必ず残す:録音からは判断できないこと -->
+<section class="panel tbc"><h2>要確認</h2>
+  <ul><li>{{担当や期限の言及なし / 文字起こしの誤りと思われる箇所 / 文脈から推定した話者}}</li></ul>
+</section>
+
+<footer>
+  <p>{{出典:録音のタイトル、録音日、長さ}}</p>
+</footer>
+</div></body></html>
