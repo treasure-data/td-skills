@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}}</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — dataviz validated palette (do not edit)
+   Light is default. Dark overrides via OS preference or [data-theme].
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Light (default) */
+:root {
+  color-scheme: light;
+  --page:      #f9f9f7;
+  --surface:   #fcfcfb;
+  --text:      #0b0b0b;
+  --text-sub:  #52514e;
+  --muted:     #898781;
+  --gridline:  #e1e0d9;
+  --baseline:  #c3c2b7;
+  --border:    rgba(11,11,11,0.10);
+
+  /* Categorical — assign in slot order, never cycle */
+  --c1: #2a78d6;  /* blue    */
+  --c2: #eb6834;  /* orange  */
+  --c3: #1baf7a;  /* aqua    */
+  --c4: #eda100;  /* yellow  */
+  --c5: #e87ba4;  /* magenta */
+  --c6: #008300;  /* green   */
+  --c7: #4a3aa7;  /* violet  */
+  --c8: #e34948;  /* red     */
+
+  /* Status — never reuse as categorical series colors */
+  --s-good:    #0ca30c;
+  --s-warn:    #fab219;
+  --s-serious: #ec835a;
+  --s-crit:    #d03b3b;
+  --good-text: #006300;  /* accessible success text on light surface */
+}
+
+/* Dark — OS preference */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page:      #0d0d0d;
+    --surface:   #1a1a19;
+    --text:      #ffffff;
+    --text-sub:  #c3c2b7;
+    --muted:     #898781;
+    --gridline:  #2c2c2a;
+    --baseline:  #383835;
+    --border:    rgba(255,255,255,0.10);
+    --c1: #3987e5;  --c2: #d95926;  --c3: #199e70;
+    --c4: #c98500;  --c5: #d55181;  --c6: #008300;
+    --c7: #9085e9;  --c8: #e66767;
+    --good-text: #0ca30c;
+  }
+}
+
+/* Dark — manual toggle (wins over media query) */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page:      #0d0d0d;
+  --surface:   #1a1a19;
+  --text:      #ffffff;
+  --text-sub:  #c3c2b7;
+  --muted:     #898781;
+  --gridline:  #2c2c2a;
+  --baseline:  #383835;
+  --border:    rgba(255,255,255,0.10);
+  --c1: #3987e5;  --c2: #d95926;  --c3: #199e70;
+  --c4: #c98500;  --c5: #d55181;  --c6: #008300;
+  --c7: #9085e9;  --c8: #e66767;
+  --good-text: #0ca30c;
+}
+
+/* Light — manual toggle override */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --page:      #f9f9f7;
+  --surface:   #fcfcfb;
+  --text:      #0b0b0b;
+  --text-sub:  #52514e;
+  --muted:     #898781;
+  --gridline:  #e1e0d9;
+  --baseline:  #c3c2b7;
+  --border:    rgba(11,11,11,0.10);
+  --c1: #2a78d6;  --c2: #eb6834;  --c3: #1baf7a;
+  --c4: #eda100;  --c5: #e87ba4;  --c6: #008300;
+  --c7: #4a3aa7;  --c8: #e34948;
+  --good-text: #006300;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   BASE
+   ════════════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--page);
+  color: var(--text);
+  font-size: 14px;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   HEADER
+   ════════════════════════════════════════════════════════════════════ */
+header {
+  padding: 22px 32px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+header h1 { font-size: 18px; font-weight: 700; }
+
+/* Badge — use for db name, filter label, stale warning */
+.badge {
+  font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 20px;
+  background: color-mix(in srgb, var(--c1) 15%, transparent);
+  color: var(--c1);
+  white-space: nowrap;
+}
+.badge.stale   { background: color-mix(in srgb, var(--s-warn) 15%, transparent); color: #7a5400; }
+.badge.filter  { background: color-mix(in srgb, var(--c1) 12%, transparent);     color: var(--c1); }
+.badge.crit    { background: color-mix(in srgb, var(--s-crit) 12%, transparent); color: var(--s-crit); }
+
+.ts { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+/* Theme toggle */
+.theme-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 11px;
+  font-size: 12px; color: var(--text-sub); cursor: pointer;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   MAIN LAYOUT
+   ════════════════════════════════════════════════════════════════════ */
+.main { padding: 24px 32px; display: flex; flex-direction: column; gap: 22px; }
+
+/* ════════════════════════════════════════════════════════════════════
+   KPI CARDS
+   ════════════════════════════════════════════════════════════════════ */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+
+.kpi {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 18px;
+}
+.kpi .label {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px;
+}
+.kpi .value { font-size: 26px; font-weight: 800; letter-spacing: -.3px; }
+.kpi .sub   { font-size: 11px; color: var(--text-sub); margin-top: 4px; }
+
+/* Value color modifiers — pick by data meaning */
+.kpi.ok     .value { color: var(--good-text); }
+.kpi.bad    .value { color: var(--s-crit);    }
+.kpi.warn   .value { color: var(--s-warn);    }
+.kpi.neutral .value { color: var(--c1);       }
+.kpi.purple  .value { color: var(--c7);       }
+
+/* ════════════════════════════════════════════════════════════════════
+   SECTION LABEL
+   ════════════════════════════════════════════════════════════════════ */
+.section-title {
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .06em;
+  margin-bottom: 10px;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ALERTS
+   ════════════════════════════════════════════════════════════════════ */
+.alert-list { display: flex; flex-direction: column; gap: 7px; }
+
+.alert {
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--s-warn);
+  border-radius: 8px; padding: 11px 15px;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.alert.critical { border-left-color: var(--s-crit);   }
+.alert.ok       { border-left-color: var(--s-good);   }
+.alert.info     { border-left-color: var(--c1);        }
+
+.alert .icon   { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.alert .title  { font-size: 13px; font-weight: 600; }
+.alert .desc   { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+
+/* ════════════════════════════════════════════════════════════════════
+   CHART LAYOUT
+   Use .charts-row (3 equal), .wide-left (2fr 1fr 1fr), .two-col (2fr 1fr)
+   ════════════════════════════════════════════════════════════════════ */
+.charts-row           { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.charts-row.wide-left { grid-template-columns: 2fr 1fr 1fr; }
+.charts-row.two-col   { grid-template-columns: 2fr 1fr; }
+
+.chart-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px;
+}
+.chart-card h3 {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   TABLE LAYOUT
+   Use .table-row (2 equal cols). Add .full to a .table-card for full width.
+   ════════════════════════════════════════════════════════════════════ */
+.table-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.table-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
+.table-card.full { grid-column: 1 / -1; }
+
+.table-card h3 {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .05em;
+  padding: 14px 16px 0; margin-bottom: 12px;
+}
+
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; }
+thead th {
+  text-align: left; padding: 6px 14px;
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .04em;
+  background: var(--page); border-bottom: 1px solid var(--gridline);
+  white-space: nowrap;
+}
+tbody td {
+  padding: 7px 14px; border-bottom: 1px solid var(--gridline);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;  /* tabular-nums on table cells only */
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: color-mix(in srgb, var(--c1) 5%, transparent); }
+
+a.console-link { color: var(--c1); text-decoration: none; }
+a.console-link:hover { text-decoration: underline; }
+
+/* ════════════════════════════════════════════════════════════════════
+   INLINE COMPONENTS
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Status pill */
+.pill {
+  display: inline-block; padding: 2px 8px;
+  border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.pill.success, .pill.done, .pill.launched, .pill.ok {
+  background: color-mix(in srgb, var(--s-good) 14%, transparent);
+  color: var(--good-text);
+}
+.pill.error, .pill.failed, .pill.stopped, .pill.bad {
+  background: color-mix(in srgb, var(--s-crit) 14%, transparent);
+  color: var(--s-crit);
+}
+.pill.warn, .pill.killed {
+  background: color-mix(in srgb, var(--s-warn) 18%, transparent);
+  color: #7a5400;
+}
+.pill.running, .pill.building {
+  background: color-mix(in srgb, var(--c7) 15%, transparent);
+  color: var(--c7);
+}
+.pill.queued, .pill.draft {
+  background: color-mix(in srgb, var(--muted) 15%, transparent);
+  color: var(--muted);
+}
+
+/* Progress bar — use for error rates, completion %, etc. */
+.pbar     { background: var(--gridline); border-radius: 3px; height: 5px; min-width: 60px; }
+.pbar-fill { height: 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════ HEADER ════════════ -->
+<header>
+  <h1>{{TITLE}}</h1>
+  <!-- Add context badges as needed: -->
+  <!-- <span class="badge">database_name</span> -->
+  <!-- <span class="badge stale">⚠ Stale data</span> -->
+  <span class="ts">{{TIME_RANGE}} · Generated {{DATE}}</span>
+  <button class="theme-btn" onclick="toggleTheme()">Toggle dark mode</button>
+</header>
+
+<div class="main">
+
+  <!-- ════════════ KPI ROW ════════════
+       4–6 cards. cls: ok, bad, warn, neutral, purple
+  ════════════════════════════════════ -->
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <!-- ════════════ ALERTS ════════════
+       3–7 findings. level: critical, '' (warning), info, ok
+  ════════════════════════════════════ -->
+  <div>
+    <div class="section-title">Alerts</div>
+    <div class="alert-list" id="alertList"></div>
+  </div>
+
+  <!-- ════════════ CHARTS ════════════
+       Use class: charts-row | charts-row wide-left | charts-row two-col
+  ════════════════════════════════════ -->
+  <div class="charts-row" id="chartsRow"></div>
+
+  <!-- ════════════ TABLES ════════════
+       Use table-row for 2-col. Add .full to table-card for full width.
+  ════════════════════════════════════ -->
+  <div class="table-row" id="tablesRow"></div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+// DATA — Populate this object with all query results.
+// One key per result set. Do not edit anything below this block.
+// ════════════════════════════════════════════════════════════════════
+const DATA = {
+  // example: jobs: [{status:'success',cnt:34212}, {status:'error',cnt:8659}]
+};
+
+
+// ════════════════════════════════════════════════════════════════════
+// PALETTE — reads validated CSS tokens at render time.
+// Pass `P` (or `buildPalette()`) as the first arg to every chart factory.
+// Use P.categorical[0..7] for series colors (in slot order).
+// Use P.status.* for good/warn/serious/crit — never as series colors.
+// ════════════════════════════════════════════════════════════════════
+function buildPalette() {
+  const v = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return {
+    surface:     v('--surface'),
+    page:        v('--page'),
+    muted:       v('--muted'),
+    gridline:    v('--gridline'),
+    text:        v('--text'),
+    categorical: [v('--c1'),v('--c2'),v('--c3'),v('--c4'),
+                  v('--c5'),v('--c6'),v('--c7'),v('--c8')],
+    status: {
+      good:    v('--s-good'),
+      warn:    v('--s-warn'),
+      serious: v('--s-serious'),
+      crit:    v('--s-crit')
+    }
+  };
+}
+
+// Chart.js defaults — reset on each render() call
+function applyChartDefaults(P) {
+  Chart.defaults.color        = P.muted;
+  Chart.defaults.borderColor  = P.gridline;
+  Chart.defaults.font.family  = 'system-ui,-apple-system,"Segoe UI",sans-serif';
+  Chart.defaults.font.size    = 11;
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// FORMATTERS
+// ════════════════════════════════════════════════════════════════════
+function fmtNum(n)          { return n == null ? '—' : Number(n).toLocaleString(); }
+function fmtK(n)            { if (n == null) return '—'; return n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/,'')+'k' : String(n); }
+function fmtPct(val, total) { return total ? Math.round(val/total*100)+'%' : '0%'; }
+function fmtDuration(sec) {
+  if (sec == null) return '—';
+  const s = Math.round(sec);
+  if (s < 60)  return s + 's';
+  const m = Math.floor(s/60);
+  if (m < 60)  return m + 'm ' + (s%60) + 's';
+  return Math.floor(m/60) + 'h ' + (m%60) + 'm';
+}
+function fmtBytes(bytes) {
+  if (bytes == null) return '—';
+  if (bytes < 1024)       return bytes + ' B';
+  if (bytes < 1048576)    return (bytes/1024).toFixed(1)    + ' KB';
+  if (bytes < 1073741824) return (bytes/1048576).toFixed(1) + ' MB';
+  return (bytes/1073741824).toFixed(2) + ' GB';
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// COMPONENT BUILDERS — return HTML strings; inject into DOM then chart.
+// ════════════════════════════════════════════════════════════════════
+
+// KPI tile. cls: 'ok' | 'bad' | 'warn' | 'neutral' | 'purple'
+function kpiCard(label, value, sub, cls) {
+  return `<div class="kpi ${cls||''}">
+    <div class="label">${label}</div>
+    <div class="value">${value}</div>
+    <div class="sub">${sub||''}</div>
+  </div>`;
+}
+
+// Alert row. level: 'critical' | '' (warning) | 'info' | 'ok'
+function alertCard(level, title, desc) {
+  const icons = {critical:'🔴', '':'🟡', info:'🔵', ok:'🟢'};
+  return `<div class="alert ${level}">
+    <span class="icon">${icons[level]||icons['']}</span>
+    <div>
+      <div class="title">${title}</div>
+      <div class="desc">${desc}</div>
+    </div>
+  </div>`;
+}
+
+// Colored status pill — supported statuses match CSS class names above
+function pill(status) {
+  return `<span class="pill ${status}">${status}</span>`;
+}
+
+// Console deep-link for a table cell. Pass null/undefined url when the id
+// needed to build it is missing — renders the plain label, never a dead link.
+// See references/console-links.md for how to build url per entity type.
+function linkCell(url, label) {
+  return url ? `<a class="console-link" href="${url}" target="_blank" rel="noopener">${label}</a>` : label;
+}
+
+// Progress bar. color: hex string (e.g. P.status.crit)
+function progressBar(pct, color) {
+  const c = color || 'var(--c1)';
+  return `<div style="display:flex;align-items:center;gap:6px">
+    <div class="pbar" style="flex:1"><div class="pbar-fill" style="width:${Math.min(pct,100)}%;background:${c}"></div></div>
+    <span style="font-size:11px;font-variant-numeric:tabular-nums;color:var(--text-sub)">${pct}%</span>
+  </div>`;
+}
+
+// Full table card. headers: string[]. rows: string[][] (each cell is HTML).
+// full: boolean — spans full width in .table-row
+function tableCard(title, headers, rows, full) {
+  const ths = headers.map(h=>`<th>${h}</th>`).join('');
+  const trs = rows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+  return `<div class="table-card${full?' full':''}">
+    <h3>${title}</h3>
+    <div class="table-scroll"><table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>
+  </div>`;
+}
+
+// Chart card shell. height defaults to 210px. Insert into DOM, then call a chart factory.
+function chartCard(title, canvasId, height) {
+  const h = height || 210;
+  return `<div class="chart-card">
+    <h3>${title}</h3>
+    <div style="position:relative;height:${h}px"><canvas id="${canvasId}"></canvas></div>
+  </div>`;
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// CHART FACTORIES — all accept palette P as first argument.
+// Destroy old chart before re-calling on theme toggle.
+// Single-dataset charts: legend auto-hidden.
+// ════════════════════════════════════════════════════════════════════
+
+// Donut — status breakdowns, type distributions. ≤ 3 slices for scatter-safe use.
+function makeDonut(P, canvasId, labels, data, colors) {
+  const bg = colors || P.categorical.slice(0, labels.length);
+  return new Chart(document.getElementById(canvasId), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: bg, borderWidth: 2, borderColor: P.surface }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { display: labels.length > 1, position: 'right', labels: { boxWidth: 11, padding: 10 } },
+        tooltip: { callbacks: { label: ctx => {
+          const tot = ctx.dataset.data.reduce((a,b)=>a+b,0);
+          return ` ${ctx.label}: ${fmtNum(ctx.parsed)} (${fmtPct(ctx.parsed,tot)})`;
+        }}}
+      }
+    }
+  });
+}
+
+// Horizontal bar — top-N rankings (names on y-axis)
+function makeHBar(P, canvasId, labels, data, color) {
+  const col = color || P.categorical[0];
+  return new Chart(document.getElementById(canvasId), {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: col,
+      borderRadius: {topRight:4, bottomRight:4}, borderSkipped: 'left', barPercentage: 0.65 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: P.gridline }, ticks: { color: P.muted, callback: v=>fmtK(v) } },
+        y: { grid: { display: false },    ticks: { color: P.muted } }
+      }
+    }
+  });
+}
+
+// Stacked horizontal bar — success/error split per category
+// datasets: [{ label, data, color }]
+function makeStackedHBar(P, canvasId, labels, datasets) {
+  return new Chart(document.getElementById(canvasId), {
+    type: 'bar',
+    data: { labels, datasets: datasets.map(ds=>({
+      label: ds.label, data: ds.data, backgroundColor: ds.color,
+      borderWidth: 2, borderColor: P.surface,
+      borderRadius: 2, stack: 's'
+    }))},
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: datasets.length > 1, position: 'top', labels: { boxWidth: 10, padding: 10 } } },
+      scales: {
+        x: { stacked: true, grid: { color: P.gridline }, ticks: { color: P.muted, callback: v=>fmtK(v) } },
+        y: { stacked: true, grid: { display: false },    ticks: { color: P.muted } }
+      }
+    }
+  });
+}
+
+// Stacked vertical bar — daily / time-based trends
+// datasets: [{ label, data, color }]
+// opts: { maxTicksLimit }
+function makeStackedVBar(P, canvasId, labels, datasets, opts) {
+  return new Chart(document.getElementById(canvasId), {
+    type: 'bar',
+    data: { labels, datasets: datasets.map(ds=>({
+      label: ds.label, data: ds.data, backgroundColor: ds.color,
+      borderWidth: 2, borderColor: P.surface,
+      borderRadius: 2, stack: 's'
+    }))},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: datasets.length > 1, position: 'top', labels: { boxWidth: 10, padding: 10 } } },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { color: P.muted, maxTicksLimit: (opts&&opts.maxTicksLimit)||15 } },
+        y: { stacked: true, grid: { color: P.gridline }, ticks: { color: P.muted, callback: v=>fmtK(v) } }
+      }
+    }
+  });
+}
+
+// Line — time-series trends
+// datasets: [{ label, data, color, fill? }]
+function makeLine(P, canvasId, labels, datasets) {
+  return new Chart(document.getElementById(canvasId), {
+    type: 'line',
+    data: { labels, datasets: datasets.map(ds=>({
+      label: ds.label, data: ds.data,
+      borderColor: ds.color, backgroundColor: ds.color + '1a',
+      fill: ds.fill || false, tension: 0,
+      borderWidth: 2, pointRadius: 4, pointHoverRadius: 6,
+      pointBackgroundColor: ds.color
+    }))},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: datasets.length > 1, position: 'top', labels: { boxWidth: 10, padding: 10 } } },
+      scales: {
+        x: { grid: { display: false },    ticks: { color: P.muted, maxTicksLimit: 15 } },
+        y: { grid: { color: P.gridline }, ticks: { color: P.muted, callback: v=>fmtK(v) }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// THEME TOGGLE — respects OS preference as baseline
+// ════════════════════════════════════════════════════════════════════
+function toggleTheme() {
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme') ||
+    (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  root.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  render();
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// CHART REGISTRY — destroy all before re-render on theme toggle
+// ════════════════════════════════════════════════════════════════════
+const CHARTS = {};
+function destroyCharts() { Object.values(CHARTS).forEach(c => c.destroy()); Object.keys(CHARTS).forEach(k => delete CHARTS[k]); }
+
+
+// ════════════════════════════════════════════════════════════════════
+// RENDER — called once on load and again on theme toggle.
+// Build KPIs, alerts, charts, and tables here using the helpers above.
+//
+// Workflow:
+//   1. const P = buildPalette();          ← call first, pass to all chart factories
+//   2. applyChartDefaults(P);             ← resets Chart.js defaults for this theme
+//   3. destroyCharts();                   ← clean up old canvases before re-injecting HTML
+//   4. Inject HTML via innerHTML          ← kpiCard / alertCard / chartCard / tableCard
+//   5. Call chart factories              ← makeDonut / makeHBar / etc., store in CHARTS{}
+//
+// Color rules:
+//   - Series colors:  P.categorical[0], P.categorical[1], …  (in slot order — never skip)
+//   - Status colors:  P.status.good / .warn / .serious / .crit  (never use as series colors)
+//   - Single series:  just P.categorical[0]  (legend auto-hidden)
+// ════════════════════════════════════════════════════════════════════
+function render() {
+
+  const P = buildPalette();
+  applyChartDefaults(P);
+  destroyCharts();
+
+  // ── KPI row ─────────────────────────────────────────────────────
+  // document.getElementById('kpiRow').innerHTML = [
+  //   kpiCard('Total Jobs',    fmtNum(42921), 'Last 7 days',     'neutral'),
+  //   kpiCard('Success Rate',  '79.7%',       '34,212 succeeded','ok'),
+  //   kpiCard('Error Rate',    '20.2%',       '8,659 failed',    'bad'),
+  //   kpiCard('Avg Duration',  '8.6s',        'Max 626s',        ''),
+  //   kpiCard('Users',         fmtNum(239),   'Active accounts', ''),
+  //   kpiCard('Schedules',     fmtNum(809),   'Configured',      ''),
+  // ].join('');
+
+  // ── Alerts ──────────────────────────────────────────────────────
+  // document.getElementById('alertList').innerHTML = [
+  //   alertCard('critical', 'hanae imamura — 87.6% error rate (2,487 / 2,839 jobs)', 'Consistently failing across the full window.'),
+  //   alertCard('',         'ivan+support — 50.6% error rate (4,236 / 8,365 jobs)', '48.9% of all errors.'),
+  //   alertCard('info',     'Today partial day — errors exceed successes so far',    'May indicate an active incident.'),
+  // ].join('');
+
+  // ── Charts ──────────────────────────────────────────────────────
+  // document.getElementById('chartsRow').innerHTML = [
+  //   chartCard('Daily Job Volume',     'trendChart', 220),
+  //   chartCard('Status Distribution',  'donutChart'),
+  //   chartCard('Jobs by Type',         'typeChart'),
+  // ].join('');
+  //
+  // CHARTS.trend = makeStackedVBar(P, 'trendChart',
+  //   ['Aug 13','Aug 14','Aug 15'],
+  //   [
+  //     { label:'Success', data:[4630,4849,4244], color: P.status.good },
+  //     { label:'Error',   data:[1120,1145,1116], color: P.status.crit },
+  //   ]
+  // );
+  //
+  // CHARTS.donut = makeDonut(P, 'donutChart',
+  //   ['success','error','queued'],
+  //   [34212, 8659, 23],
+  //   [P.status.good, P.status.crit, P.status.warn]
+  // );
+  //
+  // CHARTS.type = makeHBar(P, 'typeChart',
+  //   ['presto','result_export','bulkload','hive'],
+  //   [31727, 5634, 3764, 1372]
+  // );
+
+  // ── Tables ──────────────────────────────────────────────────────
+  // document.getElementById('tablesRow').innerHTML = [
+  //   tableCard('Top Users', ['User','Jobs','Errors','Error Rate'],
+  //     DATA.topUsers.map(u => [
+  //       u.name,
+  //       fmtNum(u.jobs),
+  //       fmtNum(u.errors),
+  //       progressBar(u.pct, u.pct>=50 ? P.status.crit : u.pct>=20 ? P.status.warn : P.status.good)
+  //     ])
+  //   ),
+  //   tableCard('Slowest Jobs', ['User','Database','Duration','Status'],
+  //     DATA.slowJobs.map(j => [j.user, j.database, fmtDuration(j.dur), pill(j.status)])
+  //   ),
+  // ].join('');
+
+}
+
+// ════════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════════
+render();
+</script>
+</body>
+</html>
