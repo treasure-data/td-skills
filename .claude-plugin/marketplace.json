@@ -234,12 +234,11 @@
     },
     {
       "name": "treasure-ai-voice",
-      "description": "Treasure AI Voice skills. Connector skills turn recordings into meeting minutes, sales call notes, follow-up email drafts, daily reports, and talk analysis. CDP skills read the AI Voice tables exported to Treasure Data CDP for a table guide, meeting digests, usage reports, and a customer harassment check for managers.",
+      "description": "Treasure AI Voice skills. Connector skills turn recordings into meeting minutes, sales call notes, follow-up email drafts, daily reports, and talk analysis. CDP skills read the AI Voice tables exported to Treasure Data CDP for a table guide, meeting digests, and usage reports.",
       "source": "./",
       "strict": false,
       "skills": [
         "./treasure-ai-voice/ai-voice-analysis",
-        "./treasure-ai-voice/ai-voice-cdp-harassment-dashboard",
         "./treasure-ai-voice/ai-voice-cdp-meeting-digest",
         "./treasure-ai-voice/ai-voice-cdp-table-guide",
         "./treasure-ai-voice/ai-voice-cdp-usage-report",

@@ -14,7 +14,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TALK = ROOT / "ai-voice-talk-analysis" / "scripts" / "talk_analysis.py"
-HARASSMENT = ROOT / "ai-voice-cdp-harassment-dashboard" / "scripts" / "harassment_report.py"
 
 JAPANESE = re.compile(r"[぀-ヿ㐀-鿿]")
 ENGLISH_WORD = re.compile(r"[A-Za-z][A-Za-z'\-]+")
@@ -98,50 +97,6 @@ def render_talk(mod, data):
         return mod.render(d, cfg, order, m)
 
 
-# ---------- harassment report: Japanese input and English input ----------
-HARASSMENT_JA = {
-    "lang": "ja",
-    "period_start": "2026-11-01",
-    "period_end": "2026-11-07",
-    "totals": {"recordings": 20, "candidates": 5, "judged": 4, "failed": 1, "in_progress": 2},
-    "findings": [
-        {
-            "recording_id": "r1", "date": "2026-11-02", "time": "18:03",
-            "recorder": "山田 太郎", "title": "夕方の対応", "minutes": 4,
-            "type": "暴言・侮辱", "severity": 3,
-            "quote": "ふざけるな", "reason": "侮辱的な言葉を繰り返している",
-            "context": [
-                {"t": "03:12", "who": "客", "text": "ふざけるなよ"},
-                {"t": "03:14", "who": "店", "text": "申し訳ございません"},
-            ],
-        },
-        {
-            "recording_id": "r2", "date": "2026-11-05", "time": "12:00",
-            "recorder": "佐藤 花子", "title": "", "minutes": 10,
-            "type": "長時間の拘束・繰り返し", "severity": 1,
-            "quote": "もう一回説明して", "reason": "同じ質問を繰り返している",
-        },
-    ],
-}
-
-HARASSMENT_EN = json.loads(json.dumps(HARASSMENT_JA))
-HARASSMENT_EN["lang"] = "en"
-HARASSMENT_EN["findings"][0].update(
-    recorder="Recorder A", title="Evening service", quote="Are you serious?",
-    reason="Repeated insults", context=[{"t": "03:12", "who": "客", "text": "Are you serious?"}],
-)
-HARASSMENT_EN["findings"][1].update(recorder="Recorder B", title="", quote="Explain it again", reason="Repeated question")
-
-
-def render_harassment(mod, data):
-    import tempfile
-    with tempfile.TemporaryDirectory() as tmp:
-        path = Path(tmp) / "in.json"
-        path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
-        start, end, totals, rows = mod.load(path)
-        return mod.render(start, end, totals, rows)
-
-
 class TalkOutputLanguageTest(unittest.TestCase):
     def setUp(self):
         self.mod = load(TALK, "talk_analysis_lang")
@@ -162,20 +117,6 @@ class TalkOutputLanguageTest(unittest.TestCase):
         ]
         text = visible_text(render_talk(self.mod, data))
         self.assertEqual(JAPANESE.findall(text), [], "Japanese text in an English talk page")
-
-
-class HarassmentOutputLanguageTest(unittest.TestCase):
-    def setUp(self):
-        self.mod = load(HARASSMENT, "harassment_lang")
-
-    def test_japanese_input_gives_a_japanese_page(self):
-        text = visible_text(render_harassment(self.mod, HARASSMENT_JA))
-        self.assertTrue(JAPANESE.search(text))
-        self.assertEqual(english_words(text), [], "English words in a Japanese harassment page")
-
-    def test_english_input_gives_an_english_page(self):
-        text = visible_text(render_harassment(self.mod, HARASSMENT_EN))
-        self.assertEqual(JAPANESE.findall(text), [], "Japanese text in an English harassment page")
 
 
 if __name__ == "__main__":

@@ -402,15 +402,6 @@ tests:
   - prompt: "AI Voice usage report: who is recording how much last month"
     expected: ai-voice-cdp-usage-report
 
-  - prompt: "AI Voice のエクスポートデータから、先月のカスハラの疑いがある録音を探して"
-    expected: ai-voice-cdp-harassment-dashboard
-
-  - prompt: "Find recordings with suspected customer harassment at our store last month"
-    expected: ai-voice-cdp-harassment-dashboard
-
-  - prompt: "店舗で威圧的なお客様がいなかったか見たい"
-    expected: ai-voice-cdp-harassment-dashboard
-
   # --- Pairs that are easy to confuse ---
 
   # One meeting (connector) vs. many meetings in a period (CDP)

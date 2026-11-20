@@ -2,7 +2,7 @@
 
 Tools are disabled, so each run starts from data that the connector would have returned (made-up).
 The output of each run is saved under out/, and a summary lists the English words found.
-This calls the model about 12 times, so it is a manual check, not a unit test.
+This calls the model about 11 times, so it is a manual check, not a unit test.
 Requires the `claude` CLI on PATH and an authenticated session. Choose the model with EVAL_MODEL (default: opus).
 Run from the treasure-ai-voice folder: python3 evals/japanese_output/run_eval.py
 Re-analyse saved outputs without calling the model: python3 evals/japanese_output/run_eval.py --analyze-only
@@ -76,10 +76,6 @@ TALK_SUMMARY_JA = """スクリプトの実行が完了しました。標準出�
 ページのファイル名: talk-analysis-2026-11-18-A社_初回ヒアリング.html
 ユーザーが日本語で依頼しています。SKILL の手順 4 に従って返信を書いてください。"""
 
-HARASSMENT_SUMMARY_JA = """スクリプトの実行が完了しました。標準出力のJSON:
-{"suspected": 3, "analyzed": 120, "severity": {"1": 1, "2": 1, "3": 1}, "by_type": {"暴言・侮辱": 2, "長時間の拘束・繰り返し": 1}, "unjudged": 0, "excluded": 4, "output": "harassment-report-2026-11-18.html"}
-ユーザーが日本語で依頼しています。SKILL の手順 5 に従って返信を書いてください。"""
-
 USAGE_EN = """Results from the export (per person and per device, period 2026-10-01 to 2026-10-31):
 Person: Sato (sato@example.com): 42 recordings, 9.5 hours in total, last recording 2026-10-30
 Person: Tanaka (tanaka@example.com): 18 recordings, 4.0 hours in total, last recording 2026-10-29
@@ -115,8 +111,6 @@ CASES = [
      "AI Voiceの利用状況を出して。\n\n[クエリの結果]\n" + USAGE_JA),
     ("talk-analysis-reply", "ja", "ai-voice-talk-analysis", "",
      "さっきの商談の話した量を見せて。\n\n[スクリプトの結果]\n" + TALK_SUMMARY_JA),
-    ("harassment-reply", "ja", "ai-voice-cdp-harassment-dashboard", "",
-     "先月のカスハラの疑いがある録音を探して。\n\n[スクリプトの結果]\n" + HARASSMENT_SUMMARY_JA),
     # English controls
     ("en-minutes", "en", "ai-voice-meeting-minutes", "",
      "Write the minutes for the meeting I just recorded.\n\n[Connector result]\n" + TRANSCRIPT_EN),

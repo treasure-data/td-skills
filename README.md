@@ -139,7 +139,6 @@ Skills for Treasure AI Voice recordings. The connector skills read recordings th
 - **[treasure-ai-voice/ai-voice-cdp-table-guide](./treasure-ai-voice/ai-voice-cdp-table-guide)** (`ai-voice-cdp-table-guide`) - Guide to the four AI Voice tables in CDP, with queries for the user's question
 - **[treasure-ai-voice/ai-voice-cdp-meeting-digest](./treasure-ai-voice/ai-voice-cdp-meeting-digest)** (`ai-voice-cdp-meeting-digest`) - Digest of the meetings in a period, with action items that are still open
 - **[treasure-ai-voice/ai-voice-cdp-usage-report](./treasure-ai-voice/ai-voice-cdp-usage-report)** (`ai-voice-cdp-usage-report`) - Usage report by person and device, with unused devices and failed recordings
-- **[treasure-ai-voice/ai-voice-cdp-harassment-dashboard](./treasure-ai-voice/ai-voice-cdp-harassment-dashboard)** (`ai-voice-cdp-harassment-dashboard`) - One-page report of suspected customer harassment across a store's recordings, for managers
 
 ### Reference
 
