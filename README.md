@@ -126,6 +126,20 @@ Setup skills for Treasure AI Studio, maintained by the Treasure AI FDE Team. Eac
 - **[fde-ai-signals-custom-agent-skills/custom-agent-skills/custom-audience-agent](./fde-ai-signals-custom-agent-skills/custom-agent-skills/custom-audience-agent)** (`fde-custom-audience-agent`) - A customer-specific audience and segment-analysis agent on any parent segment, evaluated with ten test prompts
 - **[fde-ai-signals-custom-agent-skills/custom-agent-skills/custom-dashboard-builder](./fde-ai-signals-custom-agent-skills/custom-agent-skills/custom-dashboard-builder)** (`fde-custom-dashboard-builder`) - A custom HTML dashboard on TD data (new, or from a `.dash` export, HTML file or screenshot) with its own dashboard agent
 
+### Treasure AI Voice Skills
+
+Skills for Treasure AI Voice recordings. The connector skills read recordings through the Treasure AI Voice connector. The CDP skills read the tables that AI Voice exports to Treasure Data CDP. See [treasure-ai-voice](./treasure-ai-voice).
+
+- **[treasure-ai-voice/ai-voice-analysis](./treasure-ai-voice/ai-voice-analysis)** (`ai-voice-analysis`) - Default connector skill for questions and reports across recordings, with evidence
+- **[treasure-ai-voice/ai-voice-meeting-minutes](./treasure-ai-voice/ai-voice-meeting-minutes)** (`ai-voice-meeting-minutes`) - Shareable minutes of one recorded meeting: decisions, action items, open issues
+- **[treasure-ai-voice/ai-voice-sales-call-notes](./treasure-ai-voice/ai-voice-sales-call-notes)** (`ai-voice-sales-call-notes`) - CRM-ready notes for a recorded sales call or a customer service visit
+- **[treasure-ai-voice/ai-voice-followup-email](./treasure-ai-voice/ai-voice-followup-email)** (`ai-voice-followup-email`) - Thank-you and follow-up email drafts after a meeting, based on the recording (never sent)
+- **[treasure-ai-voice/ai-voice-daily-report](./treasure-ai-voice/ai-voice-daily-report)** (`ai-voice-daily-report`) - Daily or weekly activity report from the user's own recordings
+- **[treasure-ai-voice/ai-voice-talk-analysis](./treasure-ai-voice/ai-voice-talk-analysis)** (`ai-voice-talk-analysis`) - One HTML page showing talk share, silences, overlaps, and back-and-forth turns of a call
+- **[treasure-ai-voice/ai-voice-cdp-table-guide](./treasure-ai-voice/ai-voice-cdp-table-guide)** (`ai-voice-cdp-table-guide`) - Guide to the four AI Voice tables in CDP, with queries for the user's question
+- **[treasure-ai-voice/ai-voice-cdp-meeting-digest](./treasure-ai-voice/ai-voice-cdp-meeting-digest)** (`ai-voice-cdp-meeting-digest`) - Digest of the meetings in a period, with action items that are still open
+- **[treasure-ai-voice/ai-voice-cdp-usage-report](./treasure-ai-voice/ai-voice-cdp-usage-report)** (`ai-voice-cdp-usage-report`) - Usage report by person and device, with unused devices and failed recordings
+
 ### Reference
 
 - **[template-skill](./template-skill)** - Template for creating new TD-specific skills

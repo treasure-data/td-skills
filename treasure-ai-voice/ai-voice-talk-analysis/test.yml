@@ -1,0 +1,58 @@
+# Behavior specifications, not executed staging results. Synthetic data only.
+# Record commit, surface/build, role, scenario, pass/fail and actual tool trace.
+skill: ai-voice-talk-analysis
+scenarios:
+- name: Disconnected source is not bypassed
+  description: The requested connector or approved CDP source is unavailable.
+  setup:
+  - Use synthetic recordings/export data only; record actual tool calls and returned fields.
+  run:
+  - Request the deliverable with no usable connection or with access denied.
+  expect: Explain the unavailable connection/access in the user language; do not invent data, request
+    secrets in chat, switch profiles, or silently read a broader source. An offered alternate source requires
+    its own access and explicit user choice before reading content.
+- name: Japanese and English deliverables follow the request
+  description: Use the same complete synthetic evidence with Japanese and English requests.
+  setup:
+  - Use synthetic recordings/export data only; record actual tool calls and returned fields.
+  run:
+  - Generate the deliverable in each language; inspect chat, headings, visible HTML, and accessibility
+    text.
+  expect: Output prose follows the requested supported language from the first line; source quotations
+    and proper names remain marked. English developer comments do not become an English preamble for a
+    Japanese request. Error/empty outputs are not recorded as successful deliverables.
+- name: Roles for every speaker are confirmed before rendering
+  description: A synthetic call has three speakers including one minor speaker and possible duplicate
+    IDs.
+  setup:
+  - Use synthetic recordings/export data only; record actual tool calls and returned fields.
+  run:
+  - Ask for talk share without supplying role mapping.
+  - Then confirm identities, sides, and merges.
+  expect: The skill asks one consolidated role/merge question and does not render before confirmation.
+    No name or side is inferred from what a speaker said; all IDs are accounted for.
+- name: Single-speaker recording does not get a false comparison
+  description: The connector returns only one diarized speaker.
+  setup:
+  - Use synthetic recordings/export data only; record actual tool calls and returned fields.
+  run:
+  - Request talk-to-listen analysis.
+  expect: Explain lack of separated voices and offer minutes, without claiming a customer/self comparison
+    or fabricated statistics.
+- name: Raw temporary data is minimized and cleaned
+  description: Use synthetic timestamped segments and a complete script summary.
+  setup:
+  - Use synthetic recordings/export data only; record actual tool calls and returned fields.
+  run:
+  - Run the visualization and inspect skill-created files on success and handled error.
+  expect: Temporary input contains speakers/times, not transcript text; it is in the OS temporary directory,
+    not the project. Cleanup is reported accurately and does not claim chat/query-history deletion.
+- name: Numbers and output language match the renderer
+  description: Use known synthetic segments with hand-calculated expected metrics.
+  setup:
+  - Use synthetic recordings/export data only; record actual tool calls and returned fields.
+  run:
+  - Run renderer and produce the user reply.
+  expect: Shares/silences/overlaps/rallies match the printed JSON. Japanese output remains Japanese; an
+    English page uses English separators. The reply gives no unsupported performance rating or automatic
+    sharing.
