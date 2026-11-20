@@ -1,105 +1,84 @@
-# Treasure AI Voice Skills
+# Treasure AI Voice Starter Skills
 
-Skills that turn Treasure AI Voice recordings into meeting minutes, sales call notes, follow-up email drafts, daily reports, and reports on the AI Voice data exported to Treasure Data CDP. They are written for people who are not necessarily technical: the user describes the meeting or period, and the skill finds the recordings.
+Nine skills for already-recorded Treasure AI Voice conversations and the AI Voice data exported to Treasure Data CDP. Customer-harassment review is being developed in a separately reviewed follow-up; it is not part of this starter set.
 
-Install:
+## Install
+
+After this plugin is released:
 
 ```
 /plugin marketplace add https://github.com/treasure-data/td-skills
 /plugin install treasure-ai-voice@td-skills
 ```
 
-## Skills
+Studio and `tdx` consume the stable release channel. A merge to `main` does not itself make the new skills available there; repository maintainers create and promote a release.
 
-The skills read AI Voice data in one of two ways, and each way has its own permission.
+## Skills and access paths
 
-**Connector skills** read recordings through the Treasure AI Voice connector. They can read only what the user's AI Voice permission allows.
+Connector skills use the connected user's AI Voice access. The uploader, participant, customer owner, and action owner need not be the same person.
 
-| Skill | Output |
+| Connector skill | Purpose |
 |---|---|
-| `ai-voice-analysis` | Answers and reports that no dedicated skill covers (status reports for a manager on a customer, deal, or project; customer or deal histories; product feedback). Also holds the shared rules for finding and reading recordings, which the other connector skills follow |
-| `ai-voice-meeting-minutes` | Minutes of one meeting |
-| `ai-voice-sales-call-notes` | A note for a CRM (sales call) or a customer service log (store or event visit) |
-| `ai-voice-followup-email` | A thank-you and follow-up email draft. It is never sent |
-| `ai-voice-daily-report` | A daily or weekly report from the user's own recordings, including the user's own activity report to a manager |
-| `ai-voice-talk-analysis` | One HTML page with talk share, silences, overlaps, and back-and-forth turns of one call |
+| `ai-voice-analysis` | Default connector discovery/evidence rules; customer/deal histories, project status, product feedback, and reports without a dedicated deliverable skill |
+| `ai-voice-meeting-minutes` | Minutes of one meeting, decisions, actions, and unresolved questions |
+| `ai-voice-sales-call-notes` | Text notes for sales calls or customer service, reviewed before manual CRM entry |
+| `ai-voice-followup-email` | Thank-you/follow-up subject and body only; never sends or creates a Gmail draft |
+| `ai-voice-daily-report` | Daily/weekly activity from the user's own recordings, including a personal activity report for a manager |
+| `ai-voice-talk-analysis` | Talk share, silence, overlap, and back-and-forth visualization for one call, after speaker-side confirmation |
 
-**CDP skills** read the tables that AI Voice exports to Treasure Data CDP. They can be used by anyone with read permission on the export database, and their scope is the data that permission covers.
+CDP skills require source database/organization access. That access is not a replacement for establishing the permitted recording population or confirming the requested selection before content reads.
 
-| Skill | Output |
+| CDP skill | Purpose |
 |---|---|
-| `ai-voice-cdp-table-guide` | What the four exported tables contain, and queries for the user's question |
-| `ai-voice-cdp-meeting-digest` | A digest of the meetings in a period, with action items that are still open |
-| `ai-voice-cdp-usage-report` | Recordings and hours per person and device, unused devices, failed recordings |
+| `ai-voice-cdp-table-guide` | Explain exported tables and run scoped queries; metadata-only previews precede applicable content reads |
+| `ai-voice-cdp-meeting-digest` | Explicit CDP/export or multi-user meeting digest; confirm exact organization/recording keys before summaries, actions, or transcripts |
+| `ai-voice-cdp-usage-report` | Metadata-only usage by creator and device; unknown creators are separate from identified people |
 
-**Which way a request goes.** Connector skills are the default. A CDP skill is used only when the request needs organization-wide statistics, the exported tables themselves, or a join with other Treasure Data tables. Saying that a report is 「管理者向け」 (for managers) is not enough on its own. For reports to a manager, route by what the report is about: the user's own activity goes to `ai-voice-daily-report`; a customer, deal, or project goes to `ai-voice-analysis`; several people or the whole organization goes to the CDP skills, which need read permission on the export database. When the connector is not available and the CDP export is, `ai-voice-analysis` offers a CDP alternative: the meeting digest for several meetings, and the exported tables for one meeting.
+For manager-facing requests, route by subject: personal activity goes to daily-report; customer/deal/project status goes to analysis. Wording such as "for managers" or a week/month alone is not a reason to switch to CDP. A CDP alternative is an explicit source change with its own access and scope checks, not a silent fallback after a connector denial.
 
-## Requirements
+## Requirements and preserved behavior
 
-- Connector skills: the Treasure AI Voice connector is connected in Treasure AI Studio or Treasure Work.
-- CDP skills: AI Voice export to Treasure Data CDP is set up, the user can read the export database, and `tdx` is available.
-- `ai-voice-talk-analysis`: `python3` (3.8 or later) runs its standard-library-only script.
-
-## Behavior that the skills keep
-
-Change these only after the maintainers and the PM agree, and update this section in the same pull request.
-
-- **Own recordings by default.** A skill opens a recording made by someone else only after the user confirms it. Counts that use metadata only, without opening transcripts, do not need this confirmation.
-- **Per-person and per-device numbers are not for evaluation.** `ai-voice-talk-analysis` and `ai-voice-cdp-usage-report` add one line in the chat saying that the numbers are for understanding usage and improving work, and that using them to evaluate people needs a separate agreement inside the customer's organization.
-- **Time zone.** Dates and times are shown in `Asia/Tokyo` unless the user names another time zone, which is then used for the rest of the conversation.
-- **Output language.** Output is written in the language the user writes in. An explicit request for another language takes priority. Two exceptions:
-  - `ai-voice-followup-email` writes in the language used in the meeting, because the email goes to the counterpart. It falls back to the user's language when the meeting language is unclear.
-  - The page from `ai-voice-talk-analysis` supports only Japanese and English. It uses Japanese when the user writes in Japanese and English otherwise; the chat reply is in the user's language.
-
-  Every skill also writes its first line in the user's language, without a lead-in in another language.
-- **Read only.** The skills do not send email, post files, or write to CRM systems. The user does the sharing.
-- **CDP and teams.** The CDP skills count people by `user_email`. `team_id` is not used until it is populated, and team permissions are not handled in CDP.
-
-The `description` fields are in English and list Japanese example requests, so that requests in either language select the skill. Several descriptions also say which neighboring skill to use instead. The SKILL.md bodies and references are in English. The output templates are in Japanese and are translated at run time.
+- The AI Voice connector is connected for connector skills. CDP skills need an enabled export, an approved database/organization, read permission, and `tdx`. Do not switch TD profiles.
+- Talk analysis uses Python 3.8+ and the standard library. The synthetic SQL regression tests use Python 3.9+ because their time-zone stand-ins use `zoneinfo`.
+- Use the user's own recordings by default. Other-owner full content requires established access and the applicable selection confirmation. A role assertion or confirmation does not grant access.
+- CDP table-guide/digest content reads use frozen organization/recording pairs. Preview returns no transcript, summary, action-item, or inferred-title fields. Missing metadata does not authorize orphan summaries/segments.
+- Creator email, not current device assignment, identifies personal usage. Null, empty, and whitespace-only creators form an unknown-creator bucket: included in total recordings/hours, excluded from identified-person counts. Current device assignment is shown only in the device view.
+- `team_id` is not populated and is not used for grouping, filtering, or implied team permissions.
+- Default time zone is `Asia/Tokyo`; use a requested IANA zone consistently. Freeze explicit periods instead of moving `now` between related queries. Segment time includes the utterance offset, so approved calls crossing midnight need duration-backed segment bounds.
+- Output is in the user's language unless another is requested. Follow-up email drafts use the meeting language unless explicitly overridden. The talk-analysis HTML page supports Japanese and English; explain the page-language limitation for other languages. Japanese trigger examples and output labels remain Japanese; developer comments are English.
+- The skills do not automatically send messages/files, create calendar entries, publish reports, or write CRM records. Usage/talk metrics are not employee-performance grades.
 
 ## Known limitations
 
-- In Treasure AI Studio, a short request such as 「お礼メールを書いて」 or 「直近の会議をまとめて」 did not always select a skill; adding 「AI Voice の録音から」 made it work. The descriptions now list such short requests as examples. Re-check this in Studio before removing the note.
-- Treasure AI Studio has two list operations. `ai_voice.list_my_recordings` returns the caller's own recordings and is the default. `ai_voice.list_organization_recordings` is for ENTERPRISE_ADMIN users; for anyone else it silently returns their own recordings, so its response alone does not show which happened.
-- The list operations filter by `q` (a case-sensitive substring of owner email, owner name, and inferred title), `tag`, `status`, `deviceSessionId`, and `deviceSerialNumber`. They have no date or `externalMetadata` filter, so the skill filters those on the returned records. A keyword search therefore covers titles, previews, and summaries, not full transcripts.
-- Recordings longer than about 3 hours may have no row in the exported `recordings` table. Their `summaries` row is still there. The CDP skills do not cover them.
-- Treasure AI Studio has no confirmed operation for checking the connected organization, so that check is skipped there.
-- If another AI Voice plugin is installed in the same environment, a request can match skills in both plugins. Check which skill is selected for follow-up email and customer history requests.
+- Studio action availability/schema must be checked. The documented list actions are `ai_voice.list_my_recordings` and the admin-only `ai_voice.list_organization_recordings`; a non-admin organization-list response may silently contain only own recordings, not prove organization-wide access.
+- Connector list responses can themselves include summaries/previews. Project fields where supported and record the actual response contract; do not claim an unprojected response was metadata-only. Listing supports `q`, `tag`, `status`, and device filters; date and external metadata filtering are client-side under the documented contract.
+- Short Studio requests did not always select a skill; adding "from AI Voice recordings" helped. Descriptions now include short examples, but revised routing still needs an updated-commit Studio check.
+- The export can omit a whole `recordings` row when a long transcript exceeds the event-size limit, even while summaries/segments exist. Content workflows conservatively exclude those rows without an independently reviewed mapping.
+- Query examples assume stable source keys and recording timestamps across versions. Conflicting latest rows, changed metadata, unknown duration, or uncertain authorization require stopping/refreshing scope, not widening a query.
+- Database query plans, host retention, and actual access enforcement are not established by local SQLite tests. Local temporary-file deletion does not erase tool responses, chat history, query/job results, logs, or backups.
+- Installed skills from another plugin can compete with this plugin. Use an isolated configuration for routing classification, while preserving a valid authenticated CLI environment. Do not delete a user's installed skills for a test.
 
-## What to check when something outside this plugin changes
+## Validation
 
-| When this changes | Update | Then test |
-|---|---|---|
-| Connector operation names or response fields | The table in `ai-voice-analysis/SKILL.md`, and the connector skills that rely on the fields | Every connector skill in Studio and Treasure Work |
-| Connector operation names or response fields (detail) | `ai-voice-analysis/reference/tool-notes.md` | Same as above |
-| The exported table schema | `ai-voice-cdp-table-guide/references/schema.md` and `queries.md`, and the column lists in each CDP skill | Every CDP skill |
-| A new skill is added to the td-skills marketplace | Nothing, unless its description overlaps | `./tests/run-tests.sh` |
+Every skill includes `owner`, `tier: 1`, `classification: product`, and a `test.yml` with measurable synthetic behavior specifications. A scenario file is not an executed test result.
 
-## Testing
+From the repository root:
 
-Run the checks below before a pull request that changes a skill, and write the results in the pull request. Use only made-up recordings and data. Do not commit real recordings, customer names, or generated outputs, because this repository is public.
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s treasure-ai-voice/tests -v
+claude plugin validate .
+```
 
-1. **Trigger tests** check which skill a request selects. The AI Voice cases are in `tests/trigger-tests.yml` at the repository root, with Japanese and English requests for every skill and pairs of skills that are easy to confuse. Run `CLAUDE_CONFIG_DIR=$(mktemp -d) ./tests/run-tests.sh --verbose`; it needs the `claude` CLI and `yq`. The fresh `CLAUDE_CONFIG_DIR` matters: the runner calls Claude Code, which loads the skills installed for the user, so without it an installed AI Voice skill (for example `ai-voice-customer-history-summary`) can be chosen instead of the expected one. Routing results for this revision are recorded in the PR; they do not replace behavior tests. The runner always picks one skill, so a passing test does not prove that a short request selects the skill in Studio (see Known limitations).
-2. **Unit tests** check the numbers and the input checks of `talk_analysis.py`. They are in `tests/`, outside the skill folders, so they are not installed with the skills. Run `python3 -m unittest discover -s tests -v` from the `treasure-ai-voice` folder. They use only the standard library and made-up data, and the expected values are worked out by hand in the test files. The output-language tests in the same folder check that a Japanese request gives a Japanese page, and an English request gives an English page.
-3. **Manual check in Treasure AI Studio** checks reading through the connector or CDP and the output. Run one request per skill and record the date, the Studio version, and the result.
-4. **Japanese-output check (manual; calls the model).** `evals/japanese_output/run_eval.py` runs each skill on a Japanese request with made-up connector data, then lists the English words in the output. It makes about 11 model calls, so run it when a skill's output instructions change. Choose the model with `EVAL_MODEL` (default `opus`). Outputs go to `evals/japanese_output/out/`, which is git-ignored.
+The local suite covers the talk renderer/language behavior, scoped table-guide/digest queries, and unknown-creator/device-reassignment attribution. SQL checks execute the documented queries using explicit SQLite adaptations. They are not native Trino syntax/partition-plan proof or Studio/Work permission tests.
 
-| Skill | Request to try | Check |
-|---|---|---|
-| `ai-voice-analysis` | 「AI Voice の録音から、A社の商談の状況を上長に報告できる形でまとめて」 | Groups by customer, separates facts from suggested actions, and cites evidence |
-| `ai-voice-meeting-minutes` | 「AI Voice の録音から、さっきの会議の議事録を作って」 | Asks about unnamed speakers; decisions and action items have owners and due dates or say they were not stated |
-| `ai-voice-sales-call-notes` | 「AI Voice の録音から、A社との商談メモを作って」 | Fields that did not come up say so; important facts have times in the recording |
-| `ai-voice-followup-email` | 「AI Voice の録音から、A社との打ち合わせのお礼メールを書いて」 | Uses the meeting language; is not sent |
-| `ai-voice-daily-report` | 「今日の AI Voice の録音から日報を書いて」 | Uses only the user's own recordings; 「上長への申し送り」 contains only requests and deadlines spoken in the recordings |
-| `ai-voice-talk-analysis` | 「AI Voice の録音から、さっきの商談の話した量を見せて」 | `python3` runs; asks which side each speaker is on; adds the line about evaluation |
-| `ai-voice-cdp-table-guide` | 「AI Voice のエクスポートデータの recordings テーブルには何が入っている?」 | Finds the export database; queries run |
-| `ai-voice-cdp-meeting-digest` | 「AI Voice のエクスポートデータから、先月の会議をまとめて」 | Every action item appears once with a status |
-| `ai-voice-cdp-usage-report` | 「AI Voice の利用状況を出して」 | Counts people by `user_email`; adds the line about evaluation |
+Routing cases live in repository-root `tests/trigger-tests.yml`. `./tests/run-tests.sh --verbose` requires `claude` and `yq`. Use a fresh configuration if the CLI loads competing installed skills; do not discard required authentication or override a Treasure Work TD profile. Classification does not execute connector tools.
 
-Also repeat at least one request in English and confirm that the output is in English.
+The manual `evals/japanese_output/run_eval.py` uses synthetic evidence and tools-disabled model calls to inspect Japanese output plus English controls (11 calls). Outputs are git-ignored. This does not replace tool-enabled host validation, and errors/empty responses must not be recorded as passes.
+
+The [staging checklist](validation/staging-checklist.md) records the remaining updated-commit platform scenarios. Public results must include the exact commit, test surface/build, role, scenario, actual outcome, and sanitized trace. Never publish real transcripts, identifiers, or credentials.
 
 ## Maintenance
 
-- **Maintainers:** the JP SA team maintains these skills. The PM is accountable for them.
-- **Bugs and requests:** open a GitHub issue in this repository and include the skill name, the environment (Treasure AI Studio or Treasure Work), the request, and what happened. Do not paste transcripts or customer data.
-- **Changes:** open a pull request with the test results above. Studio and `tdx` read the stable channel, so a merged change reaches users after a maintainer of this repository tags a release and promotes it to stable.
+The confirmed maintenance owner is the **JP SA team**, with PM accountability. Public bug and request contact is [GitHub Issues in this repository](https://github.com/treasure-data/td-skills/issues). No unconfirmed personal email has been assigned as owner.
+
+When connector operations/responses change, update the analysis tool table and `reference/tool-notes.md`, then exercise every connector skill on each supported surface. When export columns or timestamp semantics change, update the table guide and all affected CDP queries and revalidate scope and attribution. Keep test specifications and observed results distinct.

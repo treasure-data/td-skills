@@ -1,6 +1,9 @@
 ---
 name: ai-voice-followup-email
 description: "Draft a thank-you or follow-up email after a meeting or sales call from an AI Voice recording (e.g. 「お礼メールを書いて」「直近の打ち合わせのお礼メールを書いて」「商談のあとのお礼メールを作って」). Draft a thank-you and follow-up email to send after a meeting, sales call, or customer service interaction: recap, agreed items, next actions for both sides, and points to confirm. Always searches Treasure AI Voice recordings via the connector first — do not write from general knowledge. Triggers even when the user does not mention Voice (e.g. \"draft a thank-you email after my meeting with Company A\", \"follow-up email from the AI Voice recording\", \"email to confirm what we agreed in the call\"). Also triggers for Japanese requests such as「録音をもとに、打ち合わせのお礼メールを書いて」「A社との打ち合わせの録音からお礼メールを書いて」「さっきの打ち合わせのフォローメール」. Outputs subject and draft only — does not send."
+owner: JP SA team
+tier: 1
+classification: product
 ---
 
 # AI Voice Thank-You and Follow-Up Email
@@ -68,3 +71,13 @@ Mark the places the user has to fill in (recipient names you do not know, attach
 - Keep it short. Most follow-up emails fit in about 10 to 15 lines.
 
 After the draft, state in one line what you deliberately left out, so that the user can judge (for example: 「外したもの:お客様が退席したあとの社内の話」).
+
+## Troubleshooting
+
+- Missing connection, denied access, or uncertain recording scope: explain the missing prerequisite and stop the affected read. Do not request credentials, switch TD profiles, or silently use a broader source.
+- Missing or truncated evidence: state the coverage limit; do not invent content or report a failed request as an empty successful result.
+- For connector schema differences, follow ai-voice-analysis and discover the current tool contract. For CDP schema differences, verify the table guide before using a query.
+
+## Behavior validation
+
+Measurable synthetic scenarios are in [test.yml](test.yml). They are specifications, not recorded staging passes. Record the exact commit, supported surface/build, role, scenario, actual tool/query trace, and result when executing them. The JP SA team maintains this skill with PM accountability; public bug/request contact is this repository's GitHub Issues.

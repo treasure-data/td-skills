@@ -1,6 +1,9 @@
 ---
 name: ai-voice-analysis
 description: Default skill for all AI Voice requests — prefer this and the dedicated connector skills over CDP skills unless the user explicitly needs org-wide statistics, CDP-exported table access, or cross-data integration with other Treasure Data tables. A request that merely says "for managers" is not one of these cases. Use when the user wants to answer questions or make reports from already-recorded Treasure AI Voice conversations through the AI Voice connector, such as status reports for a manager on a customer, deal, or project, customer or deal histories with current status and next steps, follow-up email drafts, or product feedback summaries. Also use to find or select recordings by date, topic, or externalMetadata keys such as customer or opportunity IDs, and to read transcripts in bounded batches. Trigger in any language when AI Voice is the source. For minutes, sales-call notes, follow-up emails, daily reports, or talk analysis, use the dedicated skill. For tables exported to CDP, use the ai-voice-cdp skills.
+owner: JP SA team
+tier: 1
+classification: product
 ---
 
 # AI Voice Analysis
@@ -40,14 +43,14 @@ Use the tools that exist in your environment. The rules in this skill do not dep
 - Load current tool schemas when needed. In Treasure Work, confirm the connected organization once per chat with `mcp__work__ai_voice_get_organization`; reuse that confirmation unless the connection changes.
 - Use a supplied recording ID directly. Otherwise use the list-recordings tool from the table above and paginate with `nextToken`.
 - The verified list interface accepts `limit`, `nextToken`, `q` (free-text substring over owner email, name, and inferred title — case-sensitive), `tag`, `status`, `deviceSessionId`, and `deviceSerialNumber`. It has no date or externalMetadata filter argument. Recheck the schema with `get_action_guide` before relying on newly available arguments. For date and metadata filtering, implement client-side on returned records.
-- Start with 20 records per page. Narrow using recordedAt, title/inferredName, preview, existing summary, known recorder information, and externalMetadata. List responses can contain much more than the tool description suggests.
+- Start with 20 records per page. Narrow using recordedAt, title/inferredName, preview, existing summary, known recorder information, and externalMetadata. List responses can contain content fields as well as metadata: record the actual response contract, project only needed fields where supported, and never claim that an unprojected connector response was metadata-only. Do not request other-owner full-recording content before access and selection are established.
 - For multi-call discovery, use `mcp__work__run_script` to paginate, filter, and project fields before returning results to the conversation. Save raw results with `saveFile` only when needed for continued analysis; do not print raw response arrays.
 - Deduplicate by recording ID. Follow cursors in order, avoid repeated cursors, and stop when the requested time range is covered or there is no nextToken. Use descending-date early stopping only when observed ordering supports it; handle missing dates without claiming complete coverage.
 - Bound the initial discovery pass to 100 records. If the requested range is not covered, report the boundary and offer continued discovery or a narrower period/entity. Never equate "not found in this pass" with "does not exist."
 - For a single-meeting request, show a short candidate list only if the match is ambiguous. For a period report, select all relevant matches within the agreed scope without asking the user to choose every recording.
 - Keyword matches in titles, previews, or summaries are candidate discovery, not full-transcript search. State this limitation when it affects completeness.
 - If the candidate set is empty, explain what was searched and suggest a concrete next step, such as changing the period or metadata key.
-- For a multi-recording analysis, declare the agreed selection rule (period, entity, scope) in one sentence and begin fetching without waiting for per-recording approval; check in at stage boundaries rather than per recording.
+- For a multi-recording analysis, establish access and the agreed recording selection before fetching full content. For other-owner recordings, obtain the required confirmation first. Once that set is confirmed, fetch small batches without repeatedly asking for each recording; check in at stage boundaries. A period or manager-facing audience alone does not authorize other-owner content.
 
 ### externalMetadata selection and linkage
 
@@ -150,3 +153,13 @@ Use only sections relevant to the request. These are layouts, not mandatory sepa
 
 **Input:** "毎週うちの商品カテゴリと営業評価基準で同じレポートを作りたい。"
 **Behavior:** Offer a dedicated custom skill based on an agreed sample output and required classifications; do not silently add a scoring system or scheduling to this basic skill.
+
+## Troubleshooting
+
+- Missing connection, denied access, or uncertain recording scope: explain the missing prerequisite and stop the affected read. Do not request credentials, switch TD profiles, or silently use a broader source.
+- Missing or truncated evidence: state the coverage limit; do not invent content or report a failed request as an empty successful result.
+- For connector schema differences, follow ai-voice-analysis and discover the current tool contract. For CDP schema differences, verify the table guide before using a query.
+
+## Behavior validation
+
+Measurable synthetic scenarios are in [test.yml](test.yml). They are specifications, not recorded staging passes. Record the exact commit, supported surface/build, role, scenario, actual tool/query trace, and result when executing them. The JP SA team maintains this skill with PM accountability; public bug/request contact is this repository's GitHub Issues.

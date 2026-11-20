@@ -338,109 +338,69 @@ tests:
 
   # === Treasure AI Voice Skills ===
 
-  # --- Connector skills ---
-
-  - prompt: "AI Voice の録音から、A社との商談がこれまでどう進んできたか、今の状況と次の一手をまとめて"
+  - prompt: AI Voice の録音から、A社との商談がこれまでどう進んできたか、今の状況と次の一手をまとめて
     expected: ai-voice-analysis
-
-  - prompt: "From my AI Voice recordings, summarize the product feedback customers gave this month"
+  - prompt: From my AI Voice recordings, summarize the product feedback customers gave this month
     expected: ai-voice-analysis
-
-  - prompt: "AI Voice の録音で、externalMetadata の opportunityId が 0012 の商談の経緯を教えて"
+  - prompt: AI Voice の録音で、externalMetadata の opportunityId が 0012 の商談の経緯を教えて
     expected: ai-voice-analysis
-
-  - prompt: "AI Voice の録音から、さっきの会議の議事録を作って"
+  - prompt: AI Voice の録音から、さっきの会議の議事録を作って
     expected: ai-voice-meeting-minutes
-
-  - prompt: "Turn this AI Voice recording into meeting minutes with decisions and action items"
+  - prompt: Turn this AI Voice recording into meeting minutes with decisions and action items
     expected: ai-voice-meeting-minutes
-
-  - prompt: "AI Voice の録音から、A社との商談メモを作って"
+  - prompt: AI Voice の録音から、A社との商談メモを作って
     expected: ai-voice-sales-call-notes
-
-  - prompt: "What should I enter in Salesforce from the sales call I just recorded in AI Voice"
+  - prompt: What should I enter in Salesforce from the sales call I just recorded in AI Voice
     expected: ai-voice-sales-call-notes
-
-  - prompt: "さっき録音した店頭での接客を、接客記録にまとめて"
+  - prompt: さっき録音した店頭での接客を、接客記録にまとめて
     expected: ai-voice-sales-call-notes
-
-  - prompt: "A社との打ち合わせの録音から、お礼メールを書いて"
+  - prompt: A社との打ち合わせの録音から、お礼メールを書いて
     expected: ai-voice-followup-email
-
-  - prompt: "Draft a follow-up email from the AI Voice recording of my meeting with Company A"
+  - prompt: Draft a follow-up email from the AI Voice recording of my meeting with Company A
     expected: ai-voice-followup-email
-
-  - prompt: "今日の AI Voice の録音から日報を書いて"
+  - prompt: 今日の AI Voice の録音から日報を書いて
     expected: ai-voice-daily-report
-
-  - prompt: "Write my weekly report from this week's AI Voice recordings"
+  - prompt: Write my weekly report from this week's AI Voice recordings
     expected: ai-voice-daily-report
-
-  - prompt: "AI Voice の録音から、さっきの商談で誰がどれだけ話したかを見せて"
+  - prompt: AI Voice の録音から、さっきの商談で誰がどれだけ話したかを見せて
     expected: ai-voice-talk-analysis
-
-  - prompt: "Show the talk-to-listen ratio and interruptions of my recorded sales call"
+  - prompt: Show the talk-to-listen ratio and interruptions of my recorded sales call
     expected: ai-voice-talk-analysis
-
-  # --- CDP skills ---
-
-  - prompt: "AI Voice のエクスポートデータで、recordings テーブルには何が入っている?"
+  - prompt: AI Voice のエクスポートデータで、recordings テーブルには何が入っている?
     expected: ai-voice-cdp-table-guide
-
-  - prompt: "How do I join the AI Voice tables exported to Treasure Data"
+  - prompt: How do I join the AI Voice tables exported to Treasure Data
     expected: ai-voice-cdp-table-guide
-
-  - prompt: "AI Voice のエクスポートデータから、先月の会議をまとめて"
+  - prompt: AI Voice のエクスポートデータから、先月の会議をまとめて
     expected: ai-voice-cdp-meeting-digest
-
-  - prompt: "List open action items from our weekly meetings in the exported AI Voice tables"
+  - prompt: List open action items from our weekly meetings in the exported AI Voice tables
     expected: ai-voice-cdp-meeting-digest
-
-  - prompt: "AI Voice の利用状況を出して。使われていない端末も知りたい"
+  - prompt: AI Voice の利用状況を出して。使われていない端末も知りたい
     expected: ai-voice-cdp-usage-report
-
-  - prompt: "AI Voice usage report: who is recording how much last month"
+  - prompt: 'AI Voice usage report: who is recording how much last month'
     expected: ai-voice-cdp-usage-report
-
-  # --- Pairs that are easy to confuse ---
-
-  # One meeting (connector) vs. many meetings in a period (CDP)
-  - prompt: "AI Voice で録音した3時の打ち合わせをまとめて"
-    expected: ai-voice-meeting-minutes
-
-  - prompt: "AI Voice のエクスポートデータから、今月の定例の決定事項を一覧にして"
-    expected: ai-voice-cdp-meeting-digest
-
-  # Minutes vs. talk analysis of the same call
-  - prompt: "AI Voice の録音から、さっきの通話の沈黙と被りを数えて"
-    expected: ai-voice-talk-analysis
-
-  # Sales call notes vs. general minutes
-  - prompt: "AI Voice の録音から、SFA に入れる商談の内容をまとめて"
+  - prompt: AI Voice の録音から、A社との価格交渉の商談メモを作って
     expected: ai-voice-sales-call-notes
-
-  # The user's own week, written for a manager, is a weekly report.
-  - prompt: "今週の AI Voice の録音から、上長向けの活動報告をまとめて"
+  - prompt: Write meeting minutes from this AI Voice recording about a customer complaint
+    expected: ai-voice-meeting-minutes
+  - prompt: AI Voice で録音した3時の打ち合わせをまとめて
+    expected: ai-voice-meeting-minutes
+  - prompt: AI Voice のエクスポートデータから、今月の定例の決定事項を一覧にして
+    expected: ai-voice-cdp-meeting-digest
+  - prompt: AI Voice の録音から、さっきの通話の沈黙と被りを数えて
+    expected: ai-voice-talk-analysis
+  - prompt: AI Voice の録音から、SFA に入れる商談の内容をまとめて
+    expected: ai-voice-sales-call-notes
+  - prompt: 今週の AI Voice の録音から、上長向けの活動報告をまとめて
     expected: ai-voice-daily-report
-
-  # Per-person counts from the export: usage report vs. table guide
-  - prompt: "AI Voice のエクスポートしたテーブルで、人ごとの録音数を出す SQL を書きたい"
+  - prompt: AI Voice のエクスポートしたテーブルで、人ごとの録音数を出す SQL を書きたい
     expected: ai-voice-cdp-table-guide
-
-  - prompt: "誰が AI Voice をどれくらい使っているかレポートにして"
+  - prompt: 誰が AI Voice をどれくらい使っているかレポートにして
     expected: ai-voice-cdp-usage-report
-
-  # Manager-facing reports follow the subject: own activity vs. a customer, deal, or project
-  - prompt: "AI Voice の録音から、今週の自分の活動を上長に報告できる形でまとめて"
+  - prompt: AI Voice の録音から、今週の自分の活動を上長に報告できる形でまとめて
     expected: ai-voice-daily-report
-
-  - prompt: "AI Voice の録音から、プロジェクトXの進捗を上長に報告できる形で整理して"
+  - prompt: AI Voice の録音から、プロジェクトXの進捗を上長に報告できる形で整理して
     expected: ai-voice-analysis
-
-  # "For managers" alone does not move a request to the CDP skills
-  - prompt: "管理者向けに、A社との商談の状況を AI Voice の録音からまとめて"
+  - prompt: 管理者向けに、A社との商談の状況を AI Voice の録音からまとめて
     expected: ai-voice-analysis
-
-  # A short request without "AI Voice", listed in the description
-  - prompt: "直近の打ち合わせのお礼メールを書いて"
+  - prompt: 直近の打ち合わせのお礼メールを書いて
     expected: ai-voice-followup-email

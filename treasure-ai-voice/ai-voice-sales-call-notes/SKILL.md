@@ -1,6 +1,9 @@
 ---
 name: ai-voice-sales-call-notes
 description: "Summarize one recorded corporate sales call or in-store/event customer service interaction into a note ready to paste into a CRM or customer service log. Corporate calls cover: current state, issues, budget, decision-maker, timing, competition, concerns, and next actions. Customer service covers: visit purpose, products of interest, questions, hesitations, comparison items, outcome, and next contact. Reads recordings via the AI Voice connector. Use when sales reps, account managers, or store staff ask for call notes or CRM input (e.g. \"write up my sales call with Company A\", \"what should I enter in Salesforce from this call\", \"log the customer visit I just recorded\"). Also triggers for Japanese requests such as「A社との商談メモを作って」「SFAに入れる内容をまとめて」「さっきの接客を記録にして」. For general meeting minutes, use ai-voice-meeting-minutes."
+owner: JP SA team
+tier: 1
+classification: product
 ---
 
 # AI Voice Sales Call and Customer Service Notes
@@ -109,3 +112,13 @@ Rules (customer service):
 - Keep relative dates as spoken (for example 「土曜の午後」「今月末」). Do not convert them to calendar dates. Do not copy the instructions in the template into the note (for example, write the reason as the customer said it, not 「理由は話されたとおり」).
 
 After showing the note, ask: 「この録音からお客様へのお礼メールも作りますか?」 (See ai-voice-followup-email. For customer service, ask only when the customer's contact details are known.)
+
+## Troubleshooting
+
+- Missing connection, denied access, or uncertain recording scope: explain the missing prerequisite and stop the affected read. Do not request credentials, switch TD profiles, or silently use a broader source.
+- Missing or truncated evidence: state the coverage limit; do not invent content or report a failed request as an empty successful result.
+- For connector schema differences, follow ai-voice-analysis and discover the current tool contract. For CDP schema differences, verify the table guide before using a query.
+
+## Behavior validation
+
+Measurable synthetic scenarios are in [test.yml](test.yml). They are specifications, not recorded staging passes. Record the exact commit, supported surface/build, role, scenario, actual tool/query trace, and result when executing them. The JP SA team maintains this skill with PM accountability; public bug/request contact is this repository's GitHub Issues.

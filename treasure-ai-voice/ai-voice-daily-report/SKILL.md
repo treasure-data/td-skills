@@ -1,6 +1,9 @@
 ---
 name: ai-voice-daily-report
 description: "Write a daily or weekly activity report from the user's own Treasure AI Voice recordings: what was done, with whom, outcomes, issues, and next actions. Reads recordings via the AI Voice connector; fills in the user's own template if provided. Use when asked to write a daily report, weekly report, or activity summary from recordings (e.g. \"write my daily report from today's recordings\", \"weekly report from my AI Voice recordings\", \"summarize what I did this week\"). Also use for the user's own activity report to a manager, such as 「上長に報告できるように今週の活動をまとめて」. For a customer, deal, or project status, use ai-voice-analysis instead. Also triggers for Japanese requests such as「今日の録音から日報を書いて」「今週の週報をまとめて」."
+owner: JP SA team
+tier: 1
+classification: product
 ---
 
 # AI Voice Daily Report
@@ -86,3 +89,13 @@ Copy `references/daily-report-template.html`, fill in every `{{placeholder}}`, a
 - Keep it short. Readers skim. Make each activity one line, and do not include transcript quotes unless the user asks.
 - Do not include private conversations or small talk.
 - Do not write the day of the week from memory. Compute it from the date (for example: `python3 -c "import datetime;print(datetime.date(2026,10,28).strftime('%a'))"`), or omit the day of the week.
+
+## Troubleshooting
+
+- Missing connection, denied access, or uncertain recording scope: explain the missing prerequisite and stop the affected read. Do not request credentials, switch TD profiles, or silently use a broader source.
+- Missing or truncated evidence: state the coverage limit; do not invent content or report a failed request as an empty successful result.
+- For connector schema differences, follow ai-voice-analysis and discover the current tool contract. For CDP schema differences, verify the table guide before using a query.
+
+## Behavior validation
+
+Measurable synthetic scenarios are in [test.yml](test.yml). They are specifications, not recorded staging passes. Record the exact commit, supported surface/build, role, scenario, actual tool/query trace, and result when executing them. The JP SA team maintains this skill with PM accountability; public bug/request contact is this repository's GitHub Issues.

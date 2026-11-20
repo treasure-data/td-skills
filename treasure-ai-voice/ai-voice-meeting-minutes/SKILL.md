@@ -1,6 +1,9 @@
 ---
 name: ai-voice-meeting-minutes
 description: "Create shareable meeting minutes from one Treasure AI Voice recording: attendees, decisions, action items with owner and deadline, and open issues. Reads the recording via the AI Voice connector. Use when asked to write minutes or a summary for a meeting or call (e.g. \"write minutes for the meeting I just recorded\", \"turn this AI Voice recording into meeting minutes\", \"summarize my 3 pm meeting with decisions and action items\"). Also triggers for Japanese requests such as「さっきの会議の議事録を作って」「この録音を議事録にして」「3時の打ち合わせをまとめて」. For digests across multiple meetings, use ai-voice-cdp-meeting-digest."
+owner: JP SA team
+tier: 1
+classification: product
 ---
 
 # AI Voice Meeting Minutes
@@ -97,3 +100,13 @@ Copy `references/minutes-template.html` and fill in every `{{placeholder}}`. Whe
 After showing the minutes, ask once (in the user's language), for example: 「社外の方にも共有しますか?」 If the user will share them externally, make a second version without internal remarks (internal opinions about the customer, pricing not yet disclosed to the other party, personal information), list what you removed, and have the user confirm.
 
 Do not send the minutes by email or post them anywhere. The user does the sharing.
+
+## Troubleshooting
+
+- Missing connection, denied access, or uncertain recording scope: explain the missing prerequisite and stop the affected read. Do not request credentials, switch TD profiles, or silently use a broader source.
+- Missing or truncated evidence: state the coverage limit; do not invent content or report a failed request as an empty successful result.
+- For connector schema differences, follow ai-voice-analysis and discover the current tool contract. For CDP schema differences, verify the table guide before using a query.
+
+## Behavior validation
+
+Measurable synthetic scenarios are in [test.yml](test.yml). They are specifications, not recorded staging passes. Record the exact commit, supported surface/build, role, scenario, actual tool/query trace, and result when executing them. The JP SA team maintains this skill with PM accountability; public bug/request contact is this repository's GitHub Issues.

@@ -2,6 +2,9 @@
 name: ai-voice-talk-analysis
 description: "Visualize the shape of one conversation from a Treasure AI Voice recording as a single HTML page: talk share per speaker, silences, overlaps, and back-and-forth turns between own side and customer side. Reads recordings via the AI Voice connector. Use when asked about talk-to-listen ratio, silence and interruption counts, or whether a rep is talking too much (e.g. \"show the talk-to-listen ratio of my sales call\", \"count silences and interruptions\", \"is the rep talking too much\", \"visualize this call\"). Also triggers for Japanese requests such as「商談の話した量を見せて」「沈黙や被りを数えて」「営業が話しすぎていないか見たい」「さっきの通話を可視化して」. For meeting minutes, use ai-voice-meeting-minutes."
 compatibility: Requires running python3 (3.8 or later, standard library only) and writing files.
+owner: JP SA team
+tier: 1
+classification: product
 ---
 
 # AI Voice Conversation Visualization
@@ -98,3 +101,13 @@ Do not send or post the file. The user does the sharing.
 - **`被り` (overlap)**: when the speaker switches between the own side and the customer side, the next segment starts before the previous one ends.
 - **`ラリー` (back-and-forth turns)**: the number of times the speaking side switches between the own side and the customer side (`other` speakers are skipped).
 - **`最長の独演` (longest monologue)**: the longest time one person on the own side kept talking without a gap of 3 seconds or more.
+
+## Troubleshooting
+
+- Missing connection, denied access, or uncertain recording scope: explain the missing prerequisite and stop the affected read. Do not request credentials, switch TD profiles, or silently use a broader source.
+- Missing or truncated evidence: state the coverage limit; do not invent content or report a failed request as an empty successful result.
+- For connector schema differences, follow ai-voice-analysis and discover the current tool contract. For CDP schema differences, verify the table guide before using a query.
+
+## Behavior validation
+
+Measurable synthetic scenarios are in [test.yml](test.yml). They are specifications, not recorded staging passes. Record the exact commit, supported surface/build, role, scenario, actual tool/query trace, and result when executing them. The JP SA team maintains this skill with PM accountability; public bug/request contact is this repository's GitHub Issues.

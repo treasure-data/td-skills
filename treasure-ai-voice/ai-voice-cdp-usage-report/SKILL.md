@@ -1,6 +1,9 @@
 ---
 name: ai-voice-cdp-usage-report
 description: "Use only to see how AI Voice is being used (who recorded how much, how devices are used). Do not use it to find out what was said in a deal or meeting (use ai-voice-analysis for that). Create an AI Voice usage report from tables exported to Treasure Data CDP: recording count and hours per person and device, unassigned or unused devices, failed or still-processing recordings. Use when anyone with read access to the export database wants to understand how AI Voice is being used (e.g. \"AI Voice usage report\", \"who is recording how much\", \"unused AI Voice devices\", \"last month's AI Voice adoption\"). Also triggers for Japanese requests such as「AI Voiceの利用状況を出して」「使われていない端末は」「誰がどれくらい録音しているか」「先月の利用レポート」."
+owner: JP SA team
+tier: 1
+classification: product
 ---
 
 # AI Voice CDP Usage Report
@@ -13,16 +16,16 @@ Report how AI Voice is being used, based on the tables that AI Voice exports to 
 - AI Voice's CDP export must be enabled (an AI Voice admin turns it on under Export in the AI Voice Console). If the tables cannot be found, tell the user exactly that and stop.
 - Read only. Do not create tables or schedule workflows unless the user explicitly asks.
 - Do not show the SQL unless asked. When you need to ask permission to run commands, explain it in one plain sentence (for example: 「`aiv_export` から直近30日の AI Voice の利用状況を読みます(読み取りのみ)」) and ask for permission once for all the queries together.
-- Use the queries below as they are, replacing only `{database}`, `{tz}` and the period.
+- Use the queries below as they are, replacing `{database}`, `{organization_id}`, `{tz}` and the period. Verify the export organization from the approved source; database access alone is not proof of organization membership. Escape literal values and validate identifiers. Never switch TD profiles.
 - The default period is the last 30 days. Do not ask about it unless the user's wording is ambiguous.
 - **Time zone**: `{tz}` defaults to `Asia/Tokyo`. If the user names another time zone (for example 「UTC で」 or "in Pacific time"), use the IANA name (`UTC`, `America/Los_Angeles`) everywhere `{tz}` appears, and keep using it for the rest of the conversation. Write the time zone next to the period in the report.
 
 ## Step 1: Find the AI Voice tables and check the columns (do not ask the user first)
 
-If the user gave a name (for example 「`aiv_export` にエクスポート済み」), treat it as a CDP database name, not a work folder, and use it as is without searching (do not run `tdx tables`). If no name was given, search:
+If the user gives the export database, use it without a cross-database search. If unknown, ask which approved database and organization to use, then inspect tables only within that database:
 
 ```bash
-tdx tables "*.transcript_segments"
+tdx tables "{database}.*"
 ```
 
 - Exactly one match: use that database (`recordings`, `summaries` and `devices` should be in the same place).
@@ -31,8 +34,8 @@ tdx tables "*.transcript_segments"
 
 Then run `tdx describe {database}.recordings` and `tdx describe {database}.devices` once. The queries need these columns:
 
-- `recordings`: `time`, `unique_id`, `updated_at`, `id`, `user_email`, `user_name`, `duration_seconds`, `status`, `device_serial_number`
-- `devices`: `unique_id`, `updated_at`, `serial_number`, `device_model`, `status`, `assigned_user_name`, `assigned_user_email`, `last_sync_at`
+- `recordings`: `organization_id`, `time`, `unique_id`, `updated_at`, `id`, `user_email`, `user_name`, `duration_seconds`, `status`, `device_serial_number`
+- `devices`: `organization_id`, `unique_id`, `updated_at`, `serial_number`, `device_model`, `status`, `assigned_user_name`, `last_sync_at`
 
 If a column is missing or renamed, tell the user which one, and do not run a query that uses it. See "Keeping the schema current" in ai-voice-cdp-table-guide.
 
@@ -40,37 +43,34 @@ If a column is missing or renamed, tell the user which one, and do not run a que
 
 - **Remove duplicates.** Repeated exports append the same record again with the same `unique_id`. For each `unique_id`, keep only the latest row (the one with the largest `updated_at`).
 - **Filter recordings by time.** Use `td_interval(time, '-30d/now', '{tz}')` (adjust the range; for a calendar month use `td_time_range(time, '2026-10-01', '2026-11-01', '{tz}')`). Do not filter `devices` by time: its `time` is the time of the last heartbeat.
-- **Identify people by the recording's creator.** Use `recordings.user_email` as the key for a person and `user_name` as the display name. Do not use the device's current assignment for this: a device can be handed to another person, and its old recordings would then be counted for the new holder. Fall back to the device assignment only when `user_email` is empty, and report how many recordings were attributed that way.
+- **Identify people by the recording's creator.** Use `recordings.user_email` as the key for a person and `user_name` as the display name. Do not use the device's current assignment for this: a device can be handed to another person, and its old recordings would then be counted for the new holder. Treat null, empty, and whitespace-only creator email as unknown. Put these recordings in a separate unknown-creator bucket. Never attribute them to the current device assignee or infer a person from a display name alone.
 - **Do not use `team_id`.** It is not populated yet. Do not group, filter or show by team, even if the column exists. If the user asks for numbers per team, say that team information is not available in the export yet.
 
 ### Query A: per person
 
 ```sql
-with r as (
-  select * from (
-    select *, row_number() over (partition by unique_id order by updated_at desc) as rn
-    from {database}.recordings
-    where td_interval(time, '-30d/now', '{tz}')
-  ) where rn = 1
-),
-d as (
-  select * from (
-    select *, row_number() over (partition by unique_id order by updated_at desc) as rn
-    from {database}.devices
-  ) where rn = 1
+with ranked as (
+  select organization_id, id, time, user_email, user_name, duration_seconds, status,
+         row_number() over (partition by organization_id, unique_id order by updated_at desc) as rn
+  from {database}.recordings
+  where td_interval(time, '-30d/now', '{tz}')
+    and organization_id = '{organization_id}'
+), r as (
+  select id, time, nullif(trim(user_email), '') as creator_email,
+         nullif(trim(user_name), '') as creator_name, duration_seconds, status
+  from ranked where rn = 1
 )
-select
-  coalesce(r.user_email, d.assigned_user_email) as email,
-  coalesce(max_by(r.user_name, r.time), max_by(d.assigned_user_name, r.time), '(不明)') as person,
-  count(*) as recordings,
-  round(sum(r.duration_seconds) / 3600.0, 1) as hours,
-  count_if(r.status = 'FAILED') as failed,
-  count_if(r.status not in ('COMPLETED', 'FAILED')) as in_progress,
-  count_if(r.user_email is null) as attributed_by_device,
-  td_time_string(max(r.time), 'd!', '{tz}') as last_recorded
+select creator_email as email,
+       case when creator_email is null then '(作成者不明)'
+            else coalesce(max_by(creator_name, time) filter (where creator_name is not null), creator_email) end as person,
+       count(*) as recordings,
+       round(sum(coalesce(duration_seconds, 0)) / 3600.0, 1) as hours,
+       count_if(status = 'FAILED') as failed,
+       count_if(status is null or status not in ('COMPLETED', 'FAILED')) as in_progress,
+       count_if(creator_email is null) as unknown_creator,
+       td_time_string(max(time), 'd!', '{tz}') as last_recorded
 from r
-left join d on d.serial_number = r.device_serial_number
-group by 1
+group by creator_email
 order by recordings desc
 ```
 
@@ -79,28 +79,29 @@ order by recordings desc
 The current assignment is correct here: this query is about who holds each device now.
 
 ```sql
-with r as (
-  select * from (
-    select *, row_number() over (partition by unique_id order by updated_at desc) as rn
-    from {database}.recordings
-    where td_interval(time, '-30d/now', '{tz}')
-  ) where rn = 1
-),
-d as (
-  select * from (
-    select *, row_number() over (partition by unique_id order by updated_at desc) as rn
-    from {database}.devices
-  ) where rn = 1
+with ranked_recordings as (
+  select organization_id, id, device_serial_number,
+         row_number() over (partition by organization_id, unique_id order by updated_at desc) as rn
+  from {database}.recordings
+  where td_interval(time, '-30d/now', '{tz}')
+    and organization_id = '{organization_id}'
+), r as (
+  select organization_id, id, device_serial_number from ranked_recordings where rn = 1
+), ranked_devices as (
+  select organization_id, serial_number, device_model, status, assigned_user_name, last_sync_at,
+         row_number() over (partition by organization_id, unique_id order by updated_at desc) as rn
+  from {database}.devices
+  where organization_id = '{organization_id}'
+), d as (
+  select organization_id, serial_number, device_model, status, assigned_user_name, last_sync_at
+  from ranked_devices where rn = 1
 )
-select
-  d.serial_number,
-  d.device_model,
-  d.status,
-  coalesce(d.assigned_user_name, '(未割り当て)') as assigned_to,
-  substr(d.last_sync_at, 1, 10) as last_sync,
-  count(r.id) as recordings_in_period
+select d.serial_number, d.device_model, d.status,
+       coalesce(nullif(trim(d.assigned_user_name), ''), '(未割り当て)') as assigned_to,
+       substr(d.last_sync_at, 1, 10) as last_sync,
+       count(r.id) as recordings_in_period
 from d
-left join r on r.device_serial_number = d.serial_number
+left join r on r.organization_id = d.organization_id and r.device_serial_number = d.serial_number
 group by 1, 2, 3, 4, 5
 order by recordings_in_period, d.serial_number
 ```
@@ -108,18 +109,20 @@ order by recordings_in_period, d.serial_number
 ### Query C: weekly trend
 
 ```sql
-with r as (
-  select * from (
-    select *, row_number() over (partition by unique_id order by updated_at desc) as rn
-    from {database}.recordings
-    where td_interval(time, '-30d/now', '{tz}')
-  ) where rn = 1
+with ranked as (
+  select time, duration_seconds, device_serial_number,
+         row_number() over (partition by organization_id, unique_id order by updated_at desc) as rn
+  from {database}.recordings
+  where td_interval(time, '-30d/now', '{tz}')
+    and organization_id = '{organization_id}'
+), r as (
+  select time, duration_seconds, nullif(trim(device_serial_number), '') as device_serial_number
+  from ranked where rn = 1
 )
-select
-  td_time_string(td_date_trunc('week', time, '{tz}'), 'd!', '{tz}') as week_start,
-  count(*) as recordings,
-  round(sum(duration_seconds) / 3600.0, 1) as hours,
-  count(distinct device_serial_number) as active_devices
+select td_time_string(td_date_trunc('week', time, '{tz}'), 'd!', '{tz}') as week_start,
+       count(*) as recordings,
+       round(sum(coalesce(duration_seconds, 0)) / 3600.0, 1) as hours,
+       count(distinct device_serial_number) as active_devices
 from r
 group by 1
 order by 1
@@ -133,12 +136,15 @@ When a transcript exceeds the 1 MB event size limit (usually recordings longer t
 select count(distinct s.recording_id) as recordings_not_in_recordings_table
 from {database}.transcript_segments s
 where td_interval(s.time, '-30d/now', '{tz}')
+  and s.organization_id = '{organization_id}'
   and s.recording_id not in (
     /* Take the recordings side one day wider. The transcript's time is "recording start time + position of the utterance",
        so a recording made slightly before the start of the period can still have segments inside the period.
        Without the extra day, such recordings would be wrongly counted as "missing".
        When you change the period, keep the recordings side one day wider (for example, -8d for 7 days) */
-    select id from {database}.recordings where td_interval(time, '-31d/now', '{tz}') and id is not null
+    select id from {database}.recordings
+    where td_interval(time, '-31d/now', '{tz}') and id is not null
+      and organization_id = '{organization_id}'
   )
 ```
 
@@ -180,14 +186,25 @@ Order the Markdown version as follows (for English, translate the headings, for 
 - <数字に関わる補足があれば。下記参照>
 ```
 
-Take every number in the summary from the query results (the number of people is the row count of Query A; the number of devices in use is the number of rows in Query B where `recordings_in_period` is greater than 0). Do not estimate.
+Take every number in the summary from the query results (the number of people is the number of Query A rows with a non-null email; do not count the unknown-creator bucket as a person; the number of devices in use is the number of rows in Query B where `recordings_in_period` is greater than 0). Do not estimate.
 
 Keep suggestions simple and easy to act on: 「誰かに割り当てる」, 「持ち主に困っていないか確認する」, 「端末がモバイルアプリと同期しているか確認する」.
 
-In the notes, write only what affects the numbers. If Query D finds long recordings that are not in the numbers, say so in one line. If `attributed_by_device` is greater than 0 in any row, say in one line how many recordings were counted by the device's current holder because the creator was not recorded. Do not write any other notes.
+In the notes, write only what affects the numbers. If Query D finds long recordings that are not in the numbers, say so in one line. If `unknown_creator` is greater than 0, state how many recordings have no known creator. Include them in overall recording/hour totals but keep them separate from identified people. Current device assignments describe devices only, never historical recording creators. Do not write any other notes.
+
+## Troubleshooting
+
+- Missing schema, access denial, or unknown organization: stop rather than query another source.
+- No known creators: the people count is zero; keep recording/hour totals in the unknown bucket.
+- Query D is a bounded missing-metadata diagnostic. Its one-day lookback is not a guarantee for arbitrarily long recordings. If the source recording-duration bound is unknown, mark this diagnostic incomplete rather than claiming zero missing recordings.
+- Do not query transcript text, summaries, action items, or inferred titles for this report.
 
 ## Do not
 
 - Do not rank people as if grading performance. This is a usage report, and low usage may simply mean that person's job has fewer meetings.
 - The per-person and per-device numbers are for understanding usage and improving work. When you show the report, add one line in the chat (do not repeat it from the second time in the same conversation). Tell the user (in their language), for example: 「この数字は、利用状況の把握と業務の改善のためのものです。個人の評価に使う場合は、社内での取り決めが別途必要です。」 Do not put it inside the report.
 - Do not read the transcripts. This report needs only the metadata.
+
+## Behavior validation
+
+Measurable synthetic scenarios are in [test.yml](test.yml). They are specifications, not recorded staging passes. Record the exact commit, supported surface/build, role, scenario, actual tool/query trace, and result when executing them. The JP SA team maintains this skill with PM accountability; public bug/request contact is this repository's GitHub Issues.
