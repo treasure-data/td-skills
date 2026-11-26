@@ -173,6 +173,8 @@ This `--delete` means something different from `tdx cas push`'s own `--delete` (
 
 Composable audience journeys use `tdx cas journey`, not top-level `tdx journey` — `tdx journey push` resolves complete audiences only and refuses a composable audience name outright (`SEGMENT_NOT_FOUND`). Composable stays under `tdx cas` until the core `tdx journey` commands reach parity with it. Reuse the **journey** skill's 5-step order and journey structure, applying the **Composable authoring overrides** below before following its templates.
 
+For priority groups that cap concurrent journeys per profile, the audience Traffic Control schedule, or last-cycle excluded counts, use the **cas-traffic-control** skill.
+
 ```bash
 tdx cas journey list [pattern] --audience <name>              # List journeys (glob filter on name)
 tdx cas journey view <name> --audience <name>                 # Show one journey's details

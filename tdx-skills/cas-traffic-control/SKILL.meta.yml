@@ -1,0 +1,19 @@
+# Re-validation log for cas-traffic-control
+# Record each validation run: date, model, result, and notes.
+
+validations:
+  - date: 2026-11-26
+    model: Treasure Work (frontier tier)
+    result: pass
+    tester: khanh.pham@treasure.ai
+    notes: >
+      Validated on dev-us01 with a tdx build that includes `tdx cas traffic-control`
+      (tdx PR #3453). Inspect: `group list`, `group view --json/--yaml`, `schedule view`,
+      `status --from/--to` all returned data. Dry-run `group create` and `group update`
+      sent no write (group list unchanged). `schedule validate` rejected `25:00:00` (exit 1)
+      and accepted `09:00:00`. Unknown audience returned SEGMENT_NOT_FOUND. Confirmed write:
+      created a disabled 2-member group, read back capping/enabled/member order, updated it
+      from an edited `group view --yaml` file, deleted it, and confirmed NOT_FOUND. Found and
+      documented: a partial update file is rejected with HTTP 400 (server replaces the group);
+      `capping` must be smaller than the member count; the `group list` keyword was ignored
+      and all groups returned; `lastCycle: null` can coexist with member counts from earlier.
