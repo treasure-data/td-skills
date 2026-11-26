@@ -187,7 +187,7 @@ _export:
 +task:
   py>: tasks.MyTask.run
   docker:
-    image: "treasuredata/customscript-python:3.12.11-td1"
+    image: "treasuredata/customscript-python:3.14.10-td0"
   _env:
     TD_API_KEY: ${secret:td.apikey}
 ```

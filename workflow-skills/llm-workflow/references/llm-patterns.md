@@ -94,7 +94,7 @@ Write query results to a table, then read with `py>` using pytd.
 +format_for_llm:
   py>: tasks.LLMFormatter.run
   docker:
-    image: "treasuredata/customscript-python:3.12.11-td1"
+    image: "treasuredata/customscript-python:3.14.10-td0"
   _env:
     TD_API_KEY: ${secret:td.apikey}
   database: analytics
@@ -143,7 +143,7 @@ Ask a yes/no question and branch on the answer.
 +parse_response:
   py>: tasks.ResponseParser.parse_yes_no
   docker:
-    image: "treasuredata/customscript-python:3.12.11-td1"
+    image: "treasuredata/customscript-python:3.14.10-td0"
 
 +branch:
   if>: ${agent_approved}
