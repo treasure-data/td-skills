@@ -38,8 +38,8 @@ tdx cas traffic-control status --audience "QA Audience" --from 2026-11-01 --to 2
 ### Report status honestly
 
 - Report the last cycle's `sessionTime`, `executionStatus`, and `reportingStatus` as separate facts.
-- `reportingStatus: pending` means counts are still arriving. Say counts are not ready, not that nobody was excluded. No previous cycle (`lastCycle: null`) is its own state; members can still carry counts from an earlier configuration, so report their `countsAsOf` instead of calling them current.
-- For each visible member, report `currentlyInCount`, `excludedCount`, and `countsAsOf` when present.
+- `reportingStatus: pending` means counts are still arriving. Say counts are not ready, not that nobody was excluded. No previous cycle (`lastCycle: null`) is its own state.
+- For each visible member, report `currentlyInCount`, `excludedCount`, and `countsAsOf` when present. Counts can exist with `lastCycle: null`; they are as of `countsAsOf`, not current.
 - Never turn a missing count into zero. Never sum counts across groups or members as unique profiles; one profile can be in several journeys and groups.
 - Members returned as `invisible: true` have no name. Keep them hidden. Do not look up or guess their names from other sources.
 
@@ -96,7 +96,7 @@ tdx cas traffic-control schedule validate --audience "QA Audience" --type daily 
    | Delete           | `tdx cas traffic-control group delete "<group>"`            |
    | Save schedule    | `tdx cas traffic-control schedule set -f schedule.yml`      |
 
-   Dry-run and `schedule validate` check members, priorities, cap, schedule option, and timezone locally and send no write. The API has no validate endpoint, so a pass does not prove write permission, member visibility, or server acceptance. Create dry-run does not resolve the audience; confirm it exists with a read first.
+   Dry-run and `schedule validate` check members, priorities, that the cap is a positive integer, schedule option, and timezone locally and send no write. They do not check that the cap is below the member count. The API has no validate endpoint, so a pass does not prove write permission, member visibility, or server acceptance. Create dry-run does not resolve the audience; confirm it exists with a read first.
 
 2. **Confirm.** State the profile, audience, exact group or schedule, and the before → after effect (for schedules, that the audience workflow is republished). Wait for the user's explicit confirmation. For a preview-only request, stop here and report `not applied`. A CLI confirmation prompt does not replace this step. Use `--yes` only for a deletion the user approved when the run is non-interactive.
 

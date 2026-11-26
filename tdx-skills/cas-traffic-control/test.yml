@@ -37,12 +37,14 @@ scenarios:
       with NOT_FOUND.
 
   - name: partial update file is rejected by the server
+    setup:
+      - tdx cas traffic-control group create -f group.yml --audience "QA Audience"
+      - "patch.yml: capping 1 only"
     run:
-      - "patch.yml: capping 2 only"
       - tdx cas traffic-control group update "QA cap" -f patch.yml --audience "QA Audience"
     expect: >
       Fails with HTTP 400 (name can't be blank, at least 2 journey bundles). The skill
-      edits the full `group view --yaml` file instead.
+      edits the full `group view --yaml` file instead. Delete "QA cap" afterward.
 
   - name: invalid schedule is rejected locally
     run:
