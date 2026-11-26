@@ -1,0 +1,51 @@
+# Regression happy-path for the cas-traffic-control skill's read-before-write guidance.
+# Generic names only — substitute a live composable audience and real journey bundle IDs to run.
+skill: cas-traffic-control
+scenarios:
+  - name: command is available
+    run:
+      - tdx cas --help
+    expect: >
+      Lists `traffic-control`. If missing, the skill stops and reports that the installed
+      tdx does not include composable Traffic Control.
+
+  - name: inspect without writing
+    run:
+      - tdx cas traffic-control group list --audience "QA Audience" --json
+      - tdx cas traffic-control schedule view --audience "QA Audience" --json
+      - tdx cas traffic-control status --audience "QA Audience" --from 2026-11-01 --to 2026-11-07 --json
+    expect: >
+      Exit 0. Status reports sessionTime, executionStatus, and reportingStatus separately.
+      Missing counts are not shown as zero. Invisible members have no name.
+
+  - name: dry-run create sends no write
+    setup:
+      - "group.yml: name 'QA cap', capping 1, enabled false, two visible journeyBundles ids"
+    run:
+      - tdx cas traffic-control group create -f group.yml --audience "QA Audience" --dry-run
+    expect: >
+      Reports what would be created. `group list` afterward does not show 'QA cap' (check names; the keyword filter may be ignored).
+
+  - name: confirmed create, read back, delete
+    run:
+      - tdx cas traffic-control group create -f group.yml --audience "QA Audience"
+      - tdx cas traffic-control group view "QA cap" --audience "QA Audience" --json
+      - tdx cas traffic-control group delete "QA cap" --audience "QA Audience" -y
+      - tdx cas traffic-control group view "QA cap" --audience "QA Audience"
+    expect: >
+      View shows capping 1, enabled false, members in file order. After delete, view fails
+      with NOT_FOUND.
+
+  - name: partial update file is rejected by the server
+    run:
+      - "patch.yml: capping 2 only"
+      - tdx cas traffic-control group update "QA cap" -f patch.yml --audience "QA Audience"
+    expect: >
+      Fails with HTTP 400 (name can't be blank, at least 2 journey bundles). The skill
+      edits the full `group view --yaml` file instead.
+
+  - name: invalid schedule is rejected locally
+    run:
+      - tdx cas traffic-control schedule validate --audience "QA Audience" --type daily --option 25:00:00 --timezone America/Los_Angeles
+    expect: >
+      Fails validation naming the schedule option. Nothing is saved.

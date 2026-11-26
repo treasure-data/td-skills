@@ -101,6 +101,7 @@
         "./tdx-skills/segment",
         "./tdx-skills/validate-segment",
         "./tdx-skills/cas",
+        "./tdx-skills/cas-traffic-control",
         "./tdx-skills/journey",
         "./tdx-skills/validate-journey",
         "./tdx-skills/connector-config",

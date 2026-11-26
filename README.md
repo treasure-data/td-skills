@@ -67,6 +67,7 @@ Skills are folders of instructions and resources that Claude loads dynamically t
 - **[tdx-skills/validate-segment](./tdx-skills/validate-segment)** - Validate segment YAML configurations against CDP API spec for correct operators, time units, and field names
 - **[tdx-skills/journey](./tdx-skills/journey)** - Create CDP journey definitions in YAML with stages, steps (wait, activation, decision_point, ab_test, merge, jump, end), and simulation workflow
 - **[tdx-skills/validate-journey](./tdx-skills/validate-journey)** - Validate journey YAML configurations for correct step types, parameters, and segment references
+- **[tdx-skills/cas-traffic-control](./tdx-skills/cas-traffic-control)** - Configure and inspect composable Journey Traffic Control priority groups, caps, schedule, and last-cycle counts with `tdx cas traffic-control`
 - **[tdx-skills/connector-config](./tdx-skills/connector-config)** - Configure connector_config for segment/journey activations using `tdx connection schema` to discover fields
 - **[tdx-skills/foundry-agent](./tdx-skills/foundry-agent)** - Build Treasure AI Foundry agents using `tdx agent pull/push` with YAML/Markdown config, tools, and knowledge bases
 - **[tdx-skills/foundry-agent-test](./tdx-skills/foundry-agent-test)** - Run automated tests for Treasure AI Foundry agents using `tdx agent test` with test.yml format and judge evaluation

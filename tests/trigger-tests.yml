@@ -49,6 +49,15 @@ tests:
   - prompt: "Pull and push journeys for our composable Snowflake audience"
     expected: cas
 
+  - prompt: "Set up a priority group so a profile can only be in one of our promo journeys at a time on the composable audience"
+    expected: cas-traffic-control
+
+  - prompt: "Why are the Traffic Control excluded counts blank for last cycle?"
+    expected: cas-traffic-control
+
+  - prompt: "Change the Traffic Control schedule for our composable audience to daily at 9am Pacific"
+    expected: cas-traffic-control
+
   - prompt: "Validate my journey YAML file"
     expected: validate-journey
 
