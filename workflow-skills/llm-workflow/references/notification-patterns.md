@@ -28,7 +28,7 @@ Extract LLM response via `py>`, then reference the variable in the HTML template
 +extract:
   py>: tasks.ResponseExtractor.run
   docker:
-    image: "treasuredata/customscript-python:3.12.11-td1"
+    image: "treasuredata/customscript-python:3.14.10-td0"
 
 +send_report:
   mail>: templates/report.html

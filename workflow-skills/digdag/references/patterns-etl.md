@@ -196,7 +196,7 @@ Use `py>` for logic that SQL and `http>` cannot handle. See [py-operator.md](py-
 +fetch_external:
   py>: tasks.ExternalFetcher.run
   docker:
-    image: "treasuredata/customscript-python:3.12.11-td1"
+    image: "treasuredata/customscript-python:3.14.10-td0"
   _env:
     TD_API_KEY: ${secret:td.apikey}
     API_TOKEN: ${secret:external.api_token}

@@ -120,7 +120,7 @@ TD's built-in SMTP relay handles delivery — no secrets required. LLM response 
 +extract_summary:
   py>: tasks.ResponseExtractor.run
   docker:
-    image: "treasuredata/customscript-python:3.12.11-td1"
+    image: "treasuredata/customscript-python:3.14.10-td0"
 
 +send_report:
   mail>: templates/report.html

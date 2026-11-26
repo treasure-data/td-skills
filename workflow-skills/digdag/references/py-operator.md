@@ -10,7 +10,7 @@ Run Python code on TD via Custom Script Docker containers. Use for logic that SQ
 +analyze:
   py>: tasks.Analyzer.run
   docker:
-    image: "treasuredata/customscript-python:3.12.11-td1"
+    image: "treasuredata/customscript-python:3.14.10-td0"
   param1: value1
   _env:
     TD_API_KEY: ${secret:td.apikey}
