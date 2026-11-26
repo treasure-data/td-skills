@@ -14,10 +14,11 @@ Out of scope: running a cycle, launching or resuming journeys, and activating au
 1. Run `tdx --version` and `tdx cas --help`. Confirm `traffic-control` is listed before you run its subcommands; an unknown subcommand can print the parent help instead of an error. If it is missing, stop and report that the installed tdx does not include composable Traffic Control. Do not install or switch builds.
 2. Use the current profile. Do not switch or override it. Pass the exact composable audience name as `--audience` on every command; without it the audience comes from context, which may be wrong. Address a group by ID when its name is ambiguous.
 3. Tell errors apart from empty results:
-   - **Sign-in error** (401, expired or missing key): report it and point the user to `tdx auth`.
+   - **Sign-in error** (401, or 400 `API Key isn't set on the request`): report it and point the user to `tdx auth setup`.
    - **Permission denied** (403): the user lacks access to the audience or feature. Do not work around it.
-   - **Feature unavailable** (404 or "not available"): Traffic Control is not enabled for this account or audience.
-   - **Empty list**: the call succeeded and there are no matching groups.
+   - **Feature unavailable**: `Traffic Control resource not found. Composable Traffic Control may be unavailable for this audience, or you may not have access to it.` Report both possibilities; do not call it an empty result.
+   - **Wrong target**: `SEGMENT_NOT_FOUND` means the audience name did not match; `Priority group not found` means the group name or ID did not match.
+   - **Empty list**: the call succeeded and there are no groups.
 
    Do not fall back to raw `tdx api` calls or to Complete CDP `tdx journey` commands.
 
@@ -99,7 +100,7 @@ tdx cas traffic-control schedule validate --audience "QA Audience" --type daily 
 
 2. **Confirm.** State the profile, audience, exact group or schedule, and the before → after effect (for schedules, that the audience workflow is republished). Wait for the user's explicit confirmation. For a preview-only request, stop here and report `not applied`. A CLI confirmation prompt does not replace this step. Use `--yes` only for a deletion the user approved when the run is non-interactive.
 
-3. **Apply and verify.** Re-run the approved command without `--dry-run`. Read back with `group view`, `group list` (after delete), or `schedule view`, and report what changed. If a write errors or times out, read back before retrying, especially for create and duplicate, to avoid duplicates. Report unverified changes as unverified.
+3. **Apply and verify.** Re-run the approved command without `--dry-run`. Read back with `group view` (after delete it must return `Priority group not found`) or `schedule view`, and report what changed. If a write errors or times out, read back before retrying, especially for create and duplicate, to avoid duplicates. Report unverified changes as unverified.
 
 ## MCP
 
